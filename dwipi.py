@@ -29,13 +29,22 @@ class DWI(object):
         maxval = max(np.unique(self.grad[:,3]))
         return maxval
 
-    def createTensorOrder(self, order):
+    def tensortype(self):
+        # Determines whether the function is DTI
+        if self.maxbval() <= 1500:
+            type = 'dti'
+        elif self.maxbval() > 1500:
+            type = 'dki'
+        else:
+            raise ValueError('tensortype: Error in determining maximum BVAL')
+        return type
+
+    def createTensorOrder(self):
         # Creates the appropriate tensor order for ADC or AKC calculations
-        # Use 2 for DTI and 4 for DKI
-        if order == 2:
+        if self.tensortype() == 'dti':
             cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
             ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3])) - 1
-        if order == 4:
+        if self.tensortype() == 'dki':
             cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4, 1], dtype=int)
             ind = np.array(([1,1,1,1],[1,1,1,2],[1,1,1,3],[1,1,2,2],[1,1,2,3],[1,1,3,3],\
                 [1,2,2,2],[1,2,2,3],[1,2,3,3],[1,3,3,3],[2,2,2,2],[2,2,2,3],[2,2,3,3],[2,3,3,3],[3,3,3,3])) - 1
