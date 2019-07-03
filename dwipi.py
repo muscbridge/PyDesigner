@@ -20,6 +20,13 @@ class DWI(object):
                                                                 #   number of DWI volumes. [Gx Gy Gz Bval]
             else:
                 assert('Unable to locate BVAL or BVEC files')
+            maskPath = os.path.join(path,'brainmask.nii')
+            if os.path.exists(maskPath):
+                tmp = nib.load(maskPath)
+                self.mask = np.array(tmp.dataobj)
+            else:
+                self.mask = np.ones((self.img.shape[0], self.img.shape[1], self.img.shape[2]), order='F')
+                print('No brain mask specified')
         else:
             assert('File in path not found. Please locate file and try again')
         print('Image ' + fName + '.nii loaded successfully')
