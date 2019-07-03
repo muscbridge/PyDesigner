@@ -25,9 +25,11 @@ class DWI(object):
             if os.path.exists(maskPath):
                 tmp = nib.load(maskPath)
                 self.mask = np.array(tmp.dataobj)
+                self.maskStatus = True
                 print('Found brain mask')
             else:
                 self.mask = np.ones((self.img.shape[0], self.img.shape[1], self.img.shape[2]), order='F')
+                self.maskStatus = False
                 print('No brain mask found')
         else:
             assert('File in path not found. Please locate file and try again')
@@ -61,3 +63,22 @@ class DWI(object):
                 [1,2,2,2],[1,2,2,3],[1,2,3,3],[1,3,3,3],[2,2,2,2],[2,2,2,3],[2,2,3,3],[2,3,3,3],[3,3,3,3])) - 1
         return cnt, ind
 
+    def vectorize(self):
+        # if the input is 1D or 2D, unpatch it to 3D or 4D using a mask
+        # if the input is 3D or 4D, vectorize it using a mask
+        if self.img.ndim == 1:
+            self.img = np.expand_dims(self.img, axis=0)
+        if self.img.ndim == 2:
+            n = self.img.shape[0]
+            s = np.zeros((self.mask.shape[0], self.mask.shape[1], self.mask.shape[2], n), order='F')
+            for i in range(0, n):
+                s[:,:,:,i] = np.reshape(self.img[i,:], (self.mask.shape), order='F')
+        if self.img.ndim == 3:
+            dwi = np.expand_dims(self.img, axis=-1)
+        if self.img.ndim == 4:
+            s = np.zeros((self.img.shape[-1], np.prod(self.mask.shape).astype(int)), order='F')
+            for i in range(0, self.img.shape[-1]):
+                tmp = self.img[:,:,:,i]
+                maskind = np.ma.array(tmp, mask=self.mask)
+                s[i,:] = np.ma.ravel(maskind, order='F').data
+        return np.squeeze(s)
