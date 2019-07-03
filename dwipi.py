@@ -6,6 +6,9 @@ import numba
 from numba import jit
 import scipy.optimize as opt
 import warnings
+import multiprocessing
+from joblib import Parallel, delayed
+from tqdm import tqdm
 
 class DWI(object):
     def __init__(self, imPath):
@@ -79,15 +82,11 @@ class DWI(object):
             print('User enforced tensor order 2 for DTI')
             cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
             ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3])) - 1
-            if imType == 'dki':
-                warnings.warn('DWI tensor order is 4 (DKI-ready), proceed with caution.')
         elif order == 4:
             print('User enforced tensor order 4 for DKI')
             cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4, 1], dtype=int)
             ind = np.array(([1,1,1,1],[1,1,1,2],[1,1,1,3],[1,1,2,2],[1,1,2,3],[1,1,3,3],\
                 [1,2,2,2],[1,2,2,3],[1,2,3,3],[1,3,3,3],[2,2,2,2],[2,2,2,3],[2,2,3,3],[2,3,3,3],[3,3,3,3])) - 1
-            if imType == 'dti':
-                raise ValueError('createTensorOrder: DWI tensor order 4 (for DKI) not possible on DTI image.')
         else:
             raise ValueError('createTensorOrder: Please enter valid order values (2 or 4).')
         return cnt, ind
@@ -111,3 +110,45 @@ class DWI(object):
                 maskind = np.ma.array(tmp, mask=self.mask)
                 s[i,:] = np.ma.ravel(maskind, order='F').data
         return np.squeeze(s)
+
+    def fit(self):
+        # Run fitting
+        order = np.floor(np.log(np.abs(np.max(self.grad[:,-1])+1))/np.log(10))
+        if order >= 2:
+            self.grad[:, -1] = self.grad[:, -1]/1000
+
+        self.img.astype(np.double)
+        self.img[self.img <= 0] = np.finfo(np.double).eps
+
+        self.grad.astype(np.double)
+        normgrad = np.sqrt(np.sum(self.grad[:,:3]**2, 1))
+        normgrad[normgrad == 0] = 1
+
+        self.grad[:,:3] = self.grad[:,:3]/np.tile(normgrad, (3,1)).T
+        self.grad[np.isnan(self.grad)] = 0
+
+        dcnt, dind = self.createTensorOrder(2)
+        wcnt, wind = self.createTensorOrder(4)
+
+        ndwis = self.img.shape[-1]
+        bs = np.ones((ndwis, 1))
+        bD = np.tile(dcnt,(ndwis, 1))*self.grad[:,dind[:, 0]]*self.grad[:,dind[:, 1]]
+        bW = np.tile(wcnt,(ndwis, 1))*self.grad[:,wind[:, 0]]*self.grad[:,wind[:, 1]]*self.grad[:,wind[:, 2]]*self.grad[:,wind[:, 3]]
+        b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
+
+        dwi_ = self.vectorize()
+        init = np.matmul(np.linalg.pinv(b), np.log(dwi_))
+        shat = np.exp(np.matmul(b, init))
+
+        print('...fitting with wlls')
+        inputs = tqdm(range(0, dwi_.shape[1]))
+        num_cores = multiprocessing.cpu_count()
+        dt = Parallel(n_jobs=num_cores,prefer='processes')\
+            (delayed(self.img)(shat[:,i], dwi_[:,i], b) for i in inputs)
+        dt = np.reshape(dt, (dwi_.shape[1], b.shape[1])).T
+
+        s0 = np.exp(dt[0,:])
+        dt = dt[1:,:]
+        D_apprSq = 1/(np.sum(dt[(0,3,5),:], axis=0)/3)**2
+        dt[6:,:] = dt[6:,:]*np.tile(D_apprSq, (15,1))
+        return dt, s0, b
