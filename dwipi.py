@@ -7,9 +7,8 @@ import scipy.optimize as opt
 class DWI(object):
     def __init__(self, imPath):
         if os.path.exists(imPath):
-            hdr = nib.load(imPath)
-            self.hdr = hdr
-            self.img = hdr.get_fdata
+            self.hdr = nib.load(imPath)
+            self.img = np.array(self.hdr.dataobj)
             (path, file) = os.path.split(imPath)               # Get just NIFTI filename + extension
             fName = os.path.splitext(file)[0]                   # Remove extension from NIFTI filename
             bvalPath = os.path.join(path, fName + '.bval')      # Add .bval to NIFTI filename
