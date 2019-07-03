@@ -2,6 +2,8 @@ import numpy as np
 import scipy as scp
 import nibabel as nib
 import os
+import numba
+from numba import jit
 import scipy.optimize as opt
 
 class DWI(object):
@@ -34,6 +36,14 @@ class DWI(object):
         else:
             assert('File in path not found. Please locate file and try again')
         print('Image ' + fName + '.nii loaded successfully')
+
+    def getBvals(self):
+        # Loads a vector of bvals from .bval
+        return self.grad[:,3]
+
+    def getBvecs(self):
+        # Loads a [N x 3] array of gradient directions from .bvec
+        return self.grad[:,0:3]
 
     def maxBval(self):
         # Finds the maximum bval in a dataset to determine between DTI and DKI
