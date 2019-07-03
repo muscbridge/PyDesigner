@@ -5,6 +5,7 @@ import os
 import numba
 from numba import jit
 import scipy.optimize as opt
+import warnings
 
 class DWI(object):
     def __init__(self, imPath):
@@ -52,25 +53,43 @@ class DWI(object):
 
     def tensorType(self):
         # Determines whether the function is DTI
-        if self.maxbval() <= 1500:
+        if self.maxBval() <= 1500:
             type = 'dti'
             print('Maximum BVAL < 1500, image is DTI')
-        elif self.maxbval() > 1500:
+        elif self.maxBval() > 1500:
             type = 'dki'
             print('Maximum BVAL > 1500, image is DKI')
         else:
             raise ValueError('tensortype: Error in determining maximum BVAL')
         return type
 
-    def createTensorOrder(self):
+    def createTensorOrder(self, order=None):
         # Creates the appropriate tensor order for ADC or AKC calculations
-        if self.tensortype() == 'dti':
+        imType = self.tensorType()
+        if order is None:
+            if imType == 'dti':
+                cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
+                ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3])) - 1
+            elif imType == 'dki':
+                cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4, 1], dtype=int)
+                ind = np.array(([1, 1, 1, 1], [1, 1, 1, 2], [1, 1, 1, 3], [1, 1, 2, 2], [1, 1, 2, 3], [1, 1, 3, 3], \
+                                [1, 2, 2, 2], [1, 2, 2, 3], [1, 2, 3, 3], [1, 3, 3, 3], [2, 2, 2, 2], [2, 2, 2, 3],
+                                [2, 2, 3, 3], [2, 3, 3, 3], [3, 3, 3, 3])) - 1
+        elif order == 2:
+            print('User enforced tensor order 2 for DTI')
             cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
             ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3])) - 1
-        if self.tensortype() == 'dki':
+            if imType == 'dki':
+                warnings.warn('DWI tensor order is 4 (DKI-ready), proceed with caution.')
+        elif order == 4:
+            print('User enforced tensor order 4 for DKI')
             cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4, 1], dtype=int)
             ind = np.array(([1,1,1,1],[1,1,1,2],[1,1,1,3],[1,1,2,2],[1,1,2,3],[1,1,3,3],\
                 [1,2,2,2],[1,2,2,3],[1,2,3,3],[1,3,3,3],[2,2,2,2],[2,2,2,3],[2,2,3,3],[2,3,3,3],[3,3,3,3])) - 1
+            if imType == 'dti':
+                raise ValueError('createTensorOrder: DWI tensor order 4 (for DKI) not possible on DTI image.')
+        else:
+            raise ValueError('createTensorOrder: Please enter valid order values (2 or 4).')
         return cnt, ind
 
     def vectorize(self):
