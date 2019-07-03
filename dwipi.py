@@ -24,17 +24,19 @@ class DWI(object):
             assert('File in path not found. Please locate file and try again')
         print('Image ' + fName + '.nii loaded successfully')
 
-    def maxbval(self):
+    def maxBval(self):
         # Finds the maximum bval in a dataset to determine between DTI and DKI
         maxval = max(np.unique(self.grad[:,3]))
         return maxval
 
-    def tensortype(self):
+    def tensorType(self):
         # Determines whether the function is DTI
         if self.maxbval() <= 1500:
             type = 'dti'
+            print('Maximum BVAL < 1500, image is DTI')
         elif self.maxbval() > 1500:
             type = 'dki'
+            print('Maximum BVAL > 1500, image is DKI')
         else:
             raise ValueError('tensortype: Error in determining maximum BVAL')
         return type
@@ -49,3 +51,4 @@ class DWI(object):
             ind = np.array(([1,1,1,1],[1,1,1,2],[1,1,1,3],[1,1,2,2],[1,1,2,3],[1,1,3,3],\
                 [1,2,2,2],[1,2,2,3],[1,2,3,3],[1,3,3,3],[2,2,2,2],[2,2,2,3],[2,2,3,3],[2,3,3,3],[3,3,3,3])) - 1
         return cnt, ind
+
