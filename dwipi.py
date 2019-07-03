@@ -23,3 +23,15 @@ class DWI(object):
         else:
             assert('File in path not found. Please locate file and try again')
         print('Image ' + fName + '.nii loaded successfully')
+
+    def createTensorOrder(self, order):
+        # Creates the appropriate tensor order for ADC or AKC calculations
+        # Use 2 for DTI and 4 for DKI
+        if order == 2:
+            cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
+            ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3])) - 1
+        if order == 4:
+            cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4, 1], dtype=int)
+            ind = np.array(([1,1,1,1],[1,1,1,2],[1,1,1,3],[1,1,2,2],[1,1,2,3],[1,1,3,3],\
+                [1,2,2,2],[1,2,2,3],[1,2,3,3],[1,3,3,3],[2,2,2,2],[2,2,2,3],[2,2,3,3],[2,3,3,3],[3,3,3,3])) - 1
+        return cnt, ind
