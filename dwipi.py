@@ -111,6 +111,15 @@ class DWI(object):
                 s[i,:] = np.ma.ravel(maskind, order='F').data
         return np.squeeze(s)
 
+    def wlls(self, shat, dwi, b):
+        # compute a wlls fit using weights from inital fit shat
+        w = np.diag(shat)
+        dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
+        # for constrained fitting I'll need to modify this line. It is much slower than pinv so lets ignore for now.
+        # dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
+        #     method='trf', tol=1e-12, max_iter=22000, lsq_solver='bvls')
+        return dt
+
     def fit(self):
         # Run fitting
         order = np.floor(np.log(np.abs(np.max(self.grad[:,-1])+1))/np.log(10))
@@ -144,7 +153,7 @@ class DWI(object):
         inputs = tqdm(range(0, dwi_.shape[1]))
         num_cores = multiprocessing.cpu_count()
         dt = Parallel(n_jobs=num_cores,prefer='processes')\
-            (delayed(self.img)(shat[:,i], dwi_[:,i], b) for i in inputs)
+            (delayed(self.wlls)(shat[:,i], dwi_[:,i], b) for i in inputs)
         dt = np.reshape(dt, (dwi_.shape[1], b.shape[1])).T
 
         s0 = np.exp(dt[0,:])
