@@ -4,8 +4,9 @@ import scipy as scp
 import nibabel as nib
 import os
 import designerfunc as df
+import dwipi as dp
 
-print('Import successful!')
+dwi = dp.DWI('/Users/sid/Downloads/nii_test/DWI/PARAMAPS/dwi_designer.nii')
 
 # Generate paths to files
 niiPath = '/Users/sid/Downloads/nii_test/DWI/DKI_BIPOLAR_2mm_64dir_62slices_20190206093716_18.nii'
