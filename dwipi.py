@@ -24,6 +24,11 @@ class DWI(object):
             assert('File in path not found. Please locate file and try again')
         print('Image ' + fName + '.nii loaded successfully')
 
+    def maxbval(self):
+        # Finds the maximum bval in a dataset to determine between DTI and DKI
+        maxval = max(np.unique(self.grad[:,3]))
+        return maxval
+
     def createTensorOrder(self, order):
         # Creates the appropriate tensor order for ADC or AKC calculations
         # Use 2 for DTI and 4 for DKI
