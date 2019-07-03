@@ -51,8 +51,7 @@ class DWI(object):
 
     def maxBval(self):
         # Finds the maximum bval in a dataset to determine between DTI and DKI
-        maxval = max(np.unique(self.grad[:,3]))
-        return maxval
+        return max(np.unique(self.grad[:,3]))
 
     def tensorType(self):
         # Determines whether the function is DTI
