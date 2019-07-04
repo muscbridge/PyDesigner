@@ -2,8 +2,6 @@ import numpy as np
 import scipy as scp
 import nibabel as nib
 import os
-import numba
-from numba import jit
 import scipy.optimize as opt
 import warnings
 import multiprocessing
@@ -42,19 +40,52 @@ class DWI(object):
         print('Image ' + fName + '.nii loaded successfully')
 
     def getBvals(self):
-        # Loads a vector of bvals from .bval
+        """
+        Returns a vector of b-values, requires no input arguments
+        Classification: Method
+
+        Usage
+        -----
+        bvals = dwi.getBvals(), where dwi is the DWI class object
+        """
         return self.grad[:,3]
 
     def getBvecs(self):
-        # Loads a [N x 3] array of gradient directions from .bvec
+        """
+        Returns an array of gradient vectors, requires no input parameters
+        Classification: Method
+
+        Usage
+        -----
+        bvecs = dwi.getBvecs(), where dwi is the DWI class object
+        """
         return self.grad[:,0:3]
 
     def maxBval(self):
-        # Finds the maximum bval in a dataset to determine between DTI and DKI
+        """
+        Returns the maximum b-value in a dataset to determine between DTI and DKI, requires no input parameters
+        Classification: Method
+
+        Usage
+        -----
+        a = dwi.maxBval(), where dwi is the DWI class object
+
+        """
         return max(np.unique(self.grad[:,3]))
 
     def tensorType(self):
-        # Determines whether the function is DTI
+        """
+        Returns whether input image is DTI or DKI compatible, requires no input parameters
+        Classification: Method
+
+        Usage
+        -----
+        a = dwi.tensorType(), where dwi is the DWI class object
+
+        Returns
+        -------
+        a: 'dti' or 'dki' (string)
+        """
         if self.maxBval() <= 1500:
             type = 'dti'
             print('Maximum BVAL < 1500, image is DTI')
@@ -66,7 +97,53 @@ class DWI(object):
         return type
 
     def createTensorOrder(self, order=None):
-        # Creates the appropriate tensor order for ADC or AKC calculations
+        """
+        Creates tensor order array and indices
+        Classification: Method
+
+        Usage
+        -----
+        (cnt ind) = dwi.createTensorOrder(order)
+
+        Parameters
+        ----------
+        order: 2 or 4 (int or None)
+               Tensor order number, 2 for diffusion and 4 for kurtosis. Default: None; auto-detect
+
+        Returns
+        -------
+        cnt: vector (int)
+        ind: array (int)
+
+        Additional Information
+        ----------------------
+        The tensors for this pipeline are based on NYU's designer layout as depicted in the table below. This will soon
+        be depreciated and updated with MRTRIX3's layout.
+        =============================
+        ------D------
+        1  |    D11
+        2  |    D12
+        3  |    D13
+        4  |    D22
+        5  |    D23
+        6  |    D33
+        ------K------
+       1  |   W1111
+       2  |   W1112
+       3  |   W1113
+       4  |   W1122
+       5  |   W1123
+       6  |   W1133
+       7  |   W1222
+       8  |   W1223
+       9  |   W1233
+       10 |   W1333
+       11 |   W2222
+       12 |   W2223
+       13 |   W2233
+       14 |   W2333
+       15 |   W3000
+        """
         imType = self.tensorType()
         if order is None:
             if imType == 'dti':
@@ -91,8 +168,20 @@ class DWI(object):
         return cnt, ind
 
     def vectorize(self):
-        # if the input is 1D or 2D, unpatch it to 3D or 4D using a mask
-        # if the input is 3D or 4D, vectorize it using a mask
+        """
+        Returns vectorized image based on brain mask, requires no input parameters
+        If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
+        If the input is 3D or 4D, vectorize it using a mask
+        Classification: Method
+
+        Usage
+        -----
+        vec = dwi.vectorize()
+
+        Returns
+        -------
+        vec: N X number_of_voxels vector or array, where N is the number of DWI volumes
+        """
         if self.img.ndim == 1:
             self.img = np.expand_dims(self.img, axis=0)
         if self.img.ndim == 2:
@@ -115,8 +204,8 @@ class DWI(object):
         w = np.diag(shat)
         dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
         # for constrained fitting I'll need to modify this line. It is much slower than pinv so lets ignore for now.
-        # dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
-        #     method='trf', tol=1e-12, max_iter=22000, lsq_solver='bvls')
+        #dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
+        #     method='bvls', tol=1e-12, max_iter=22000, lsq_solver='exact')
         return dt
 
     def fit(self):
