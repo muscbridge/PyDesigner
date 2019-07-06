@@ -209,7 +209,10 @@ class DWI(object):
         return dt
 
     def fit(self):
-        # Run fitting
+        """
+        Returns fitted diffusion or kurtosis tensor
+        :return:
+        """
         order = np.floor(np.log(np.abs(np.max(self.grad[:,-1])+1))/np.log(10))
         if order >= 2:
             self.grad[:, -1] = self.grad[:, -1]/1000
@@ -247,3 +250,26 @@ class DWI(object):
         self.dt = self.dt[1:,:]
         D_apprSq = 1/(np.sum(self.dt[(0,3,5),:], axis=0)/3)**2
         self.dt[6:,:] = self.dt[6:,:]*np.tile(D_apprSq, (15,1))
+
+    def fibonacciSphere(self, samples=1, randomize=True):
+        """
+        Returns "samples" evenly spaced points on a sphere
+        :param samples:
+        :param randomize:
+        :return:
+        """
+        import random
+        rnd = 1
+        if randomize:
+            rnd = random.random() * samples
+        points = []
+        offset = 2/samples
+        increment = np.pi * (3. - np.sqrt(5.))
+        for i in range(samples):
+            y = ((i * offset) - 1) + (offset / 2)
+            r = np.sqrt(1 - pow(y,2))
+            phi = ((i + rnd) % samples) * increment
+            x = np.cos(phi) * r
+            z = np.sin(phi) * r
+            points.append([x,y,z])
+        return points
