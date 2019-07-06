@@ -273,3 +273,16 @@ class DWI(object):
             z = np.sin(phi) * r
             points.append([x,y,z])
         return points
+
+    def radialSampling(self, dir, n):
+        # get the radial component of a set of directions
+        dt = 2*np.pi/n
+        theta = np.arange(0,2*np.pi-dt,dt)
+        dirs = np.vstack((np.cos(theta), np.sin(theta), 0*theta))
+        v = np.hstack((-dir[1], dir[0], 0))
+        s = np.sqrt(np.sum(v**2))
+        c = dir[2]
+        V = np.array([[0, -v[2], v[1]],[v[2], 0, -v[0]],[-v[1], v[0], 0]])
+        R = np.eye(3) + V + np.matmul(V,V) * (1-c)/(s**2)
+        dirs = np.matmul(R, dirs)
+        return dirs
