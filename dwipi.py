@@ -286,3 +286,22 @@ class DWI(object):
         R = np.eye(3) + V + np.matmul(V,V) * (1-c)/(s**2)
         dirs = np.matmul(R, dirs)
         return dirs
+
+    def diffusionCoeff(self, dt, dir):
+        # compute ADC
+        dcnt, dind = self.createTensorOrder(2)
+        ndir = dir.shape[0]
+        bD = np.tile(dcnt,(ndir, 1)) * dir[:,dind[:, 0]] * dir[:,dind[:, 1]]
+        adc = np.matmul(bD, dt)
+        return adc
+
+    def kurtosisCoeff(self, dt, dir):
+        # compute AKC
+        wcnt, wind = self.createTensorOrder(4)
+        ndir = dir.shape[0]
+        adc = self.diffusionCoeff(dt[:6], dir)
+        md = np.sum(dt[np.array([0,3,5])], 0)/3
+        bW = np.tile(wcnt,(ndir, 1)) * dir[:,wind[:, 0]] * dir[:,wind[:, 1]] * dir[:,wind[:, 2]] * dir[:,wind[:, 3]]
+        akc = np.matmul(bW, dt[6:])
+        akc = (akc * np.tile(md**2, (adc.shape[0], 1)))/(adc**2)
+        return akc
