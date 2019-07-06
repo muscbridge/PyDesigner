@@ -231,21 +231,19 @@ class DWI(object):
         bs = np.ones((ndwis, 1))
         bD = np.tile(dcnt,(ndwis, 1))*self.grad[:,dind[:, 0]]*self.grad[:,dind[:, 1]]
         bW = np.tile(wcnt,(ndwis, 1))*self.grad[:,wind[:, 0]]*self.grad[:,wind[:, 1]]*self.grad[:,wind[:, 2]]*self.grad[:,wind[:, 3]]
-        b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
+        self.b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
 
         dwi_ = self.vectorize()
-        init = np.matmul(np.linalg.pinv(b), np.log(dwi_))
-        shat = np.exp(np.matmul(b, init))
+        init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
+        shat = np.exp(np.matmul(self.b, init))
 
         print('...fitting with wlls')
         inputs = tqdm(range(0, dwi_.shape[1]))
         num_cores = multiprocessing.cpu_count()
-        dt = Parallel(n_jobs=num_cores,prefer='processes')\
-            (delayed(self.wlls)(shat[:,i], dwi_[:,i], b) for i in inputs)
-        dt = np.reshape(dt, (dwi_.shape[1], b.shape[1])).T
-
-        s0 = np.exp(dt[0,:])
-        dt = dt[1:,:]
-        D_apprSq = 1/(np.sum(dt[(0,3,5),:], axis=0)/3)**2
-        dt[6:,:] = dt[6:,:]*np.tile(D_apprSq, (15,1))
-        return dt, s0, b
+        self.dt = Parallel(n_jobs=num_cores,prefer='processes')\
+            (delayed(self.wlls)(shat[:,i], dwi_[:,i], self.b) for i in inputs)
+        self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
+        self.s0 = np.exp(self.dt[0,:])
+        self.dt = self.dt[1:,:]
+        D_apprSq = 1/(np.sum(self.dt[(0,3,5),:], axis=0)/3)**2
+        self.dt[6:,:] = self.dt[6:,:]*np.tile(D_apprSq, (15,1))
