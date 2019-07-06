@@ -250,6 +250,7 @@ class DWI(object):
         self.dt = self.dt[1:,:]
         D_apprSq = 1/(np.sum(self.dt[(0,3,5),:], axis=0)/3)**2
         self.dt[6:,:] = self.dt[6:,:]*np.tile(D_apprSq, (15,1))
+        return self.dt
 
     def fibonacciSphere(self, samples=1, randomize=True):
         """
