@@ -8,6 +8,9 @@ import multiprocessing
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
+# Define the lowest number possible before it is considred a zero
+minZero = 1e-8
+
 class DWI(object):
     def __init__(self, imPath):
         if os.path.exists(imPath):
@@ -379,3 +382,47 @@ class DWI(object):
         rk = self.vectorize(rk, self.mask)
         mk = self.vectorize(mk, self.mask)
         return md, rd, ad, fa, fe, trace, mk, ak, rk
+
+    def findViols(self, img, c=[0, 1, 0]):
+        """
+        Returns a 3D violation map of voxels that violate constraints\
+        Classification: Method
+
+        Usage
+        -----
+        map = findViols(img, [0 1 0]
+
+        Parameters
+        ----------
+        img: 3D metric array such as mk or fa
+        c:   [3 x 1] vector that toggles which constraints to check
+             c[0]: Check D < 0 constraint
+             c[1]: Check K < 0 constraint
+             c[2]: Check K > 3/(b*D) constraint
+
+        Returns
+        -------
+        map: 3D array containing locations of voxels that incur directional violations
+
+        """
+        if c == None:
+            c = [0, 0, 0]
+
+        nVoxels = np.prod(img.shape)
+        sumViols = np.zeros(nVoxels)
+        maxB = self.maxBval()
+        adc = self.diffusionCoeff(self.dt[:6], dirs)
+        akc = self.kurtosisCoeff(self.dt, dirs)
+        nDirs = dirs.shape[0]
+        tmp = np.zeros(3)
+        for i in range(nVoxels):
+            # C[0]: D < 0
+            tmp[0] = np.size(np.nonzero(adc[:, i] < minZero))
+            # C[1]: K < 0
+            tmp[1] = np.size(np.nonzero(akc[:, i] < minZero))
+            #c[2]:
+            tmp[2] = np.size(np.nonzero(akc[:, i] > (3/adc[:, i])))
+            sumViols[i] = tmp[0] + tmp[1] + tmp[2]
+
+
+
