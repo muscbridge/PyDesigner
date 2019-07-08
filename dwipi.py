@@ -176,7 +176,8 @@ class DWI(object):
 
         Usage
         -----
-        vec = dwi.vectorize()
+        vec = dwi.vectorize(img) if there's no mask
+        vec = dwi.vectorize(img, mask) if there's a mask
 
         Returns
         -------
