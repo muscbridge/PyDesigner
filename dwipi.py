@@ -199,59 +199,6 @@ class DWI(object):
                 s[i,:] = np.ma.ravel(maskind, order='F').data
         return np.squeeze(s)
 
-    def wlls(self, shat, dwi, b):
-        # compute a wlls fit using weights from inital fit shat
-        w = np.diag(shat)
-        dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
-        # for constrained fitting I'll need to modify this line. It is much slower than pinv so lets ignore for now.
-        #dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
-        #     method='bvls', tol=1e-12, max_iter=22000, lsq_solver='exact')
-        return dt
-
-    def fit(self):
-        """
-        Returns fitted diffusion or kurtosis tensor
-        :return:
-        """
-        order = np.floor(np.log(np.abs(np.max(self.grad[:,-1])+1))/np.log(10))
-        if order >= 2:
-            self.grad[:, -1] = self.grad[:, -1]/1000
-
-        self.img.astype(np.double)
-        self.img[self.img <= 0] = np.finfo(np.double).eps
-
-        self.grad.astype(np.double)
-        normgrad = np.sqrt(np.sum(self.grad[:,:3]**2, 1))
-        normgrad[normgrad == 0] = 1
-
-        self.grad[:,:3] = self.grad[:,:3]/np.tile(normgrad, (3,1)).T
-        self.grad[np.isnan(self.grad)] = 0
-
-        dcnt, dind = self.createTensorOrder(2)
-        wcnt, wind = self.createTensorOrder(4)
-
-        ndwis = self.img.shape[-1]
-        bs = np.ones((ndwis, 1))
-        bD = np.tile(dcnt,(ndwis, 1))*self.grad[:,dind[:, 0]]*self.grad[:,dind[:, 1]]
-        bW = np.tile(wcnt,(ndwis, 1))*self.grad[:,wind[:, 0]]*self.grad[:,wind[:, 1]]*self.grad[:,wind[:, 2]]*self.grad[:,wind[:, 3]]
-        self.b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
-
-        dwi_ = self.vectorize()
-        init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
-        shat = np.exp(np.matmul(self.b, init))
-
-        print('...fitting with wlls')
-        inputs = tqdm(range(0, dwi_.shape[1]))
-        num_cores = multiprocessing.cpu_count()
-        self.dt = Parallel(n_jobs=num_cores,prefer='processes')\
-            (delayed(self.wlls)(shat[:,i], dwi_[:,i], self.b) for i in inputs)
-        self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
-        self.s0 = np.exp(self.dt[0,:])
-        self.dt = self.dt[1:,:]
-        D_apprSq = 1/(np.sum(self.dt[(0,3,5),:], axis=0)/3)**2
-        self.dt[6:,:] = self.dt[6:,:]*np.tile(D_apprSq, (15,1))
-        return self.dt
-
     def fibonacciSphere(self, samples=1, randomize=True):
         """
         Returns "samples" evenly spaced points on a sphere
@@ -306,3 +253,58 @@ class DWI(object):
         akc = np.matmul(bW, dt[6:])
         akc = (akc * np.tile(md**2, (adc.shape[0], 1)))/(adc**2)
         return akc
+
+    def wlls(self, shat, dwi, b):
+        # compute a wlls fit using weights from inital fit shat
+        w = np.diag(shat)
+        dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
+        # for constrained fitting I'll need to modify this line. It is much slower than pinv so lets ignore for now.
+        #dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
+        #     method='bvls', tol=1e-12, max_iter=22000, lsq_solver='exact')
+        return dt
+
+    def fit(self):
+        """
+        Returns fitted diffusion or kurtosis tensor
+        :return:
+        """
+        order = np.floor(np.log(np.abs(np.max(self.grad[:,-1])+1))/np.log(10))
+        if order >= 2:
+            self.grad[:, -1] = self.grad[:, -1]/1000
+
+        self.img.astype(np.double)
+        self.img[self.img <= 0] = np.finfo(np.double).eps
+
+        self.grad.astype(np.double)
+        normgrad = np.sqrt(np.sum(self.grad[:,:3]**2, 1))
+        normgrad[normgrad == 0] = 1
+
+        self.grad[:,:3] = self.grad[:,:3]/np.tile(normgrad, (3,1)).T
+        self.grad[np.isnan(self.grad)] = 0
+
+        dcnt, dind = self.createTensorOrder(2)
+        wcnt, wind = self.createTensorOrder(4)
+
+        ndwis = self.img.shape[-1]
+        bs = np.ones((ndwis, 1))
+        bD = np.tile(dcnt,(ndwis, 1))*self.grad[:,dind[:, 0]]*self.grad[:,dind[:, 1]]
+        bW = np.tile(wcnt,(ndwis, 1))*self.grad[:,wind[:, 0]]*self.grad[:,wind[:, 1]]*self.grad[:,wind[:, 2]]*self.grad[:,wind[:, 3]]
+        self.b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
+
+        dwi_ = self.vectorize()
+        init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
+        shat = np.exp(np.matmul(self.b, init))
+
+        print('...fitting with wlls')
+        inputs = tqdm(range(0, dwi_.shape[1]))
+        num_cores = multiprocessing.cpu_count()
+        self.dt = Parallel(n_jobs=num_cores,prefer='processes')\
+            (delayed(self.wlls)(shat[:,i], dwi_[:,i], self.b) for i in inputs)
+        self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
+        self.s0 = np.exp(self.dt[0,:])
+        self.dt = self.dt[1:,:]
+        D_apprSq = 1/(np.sum(self.dt[(0,3,5),:], axis=0)/3)**2
+        self.dt[6:,:] = self.dt[6:,:]*np.tile(D_apprSq, (15,1))
+        return self.dt
+
+
