@@ -167,7 +167,7 @@ class DWI(object):
             raise ValueError('createTensorOrder: Please enter valid order values (2 or 4).')
         return cnt, ind
 
-    def vectorize(self):
+    def vectorize(self, dwi, mask):
         """
         Returns vectorized image based on brain mask, requires no input parameters
         If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
@@ -182,20 +182,22 @@ class DWI(object):
         -------
         vec: N X number_of_voxels vector or array, where N is the number of DWI volumes
         """
-        if self.img.ndim == 1:
-            self.img = np.expand_dims(self.img, axis=0)
-        if self.img.ndim == 2:
-            n = self.img.shape[0]
-            s = np.zeros((self.mask.shape[0], self.mask.shape[1], self.mask.shape[2], n), order='F')
+        if mask is None:
+            mask = np.ones((dwi.shape[0], dwi.shape[1], dwi.shape[2]), order='F')
+        if dwi.ndim == 1:
+            dwi = np.expand_dims(dwi, axis=0)
+        if dwi.ndim == 2:
+            n = dwi.shape[0]
+            s = np.zeros((mask.shape[0], mask.shape[1], mask.shape[2], n), order='F')
             for i in range(0, n):
-                s[:,:,:,i] = np.reshape(self.img[i,:], (self.mask.shape), order='F')
-        if self.img.ndim == 3:
-            dwi = np.expand_dims(self.img, axis=-1)
-        if self.img.ndim == 4:
-            s = np.zeros((self.img.shape[-1], np.prod(self.mask.shape).astype(int)), order='F')
-            for i in range(0, self.img.shape[-1]):
-                tmp = self.img[:,:,:,i]
-                maskind = np.ma.array(tmp, mask=self.mask)
+                s[:,:,:,i] = np.reshape(dwi[i,:], (mask.shape), order='F')
+        if dwi.ndim == 3:
+            dwi = np.expand_dims(dwi, axis=-1)
+        if dwi.ndim == 4:
+            s = np.zeros((dwi.shape[-1], np.sum(mask).astype(int)), order='F')
+            for i in range(0, dwi.shape[-1]):
+                tmp = dwi[:,:,:,i]
+                maskind = np.ma.array(tmp, mask=mask)
                 s[i,:] = np.ma.ravel(maskind, order='F').data
         return np.squeeze(s)
 
@@ -310,7 +312,7 @@ class DWI(object):
         bW = np.tile(wcnt,(ndwis, 1))*self.grad[:,wind[:, 0]]*self.grad[:,wind[:, 1]]*self.grad[:,wind[:, 2]]*self.grad[:,wind[:, 3]]
         self.b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
 
-        dwi_ = self.vectorize()
+        dwi_ = self.vectorize(self.img, None)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
 
