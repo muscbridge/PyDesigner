@@ -254,6 +254,25 @@ class DWI(object):
         akc = (akc * np.tile(md**2, (adc.shape[0], 1)))/(adc**2)
         return akc
 
+    def dtiTensorParams(self, nn):
+        # compute dti tensor eigenvalues and eigenvectors and sort them
+        values, vectors = np.linalg.eig(nn)
+        idx = np.argsort(-values)
+        values = -np.sort(-values)
+        vectors = vectors[:, idx]
+        return values, vectors
+
+    def dkiTensorParams(self, v1, dt):
+        # kurtosis tensor parameters use average directional
+        # statistics to approximate ak and rk
+        dirs = np.vstack((v1, -v1))
+        akc = self.kurtosisCoeff(dt, dirs)
+        ak = np.mean(akc)
+        dirs = self.radialSampling(v1, 256).T
+        akc = self.kurtosisCoeff(dt, dirs)
+        rk = np.mean(akc)
+        return ak, rk
+
     def wlls(self, shat, dwi, b):
         # compute a wlls fit using weights from inital fit shat
         w = np.diag(shat)
@@ -307,4 +326,53 @@ class DWI(object):
         self.dt[6:,:] = self.dt[6:,:]*np.tile(D_apprSq, (15,1))
         return self.dt
 
+    def extract(self):
+        # extract all tensor parameters from dt
+        num_cores = multiprocessing.cpu_count()
 
+        print('...extracting dti parameters')
+        DT = np.reshape(
+            np.concatenate((self.dt[0, :], self.dt[1, :], self.dt[2, :], self.dt[1, :], self.dt[3, :], self.dt[4, :], self.dt[2, :], self.dt[4, :], self.dt[5, :])),
+            (3, 3, self.dt.shape[1]))
+
+        # get the trace
+        rdwi = scp.special.expit(np.matmul(self.b[:, 1:], self.dt))
+        B = np.round(-(self.b[:, 0] + self.b[:, 3] + self.b[:, 5]) * 1000)
+        uB = np.unique(B)
+        trace = np.zeros((self.dt.shape[1], uB.shape[0]))
+        for ib in range(0, uB.shape[0]):
+            t = np.where(B == uB[ib])
+            trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
+
+        nvox = self.dt.shape[1]
+        inputs = range(0, nvox)
+        values, vectors = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
+            (delayed(self.dtiTensorParams)(DT[:, :, i]) for i in inputs))
+        values = np.reshape(np.abs(values), (nvox, 3))
+        vectors = np.reshape(vectors, (nvox, 3, 3))
+
+        print('...extracting dki parameters')
+        dirs = np.array(self.fibonacciSphere(256, True))
+        akc = self.kurtosisCoeff(self.dt, dirs)
+        mk = np.mean(akc, 0)
+        ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
+            (delayed(self.dkiTensorParams)(vectors[i, :, 0], self.dt[:, i]) for i in inputs))
+        ak = np.reshape(ak, (nvox))
+        rk = np.reshape(rk, (nvox))
+
+        l1 = self.vectorize(values[:, 0], self.mask)
+        l2 = self.vectorize(values[:, 1], self.mask)
+        l3 = self.vectorize(values[:, 2], self.mask)
+        v1 = self.vectorize(vectors[:, :, 0].T, self.mask)
+
+        md = (l1 + l2 + l3) / 3
+        rd = (l2 + l3) / 2
+        ad = l1
+        fa = np.sqrt(1 / 2) * np.sqrt((l1 - l2) ** 2 + (l2 - l3) ** 2 + (l3 - l1) ** 2) / np.sqrt(
+            l1 ** 2 + l2 ** 2 + l3 ** 2)
+        trace = self.vectorize(trace.T, self.mask)
+        fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1], fa * v1[:, :, :, 2]), axis=3))
+        ak = self.vectorize(ak, self.mask)
+        rk = self.vectorize(rk, self.mask)
+        mk = self.vectorize(mk, self.mask)
+        return md, rd, ad, fa, fe, trace, mk, ak, rk
