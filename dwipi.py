@@ -185,6 +185,7 @@ class DWI(object):
         """
         if mask is None:
             mask = np.ones((dwi.shape[0], dwi.shape[1], dwi.shape[2]), order='F')
+        mask = mask.astype(bool)
         if dwi.ndim == 1:
             dwi = np.expand_dims(dwi, axis=0)
         if dwi.ndim == 2:
@@ -200,6 +201,7 @@ class DWI(object):
                 tmp = dwi[:,:,:,i]
                 maskind = np.ma.array(tmp, mask=mask)
                 s[i,:] = np.ma.ravel(maskind, order='F').data
+
         return np.squeeze(s)
 
     def fibonacciSphere(self, samples=1, randomize=True):
@@ -381,7 +383,7 @@ class DWI(object):
         mk = self.vectorize(mk, self.mask)
         return md, rd, ad, fa, fe, trace, mk, ak, rk
 
-    def findViols(self, img, c=[0, 1, 0]):
+    def findViols(self, c=[0, 1, 0]):
         """
         Returns a 3D violation map of voxels that violate constraints.
         Classification: Method
@@ -407,59 +409,162 @@ class DWI(object):
         if c == None:
             c = [0, 0, 0]
 
-        nVoxels = np.prod(img.shape)
-        sumViols = np.zeros(nVoxels)
+        nvox = self.dt.shape[1]
+        sumViols = np.zeros(nvox)
         maxB = self.maxBval()
         adc = self.diffusionCoeff(self.dt[:6], self.dirs)
         akc = self.kurtosisCoeff(self.dt, self.dirs)
         tmp = np.zeros(3)
         print('...computing directional violations')
-        for i in range(nVoxels):
+        for i in range(nvox):
             # C[0]: D < 0
             tmp[0] = np.size(np.nonzero(adc[:, i] < minZero))
             # C[1]: K < 0
             tmp[1] = np.size(np.nonzero(akc[:, i] < minZero))
             #c[2]:
-            tmp[2] = np.size(np.nonzero(akc[:, i] > (3/adc[:, i])))
-            sumViols[i] = tmp[0] + tmp[1] + tmp[2]
+            tmp[2] = np.size(np.nonzero(akc[:, i] > (3/(maxB * adc[:, i]))))
+            sumViols[i] = np.sum(tmp)
 
         map = np.zeros((sumViols.shape))
         if c[0] == 0 and c[1] == 0 and c[2] == 0:
             # [0 0 0]
+            print('0 0 0')
             map = pViols
 
         elif c[0] == 1 and c[1] == 0 and c[2] == 0:
             # [1 0 0]
+            print('1 0 0')
             map = sumViols/dirSample
 
         elif c[0] == 0 and c[1] == 1 and c[2] == 0:
             # [0 1 0]
+            print('0 1 0')
             map = sumViols/dirSample
 
         elif c[0] == 0 and c[1] == 0 and c[2] == 1:
             # [0 0 1]
+            print('0 0 1')
             map = sumViols/dirSample
 
         elif c[0] == 1 and c[1] == 1 and c[2] == 0:
             # [1 1 0]
+            print('1 1 0')
             map = sumVioms/(2 * dirSample)
 
         elif c[0] == 1 and c[1] == 0 and c[2] == 1:
             # [1 0 1]
+            print('1 0 1')
             map = sumViols/(2 * dirSample)
 
-        elif c[0] == 1 and c[1] == 0 and c[2] == 1:
+        elif c[0] == 0 and c[1] == 1 and c[2] == 1:
             # [0 1 1]
+            print('0 1 1')
             map = sumViols / (2 * dirSample)
 
         elif c[0] == 1 and c[1] == 1 and c[2] == 1:
             # [1 1 1]
+            print('1 1 1')
             map = sumViols / (3 * dirSample)
 
+        map = np.reshape(map, nvox)
         map = self.vectorize(map, self.mask)
         return map
 
+    def findVoxelViol(self, adcVox, akcVox, maxB, c):
+        """
+        Returns the proportiona of vioaltions occuring at a voxel.
+        Classification: Method
 
+        Usage
+        -----
+        map = findViols(voxel, [0 1 0]
 
+        Parameters
+        ----------
+        img: 3D metric array such as mk or fa
+        c:   [3 x 1] vector that toggles which constraints to check
+             c[0]: Check D < 0 constraint
+             c[1]: Check K < 0 constraint (default)
+             c[2]: Check K > 3/(b*D) constraint
 
+        Returns
+        -------
+        n: Number ranging from 0 to 1 that indicates proportion of violations occuring at voxel.
 
+        """
+        tmp = np.zeros(3)
+        # C[0]: D < 0
+        tmp[0] = np.size(np.nonzero(adcVox < minZero))
+        # C[1]: K < 0
+        tmp[1] = np.size(np.nonzero(akcVox < minZero))
+        #c[2]:K > 3/(b * D)
+        tmp[2] = np.size(np.nonzero(akcVox > (3/(maxB * adcVox))))
+        sumViols = np.sum(tmp)
+
+        if c[0] == 0 and c[1] == 0 and c[2] == 0:
+            # [0 0 0]
+            n = 0
+
+        elif c[0] == 1 and c[1] == 0 and c[2] == 0:
+            # [1 0 0]
+            n = sumViols/dirSample
+
+        elif c[0] == 0 and c[1] == 1 and c[2] == 0:
+            # [0 1 0]
+            n = sumViols/dirSample
+
+        elif c[0] == 0 and c[1] == 0 and c[2] == 1:
+            # [0 0 1]
+            n = sumViols/dirSample
+
+        elif c[0] == 1 and c[1] == 1 and c[2] == 0:
+            # [1 1 0]
+            n = sumVioms/(2 * dirSample)
+
+        elif c[0] == 1 and c[1] == 0 and c[2] == 1:
+            # [1 0 1]
+            n = sumViols/(2 * dirSample)
+
+        elif c[0] == 0 and c[1] == 1 and c[2] == 1:
+            # [0 1 1]
+            n = sumViols/(2 * dirSample)
+
+        elif c[0] == 1 and c[1] == 1 and c[2] == 1:
+            # [1 1 1]
+            n = sumViols/(3 * dirSample)
+        return n
+
+    def parfindViols(self, c=[0, 0, 0]):
+        if c == None:
+            c = [0, 0, 0]
+        print('...computing directional violations (parallel)')
+        nvox = self.dt.shape[1]
+        map = np.zeros(nvox)
+        maxB = self.maxBval()
+        adc = self.diffusionCoeff(self.dt[:6], self.dirs)
+        akc = self.kurtosisCoeff(self.dt, self.dirs)
+        num_cores = multiprocessing.cpu_count()
+        inputs = tqdm(range(0, nvox))
+        map = Parallel(n_jobs=num_cores, prefer='processes') \
+            (delayed(self.findVoxelViol)(adc[:,i], akc[:,i], maxB, [0, 1, 0]) for i in inputs)
+        map = np.reshape(pViols2, nvox)
+        map = self.vectorize(map,self.mask)
+        return map
+
+    def multiplyMask(self, img):
+        # Returns an image multiplied by the brain mask to remove all values outside the brain
+        return np.multiply(self.mask.astype(bool), img)
+
+    def main(self):
+        self.fit()
+        md, rd, ad, fa, fe, trace, mk, rk, ak = self.extract()
+        map = self.findViols([0, 1, 0])
+        md = self.multiplyMask(md)
+        rd = self.multiplyMask(rd)
+        ad = self.multiplyMask(ad)
+        fa = self.multiplyMask(fa)
+        mk = self.multiplyMask(mk)
+        rk = self.multiplyMask(rk)
+        ak = self.multiplyMask(ak)
+        map = self.multiplyMask(map)
+        return map, md, rd, ad, fa, fe, trace, mk, rk, ak
