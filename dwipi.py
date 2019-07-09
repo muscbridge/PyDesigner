@@ -2,14 +2,15 @@ import numpy as np
 import scipy as scp
 import nibabel as nib
 import os
-import scipy.optimize as opt
-import warnings
 import multiprocessing
 from joblib import Parallel, delayed
 from tqdm import tqdm
 
 # Define the lowest number possible before it is considred a zero
 minZero = 1e-8
+
+# Define number of directions to resample after computing all tensors
+dirSample = 256
 
 class DWI(object):
     def __init__(self, imPath):
@@ -91,10 +92,8 @@ class DWI(object):
         """
         if self.maxBval() <= 1500:
             type = 'dti'
-            print('Maximum BVAL < 1500, image is DTI')
         elif self.maxBval() > 1500:
             type = 'dki'
-            print('Maximum BVAL > 1500, image is DKI')
         else:
             raise ValueError('tensortype: Error in determining maximum BVAL')
         return type
@@ -358,7 +357,8 @@ class DWI(object):
         vectors = np.reshape(vectors, (nvox, 3, 3))
 
         print('...extracting dki parameters')
-        dirs = np.array(self.fibonacciSphere(256, True))
+        dirs = np.array(self.fibonacciSphere(dirSample, True))
+        self.dirs = dirs
         akc = self.kurtosisCoeff(self.dt, dirs)
         mk = np.mean(akc, 0)
         ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
@@ -397,12 +397,13 @@ class DWI(object):
         img: 3D metric array such as mk or fa
         c:   [3 x 1] vector that toggles which constraints to check
              c[0]: Check D < 0 constraint
-             c[1]: Check K < 0 constraint
+             c[1]: Check K < 0 constraint (default)
              c[2]: Check K > 3/(b*D) constraint
 
         Returns
         -------
-        map: 3D array containing locations of voxels that incur directional violations
+        map: 3D array containing locations of voxels that incur directional violations. Voxels with values contain
+             violaions and voxel values represent proportion of directional violations
 
         """
         if c == None:
@@ -411,10 +412,10 @@ class DWI(object):
         nVoxels = np.prod(img.shape)
         sumViols = np.zeros(nVoxels)
         maxB = self.maxBval()
-        adc = self.diffusionCoeff(self.dt[:6], dirs)
-        akc = self.kurtosisCoeff(self.dt, dirs)
-        nDirs = dirs.shape[0]
+        adc = self.diffusionCoeff(self.dt[:6], self.dirs)
+        akc = self.kurtosisCoeff(self.dt, self.dirs)
         tmp = np.zeros(3)
+        print('...computing directional violations')
         for i in range(nVoxels):
             # C[0]: D < 0
             tmp[0] = np.size(np.nonzero(adc[:, i] < minZero))
@@ -423,6 +424,44 @@ class DWI(object):
             #c[2]:
             tmp[2] = np.size(np.nonzero(akc[:, i] > (3/adc[:, i])))
             sumViols[i] = tmp[0] + tmp[1] + tmp[2]
+
+        map = np.zeros((sumViols.shape))
+        if c[0] == 0 and c[1] == 0 and c[2] == 0:
+            # [0 0 0]
+            map = pViols
+
+        elif c[0] == 1 and c[1] == 0 and c[2] == 0:
+            # [1 0 0]
+            map = sumViols/dirSample
+
+        elif c[0] == 0 and c[1] == 1 and c[2] == 0:
+            # [0 1 0]
+            map = sumViols/dirSample
+
+        elif c[0] == 0 and c[1] == 0 and c[2] == 1:
+            # [0 0 1]
+            map = sumViols/dirSample
+
+        elif c[0] == 1 and c[1] == 1 and c[2] == 0:
+            # [1 1 0]
+            map = sumVioms/(2 * dirSample)
+
+        elif c[0] == 1 and c[1] == 0 and c[2] == 1:
+            # [1 0 1]
+            map = sumViols/(2 * dirSample)
+
+        elif c[0] == 1 and c[1] == 0 and c[2] == 1:
+            # [0 1 1]
+            map = sumViols / (2 * dirSample)
+
+        elif c[0] == 1 and c[1] == 1 and c[2] == 1:
+            # [1 1 1]
+            map = sumViols / (3 * dirSample)
+
+        map = self.vectorize(map, self.mask)
+        return map
+
+
 
 
 
