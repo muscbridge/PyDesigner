@@ -357,8 +357,7 @@ class DWI(object):
         vectors = np.reshape(vectors, (nvox, 3, 3))
 
         print('...extracting dki parameters')
-        dirs = np.array(self.fibonacciSphere(dirSample, True))
-        self.dirs = dirs
+        self.dirs = np.array(self.fibonacciSphere(dirSample, True))
         akc = self.kurtosisCoeff(self.dt, dirs)
         mk = np.mean(akc, 0)
         ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
