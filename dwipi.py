@@ -1,5 +1,5 @@
 import numpy as np
-import scipy as scp
+from scipy.special import expit as sigmoid
 import nibabel as nib
 import os
 import multiprocessing
@@ -341,7 +341,7 @@ class DWI(object):
             (3, 3, self.dt.shape[1]))
 
         # get the trace
-        rdwi = scp.special.expit(np.matmul(self.b[:, 1:], self.dt))
+        rdwi = sigmoid(np.matmul(self.b[:, 1:], self.dt))
         B = np.round(-(self.b[:, 0] + self.b[:, 3] + self.b[:, 5]) * 1000)
         uB = np.unique(B)
         trace = np.zeros((self.dt.shape[1], uB.shape[0]))
@@ -385,7 +385,7 @@ class DWI(object):
 
     def findViols(self, img, c=[0, 1, 0]):
         """
-        Returns a 3D violation map of voxels that violate constraints\
+        Returns a 3D violation map of voxels that violate constraints.
         Classification: Method
 
         Usage
@@ -403,7 +403,7 @@ class DWI(object):
         Returns
         -------
         map: 3D array containing locations of voxels that incur directional violations. Voxels with values contain
-             violaions and voxel values represent proportion of directional violations
+             violaions and voxel values represent proportion of directional violations.
 
         """
         if c == None:
