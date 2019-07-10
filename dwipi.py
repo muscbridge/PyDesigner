@@ -358,7 +358,7 @@ class DWI(object):
 
         print('...extracting dki parameters')
         self.dirs = np.array(self.fibonacciSphere(dirSample, True))
-        akc = self.kurtosisCoeff(self.dt, dirs)
+        akc = self.kurtosisCoeff(self.dt, self.dirs)
         mk = np.mean(akc, 0)
         ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.dkiTensorParams)(vectors[i, :, 0], self.dt[:, i]) for i in inputs))
@@ -567,3 +567,16 @@ class DWI(object):
         ak = self.multiplyMask(ak)
         map = self.multiplyMask(map)
         return map, md, rd, ad, fa, fe, trace, mk, rk, ak
+
+    def detectOutliers(self):
+        dir = np.genfromtxt('dirs100000.csv', delimiter=",")
+        nvox = self.dt.shape[1]
+        akc_out = np.zeros(nvox)
+        N = dir.shape[0]
+        nblocks = 10
+        inputs = tqdm(range(nblocks))
+        for i in inputs:
+            akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
+            akc_out = akc < -2 or akc > 10
+        return akc_out
+
