@@ -571,12 +571,13 @@ class DWI(object):
     def detectOutliers(self):
         dir = np.genfromtxt('dirs100000.csv', delimiter=",")
         nvox = self.dt.shape[1]
-        akc_out = np.zeros(nvox)
+        akc_out = np.zeros(nvox, dtype=bool)
         N = dir.shape[0]
         nblocks = 10
         inputs = tqdm(range(nblocks))
         for i in inputs:
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
-            akc_out = akc < -2 or akc > 10
+            akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
+        akc_out = self.multiplyMask(self.vectorize(akc_out, self.mask))
         return akc_out
 
