@@ -547,7 +547,7 @@ class DWI(object):
         map = Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.findVoxelViol)(adc[:,i], akc[:,i], maxB, [0, 1, 0]) for i in inputs)
         map = np.reshape(pViols2, nvox)
-        map = self.multiplyMask(.vectorize(map,self.mask))
+        map = self.multiplyMask(seld.vectorize(map,self.mask))
         return map
 
     def multiplyMask(self, img):
@@ -583,11 +583,49 @@ class DWI(object):
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
             akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
         akc_out = self.multiplyMask(self.vectorize(akc_out, self.mask))
+        self.outliers = akc_out
         return akc_out
 
-    def createMedian(self, img):
-        """
-        Returns median filter object
-        :param img:
-        :return:
-        """
+class medianFilter(object):
+    def __init__(self, img, violmask, th=1, sz=3, conn='face'):
+        assert th > 0, 'Threshold cannot be zero, disable median filtering instead'
+        assert violMask.shape == img.shape, 'Image dimensions not the same as violation mask dimensions'
+        self.Threshold = th
+        self.Size = sz
+        self.Connectivity = conn
+        self.Mask = violmask >= th
+
+        # Get box filter properties
+        centralIdx = np.median(range(sz))
+        d2move = np.int(np.abs(sz - (centralIdx + 1))) # Add 1 to central idx because first index starts with zero
+
+        # Apply a nan padding to all 3 dimensions of the input image and a nan padding to mask. Padding widths is same
+        # distance between centroid of patch to edge. This enables median filtering of edges.
+        img = np.pad(img, d2move, 'constant', constant_values=np.nan)
+        self.Mask = np.pad(self.Mask, d2move, 'constant', constant_values=0)
+
+        (Ix, Iy, Iz) = img.shape
+        (Mx, My, Mz) = self.Mask.shape
+
+    def findReplacement(self, img):
+        violIdx = np.array(np.where(self.Mask))   # Locate coordinates of violations
+
+        inputs = tqdm(range(violIdx.size))
+        for i in range(np.shape[2]):
+            # Index beginning and ending of patch
+            Ib = violIdx[0, i] - d2move
+            Ie = violIdx[0, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
+            Jb = violIdx[1, i] - d2move
+            Je = violIdx[1, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
+            Kb = violIdx[2, i] - d2move
+            Ke = violIdx[2, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
+
+            if self.Connectivity = 'all':
+                patchViol = self.Mask[Ib:Ie, Jb:Je, Kb:Ke]
+                patchImg = img[Ib:Ie, Jb:Je, Kb:Ke]
+                connLimit = 26
+            elif self.Connectivity = 'face':
+                patchViol = self.Mask[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
+                patchViol = np.hstack((patchViol, self.Mask[violIdx[0,i], [Jb, Je], violIdx[2, i]]))
+                patchViol = np.hstack((patchViol, self.Mask[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
+
