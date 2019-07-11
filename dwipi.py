@@ -547,7 +547,7 @@ class DWI(object):
         map = Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.findVoxelViol)(adc[:,i], akc[:,i], maxB, [0, 1, 0]) for i in inputs)
         map = np.reshape(pViols2, nvox)
-        map = self.vectorize(map,self.mask)
+        map = self.multiplyMask(.vectorize(map,self.mask))
         return map
 
     def multiplyMask(self, img):
@@ -565,19 +565,29 @@ class DWI(object):
         mk = self.multiplyMask(mk)
         rk = self.multiplyMask(rk)
         ak = self.multiplyMask(ak)
-        map = self.multiplyMask(map)
         return map, md, rd, ad, fa, fe, trace, mk, rk, ak
 
     def detectOutliers(self):
+        """
+        Uses 100,000 direction in chunks of 10 to iteratively find outliers. Returns a mask of locations where
+        :return:
+        """
         dir = np.genfromtxt('dirs100000.csv', delimiter=",")
         nvox = self.dt.shape[1]
         akc_out = np.zeros(nvox, dtype=bool)
         N = dir.shape[0]
         nblocks = 10
         inputs = tqdm(range(nblocks))
+        print('...computing outliers')
         for i in inputs:
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
             akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
         akc_out = self.multiplyMask(self.vectorize(akc_out, self.mask))
         return akc_out
 
+    def createMedian(self, img):
+        """
+        Returns median filter object
+        :param img:
+        :return:
+        """
