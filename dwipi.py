@@ -621,11 +621,30 @@ class medianFilter(object):
             Ke = violIdx[2, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
 
             if self.Connectivity = 'all':
-                patchViol = self.Mask[Ib:Ie, Jb:Je, Kb:Ke]
-                patchImg = img[Ib:Ie, Jb:Je, Kb:Ke]
+                patchViol = np.delete(np.ravel(self.Mask[Ib:Ie, Jb:Je, Kb:Ke]), 13)     # Remove 14th (centroid) element
+                patchImg = np.delete(np.ravel(img[Ib:Ie, Jb:Je, Kb:Ke]), 13)            # Remove 14th (centroid) element
                 connLimit = 26
             elif self.Connectivity = 'face':
                 patchViol = self.Mask[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
                 patchViol = np.hstack((patchViol, self.Mask[violIdx[0,i], [Jb, Je], violIdx[2, i]]))
                 patchViol = np.hstack((patchViol, self.Mask[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
+                patchImg = img[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
+                patchImg = np.hstack((patchImg, img[violIdx[0, i], [Jb, Je], violIdx[2, i]]))
+                patchImg = np.hstack((patchImg, img[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
+                connLimit = 6
+            else:
+                raise Exception('Connectivity choice "{}" is invalid. Please enter either "all" or "face".'.format(self.Connectivity))
+
+            nVoil = np.sum(patchViol)
+
+            # Here a check is performed to compute the number of violations in a patch. If all voxels are violations,
+            # do nothing. Otherwise, exclude violation voxels from the median calculation
+            if nVoil == connLimt
+                self.PatchIdx = np.nan
+                print('Voxel (%d, %d, %d) surrounded by violations...skipping' %(violIdx[0, i], violIdx[1, i], violIdx[2, i]))
+                continue
+            else:
+                # Sort all patch values in ascending order and remove NaNs
+                patchVals
+
 
