@@ -7,9 +7,10 @@ import time
 import matplotlib.image as mpimg
 
 
-niiPath = '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/dwi_designer.nii'
+niiPath = "D:\SystemFiles\siddh\Box Sync\Home-Work\PARAMAPS\dwi_designer.nii"
 dwi = dp.DWI(niiPath)
-pViols, md, rd, ad, fa, fe, trace, mk, rk, ak = dwi.main()
+dwi.fit()
+viols = dwi.detectOutliers(1)
 
 dwi.fit()
 md, rd, ad, fa, fe, trace, mk, rk, ak = dwi.extract()
