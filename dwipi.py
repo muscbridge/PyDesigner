@@ -5,6 +5,7 @@ import os
 import multiprocessing
 from joblib import Parallel, delayed
 from tqdm import tqdm
+import random as rnd
 
 # Define the lowest number possible before it is considred a zero
 minZero = 1e-8
@@ -589,11 +590,12 @@ class DWI(object):
 class medianFilter(object):
     def __init__(self, img, violmask, th=1, sz=3, conn='face'):
         assert th > 0, 'Threshold cannot be zero, disable median filtering instead'
-        assert violMask.shape == img.shape, 'Image dimensions not the same as violation mask dimensions'
+        assert violmask.shape == img.shape, 'Image dimensions not the same as violation mask dimensions'
         self.Threshold = th
         self.Size = sz
         self.Connectivity = conn
         self.Mask = violmask >= th
+        self.Img = img
 
         # Get box filter properties
         centralIdx = np.median(range(sz))
@@ -601,17 +603,37 @@ class medianFilter(object):
 
         # Apply a nan padding to all 3 dimensions of the input image and a nan padding to mask. Padding widths is same
         # distance between centroid of patch to edge. This enables median filtering of edges.
-        img = np.pad(img, d2move, 'constant', constant_values=np.nan)
+        self.Img = np.pad(self.Img, d2move, 'constant', constant_values=np.nan)
         self.Mask = np.pad(self.Mask, d2move, 'constant', constant_values=0)
 
         (Ix, Iy, Iz) = img.shape
         (Mx, My, Mz) = self.Mask.shape
 
-    def findReplacement(self, img):
-        violIdx = np.array(np.where(self.Mask))   # Locate coordinates of violations
+    def findReplacement(self, bias='left'):
+        """
+        Returns information on replacements for violating voxels
 
-        inputs = tqdm(range(violIdx.size))
-        for i in range(np.shape[2]):
+        Parameters
+        ----------
+        img: input image in 3D
+        bias: 'left', 'right', or 'rand'
+               In the even the number of voxels in patch is even (for median calculation), 'left' will pick a median to
+               the left of mean and 'right' will pick a median to the right of mean. 'rand' will randoms pick a bias.
+
+        Returns
+        -------
+
+        """
+        # Get box filter properties
+        centralIdx = np.median(range(self.Size))
+        d2move = np.int(np.abs(self.Size - (centralIdx + 1)))  # Add 1 to central idx because first index starts with zero
+
+        violIdx = np.array(np.where(self.Mask))   # Locate coordinates of violations
+        self.PatchIdx = np.zeros(violIdx.shape[1])
+
+        inputs = tqdm(range(violIdx.shape[1]))
+        cntSkip = 0
+        for i in inputs:
             # Index beginning and ending of patch
             Ib = violIdx[0, i] - d2move
             Ie = violIdx[0, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
@@ -620,17 +642,17 @@ class medianFilter(object):
             Kb = violIdx[2, i] - d2move
             Ke = violIdx[2, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
 
-            if self.Connectivity = 'all':
+            if self.Connectivity == 'all':
                 patchViol = np.delete(np.ravel(self.Mask[Ib:Ie, Jb:Je, Kb:Ke]), 13)     # Remove 14th (centroid) element
-                patchImg = np.delete(np.ravel(img[Ib:Ie, Jb:Je, Kb:Ke]), 13)            # Remove 14th (centroid) element
+                patchImg = np.delete(np.ravel(self.Img[Ib:Ie, Jb:Je, Kb:Ke]), 13)            # Remove 14th (centroid) element
                 connLimit = 26
-            elif self.Connectivity = 'face':
+            elif self.Connectivity == 'face':
                 patchViol = self.Mask[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
                 patchViol = np.hstack((patchViol, self.Mask[violIdx[0,i], [Jb, Je], violIdx[2, i]]))
                 patchViol = np.hstack((patchViol, self.Mask[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
-                patchImg = img[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
-                patchImg = np.hstack((patchImg, img[violIdx[0, i], [Jb, Je], violIdx[2, i]]))
-                patchImg = np.hstack((patchImg, img[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
+                patchImg = self.Img[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
+                patchImg = np.hstack((patchImg, self.Img[violIdx[0, i], [Jb, Je], violIdx[2, i]]))
+                patchImg = np.hstack((patchImg, self.Img[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
                 connLimit = 6
             else:
                 raise Exception('Connectivity choice "{}" is invalid. Please enter either "all" or "face".'.format(self.Connectivity))
@@ -639,12 +661,39 @@ class medianFilter(object):
 
             # Here a check is performed to compute the number of violations in a patch. If all voxels are violations,
             # do nothing. Otherwise, exclude violation voxels from the median calculation
-            if nVoil == connLimt
-                self.PatchIdx = np.nan
-                print('Voxel (%d, %d, %d) surrounded by violations...skipping' %(violIdx[0, i], violIdx[1, i], violIdx[2, i]))
+            if nVoil == connLimit:
+                self.PatchIdx[i] = np.nan
+                cntSkip = cntSkip + 1
                 continue
             else:
                 # Sort all patch values in ascending order and remove NaNs
-                patchVals
+                patchVals = np.array(np.sort(patchImg[~np.isnan(patchImg)],kind='quicksort'))
+                nVals = patchVals.size
+
+                # Median algorithm dependent on whether number of valid voxels (nVals) is even or odd
+                if np.mod(nVals, 2) == 0:                                       # If even
+                    medianIdxTmp = np.array([nVals/2 - 1, nVals/2],dtype=int)   # Convert to Py index (-1)
+                    if bias == 'left':
+                        medianIdx = medianIdxTmp[0]
+                    elif bias == 'right':
+                        medianIdx = medianIdxTmp[1]
+                    elif bias == 'rand':
+                        medianIdx = medianIdxTmp[rnd.randint(0,1)]
+                else:                                                           # If odd
+                    medianIdx = (nVals-1)/2                                     # Convert to Py index (-1)
+
+                # Now that a the index of a median voxel is located, determine it's value in sorted list and find the
+                # location of that voxel in patch. The median index needs to be relative to patch, not sorted list. In
+                # the event that there are more than one indexes of the same value, use the first one.
+                medianIdxP = np.where(patchImg == patchVals[np.int(medianIdx)])[0][0]
+                self.PatchIdx[i] = medianIdxP
+        self.PatchIdx = self.PatchIdx.astype(int)   # Convert to integer
+        print('%d voxels out of %d were completely surrounded by violations and were ignored' %(cntSkip, violIdx.shape[1]))
+        return self.PatchIdx
+
+
+
+
+
 
 
