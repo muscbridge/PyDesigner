@@ -351,7 +351,7 @@ class DWI(object):
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
 
         nvox = self.dt.shape[1]
-        inputs = range(0, nvox)
+        inputs = tqdm(range(0, nvox))
         values, vectors = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.dtiTensorParams)(DT[:, :, i]) for i in inputs))
         values = np.reshape(np.abs(values), (nvox, 3))
@@ -613,16 +613,19 @@ class medianFilter(object):
         """
         Returns information on replacements for violating voxels
 
+        Usage
+        -----
+        m = med.findReplacement(bias='rand')
+
         Parameters
         ----------
-        img: input image in 3D
         bias: 'left', 'right', or 'rand'
                In the even the number of voxels in patch is even (for median calculation), 'left' will pick a median to
                the left of mean and 'right' will pick a median to the right of mean. 'rand' will randoms pick a bias.
 
         Returns
         -------
-
+        m: Vector containing index of replacement voxel in patch. In conn = 'face' max is 5 and conn =
         """
         # Get box filter properties
         centralIdx = np.median(range(self.Size))
@@ -690,6 +693,8 @@ class medianFilter(object):
         self.PatchIdx = self.PatchIdx.astype(int)   # Convert to integer
         print('%d voxels out of %d were completely surrounded by violations and were ignored' %(cntSkip, violIdx.shape[1]))
         return self.PatchIdx
+
+
 
 
 
