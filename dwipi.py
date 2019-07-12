@@ -690,15 +690,56 @@ class medianFilter(object):
                 # the event that there are more than one indexes of the same value, use the first one.
                 medianIdxP = np.where(patchImg == patchVals[np.int(medianIdx)])[0][0]
                 self.PatchIdx[i] = medianIdxP
-        self.PatchIdx = self.PatchIdx.astype(int)   # Convert to integer
+        self.PatchIdx = np.array(self.PatchIdx, dtype='int')  # Convert to integer
         print('%d voxels out of %d were completely surrounded by violations and were ignored' %(cntSkip, violIdx.shape[1]))
         return self.PatchIdx
 
+    def applyReplacement(self, img):
+        """
+        Applies median filter onto input images.
+        :param img:
+        :return:
+        """
+        # Get box filter properties
+        centralIdx = np.median(range(self.Size))
+        d2move = np.int(
+            np.abs(self.Size - (centralIdx + 1)))  # Add 1 to central idx because first index starts with zero
 
+        # Pad Image
+        img = np.pad(img, d2move, 'constant', constant_values=np.nan)
 
+        violIdx = np.array(np.where(self.Mask))  # Locate coordinates of violations
+        self.PatchIdx = np.array(np.zeros(violIdx.shape[1]),dtype='int')
 
+        inputs = tqdm(range(self.PatchIdx.size))
+        cntSkip = 0
+        for i in inputs:
+            # Index beginning and ending of patch
+            Ib = violIdx[0, i] - d2move
+            Ie = violIdx[0, i] + d2move + 1  # Mitigate Python's [X,Y) indexing
+            Jb = violIdx[1, i] - d2move
+            Je = violIdx[1, i] + d2move + 1  # Mitigate Python's [X,Y) indexing
+            Kb = violIdx[2, i] - d2move
+            Ke = violIdx[2, i] + d2move + 1  # Mitigate Python's [X,Y) indexing
 
+            if self.Connectivity == 'all':
+                patchViol = np.delete(np.ravel(self.Mask[Ib:Ie, Jb:Je, Kb:Ke]), 13)     # Remove 14th (centroid) element
+                patchImg = np.delete(np.ravel(self.Img[Ib:Ie, Jb:Je, Kb:Ke]), 13)            # Remove 14th (centroid) element
+            elif self.Connectivity == 'face':
+                patchViol = self.Mask[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
+                patchViol = np.hstack((patchViol, self.Mask[violIdx[0,i], [Jb, Je], violIdx[2, i]]))
+                patchViol = np.hstack((patchViol, self.Mask[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
+                patchImg = self.Img[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
+                patchImg = np.hstack((patchImg, self.Img[violIdx[0, i], [Jb, Je], violIdx[2, i]]))
+                patchImg = np.hstack((patchImg, self.Img[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
 
+            if np.isnan(self.PatchIdx[i]) == True:
+                continue
+            else:
+                img[violIdx[0, i], violIdx[1, i], violIdx[2, i]] = patchImg[self.PatchIdx[i]]
 
-
-
+        # Unpad image by removing first and last slices along each axis
+        img = np.delete(img, [0, img.shape[0] - 1], axis=0)
+        img = np.delete(img, [0, img.shape[1] - 1], axis=1)
+        img = np.delete(img, [0, img.shape[2] - 1], axis=2)
+        return img
