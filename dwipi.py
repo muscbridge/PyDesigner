@@ -567,7 +567,7 @@ class DWI(object):
         ak = self.multiplyMask(ak)
         return map, md, rd, ad, fa, fe, trace, mk, rk, ak
 
-    def detectOutliers(self):
+    def detectOutliers(self, iter=10):
         """
         Uses 100,000 direction in chunks of 10 to iteratively find outliers. Returns a mask of locations where
         :return:
@@ -577,8 +577,12 @@ class DWI(object):
         akc_out = np.zeros(nvox, dtype=bool)
         N = dir.shape[0]
         nblocks = 10
-        inputs = tqdm(range(nblocks))
-        print('...computing outliers')
+        if iter > nblocks:
+            print('Entered iteration value exceeds 10...resetting to 10')
+            iter = 10
+        else:
+            print('...computing outliers with %d iterations' %(iter))
+        inputs = tqdm(range(iter))
         for i in inputs:
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
             akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
