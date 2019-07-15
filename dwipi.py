@@ -78,6 +78,19 @@ class DWI(object):
         """
         return max(np.unique(self.grad[:,3]))
 
+    def getndirs(self):
+        """
+        Returns the number of gradient directions acquired from scanner
+
+        Usage
+        -----
+        n = dwi.getndirs(), where dwi is the DWI class object
+
+        Retun
+        n: integer quantifying number of directions
+        """
+        return np.sum(self.grad[:, 3] == self.maxBval())
+
     def tensorType(self):
         """
         Returns whether input image is DTI or DKI compatible, requires no input parameters
