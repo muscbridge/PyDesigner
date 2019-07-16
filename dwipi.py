@@ -301,7 +301,7 @@ class DWI(object):
         #     method='bvls', tol=1e-12, max_iter=22000, lsq_solver='exact')
         return dt
 
-    def fit(self):
+    def fit(self, constraints=[0, 1, 0]):
         """
         Returns fitted diffusion or kurtosis tensor
         :return:
@@ -333,6 +333,9 @@ class DWI(object):
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
 
+        # Construct constraints
+        C = self.createConstraints(constraints)
+
         print('...fitting with wlls')
         inputs = tqdm(range(0, dwi_.shape[1]))
         num_cores = multiprocessing.cpu_count()
@@ -344,6 +347,39 @@ class DWI(object):
         D_apprSq = 1/(np.sum(self.dt[(0,3,5),:], axis=0)/3)**2
         self.dt[6:,:] = self.dt[6:,:]*np.tile(D_apprSq, (15,1))
         return self.dt
+
+    def createConstraints(self, constraints=[0, 1, 0]):
+        """
+        Generates constraint array for constrained minimization quadratic programming
+
+        Usage
+        -----
+        C = dwi.createConstraints([0, 1, 0])
+
+        Parameter(s)
+        -----------
+        constraints: [1 X 3] logical vector indicating which constraints out of three to enable
+
+        Return(s)
+        ---------
+        C: array containing constraints to consider during minimization
+           C is shaped [number of constraints enforced * number of directions, 22]
+        """
+        if sum(constraints) >= 0 and sum(constraints) <= 3:
+            dcnt, dind = self.createTensorOrder(2)
+            wcnt, wind = self.createTensorOrder(4)
+            ndirs = self.getndirs()
+            cDirs = self.grad[(self.grad[:, 3] == self.maxBval()), 0:3]
+            C = np.empty((0, 22))
+            if constraints[0] > 0:  # D > 0
+                C = np.append(C, np.hstack((np.zeros((ndirs, 1)),np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]] * cDirs[:, dind[:, 1]],np.zeros((ndirs, 15)))), axis=0)
+            if constraints[1] > 0:  # K > 0
+                C = np.append(C, np.hstack((np.zeros((ndirs, 7)), np.tile(wcnt, [ndirs, 1]) * cDirs[:, wind[:, 0]] * cDirs[:, wind[:, 1]] * cDirs[:,wind[:,2]] * cDirs[:,wind[:,3]])),axis=0)
+            if constraints[2] > 0:  # D < K/3D
+                C = np.append(C, np.hstack((np.zeros((ndirs, 1)), 3 / self.maxBval() * np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]],np.tile(-wcnt, [ndirs, 1]) * cDirs[:, wind[:, 1]] * cDirs[:,wind[:, 2]] * cDirs[:,wind[:, 3]])),axis=0)
+            else:
+                print('Invalid constraints. Please use format "[0, 0, 0]"')
+        return C
 
     def extract(self):
         # extract all tensor parameters from dt
