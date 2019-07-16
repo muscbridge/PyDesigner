@@ -761,7 +761,7 @@ class medianFilter(object):
         img = np.delete(img, [0, img.shape[2] - 1], axis=2)
         return img
 
-def writeNii(map, hdr, outDir):
+def writeNii(map, hdr, outDir, range=None):
     """
     Save nifti files
     :param hdr:
@@ -769,7 +769,11 @@ def writeNii(map, hdr, outDir):
     :param outdir:
     :return:
     """
-    clipped_img = nib.Nifti1Image(map, hdr.affine, hdr.header)
+    if range == None:
+        clipped_img = nib.Nifti1Image(map, hdr.affine, hdr.header)
+    else:
+        clipped_img = clipImage(map, range)
+        clipped_img = nib.Nifti1Image(clipped_img, hdr.affine, hdr.header)
     nib.save(clipped_img, outDir)
 
 def clipImage(img, range):
