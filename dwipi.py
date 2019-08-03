@@ -641,11 +641,6 @@ class DWI(object):
         self.outliers = akc_out
         return self.multiplyMask(self.vectorize(akc_out, self.mask))
 
-    def irlls(self):
-        """Runs IRLLS on outlier voxels and marks those that don't converge
-        """
-
-
 class medianFilter(object):
     def __init__(self, img, violmask, th=1, sz=3, conn='face'):
         assert th > 0, 'Threshold cannot be zero, disable median filtering instead'
