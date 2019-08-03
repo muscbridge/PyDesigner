@@ -160,7 +160,7 @@ class DWI(object):
        14 |   W2333
        15 |   W3000
         """
-        imType = self.tensorType(order)
+        imType = self.tensorType()
         if order is None:
             if imType == 'dti':
                 cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
