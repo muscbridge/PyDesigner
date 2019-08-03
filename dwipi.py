@@ -637,9 +637,14 @@ class DWI(object):
         for i in inputs:
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
             akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
-        akc_out = self.multiplyMask(self.vectorize(akc_out, self.mask))
+            akc_out.astype('bool')
         self.outliers = akc_out
-        return akc_out
+        return self.multiplyMask(self.vectorize(akc_out, self.mask))
+
+    def irlls(self):
+        """Runs IRLLS on outlier voxels and marks those that don't converge
+        """
+
 
 class medianFilter(object):
     def __init__(self, img, violmask, th=1, sz=3, conn='face'):
