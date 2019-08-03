@@ -4,10 +4,13 @@ import nibabel as nib
 import dwipi as dp
 import matplotlib.pyplot as plt
 import time
+import os
 import matplotlib.image as mpimg
 
 
-niiPath = "/Users/sid/Downloads/nii_test/DWI/PARAMAPS/dwi_designer.nii"
+niiPath = 'D:\SystemFiles\siddh\Box Sync\Home-Work\PARAMAPS\dwi_designer.nii'
+savePath = 'D:\SystemFiles\siddh\Downloads\PyDesigner_Test'
+
 dwi = dp.DWI(niiPath)
 dwi.fit()
 viols = dwi.detectOutliers(1)
@@ -22,17 +25,28 @@ rk = dwi.multiplyMask(rk)
 ak = dwi.multiplyMask(rk)
 viols = dwi.multiplyMask(viols)
 
+mdPath = os.path.join(savePath, 'md.nii')
+rdPath = os.path.join(savePath, 'rd.nii')
+adPath = os.path.join(savePath, 'ad.nii')
+faPath = os.path.join(savePath, 'fa.nii')
+fePath = os.path.join(savePath, 'fe.nii')
+tracePath = os.path.join(savePath, 'trace.nii')
+mkPath = os.path.join(savePath, 'mk.nii')
+rkPath = os.path.join(savePath, 'rk.nii')
+akPath = os.path.join(savePath, 'ak.nii')
+violPath = os.path.join(savePath, 'outliers.nii')
 
-dp.writeNii(md, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/md.nii')
-dp.writeNii(rd, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/rd.nii')
-dp.writeNii(ad, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/ad.nii')
-dp.writeNii(fa, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/fa.nii')
-dp.writeNii(fe, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/fe.nii')
-dp.writeNii(trace, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/trace.nii')
-dp.writeNii(mk, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/mk.nii')
-dp.writeNii(rk, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/rk.nii')
-dp.writeNii(ak, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/ak.nii')
-dp.writeNii(viols, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/outliers.nii')
+
+dp.writeNii(md, dwi.hdr, mdPath)
+dp.writeNii(rd, dwi.hdr, rdPath)
+dp.writeNii(ad, dwi.hdr, adPath)
+dp.writeNii(fa, dwi.hdr, faPath)
+dp.writeNii(fe, dwi.hdr, fePath)
+dp.writeNii(trace, dwi.hdr, tracePath)
+dp.writeNii(mk, dwi.hdr, mkPath)
+dp.writeNii(rk, dwi.hdr, rkPath)
+dp.writeNii(ak, dwi.hdr, akPath)
+dp.writeNii(viols, dwi.hdr, violPath)
 
 med = dp.medianFilter(mk, viols, th=1, sz=3, conn='face')
 reps = med.findReplacement(bias='rand')
