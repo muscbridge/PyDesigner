@@ -641,6 +641,33 @@ class DWI(object):
         self.outliers = akc_out
         return self.multiplyMask(self.vectorize(akc_out, self.mask))
 
+    def irlls(self, excludeb0=True, maxiter=25, convcrit=1e-3, mode='DTI', leverage=3, bounds=3):
+        """IRLLS This functions performs outlier detection and robust parameter estimation for diffusion MRI using the
+        iterative reweigthed linear least squares (IRLLS) approach.
+        """
+
+        if not excludeb0.dtype:
+            assert('option: Excludeb0 should be set to True or False')
+
+        if maxiter < 1 or  maxiter > 200:
+            assert('option: Maxiter should be set to a value between 1 and 200')
+
+        if convcrit < 0 or convcrit > 1:
+            assert('option: Maxiter should be set to a value between 1 and 200')
+
+        if not (mode == 'DKI' or mode == 'DTI'):
+            assert('Mode should be set to DKI or DTI)
+
+        if leverage < 0 or leverage > 1:
+            assert('option: Leverage should be set to a value between 0 and 1')
+
+        if bounds < 1:
+            assert('option: Bounds should be set to a value >= 1')
+        img = self.vectorize(self.img)
+        (ndwi, nvox) = shape.img
+
+
+
 class medianFilter(object):
     def __init__(self, img, violmask, th=1, sz=3, conn='face'):
         assert th > 0, 'Threshold cannot be zero, disable median filtering instead'
