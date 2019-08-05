@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.special import expit as sigmoid
+from scipy.optimize import linprog
 import nibabel as nib
 import os
 import multiprocessing
@@ -300,6 +301,21 @@ class DWI(object):
         #dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
         #     method='bvls', tol=1e-12, max_iter=22000, lsq_solver='exact')
         return dt
+
+    def slsqp(self, shat, dwi, b, constraints):
+        """
+        Computes constrained minimization using Least SQuares programming optimization algorithm (SLSQP) at a voxel
+        
+        Return(s)
+        ---------
+        dt: minimized tensor
+        """
+        # Use scipy.optimize.linprog to define inequality constraint matrix
+        C = ({'type': 'ineq',
+              'fun' :   constraints})
+        dt = linprog()
+
+
 
     def fit(self, constraints=[0, 1, 0]):
         """
@@ -620,7 +636,8 @@ class DWI(object):
 
     def outlierdetection(self, iter=10):
         """
-        Uses 100,000 direction in chunks of 10 to iteratively find outliers. Returns a mask of locations where
+        Uses 100,000 direction in chunks of 10 to iteratively find outliers. Returns a mask of locations where said
+        violations occur
         :return:
         """
         dir = np.genfromtxt('dirs100000.csv', delimiter=",")
@@ -640,6 +657,8 @@ class DWI(object):
             akc_out.astype('bool')
         self.outliers = akc_out
         return self.multiplyMask(self.vectorize(akc_out, self.mask))
+
+
 
 class medianFilter(object):
     def __init__(self, img, violmask, th=1, sz=3, conn='face'):
