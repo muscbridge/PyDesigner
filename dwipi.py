@@ -694,7 +694,8 @@ class DWI(object):
                               np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * g[:,dind[:,1]]), np.diag(dcnt)),
                               (1/6)*np.matmul((np.square(np.tile(b, (1, 15))) * g[:,wind[:,0]] * g[:,wind[:,1]] * g[:,wind[:,2]] * g[:,wind[:,3]]),
                                               np.diag(wcnt))))
-        
+        nparam = bmat.shape[1]
+        ndof = ndwi - nparam
 
 
 class medianFilter(object):
