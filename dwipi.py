@@ -697,6 +697,18 @@ class DWI(object):
         nparam = bmat.shape[1]
         ndof = ndwi - nparam
 
+        # Initialization
+        b0_pos = np.zeros(b.shape,dtype=bool)
+        if excludeb0:
+            if self.maxBval() < 10000:
+                b0_pos = b < 10
+            else:
+                b0_pos = b < 10000
+
+        reject = np.zeros(dwi.shape, dtype=bool)
+        dt = np.zeros((nparam, nvox))
+        fa = np.zeros((nvox, 1))
+        md = np.zeros((nvox, 1))
 
 class medianFilter(object):
     def __init__(self, img, violmask, th=1, sz=3, conn='face'):
