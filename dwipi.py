@@ -33,7 +33,7 @@ class DWI(object):
             maskPath = os.path.join(path,'brain_mask.nii')
             if os.path.exists(maskPath):
                 tmp = nib.load(maskPath)
-                self.mask = np.array(tmp.dataobj)
+                self.mask = np.array(tmp.dataobj).astype(bool)
                 self.maskStatus = True
                 print('Found brain mask')
             else:
@@ -181,7 +181,7 @@ class DWI(object):
             raise ValueError('createTensorOrder: Please enter valid order values (2 or 4).')
         return cnt, ind
 
-    def vectorize(self, dwi, mask):
+    def vectorize(self, img, mask):
         """
         Returns vectorized image based on brain mask, requires no input parameters
         If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
@@ -198,24 +198,24 @@ class DWI(object):
         vec: N X number_of_voxels vector or array, where N is the number of DWI volumes
         """
         if mask is None:
-            mask = np.ones((dwi.shape[0], dwi.shape[1], dwi.shape[2]), order='F')
+            mask = np.ones((img.shape[0], img.shape[1], img.shape[2]), order='F')
         mask = mask.astype(bool)
-        if dwi.ndim == 1:
-            dwi = np.expand_dims(dwi, axis=0)
-        if dwi.ndim == 2:
-            n = dwi.shape[0]
+        if img.ndim == 1:
+            img = np.expand_dims(img, axis=0)
+        if img.ndim == 2:
+            n = img.shape[0]
             s = np.zeros((mask.shape[0], mask.shape[1], mask.shape[2], n), order='F')
             for i in range(0, n):
-                s[:,:,:,i] = np.reshape(dwi[i,:], (mask.shape), order='F')
-        if dwi.ndim == 3:
-            dwi = np.expand_dims(dwi, axis=-1)
-        if dwi.ndim == 4:
-            s = np.zeros((dwi.shape[-1], np.sum(mask).astype(int)), order='F')
-            for i in range(0, dwi.shape[-1]):
-                tmp = dwi[:,:,:,i]
-                maskind = np.ma.array(tmp, mask=mask)
-                s[i,:] = np.ma.ravel(maskind, order='F').data
-
+                s[mask, i] = img[i,:]
+        if img.ndim == 3:
+            img = np.expand_dims(img, axis=-1)
+        if img.ndim == 4:
+            s = np.zeros((img.shape[-1], np.sum(mask).astype(int)), order='F')
+            for i in range(0, img.shape[-1]):
+                tmp = img[:,:,:,i]
+                # Compressed returns non-masked area, so invert the mask first
+                maskind = np.ma.array(tmp, mask=np.logical_not(mask))
+                s[i,:] = np.ma.compressed(maskind)
         return np.squeeze(s)
 
     def fibonacciSphere(self, samples=1, randomize=True):
