@@ -656,14 +656,14 @@ class DWI(object):
             assert('option: Maxiter should be set to a value between 1 and 200')
 
         if not (mode == 'DKI' or mode == 'DTI'):
-            assert('Mode should be set to DKI or DTI)
+            assert('Mode should be set to DKI or DTI')
 
         if leverage < 0 or leverage > 1:
             assert('option: Leverage should be set to a value between 0 and 1')
 
         if bounds < 1:
             assert('option: Bounds should be set to a value >= 1')
-        img = self.vectorize(self.img)
+        img = self.vectorize(self.img, self.mask)
         (ndwi, nvox) = shape.img
 
 
