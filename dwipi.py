@@ -667,6 +667,8 @@ class DWI(object):
         # Vectorize DWI
         dwi = self.vectorize(self.img, self.mask)
         (ndwi, nvox) = dwi.shape
+        b = self.grad[:, 3].reshape((ndwi,1))
+        g = self.grad[:, 0:3]
 
         # Apply Scaling
         scaling = False
@@ -682,6 +684,17 @@ class DWI(object):
             dwi[dwi < sc/1000] = sc/1000
             dwi = dwi * 1000 / sc
 
+        # Create B-matrix
+        (dcnt, dind) = self.createTensorOrder(2)
+        if mode = 'DTI':
+            bmat = np.hstack((np.ones((ndwi, 1)), np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * g[:,dind[:,1]]), np.diag(dcnt))))
+        else:
+            (wcnt, wind) = self.createTensorOrder(4)
+            bmat = np.hstack((np.ones((ndwi,1)),
+                              np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * g[:,dind[:,1]]), np.diag(dcnt)),
+                              (1/6)*np.matmul((np.square(np.tile(b, (1, 15))) * g[:,wind[:,0]] * g[:,wind[:,1]] * g[:,wind[:,2]] * g[:,wind[:,3]]),
+                                              np.diag(wcnt))))
+        
 
 
 class medianFilter(object):
