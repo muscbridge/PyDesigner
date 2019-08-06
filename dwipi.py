@@ -76,7 +76,7 @@ class DWI(object):
         a = dwi.maxBval(), where dwi is the DWI class object
 
         """
-        return max(np.unique(self.grad[:,3]))
+        return max(np.unique(self.grad[:,3])).astype(int)
 
     def getndirs(self):
         """
@@ -663,8 +663,24 @@ class DWI(object):
 
         if bounds < 1:
             assert('option: Bounds should be set to a value >= 1')
-        img = self.vectorize(self.img, self.mask)
-        (ndwi, nvox) = shape.img
+
+        # Vectorize DWI
+        dwi = self.vectorize(self.img, self.mask)
+        (ndwi, nvox) = dwi.shape
+
+        # Apply Scaling
+        scaling = False
+        if np.sum(dwi < 1)/np.size(dwi) < 0.001:
+            dwi[dwi < 1] = 1
+        else:
+            scaling = True
+            if self.maxBval() < 10000:
+                tmp = dwi[dwi < 0.05]
+            else:
+                tmp = dwi[dwi < 50]
+            sc = np.median(tmp)
+            dwi[dwi < sc/1000] = sc/1000
+            dwi = dwi * 1000 / sc
 
 
 
