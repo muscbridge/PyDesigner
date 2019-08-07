@@ -686,7 +686,7 @@ class DWI(object):
 
         # Create B-matrix
         (dcnt, dind) = self.createTensorOrder(2)
-        if mode = 'DTI':
+        if mode == 'DTI':
             bmat = np.hstack((np.ones((ndwi, 1)), np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * g[:,dind[:,1]]), np.diag(dcnt))))
         else:
             (wcnt, wind) = self.createTensorOrder(4)
@@ -709,6 +709,27 @@ class DWI(object):
         dt = np.zeros((nparam, nvox))
         fa = np.zeros((nvox, 1))
         md = np.zeros((nvox, 1))
+
+        # Attempt basic noise estimation
+        try:
+            sigma
+        except NameError:
+            def estSigma(dwi, bmat):
+                dt_ = np.linalg.lstsq(bmat, np.log(dwi), rcond=None)[0]
+                w = np.exp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
+                dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))), (np.log(dwi) * w), rcond=None)[0]
+                e = np.log(dwi) - np.matmul(bmat, dt_)
+                m = np.median(np.abs((e * w) - np.median(e * w)))
+                sigma_ = np.sqrt(ndwi / ndof) * 1.4826 * m
+                return sigma_
+            sigma_ = np.zeros((nvox,1))
+            inputs = tqdm(range(nvox))
+            sigma_[i] = Parallel(n_jobs=num_cores, prefer='processes') \
+                (delayed(estSigma)(dwi[:, i], bmat) for i in inputs)
+            sigma = np.median(sigma_)
+            sigma = np.tile(sigma,(nvox,1))
+        if scaling:
+            sigma = sigma*1000/sc
 
 class medianFilter(object):
     def __init__(self, img, violmask, th=1, sz=3, conn='face'):
