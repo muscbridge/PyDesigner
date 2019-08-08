@@ -337,7 +337,9 @@ class DWI(object):
         C = self.createConstraints(constraints)
 
         print('...fitting with wlls')
-        inputs = tqdm(range(0, dwi_.shape[1]))
+        inputs = tqdm(range(0, dwi_.shape[1]),
+                      desc='WLLS',
+                      unit='vox')
         num_cores = multiprocessing.cpu_count()
         self.dt = Parallel(n_jobs=num_cores,prefer='processes')\
             (delayed(self.wlls)(shat[:,i], dwi_[:,i], self.b) for i in inputs)
@@ -401,7 +403,9 @@ class DWI(object):
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
 
         nvox = self.dt.shape[1]
-        inputs = tqdm(range(0, nvox))
+        inputs = tqdm(range(0, nvox),
+                      desc='Tensor params',
+                      unit='vox')
         values, vectors = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.dtiTensorParams)(DT[:, :, i]) for i in inputs))
         values = np.reshape(np.abs(values), (nvox, 3))
@@ -633,7 +637,9 @@ class DWI(object):
             iter = 10
         else:
             print('...computing outliers with %d iterations' %(iter))
-        inputs = tqdm(range(iter))
+        inputs = tqdm(range(iter),
+                      desc='AKC Outlier',
+                      unit='blk')
         for i in inputs:
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
             akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
@@ -723,8 +729,11 @@ class DWI(object):
                 sigma_ = np.sqrt(ndwi / ndof) * 1.4826 * m
                 return sigma_
             sigma_ = np.zeros((nvox,1))
-            inputs = tqdm(range(nvox))
-            sigma_[i] = Parallel(n_jobs=num_cores, prefer='processes') \
+            inputs = tqdm(range(nvox),
+                          desc='Noise Estimation',
+                          unit='vox')
+            num_cores = multiprocessing.cpu_count()
+            sigma_ = Parallel(n_jobs=num_cores, prefer='processes') \
                 (delayed(estSigma)(dwi[:, i], bmat) for i in inputs)
             sigma = np.median(sigma_)
             sigma = np.tile(sigma,(nvox,1))
