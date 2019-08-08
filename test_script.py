@@ -13,6 +13,13 @@ savePath = 'D:\SystemFiles\siddh\Downloads\PyDesigner_Test'
 
 dwi = dp.DWI(niiPath)
 dwi.fit()
+excludeb0=True
+maxiter=25
+convcrit=1e-3
+mode='DKI'
+leverage=3
+bounds=3
+reject, dt, conv, fa, md = dwi.irlls()
 viols = dwi.detectOutliers(1)
 md, rd, ad, fa, fe, trace, mk, rk, ak = dwi.extract()
 
