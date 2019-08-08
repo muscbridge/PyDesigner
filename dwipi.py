@@ -712,6 +712,7 @@ class DWI(object):
                 b0_pos = b < 10000
 
         reject = np.zeros(dwi.shape, dtype=bool)
+        conv = np.zeros((nvox, 1))
         dt = np.zeros((nparam, nvox))
         fa = np.zeros((nvox, 1))
         md = np.zeros((nvox, 1))
@@ -721,6 +722,8 @@ class DWI(object):
             sigma
         except NameError:
             def estSigma(dwi, bmat):
+                global conv
+                dwi = np.reshape(dwi, (len(dwi), 1))
                 dt_ = np.linalg.lstsq(bmat, np.log(dwi), rcond=None)[0]
                 w = np.exp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
                 dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))), (np.log(dwi) * w), rcond=None)[0]
@@ -740,20 +743,21 @@ class DWI(object):
         if scaling:
             sigma = sigma*1000/sc
 
-        def outlierHelper(dwi, bmat, sigma):
+        def outlierHelper(dwi, bmat, sigma, b, b0_pos, maxiter=25, convcrit=1e-3, leverage=3, bounds=3):
             # Preliminary rough outlier check
+            dwi = np.reshape(dwi, (len(dwi), 1))
             dwi0 = np.median(dwi[b.reshape(-1)/1000 < 0.01])
             out = dwi > (dwi0 + 3 * sigma)
-            if np.sum(~out[b.reshape(-1) > 0.01]) < (bmat.shape[1] - 1):
+            if np.sum(~out[b.reshape(-1)/1000 > 0.01]) < (bmat.shape[1] - 1):
                 out = np.zeros((out.shape),dtype=bool)
             out[b0_pos.reshape(-1)] = False
-            bmat_i = bmat[~out]
-            dwi = dwi[~out]
+            bmat_i = bmat[~out.reshape(-1)]
+            dwi = dwi[~out.reshape(-1)]
             n_i = dwi.size
             ndof_i = n_i - bmat_i.shape[1]
 
             # WLLS estimation
-            dt_i = np.linalg.lstsq(bmat_i, np.log(dwi), rcond=None)[0].reshape((dt_i.shape[0], 1))
+            dt_i = np.linalg.lstsq(bmat_i, np.log(dwi), rcond=None)[0]
             w = np.exp(np.matmul(bmat_i, dt_i))
             dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi).reshape((dwi.shape[0], 1)) * w),
                                    rcond=None)[0]
@@ -799,19 +803,19 @@ class DWI(object):
                 tmp[residu > upperbound_nonlinear] = True
                 tmp[lev > leverage] = False
                 tmp2 = np.ones(b.shape, dtype=bool)
-                tmp2[~out] = tmp
+                tmp2[~out.reshape(-1)] = tmp
                 tmp2[b0_pos] = False
                 reject = tmp2
             else:
-                tmp2 = np.zeros(size(b), dtype=bool)
-                tmp2[out] = True
+                tmp2 = np.zeros(b.shape, dtype=bool)
+                tmp2[out.reshape(-1)] = True
                 reject = tmp2
 
             # Robust parameter estimation
             keep = ~reject.reshape(-1)
             bmat_i = bmat[keep,:]
             dwi_i = dwi[keep]
-            dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0].reshape((dt_i.shape[0], 1))
+            dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
             w = np.exp(np.matmul(bmat_i, dt_))
             dt = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
                                        rcond=None)[0]
@@ -824,19 +828,18 @@ class DWI(object):
                  (np.sqrt(np.square(eigv[0] - eigv[1]) + np.square(eigv[0] - eigv[2]) + np.square(eigv[1] - eigv[2])) / \
                  np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
             md = np.sum(eigv)/3
-            return reject, dt, conv, fa, md
+            return reject, conv, dt, fa, md
+        inputs = tqdm(range(nvox))
         # (reject, dt, conv, fa, md) = Parallel(n_jobs=num_cores, prefer='processes') \
         #     (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0]) for i in inputs)
         for i in inputs:
-            reject, dt, conv, fa, md = outlierHelper(dwi[:, i], bmat, sigma[i,0])
+            reject[i,:], dt[i,:], conv[i], fa[i], md[i] = outlierHelper(dwi[:, i], bmat, sigma[i,0],  b, b0_pos)
 
         #Unscaling
 
         #Unvectorizing
 
         return reject, dt, conv, fa, md
-
-
 
 
 
