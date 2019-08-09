@@ -332,12 +332,9 @@ class DWI(object):
         bW = np.tile(wcnt,(ndwis, 1))*self.grad[:,wind[:, 0]]*self.grad[:,wind[:, 1]]*self.grad[:,wind[:, 2]]*self.grad[:,wind[:, 3]]
         self.b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
 
-        dwi_ = self.vectorize(self.img, None)
+        dwi_ = self.vectorize(self.img, self.mask)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
-
-        # Construct constraints
-        C = self.createConstraints(constraints)
 
         print('...fitting with wlls')
         inputs = tqdm(range(0, dwi_.shape[1]),
