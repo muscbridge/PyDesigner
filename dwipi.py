@@ -670,6 +670,7 @@ class DWI(object):
         if bounds < 1:
             assert('option: Bounds should be set to a value >= 1')
 
+        print('...iterative reweighted linear least squares')
         # Vectorize DWI
         dwi = self.vectorize(self.img, self.mask)
         (ndwi, nvox) = dwi.shape
@@ -722,7 +723,6 @@ class DWI(object):
             sigma
         except NameError:
             def estSigma(dwi, bmat):
-                global conv
                 dwi = np.reshape(dwi, (len(dwi), 1))
                 dt_ = np.linalg.lstsq(bmat, np.log(dwi), rcond=None)[0]
                 w = np.exp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
@@ -748,6 +748,7 @@ class DWI(object):
             dwi = np.reshape(dwi, (len(dwi), 1))
             dwi0 = np.median(dwi[b.reshape(-1)/1000 < 0.01])
             out = dwi > (dwi0 + 3 * sigma)
+            print('out: ', out.reshape(-1).shape)
             if np.sum(~out[b.reshape(-1)/1000 > 0.01]) < (bmat.shape[1] - 1):
                 out = np.zeros((out.shape),dtype=bool)
             out[b0_pos.reshape(-1)] = False
@@ -810,6 +811,7 @@ class DWI(object):
                 tmp2 = np.zeros(b.shape, dtype=bool)
                 tmp2[out.reshape(-1)] = True
                 reject = tmp2
+            print('reject: ', reject.reshape(-1).shape)
 
             # Robust parameter estimation
             keep = ~reject.reshape(-1)
@@ -819,6 +821,7 @@ class DWI(object):
             w = np.exp(np.matmul(bmat_i, dt_))
             dt = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
                                        rcond=None)[0]
+            print('dt: ', dt.reshape(-1).shape)
             dt_tmp = dt.reshape(-1)
             dt2 = np.array([[dt_tmp[1], dt_tmp[2]/2, dt_tmp[3]],
                    [dt_tmp[2]/2, dt_tmp[4], dt_tmp[5]/2],
@@ -828,12 +831,18 @@ class DWI(object):
                  (np.sqrt(np.square(eigv[0] - eigv[1]) + np.square(eigv[0] - eigv[2]) + np.square(eigv[1] - eigv[2])) / \
                  np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
             md = np.sum(eigv)/3
-            return reject, conv, dt, fa, md
-        inputs = tqdm(range(nvox))
-        # (reject, dt, conv, fa, md) = Parallel(n_jobs=num_cores, prefer='processes') \
-        #     (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0]) for i in inputs)
+            print('')
+            return reject.reshape(-1), dt.reshape(-1), fa, md
+
+        inputs = tqdm(range(nvox),
+                          desc='Reweighted Fitting',
+                          unit='vox')
+        # (reject, dt, fa, md) = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
+        #     (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
         for i in inputs:
-            reject[i,:], dt[i,:], conv[i], fa[i], md[i] = outlierHelper(dwi[:, i], bmat, sigma[i,0],  b, b0_pos)
+            print(i)
+            (reject[:,i], dt[:,i], fa[i], md[i]) = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
+
 
         #Unscaling
 
