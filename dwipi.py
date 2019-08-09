@@ -851,6 +851,17 @@ class DWI(object):
 
         return reject, dt, fa, md
 
+    def irllsviolmask(self, reject):
+        img = self.vectorize(reject, self.mask)
+        (ndwi, nvox) = img.shape
+        b = np.array(self.grad[:, 3])
+        b = np.reshape(b, (len(b), 1))
+        b_pos = ~(b < 10).reshape(-1)
+        img = img[b_pos, :]
+        propViol = np.sum(img,axis=0).astype(int) / np.sum(b_pos)
+        propViol = self.vectorize(propViol, self.mask)
+        return propViol
+
 class medianFilter(object):
     def __init__(self, img, violmask, th=1, sz=3, conn='face'):
         assert th > 0, 'Threshold cannot be zero, disable median filtering instead'
