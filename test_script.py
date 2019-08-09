@@ -12,14 +12,14 @@ niiPath = 'D:\SystemFiles\siddh\Box Sync\Home-Work\PARAMAPS\dwi_designer.nii'
 savePath = 'D:\SystemFiles\siddh\Downloads\PyDesigner_Test'
 
 dwi = dp.DWI(niiPath)
-dwi.fit()
-excludeb0=True
-maxiter=25
-convcrit=1e-3
-mode='DKI'
-leverage=3
-bounds=3
-reject, dt, conv, fa, md = dwi.irlls()
+# excludeb0=True
+# maxiter=25
+# convcrit=1e-3
+# mode='DKI'
+# leverage=3
+# bounds=3
+reject, dt, fa, md = dwi.irlls()
+propviol = dwi.irllsviolmask(reject)
 viols = dwi.detectOutliers(1)
 md, rd, ad, fa, fe, trace, mk, rk, ak = dwi.extract()
 
@@ -53,7 +53,7 @@ dp.writeNii(trace, dwi.hdr, tracePath)
 dp.writeNii(mk, dwi.hdr, mkPath)
 dp.writeNii(rk, dwi.hdr, rkPath)
 dp.writeNii(ak, dwi.hdr, akPath)
-dp.writeNii(viols, dwi.hdr, violPath)
+dp.writeNii(propviol, dwi.hdr, violPath)
 
 med = dp.medianFilter(mk, viols, th=1, sz=3, conn='face')
 reps = med.findReplacement(bias='rand')
