@@ -603,7 +603,7 @@ class DWI(object):
         map = Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.findVoxelViol)(adc[:,i], akc[:,i], maxB, [0, 1, 0]) for i in inputs)
         map = np.reshape(pViols2, nvox)
-        map = self.multiplyMask(seld.vectorize(map,self.mask))
+        map = self.multiplyMask(self.vectorize(map,self.mask))
         return map
 
     def multiplyMask(self, img):
