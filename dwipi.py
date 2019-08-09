@@ -402,7 +402,7 @@ class DWI(object):
 
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
-                      desc='Tensor params',
+                      desc='DTI params',
                       unit='vox')
         values, vectors = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.dtiTensorParams)(DT[:, :, i]) for i in inputs))
@@ -413,6 +413,9 @@ class DWI(object):
         self.dirs = np.array(self.fibonacciSphere(dirSample, True))
         akc = self.kurtosisCoeff(self.dt, self.dirs)
         mk = np.mean(akc, 0)
+        inputs = tqdm(range(0, nvox),
+                      desc='DKI params',
+                      unit='vox')
         ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.dkiTensorParams)(vectors[i, :, 0], self.dt[:, i]) for i in inputs))
         ak = np.reshape(ak, (nvox))
@@ -421,7 +424,7 @@ class DWI(object):
         l1 = self.vectorize(values[:, 0], self.mask)
         l2 = self.vectorize(values[:, 1], self.mask)
         l3 = self.vectorize(values[:, 2], self.mask)
-        v1 = self.vectorize(vectors[:, :, 0].T, self.mask)
+        v1 = self.vectorize(vectors[:, :, 0], self.mask)
 
         md = (l1 + l2 + l3) / 3
         rd = (l2 + l3) / 2
@@ -672,7 +675,8 @@ class DWI(object):
         # Vectorize DWI
         dwi = self.vectorize(self.img, self.mask)
         (ndwi, nvox) = dwi.shape
-        b = self.grad[:, 3].reshape((ndwi,1))
+        b = np.array(self.grad[:, 3])
+        b = np.reshape(b, (len(b), 1))
         g = self.grad[:, 0:3]
 
         # Apply Scaling
@@ -681,7 +685,7 @@ class DWI(object):
             dwi[dwi < 1] = 1
         else:
             scaling = True
-            if self.maxBval() < 10000:
+            if self.maxBval()/1000 < 0.001:
                 tmp = dwi[dwi < 0.05]
             else:
                 tmp = dwi[dwi < 50]
@@ -703,14 +707,14 @@ class DWI(object):
         ndof = ndwi - nparam
 
         # Initialization
-        b0_pos = np.zeros(b.shape,dtype=bool)
+        b0_pos = np.zeros(b.shape,dtype=bool, order='F')
         if excludeb0:
             if self.maxBval() < 10000:
                 b0_pos = b < 10
             else:
                 b0_pos = b < 10000
 
-        reject = np.zeros(dwi.shape, dtype=bool)
+        reject = np.zeros(dwi.shape, dtype=bool, order='F')
         conv = np.zeros((nvox, 1))
         dt = np.zeros((nparam, nvox))
         fa = np.zeros((nvox, 1))
@@ -743,28 +747,27 @@ class DWI(object):
 
         def outlierHelper(dwi, bmat, sigma, b, b0_pos, maxiter=25, convcrit=1e-3, leverage=3, bounds=3):
             # Preliminary rough outlier check
-            dwi = np.reshape(dwi, (len(dwi), 1))
-            dwi0 = np.median(dwi[b.reshape(-1)/1000 < 0.01])
-            out = dwi > (dwi0 + 3 * sigma)
-            print('out: ', out.reshape(-1).shape)
+            dwi_i = dwi.reshape((len(dwi), 1))
+            dwi0 = np.median(dwi_i[b.reshape(-1)/1000 < 0.01])
+            out = dwi_i > (dwi0 + 3 * sigma)
             if np.sum(~out[b.reshape(-1)/1000 > 0.01]) < (bmat.shape[1] - 1):
                 out = np.zeros((out.shape),dtype=bool)
             out[b0_pos.reshape(-1)] = False
             bmat_i = bmat[~out.reshape(-1)]
-            dwi = dwi[~out.reshape(-1)]
-            n_i = dwi.size
+            dwi_i = dwi_i[~out.reshape(-1)]
+            n_i = dwi_i.size
             ndof_i = n_i - bmat_i.shape[1]
 
             # WLLS estimation
-            dt_i = np.linalg.lstsq(bmat_i, np.log(dwi), rcond=None)[0]
+            dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
             w = np.exp(np.matmul(bmat_i, dt_i))
-            dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi).reshape((dwi.shape[0], 1)) * w),
+            dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
                                    rcond=None)[0]
             dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
 
             # Goodness-of-fit
-            residu = np.log(dwi.reshape((dwi.shape[0],1))) - np.log(dwi_hat)
-            residu_ = dwi.reshape((dwi.shape[0],1)) - dwi_hat
+            residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
+            residu_ = dwi_i.reshape((dwi_i.shape[0],1)) - dwi_hat
             chi2 = np.sum((residu_ * residu_) / np.square(sigma)) / (ndof_i) -1
             gof = np.abs(chi2) < 3 * np.sqrt(2/ndof_i)
             gof2 = gof
@@ -776,12 +779,12 @@ class DWI(object):
                 GMM = np.square(C) / np.square(np.square(residu) + np.square(C))
                 w = np.sqrt(GMM) * dwi_hat
                 dt_imin1 = dt_i
-                dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi).reshape((dwi.shape[0], 1)) * w),
+                dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
                                        rcond=None)[0]
                 dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
                 dwi_hat[dwi_hat < 1] = 1
-                residu = np.log(dwi.reshape((dwi.shape[0],1))) - np.log(dwi_hat)
-                residu_ = dwi.reshape((dwi.shape[0], 1)) - dwi_hat
+                residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
+                residu_ = dwi_i.reshape((dwi_i.shape[0], 1)) - dwi_hat
 
                 # Convergence check
                 iter = iter + 1
@@ -797,19 +800,18 @@ class DWI(object):
                 lowerbound_linear = -bounds * np.sqrt(1 -lev) * sigma / dwi_hat
                 upperbound_nonlinear = bounds * np.sqrt(1 - lev) * sigma
 
-                tmp = np.zeros(residu.shape, dtype=bool)
+                tmp = np.zeros(residu.shape, dtype=bool, order='F')
                 tmp[residu < lowerbound_linear] = True
                 tmp[residu > upperbound_nonlinear] = True
                 tmp[lev > leverage] = False
-                tmp2 = np.ones(b.shape, dtype=bool)
+                tmp2 = np.ones(b.shape, dtype=bool, order='F')
                 tmp2[~out.reshape(-1)] = tmp
                 tmp2[b0_pos] = False
                 reject = tmp2
             else:
-                tmp2 = np.zeros(b.shape, dtype=bool)
+                tmp2 = np.zeros(b.shape, dtype=bool, order='F')
                 tmp2[out.reshape(-1)] = True
                 reject = tmp2
-            print('reject: ', reject.reshape(-1).shape)
 
             # Robust parameter estimation
             keep = ~reject.reshape(-1)
@@ -817,9 +819,8 @@ class DWI(object):
             dwi_i = dwi[keep]
             dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
             w = np.exp(np.matmul(bmat_i, dt_))
-            dt = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
+            dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
                                        rcond=None)[0]
-            print('dt: ', dt.reshape(-1).shape)
             dt_tmp = dt.reshape(-1)
             dt2 = np.array([[dt_tmp[1], dt_tmp[2]/2, dt_tmp[3]],
                    [dt_tmp[2]/2, dt_tmp[4], dt_tmp[5]/2],
@@ -829,26 +830,25 @@ class DWI(object):
                  (np.sqrt(np.square(eigv[0] - eigv[1]) + np.square(eigv[0] - eigv[2]) + np.square(eigv[1] - eigv[2])) / \
                  np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
             md = np.sum(eigv)/3
-            print('')
             return reject.reshape(-1), dt.reshape(-1), fa, md
 
         inputs = tqdm(range(nvox),
                           desc='Reweighted Fitting',
                           unit='vox')
-        # (reject, dt, fa, md) = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
-        #     (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
-        for i in inputs:
-            print(i)
-            (reject[:,i], dt[:,i], fa[i], md[i]) = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
-
-
+        (reject, dt, fa, md) = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
+            (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
+        # for i in inputs:
+        #     reject[:,i], dt[:,i], fa[i], md[i] = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
+        dt = np.array(dt)
         #Unscaling
-
+        if scaling:
+            dt[1, :] = dt[1, :] + np.log(sc/1000)
         #Unvectorizing
+        reject = self.vectorize(np.array(reject).T, self.mask)
+        fa = self.vectorize(np.array(fa), self.mask)
+        md = self.vectorize(np.array(md), self.mask)
 
-        return reject, dt, conv, fa, md
-
-
+        return reject, dt, fa, md
 
 class medianFilter(object):
     def __init__(self, img, violmask, th=1, sz=3, conn='face'):
