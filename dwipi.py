@@ -351,8 +351,6 @@ class DWI(object):
         self.dt = self.dt[1:,:]
         D_apprSq = 1/(np.sum(self.dt[(0,3,5),:], axis=0)/3)**2
         self.dt[6:,:] = self.dt[6:,:]*np.tile(D_apprSq, (15,1))
-        self.img = None  # Remove input image to free memory
-        return self.dt
 
     def createConstraints(self, constraints=[0, 1, 0]):
         """
