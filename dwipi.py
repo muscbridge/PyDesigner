@@ -840,6 +840,7 @@ class DWI(object):
         # for i in inputs:
         #     reject[:,i], dt[:,i], fa[i], md[i] = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
         dt = np.array(dt)
+        self.dt = dt
         #Unscaling
         if scaling:
             dt[1, :] = dt[1, :] + np.log(sc/1000)
