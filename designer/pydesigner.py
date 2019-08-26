@@ -140,3 +140,61 @@ parser.add_argument('--pe_dir', metavar='<phase encoding direction>',
 # Use argument specification to actually get args
 args = parser.parse_args()
 
+# Check to make sure there are not incompatible args, error out if so
+
+errmsg = ''
+warningmsg = ''
+msgstart = 'Incompatible arguments: '
+override = '; overriding with '
+# --rpe*
+if args.rpe_pair and args.rpe_all:
+    errmsg+=msgstart+'--rpe_pair and --rpe_all\n'
+
+# DKI
+if not args.DKI:
+    nodki='no --DKI but uses '
+    if args.WMTI:
+        warningmsg+=msgstart+nodki+'--WMTI'+override+'--DKI\n'
+        args.DKI = True
+    if args.kcumulants:
+        warningmsg+=msgstart+nodki+'--kcumulants'+override+'--DKI\n'
+        args.DKI = True
+    if args.fit_constraints != '0,1,0':
+        warningmsg+=msgstart+nodki+'--fit_constraints'+override+'--DKI\n'
+        args.DKI = True
+
+# Warn if --standard and cherry-picking
+if args.standard:
+    stdmsg= '--standard but cherry-picking '
+    override='; overriding with standard pipeline.\n'
+    if args.denoise:
+        warningmsg+=msgstart+stdmsg+'--denoise'+override
+    if args.eddy:
+        warningmsg+=msgstart+stdmsg+'--eddy'+override
+    if args.b1correct:
+        warningmsg+=msgstart+stdmsg+'--b1correct'+override
+    if args.smooth:
+        warningmsg+=msgstart+stdmsg+'--smooth'+override
+    if args.DTI:
+        warningmsg+=msgstart+stdmsg+'--DTI'+override
+    if args.DKI:
+        warningmsg+=msgstart+stdmsg+'--DKI'+override
+    # Coerce all of the above to be true
+    args.denoise = True
+    args.eddy = True
+    args.b1correct = True
+    args.smooth = True
+    args.DTI = True
+    args.DKI = True
+
+# Coerce DTI if given DKI; not warning-worthy since this step is obvious
+if args.DKI:
+    args.DTI = True
+
+# Print warnings
+if warningmsg is not '':
+    print(warningmsg)
+
+# If things are unsalvageable, point out all errors and quit
+if errmsg is not '':
+    raise Exception(errmsg)
