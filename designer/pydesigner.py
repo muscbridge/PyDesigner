@@ -177,7 +177,9 @@ parser.add_argument('--pe_dir', metavar='<phase encoding direction>',
 # Use argument specification to actually get args
 args = parser.parse_args()
 
-# Check to make sure there are not incompatible args, error out if so
+#---------------------------------------------------------------------
+# Validate Arguments
+#----------------------------------------------------------------------
 
 errmsg = ''
 warningmsg = ''
