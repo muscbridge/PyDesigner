@@ -303,12 +303,14 @@ class DWI(object):
         # compute a wlls fit using weights from inital fit shat
         w = np.diag(shat)
         dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
+        # Constrained fitting
+        dt = opt.linprog(c=np.matmul(w, b), np.matmul(w, np.log(dwi)), A_eq=)
         # for constrained fitting I'll need to modify this line. It is much slower than pinv so lets ignore for now.
         #dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
         #     method='bvls', tol=1e-12, max_iter=22000, lsq_solver='exact')
         return dt
 
-    def fit(self, constraints=[0, 1, 0]):
+    def fit(self, constraints=[0, 1, 0], reject=None):
         """
         Returns fitted diffusion or kurtosis tensor
         :return:
@@ -337,8 +339,12 @@ class DWI(object):
         self.b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
 
         dwi_ = self.vectorize(self.img, self.mask)
+        reject_ = self.vectorize(reject, self.mask)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
+
+        # Create constraints
+        C = self.createConstraints(constraints)
 
         print('...fitting with wlls')
         inputs = tqdm(range(0, dwi_.shape[1]),
