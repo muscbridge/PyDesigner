@@ -10,7 +10,8 @@ import shutil # which
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy # array, ndarray
-import preprocessing
+from preprocessing import util, smoothing
+DWIFile = util.DWIFile
 
 # Locate mrtrix3 via which-ing dwidenoise
 dwidenoise_location = shutil.which('dwidenoise')
