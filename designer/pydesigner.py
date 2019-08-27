@@ -239,5 +239,10 @@ if errmsg is not '':
     raise Exception(errmsg)
 
 # Begin importing important data files
-filetable = {'dwi' : preprocessing.util.DWIFile(args.dwi)}
-filetable['dwi'].print(json=True)
+filetable = {'dwi' : DWIFile(args.dwi)}
+if args.rpe_pair:
+    filetable['rpe_pair'] = DWIFile(args.rpe_pair)
+if args.rpe_all:
+    filetable['rpe_all'] = DWIFile(args.rpe_all)
+
+# TODO: add check for the rpe specifiers so we fail BEFORE running things
