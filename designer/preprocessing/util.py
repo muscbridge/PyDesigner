@@ -122,6 +122,40 @@ class DWIFile:
             with open(op.join(self.path, self.name + '.json')) as f:
                 self.json = json.load(f)
 
+    def getName(self):
+        """Get the name without the path for this dwifile
+
+        Returns
+        -------
+        string
+            Name of the file without extensions
+        """
+        return self.name
+
+    def getPath(self):
+        """Get the path without the name for this dwifile
+
+        Returns
+        -------
+        string
+            The path to this file
+        """
+        return self.path
+
+    def getFull(self):
+        """Get the path and name combined for thsi dwifile
+
+        Returns
+        -------
+        string
+            The full path and filename with extension
+        """
+
+        if '.nii' in self.ext:
+            return op.join(self.path, self.name + '.nii')
+        else:
+            return op.join(self.path, self.name + '.nii.gz')
+
     def isAcquisition(self):
         """Check if this object is an acquisition
 

@@ -5,7 +5,8 @@ Runs the PyDesigner pipeline
 #---------------------------------------------------------------------- 
 # Package Management
 #----------------------------------------------------------------------
-import os # path
+import subprocess #subprocess
+import os.path as op # path
 import shutil # which
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
@@ -21,7 +22,7 @@ if dwidenoise_location == None:
         ' to troubleshoot.')
 
 # Extract mrtrix3 path from dwidenoise_location
-mrtrix3path = os.path.dirname(dwidenoise_location)
+mrtrix3path = op.dirname(dwidenoise_location)
 
 # Locate FSL via which-ing fsl
 fsl_location = shutil.which('fsl')
@@ -31,7 +32,7 @@ if fsl_location == None:
         ' to troubleshoot.')
 
 # Extract FSL path from fsl_location
-fslpath = os.path.dirname(fsl_location)
+fslpath = op.dirname(fsl_location)
 
 #---------------------------------------------------------------------- 
 # Parse Arguments
@@ -249,3 +250,32 @@ if args.rpe_all:
     filetable['rpe_all'] = DWIFile(args.rpe_all)
 
 # TODO: add check for the rpe specifiers so we fail BEFORE running things
+
+# Get naming and location information
+dwiname = filetable['dwi'].getName()
+if not args.output:
+    outpath = filetable['dwi'].getPath()
+else:
+    outpath = args.output
+
+# Make the pipeline point to dwi as the last file since it's the only one
+# so far
+filetable['last'] = filetable['dwi']
+
+# Check for and run denoising
+if args.denoise:
+    # hardcoding this to be the initial file per dwidenoise
+    # recommmendation
+    denoised_name = 'd' + filetable['dwi'].getName() + '.nii'
+    denoised = op.join(outpath, denoised_name)
+    # output the noise map even without user permission, space is cheap
+    noisemap_name = 'n' + filetable['dwi'].getName() + '.nii'
+    noisemap = op.join(outpath, noisemap_name)
+    # system call
+    completion = subprocess.run(args=['dwidenoise', '-noise', noisemap,
+                                      '-quiet',
+                                      filetable['dwi'].getFull(),
+                                      denoised])
+    if completion.returncode != 0:
+        raise Exception('dwidenoise failed, please look above for error '
+                        ' sources')
