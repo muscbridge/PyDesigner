@@ -10,6 +10,7 @@ import shutil # which
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy # array, ndarray
+import preprocessing
 
 # Locate mrtrix3 via which-ing dwidenoise
 dwidenoise_location = shutil.which('dwidenoise')
@@ -233,3 +234,7 @@ if warningmsg is not '':
 # If things are unsalvageable, point out all errors and quit
 if errmsg is not '':
     raise Exception(errmsg)
+
+# Begin importing important data files
+filetable = {'dwi' : preprocessing.util.DWIFile(args.dwi)}
+filetable['dwi'].print(json=True)
