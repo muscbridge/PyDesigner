@@ -252,6 +252,14 @@ if not args.denoise:
 if args.DKI:
     args.DTI = True
 
+if args.output:
+    if not op.isdir(args.output):
+        try:
+            os.mkdir(args.output)
+        except:
+            raise Exception('Output directory doesn not exist and cannot '
+                            'be made.')
+
 # Print warnings
 if warningmsg is not '':
     print(warningmsg)
