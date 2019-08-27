@@ -240,6 +240,9 @@ if errmsg is not '':
 
 # Begin importing important data files
 filetable = {'dwi' : DWIFile(args.dwi)}
+if not filetable['dwi'].isAcquisition():
+    raise Exception('Input dwi does not have .bval/.bvec pair')
+
 if args.rpe_pair:
     filetable['rpe_pair'] = DWIFile(args.rpe_pair)
 if args.rpe_all:

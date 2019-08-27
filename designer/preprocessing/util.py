@@ -121,6 +121,18 @@ class DWIFile:
         if ('.json' in self.ext):
             with open(op.join(self.path, self.name + '.json')) as f:
                 self.json = json.load(f)
+
+    def isAcquisition(self):
+        """Check if this object is an acquisition
+
+        Returns
+        -------
+        bool
+            True if acquisition, False if not
+        """
+
+        return self.acquisition
+
     def print(self, json=False):
         print('Path: ' + self.path)
         print('Name: ' + self.name)
