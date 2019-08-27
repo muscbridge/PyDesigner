@@ -178,6 +178,13 @@ parser.add_argument('--pe_dir', metavar='<phase encoding direction>',
                     'in dwipreproc. Can be signed axis number, (-0,1,+2) '
                     'axis designator (RL, PA, IS), or '
                     'NIfTI axis codes (i-,j,k)')
+parser.add_argument('--force', action='store_true',
+                    help='Force overwrites of existing files. Otherwise, '
+                    'there will be an error at runtime.')
+parser.add_argument('--verbose', action='store_true',
+                    help='Print out all output. This is a very messy '
+                    'option. We recommend piping output to a text file '
+                    'if you use this option.')
 
 # Use argument specification to actually get args
 args = parser.parse_args()
