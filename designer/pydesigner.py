@@ -54,28 +54,28 @@ Filename note:
 
 Example usage:
     In order to process in the standard way:
-    python3 pydesigner.py \
-            --standard \
+    python3 pydesigner.py \\
+            --standard \\
             <dwi>
 
     In order to process in a custom pipeline with denoising, eddy, reverse
     phase encoding, and smoothing, but no diffusion metrics:
-    python3 pydesigner.py \
-            --denoise \
-            --eddy \
-            --rpe_pair <rpe> \
-            --pe_dir <dir> \
-            --smooth \
+    python3 pydesigner.py \\
+            --denoise \\
+            --eddy \\
+            --rpe_pair <rpe> \\
+            --pe_dir <dir> \\
+            --smooth \\
             <dwi>
 
     In order to just do denoising, eddy with reverse phase encode, and 
     diffusion metrics:
-    python3 pydesigner.py \
-            --denoise \
-            --eddy \
-            --rpe_pair <rpe> \
-            --pe_dir <dir> \
-            --DKI \
+    python3 pydesigner.py \\
+            --denoise \\
+            --eddy \\
+            --rpe_pair <rpe> \\
+            --pe_dir <dir> \\
+            --DKI \\
             <dwi>
 
 Standard pipeline steps:
