@@ -41,6 +41,41 @@ parser = argparse.ArgumentParser(
         epilog=textwrap.dedent('''\
 Appendix
 --------
+Filename note:
+    Use the base name without the extension. This makes it easy to program
+    in automatic .bvec/.bval detection for Niftis and makes your shell
+    easier to read by others. The program will automatically search image
+    filenames for .nii and .nii.gz extensions. If you use the --dicom
+    option, then the program will assume that the entire directory
+    consists of dicom files, and will warn you of any files which fail to
+    be read in as dicoms.
+
+Example usage:
+    In order to process in the standard way:
+    python3 pydesigner.py \
+            --standard \
+            <dwi>
+
+    In order to process in a custom pipeline with denoising, eddy, reverse
+    phase encoding, and smoothing, but no diffusion metrics:
+    python3 pydesigner.py \
+            --denoise \
+            --eddy \
+            --rpe_pair <rpe> \
+            --pe_dir <dir> \
+            --smooth \
+            <dwi>
+
+    In order to just do denoising, eddy with reverse phase encode, and 
+    diffusion metrics:
+    python3 pydesigner.py \
+            --denoise \
+            --eddy \
+            --rpe_pair <rpe> \
+            --pe_dir <dir> \
+            --DKI \
+            <dwi>
+
 Standard pipeline steps:
     1. dwidenoise (thermal denoising)
     2. mrdegibbs (gibbs unringing)
