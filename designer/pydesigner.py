@@ -291,7 +291,9 @@ else:
 # so far
 filetable['last'] = filetable['dwi']
 
-# Check for and run denoising
+#----------------------------------------------------------------------
+# Run Denoising
+#----------------------------------------------------------------------
 if args.denoise:
     # hardcoding this to be the initial file per dwidenoise
     # recommmendation
@@ -301,10 +303,24 @@ if args.denoise:
     noisemap_name = 'n' + filetable['dwi'].getName() + '.nii'
     noisemap = op.join(outpath, noisemap_name)
     # system call
-    completion = subprocess.run(args=['dwidenoise', '-noise', noisemap,
-                                      '-quiet',
-                                      filetable['dwi'].getFull(),
-                                      denoised])
+    denoise_args = ['dwidenoise', '-noise', noisemap]
+    if args.force:
+        denoise_args.append('-force')
+    else:
+        if op.exists(denoised) or op.exists(noisemap):
+            raise Exception('Running dwidenoise would cause an overwrite. '
+                            'In order to run this please delete the '
+                            'files, use --force, or change output '
+                            'destination.')
+    if not args.verbose:
+        denoise_args.append('-quiet')
+
+    if args.extent:
+        denoise_args.append('-extent')
+        denoise_args.append(args.extent)
+    denoise_args.append(filetable['dwi'].getFull())
+    denoise_args.append(denoised)
+    completion = subprocess.run(denoise_args)
     if completion.returncode != 0:
         raise Exception('dwidenoise failed, please look above for error '
                         ' sources')
