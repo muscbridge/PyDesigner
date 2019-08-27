@@ -120,6 +120,10 @@ parser.add_argument('--extent', metavar='n,n,n', default='5,5,5',
                     help='Denoising extent formatted n,n,n (forces '
                     ' denoising. '
                     'Default: 5,5,5.')
+parser.add_argument('--degibbs', action='store_true', default=False,
+                    help='Perform gibbs unringing. Only perform if you '
+                    'have full Fourier encoding. The program will check '
+                    'for you if you have a .json sidecar.')
 parser.add_argument('--eddy', action='store_true', default=False,
                     help='Run FSL eddy. NOTE: requires phase encoding '
                     'specification to run.')
@@ -226,6 +230,16 @@ if args.standard:
     args.smooth = True
     args.DTI = True
     args.DKI = True
+
+# (Extent or Degibbs) and no Denoise
+if not args.denoise:
+    stdmsg='No --denoise but '
+    if args.extent:
+        warningmsg+=stdmsg+'--extent given; overriding with --denoise'
+        args.denoise = True
+    if args.degibbs:
+        warningmsg+=stdmsg+'--degibbs given; overriding with --denoise'
+        args.denoise = True
 
 # Coerce DTI if given DKI; not warning-worthy since this step is obvious
 if args.DKI:
