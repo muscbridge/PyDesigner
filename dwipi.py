@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.special import expit as sigmoid
-from cvxopt import matrix, solvers
-from cvxopt.blas import dot
+from cvxopt import matrix
+from cvxopt import solvers
 import nibabel as nib
 import os
 import multiprocessing
@@ -318,13 +318,17 @@ class DWI(object):
         #   subject to A*x <= b
         # No lower or upper bounds
         else:
-            M = matrix(np.matmul(w, b).astype('double'))
+            M = np.matmul(w, b).astype('double')
+            idx2add = M.shape[0] - M.shape[1]
+            M = matrix(np.hstack((M, np.zeros((M.shape[0], idx2add)))))     # To create a pseudo square matrix
             P = dot(M.T, M)
             const_vec = np.matmul(w, np.log(dwi)).astype('double')
-            dt = solvers.qp(P=M,
-                                 q=-matrix(const_vec),
-                                 G=matrix(-C),
-                                 h=matrix(h))
+            P = M,
+            q = -matrix(const_vec)
+            G = matrix(-C)
+            h = matrix(h)
+            dt = solvers.qp(M, q, G, h)
+
         return dt
 
 
