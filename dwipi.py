@@ -345,7 +345,8 @@ class DWI(object):
         shat = np.exp(np.matmul(self.b, init))
 
         # Create constraints
-        C = self.createConstraints(constraints)
+        C = self.createConstraints(constraints)     # Linear inequality constraint matrix A_ub
+        d = np.zeros(C.shape[0])                    # Linear inequality constraint vector b_ub
 
         print('...fitting with wlls')
         inputs = tqdm(range(0, dwi_.shape[1]),
