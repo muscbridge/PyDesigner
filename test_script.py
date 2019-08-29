@@ -8,8 +8,8 @@ import os
 import matplotlib.image as mpimg
 
 
-niiPath = 'D:\SystemFiles\siddh\Box Sync\Home-Work\PARAMAPS\dwi_designer.nii'
-savePath = 'D:\SystemFiles\siddh\Downloads\PyDesigner_Test'
+niiPath = '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/dwi_designer.nii'
+savePath = '/Users/sid/Downloads/PyDesigner_Test'
 
 dwi = dp.DWI(niiPath)
 # excludeb0=True
@@ -18,7 +18,7 @@ dwi = dp.DWI(niiPath)
 # mode='DKI'
 # leverage=3
 # bounds=3
-reject, dt, fa, md = dwi.irlls()
+reject = dwi.irlls()
 propviol = dwi.irllsviolmask(reject)
 viols = dwi.detectOutliers(1)
 md, rd, ad, fa, fe, trace, mk, rk, ak = dwi.extract()

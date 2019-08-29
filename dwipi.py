@@ -304,7 +304,7 @@ class DWI(object):
         w = np.diag(shat)
         dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
         # Constrained fitting
-        dt = opt.linprog(c=np.matmul(w, b), np.matmul(w, np.log(dwi)), A_eq=)
+        # dt = opt.linprog(c=np.matmul(w, b), np.matmul(w, np.log(dwi)), A_eq=)
         # for constrained fitting I'll need to modify this line. It is much slower than pinv so lets ignore for now.
         #dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
         #     method='bvls', tol=1e-12, max_iter=22000, lsq_solver='exact')
@@ -726,9 +726,9 @@ class DWI(object):
 
         reject = np.zeros(dwi.shape, dtype=bool, order='F')
         conv = np.zeros((nvox, 1))
-        dt = np.zeros((nparam, nvox))
-        fa = np.zeros((nvox, 1))
-        md = np.zeros((nvox, 1))
+        # dt = np.zeros((nparam, nvox))
+        # fa = np.zeros((nvox, 1))
+        # md = np.zeros((nvox, 1))
 
         # Attempt basic noise estimation
         try:
@@ -824,42 +824,42 @@ class DWI(object):
                 reject = tmp2
 
             # Robust parameter estimation
-            keep = ~reject.reshape(-1)
-            bmat_i = bmat[keep,:]
-            dwi_i = dwi[keep]
-            dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
-            w = np.exp(np.matmul(bmat_i, dt_))
-            dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
-                                       rcond=None)[0]
-            dt_tmp = dt.reshape(-1)
-            dt2 = np.array([[dt_tmp[1], dt_tmp[2]/2, dt_tmp[3]],
-                   [dt_tmp[2]/2, dt_tmp[4], dt_tmp[5]/2],
-                   [dt_tmp[3]/2, dt_tmp[5]/2, dt_tmp[6]]])
-            eigv, tmp = np.linalg.eig(dt2)
-            fa = np.sqrt(1/2) * \
-                 (np.sqrt(np.square(eigv[0] - eigv[1]) + np.square(eigv[0] - eigv[2]) + np.square(eigv[1] - eigv[2])) / \
-                 np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
-            md = np.sum(eigv)/3
-            return reject.reshape(-1), dt.reshape(-1), fa, md
+            # keep = ~reject.reshape(-1)
+            # bmat_i = bmat[keep,:]
+            # dwi_i = dwi[keep]
+            # dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
+            # w = np.exp(np.matmul(bmat_i, dt_))
+            # dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
+            #                            rcond=None)[0]
+            # dt_tmp = dt.reshape(-1)
+            # dt2 = np.array([[dt_tmp[1], dt_tmp[2]/2, dt_tmp[3]],
+            #        [dt_tmp[2]/2, dt_tmp[4], dt_tmp[5]/2],
+            #        [dt_tmp[3]/2, dt_tmp[5]/2, dt_tmp[6]]])
+            # eigv, tmp = np.linalg.eig(dt2)
+            # fa = np.sqrt(1/2) * \
+            #      (np.sqrt(np.square(eigv[0] - eigv[1]) + np.square(eigv[0] - eigv[2]) + np.square(eigv[1] - eigv[2])) / \
+            #      np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
+            # md = np.sum(eigv)/3
+            return reject.reshape(-1) #, dt.reshape(-1), fa, md
 
         inputs = tqdm(range(nvox),
                           desc='Reweighted Fitting',
                           unit='vox')
-        (reject, dt, fa, md) = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
-            (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
+        reject = Parallel(n_jobs=num_cores, prefer='processes') \
+            (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs)
         # for i in inputs:
         #     reject[:,i], dt[:,i], fa[i], md[i] = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
-        dt = np.array(dt)
-        self.dt = dt
+        # dt = np.array(dt)
+        # self.dt = dt
         #Unscaling
         if scaling:
             dt[1, :] = dt[1, :] + np.log(sc/1000)
         #Unvectorizing
         reject = self.vectorize(np.array(reject).T, self.mask)
-        fa = self.vectorize(np.array(fa), self.mask)
-        md = self.vectorize(np.array(md), self.mask)
+        # fa = self.vectorize(np.array(fa), self.mask)
+        # md = self.vectorize(np.array(md), self.mask)
 
-        return reject, dt, fa, md
+        return reject#, dt, fa, md
 
     def irllsviolmask(self, reject):
         img = self.vectorize(reject, self.mask)
