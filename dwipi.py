@@ -300,12 +300,14 @@ class DWI(object):
         rk = np.mean(akc)
         return ak, rk
 
-    def wlls(self, shat, dwi, b):
+    def wlls(self, shat, dwi, b, constraints=None):
         # compute a wlls fit using weights from inital fit shat
         w = np.diag(shat)
-        dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
+        if constraints is None:
+            dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
         # Constrained fitting
-        # dt = opt.linprog(c=np.matmul(w, b), np.matmul(w, np.log(dwi)), A_eq=)
+        else:
+            dt = opt.linprog(c=np.matmul(w, b), np.matmul(w, np.log(dwi)), A_eq=)
         # for constrained fitting I'll need to modify this line. It is much slower than pinv so lets ignore for now.
         #dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
         #     method='bvls', tol=1e-12, max_iter=22000, lsq_solver='exact')
