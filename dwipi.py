@@ -406,8 +406,10 @@ class DWI(object):
         if sum(constraints) >= 0 and sum(constraints) <= 3:
             dcnt, dind = self.createTensorOrder(2)
             wcnt, wind = self.createTensorOrder(4)
-            ndirs = self.getndirs()
-            cDirs = self.grad[(self.grad[:, 3] == self.maxBval()), 0:3]
+            #ndirs = self.getndirs()
+            #cDirs = self.grad[(self.grad[:, 3] == self.maxBval()), 0:3]
+            ndirs = len(self.grad)
+            cDirs = self.grad[:, 0:3]       # Modified to compute constraints at each b0
             C = np.empty((0, 22))
             if constraints[0] > 0:  # D > 0
                 C = np.append(C, np.hstack((np.zeros((ndirs, 1)),np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]] * cDirs[:, dind[:, 1]],np.zeros((ndirs, 15)))), axis=0)
