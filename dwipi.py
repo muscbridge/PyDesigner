@@ -7,12 +7,16 @@ import multiprocessing
 from joblib import Parallel, delayed
 from tqdm import tqdm
 import random as rnd
+import warnings
 
 # Define the lowest number possible before it is considred a zero
 minZero = 1e-8
 
 # Define number of directions to resample after computing all tensors
 dirSample = 256
+
+# Suppress warnings because mitigations are applied in code
+warnings.filterwarnings("ignore")
 
 class DWI(object):
     def __init__(self, imPath):
@@ -34,7 +38,7 @@ class DWI(object):
             maskPath = os.path.join(path,'brain_mask.nii')
             if os.path.exists(maskPath):
                 tmp = nib.load(maskPath)
-                self.mask = np.array(tmp.dataobj)
+                self.mask = np.array(tmp.dataobj).astype(bool)
                 self.maskStatus = True
                 print('Found brain mask')
             else:
@@ -77,7 +81,7 @@ class DWI(object):
         a = dwi.maxBval(), where dwi is the DWI class object
 
         """
-        return max(np.unique(self.grad[:,3]))
+        return max(np.unique(self.grad[:,3])).astype(int)
 
     def getndirs(self):
         """
@@ -182,7 +186,7 @@ class DWI(object):
             raise ValueError('createTensorOrder: Please enter valid order values (2 or 4).')
         return cnt, ind
 
-    def vectorize(self, dwi, mask):
+    def vectorize(self, img, mask):
         """
         Returns vectorized image based on brain mask, requires no input parameters
         If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
@@ -199,24 +203,27 @@ class DWI(object):
         vec: N X number_of_voxels vector or array, where N is the number of DWI volumes
         """
         if mask is None:
-            mask = np.ones((dwi.shape[0], dwi.shape[1], dwi.shape[2]), order='F')
+            mask = np.ones((img.shape[0], img.shape[1], img.shape[2]), order='F')
         mask = mask.astype(bool)
-        if dwi.ndim == 1:
-            dwi = np.expand_dims(dwi, axis=0)
-        if dwi.ndim == 2:
-            n = dwi.shape[0]
+        if img.ndim == 1:
+            n = img.shape[0]
+            s = np.zeros((mask.shape[0], mask.shape[1], mask.shape[2]), order='F')
+            s[mask] = img
+        if img.ndim == 2:
+            n = img.shape[0]
             s = np.zeros((mask.shape[0], mask.shape[1], mask.shape[2], n), order='F')
             for i in range(0, n):
-                s[:,:,:,i] = np.reshape(dwi[i,:], (mask.shape), order='F')
-        if dwi.ndim == 3:
-            dwi = np.expand_dims(dwi, axis=-1)
-        if dwi.ndim == 4:
-            s = np.zeros((dwi.shape[-1], np.sum(mask).astype(int)), order='F')
-            for i in range(0, dwi.shape[-1]):
-                tmp = dwi[:,:,:,i]
-                maskind = np.ma.array(tmp, mask=mask)
-                s[i,:] = np.ma.ravel(maskind, order='F').data
-
+                s[mask, i] = img[i,:]
+        if img.ndim == 3:
+            maskind = np.ma.array(img, mask=np.logical_not(mask))
+            s = np.ma.compressed(maskind)
+        if img.ndim == 4:
+            s = np.zeros((img.shape[-1], np.sum(mask).astype(int)), order='F')
+            for i in range(0, img.shape[-1]):
+                tmp = img[:,:,:,i]
+                # Compressed returns non-masked area, so invert the mask first
+                maskind = np.ma.array(tmp, mask=np.logical_not(mask))
+                s[i,:] = np.ma.compressed(maskind)
         return np.squeeze(s)
 
     def fibonacciSphere(self, samples=1, randomize=True):
@@ -297,27 +304,14 @@ class DWI(object):
         # compute a wlls fit using weights from inital fit shat
         w = np.diag(shat)
         dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
+        # Constrained fitting
+        # dt = opt.linprog(c=np.matmul(w, b), np.matmul(w, np.log(dwi)), A_eq=)
         # for constrained fitting I'll need to modify this line. It is much slower than pinv so lets ignore for now.
         #dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
         #     method='bvls', tol=1e-12, max_iter=22000, lsq_solver='exact')
         return dt
 
-    def slsqp(self, shat, dwi, b, constraints):
-        """
-        Computes constrained minimization using Least SQuares programming optimization algorithm (SLSQP) at a voxel
-        
-        Return(s)
-        ---------
-        dt: minimized tensor
-        """
-        # Use scipy.optimize.linprog to define inequality constraint matrix
-        C = ({'type': 'ineq',
-              'fun' :   constraints})
-        dt = linprog()
-
-
-
-    def fit(self, constraints=[0, 1, 0]):
+    def fit(self, constraints=[0, 1, 0], reject=None):
         """
         Returns fitted diffusion or kurtosis tensor
         :return:
@@ -345,15 +339,18 @@ class DWI(object):
         bW = np.tile(wcnt,(ndwis, 1))*self.grad[:,wind[:, 0]]*self.grad[:,wind[:, 1]]*self.grad[:,wind[:, 2]]*self.grad[:,wind[:, 3]]
         self.b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
 
-        dwi_ = self.vectorize(self.img, None)
+        dwi_ = self.vectorize(self.img, self.mask)
+        reject_ = self.vectorize(reject, self.mask)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
 
-        # Construct constraints
+        # Create constraints
         C = self.createConstraints(constraints)
 
         print('...fitting with wlls')
-        inputs = tqdm(range(0, dwi_.shape[1]))
+        inputs = tqdm(range(0, dwi_.shape[1]),
+                      desc='WLLS',
+                      unit='vox')
         num_cores = multiprocessing.cpu_count()
         self.dt = Parallel(n_jobs=num_cores,prefer='processes')\
             (delayed(self.wlls)(shat[:,i], dwi_[:,i], self.b) for i in inputs)
@@ -362,8 +359,6 @@ class DWI(object):
         self.dt = self.dt[1:,:]
         D_apprSq = 1/(np.sum(self.dt[(0,3,5),:], axis=0)/3)**2
         self.dt[6:,:] = self.dt[6:,:]*np.tile(D_apprSq, (15,1))
-        self.img = None  # Remove input image to free memory
-        return self.dt
 
     def createConstraints(self, constraints=[0, 1, 0]):
         """
@@ -417,7 +412,9 @@ class DWI(object):
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
 
         nvox = self.dt.shape[1]
-        inputs = tqdm(range(0, nvox))
+        inputs = tqdm(range(0, nvox),
+                      desc='DTI params',
+                      unit='vox')
         values, vectors = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.dtiTensorParams)(DT[:, :, i]) for i in inputs))
         values = np.reshape(np.abs(values), (nvox, 3))
@@ -427,6 +424,9 @@ class DWI(object):
         self.dirs = np.array(self.fibonacciSphere(dirSample, True))
         akc = self.kurtosisCoeff(self.dt, self.dirs)
         mk = np.mean(akc, 0)
+        inputs = tqdm(range(0, nvox),
+                      desc='DKI params',
+                      unit='vox')
         ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.dkiTensorParams)(vectors[i, :, 0], self.dt[:, i]) for i in inputs))
         ak = np.reshape(ak, (nvox))
@@ -435,7 +435,7 @@ class DWI(object):
         l1 = self.vectorize(values[:, 0], self.mask)
         l2 = self.vectorize(values[:, 1], self.mask)
         l3 = self.vectorize(values[:, 2], self.mask)
-        v1 = self.vectorize(vectors[:, :, 0].T, self.mask)
+        v1 = self.vectorize(vectors[:, :, 0], self.mask)
 
         md = (l1 + l2 + l3) / 3
         rd = (l2 + l3) / 2
@@ -614,7 +614,7 @@ class DWI(object):
         map = Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.findVoxelViol)(adc[:,i], akc[:,i], maxB, [0, 1, 0]) for i in inputs)
         map = np.reshape(pViols2, nvox)
-        map = self.multiplyMask(seld.vectorize(map,self.mask))
+        map = self.multiplyMask(self.vectorize(map,self.mask))
         return map
 
     def multiplyMask(self, img):
@@ -650,7 +650,9 @@ class DWI(object):
             iter = 10
         else:
             print('...computing outliers with %d iterations' %(iter))
-        inputs = tqdm(range(iter))
+        inputs = tqdm(range(iter),
+                      desc='AKC Outlier',
+                      unit='blk')
         for i in inputs:
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
             akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
@@ -658,7 +660,219 @@ class DWI(object):
         self.outliers = akc_out
         return self.multiplyMask(self.vectorize(akc_out, self.mask))
 
+    def irlls(self, excludeb0=True, maxiter=25, convcrit=1e-3, mode='DKI', leverage=3, bounds=3):
+        """IRLLS This functions performs outlier detection and robust parameter estimation for diffusion MRI using the
+        iterative reweigthed linear least squares (IRLLS) approach.
+        """
 
+        # if not excludeb0.dtype:
+        #     assert('option: Excludeb0 should be set to True or False')
+
+        if maxiter < 1 or  maxiter > 200:
+            assert('option: Maxiter should be set to a value between 1 and 200')
+
+        if convcrit < 0 or convcrit > 1:
+            assert('option: Maxiter should be set to a value between 1 and 200')
+
+        if not (mode == 'DKI' or mode == 'DTI'):
+            assert('Mode should be set to DKI or DTI')
+
+        if leverage < 0 or leverage > 1:
+            assert('option: Leverage should be set to a value between 0 and 1')
+
+        if bounds < 1:
+            assert('option: Bounds should be set to a value >= 1')
+
+        print('...iterative reweighted linear least squares')
+        # Vectorize DWI
+        dwi = self.vectorize(self.img, self.mask)
+        (ndwi, nvox) = dwi.shape
+        b = np.array(self.grad[:, 3])
+        b = np.reshape(b, (len(b), 1))
+        g = self.grad[:, 0:3]
+
+        # Apply Scaling
+        scaling = False
+        if np.sum(dwi < 1)/np.size(dwi) < 0.001:
+            dwi[dwi < 1] = 1
+        else:
+            scaling = True
+            if self.maxBval()/1000 < 0.001:
+                tmp = dwi[dwi < 0.05]
+            else:
+                tmp = dwi[dwi < 50]
+            sc = np.median(tmp)
+            dwi[dwi < sc/1000] = sc/1000
+            dwi = dwi * 1000 / sc
+
+        # Create B-matrix
+        (dcnt, dind) = self.createTensorOrder(2)
+        if mode == 'DTI':
+            bmat = np.hstack((np.ones((ndwi, 1)), np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * g[:,dind[:,1]]), np.diag(dcnt))))
+        else:
+            (wcnt, wind) = self.createTensorOrder(4)
+            bmat = np.hstack((np.ones((ndwi,1)),
+                              np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * g[:,dind[:,1]]), np.diag(dcnt)),
+                              (1/6)*np.matmul((np.square(np.tile(b, (1, 15))) * g[:,wind[:,0]] * g[:,wind[:,1]] * g[:,wind[:,2]] * g[:,wind[:,3]]),
+                                              np.diag(wcnt))))
+        nparam = bmat.shape[1]
+        ndof = ndwi - nparam
+
+        # Initialization
+        b0_pos = np.zeros(b.shape,dtype=bool, order='F')
+        if excludeb0:
+            if self.maxBval() < 10000:
+                b0_pos = b < 10
+            else:
+                b0_pos = b < 10000
+
+        reject = np.zeros(dwi.shape, dtype=bool, order='F')
+        conv = np.zeros((nvox, 1))
+        # dt = np.zeros((nparam, nvox))
+        # fa = np.zeros((nvox, 1))
+        # md = np.zeros((nvox, 1))
+
+        # Attempt basic noise estimation
+        try:
+            sigma
+        except NameError:
+            def estSigma(dwi, bmat):
+                dwi = np.reshape(dwi, (len(dwi), 1))
+                dt_ = np.linalg.lstsq(bmat, np.log(dwi), rcond=None)[0]
+                w = np.exp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
+                dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))), (np.log(dwi) * w), rcond=None)[0]
+                e = np.log(dwi) - np.matmul(bmat, dt_)
+                m = np.median(np.abs((e * w) - np.median(e * w)))
+                sigma_ = np.sqrt(ndwi / ndof) * 1.4826 * m
+                return sigma_
+            sigma_ = np.zeros((nvox,1))
+            inputs = tqdm(range(nvox),
+                          desc='Noise Estimation',
+                          unit='vox')
+            num_cores = multiprocessing.cpu_count()
+            sigma_ = Parallel(n_jobs=num_cores, prefer='processes') \
+                (delayed(estSigma)(dwi[:, i], bmat) for i in inputs)
+            sigma = np.median(sigma_)
+            sigma = np.tile(sigma,(nvox,1))
+        if scaling:
+            sigma = sigma*1000/sc
+
+        def outlierHelper(dwi, bmat, sigma, b, b0_pos, maxiter=25, convcrit=1e-3, leverage=3, bounds=3):
+            # Preliminary rough outlier check
+            dwi_i = dwi.reshape((len(dwi), 1))
+            dwi0 = np.median(dwi_i[b.reshape(-1)/1000 < 0.01])
+            out = dwi_i > (dwi0 + 3 * sigma)
+            if np.sum(~out[b.reshape(-1)/1000 > 0.01]) < (bmat.shape[1] - 1):
+                out = np.zeros((out.shape),dtype=bool)
+            out[b0_pos.reshape(-1)] = False
+            bmat_i = bmat[~out.reshape(-1)]
+            dwi_i = dwi_i[~out.reshape(-1)]
+            n_i = dwi_i.size
+            ndof_i = n_i - bmat_i.shape[1]
+
+            # WLLS estimation
+            dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
+            w = np.exp(np.matmul(bmat_i, dt_i))
+            dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
+                                   rcond=None)[0]
+            dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
+
+            # Goodness-of-fit
+            residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
+            residu_ = dwi_i.reshape((dwi_i.shape[0],1)) - dwi_hat
+            chi2 = np.sum((residu_ * residu_) / np.square(sigma)) / (ndof_i) -1
+            gof = np.abs(chi2) < 3 * np.sqrt(2/ndof_i)
+            gof2 = gof
+
+            # Iterative reweighning procedure
+            iter = 0
+            while ~gof and iter < maxiter:
+                C = np.sqrt(n_i/(n_i-nparam)) * 1.4826 * np.median(np.abs(residu_ - np.median(residu_))) / dwi_hat
+                GMM = np.square(C) / np.square(np.square(residu) + np.square(C))
+                w = np.sqrt(GMM) * dwi_hat
+                dt_imin1 = dt_i
+                dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
+                                       rcond=None)[0]
+                dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
+                dwi_hat[dwi_hat < 1] = 1
+                residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
+                residu_ = dwi_i.reshape((dwi_i.shape[0], 1)) - dwi_hat
+
+                # Convergence check
+                iter = iter + 1
+                gof = np.linalg.norm(dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
+                conv = iter
+
+            # Outlier detection
+            if ~gof2:
+                lev = np.diag(np.matmul(bmat_i, np.linalg.lstsq(np.matmul(np.transpose(bmat_i),
+                                                        np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i)),
+                                      np.matmul(np.transpose(bmat_i), np.diag(np.square(w.reshape(-1)))), rcond=None)[0]))
+                lev = lev.reshape((lev.shape[0], 1))
+                lowerbound_linear = -bounds * np.sqrt(1 -lev) * sigma / dwi_hat
+                upperbound_nonlinear = bounds * np.sqrt(1 - lev) * sigma
+
+                tmp = np.zeros(residu.shape, dtype=bool, order='F')
+                tmp[residu < lowerbound_linear] = True
+                tmp[residu > upperbound_nonlinear] = True
+                tmp[lev > leverage] = False
+                tmp2 = np.ones(b.shape, dtype=bool, order='F')
+                tmp2[~out.reshape(-1)] = tmp
+                tmp2[b0_pos] = False
+                reject = tmp2
+            else:
+                tmp2 = np.zeros(b.shape, dtype=bool, order='F')
+                tmp2[out.reshape(-1)] = True
+                reject = tmp2
+
+            # Robust parameter estimation
+            # keep = ~reject.reshape(-1)
+            # bmat_i = bmat[keep,:]
+            # dwi_i = dwi[keep]
+            # dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
+            # w = np.exp(np.matmul(bmat_i, dt_))
+            # dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
+            #                            rcond=None)[0]
+            # dt_tmp = dt.reshape(-1)
+            # dt2 = np.array([[dt_tmp[1], dt_tmp[2]/2, dt_tmp[3]],
+            #        [dt_tmp[2]/2, dt_tmp[4], dt_tmp[5]/2],
+            #        [dt_tmp[3]/2, dt_tmp[5]/2, dt_tmp[6]]])
+            # eigv, tmp = np.linalg.eig(dt2)
+            # fa = np.sqrt(1/2) * \
+            #      (np.sqrt(np.square(eigv[0] - eigv[1]) + np.square(eigv[0] - eigv[2]) + np.square(eigv[1] - eigv[2])) / \
+            #      np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
+            # md = np.sum(eigv)/3
+            return reject.reshape(-1) #, dt.reshape(-1), fa, md
+
+        inputs = tqdm(range(nvox),
+                          desc='Reweighted Fitting',
+                          unit='vox')
+        reject = Parallel(n_jobs=num_cores, prefer='processes') \
+            (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs)
+        # for i in inputs:
+        #     reject[:,i], dt[:,i], fa[i], md[i] = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
+        # dt = np.array(dt)
+        # self.dt = dt
+        #Unscaling
+        if scaling:
+            dt[1, :] = dt[1, :] + np.log(sc/1000)
+        #Unvectorizing
+        reject = self.vectorize(np.array(reject).T, self.mask)
+        # fa = self.vectorize(np.array(fa), self.mask)
+        # md = self.vectorize(np.array(md), self.mask)
+
+        return reject#, dt, fa, md
+
+    def irllsviolmask(self, reject):
+        img = self.vectorize(reject, self.mask)
+        (ndwi, nvox) = img.shape
+        b = np.array(self.grad[:, 3])
+        b = np.reshape(b, (len(b), 1))
+        b_pos = ~(b < 10).reshape(-1)
+        img = img[b_pos, :]
+        propViol = np.sum(img,axis=0).astype(int) / np.sum(b_pos)
+        propViol = self.vectorize(propViol, self.mask)
+        return propViol
 
 class medianFilter(object):
     def __init__(self, img, violmask, th=1, sz=3, conn='face'):
