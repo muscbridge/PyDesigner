@@ -307,18 +307,22 @@ class DWI(object):
         if constraints is None:
             dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
         # Constrained fitting
-        # The equation |Mx -b|^2 expands to 0.5*x.T(A.T*A)*x -(A.T*b).T
+        # The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
         #                                      -------      ------
         #                                         P           q
         # where A is denoted by multiplier matrix (w * b)
         # Multiplying by a positive constant (0.5) does not change the value of optimum x*. Similarly, the
         # constant offset b.T*b does not affect x*, therefore we can leave these out.
+        #
+        # Minimize: || C*x -b ||_2^2
+        #   subject to A*x <= b
+        # No lower or upper bounds
         else:
             M = matrix(np.matmul(w, b).astype('double'))
             P = dot(M.T, M)
             const_vec = np.matmul(w, np.log(dwi)).astype('double')
-            dt = solvers.qp(P=P,
-                                 q=-matrix(const_vec)),
+            dt = solvers.qp(P=M,
+                                 q=-matrix(const_vec),
                                  G=matrix(-C),
                                  h=matrix(h))
         return dt

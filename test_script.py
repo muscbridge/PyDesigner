@@ -23,6 +23,14 @@ propviol = dwi.irllsviolmask(reject)
 viols = dwi.detectOutliers(1)
 md, rd, ad, fa, fe, trace, mk, rk, ak = dwi.extract()
 
+i=50000
+shat=shat[:,i]
+dwi = dwi_[:,i]
+b=self.b
+constraints=[0,1,0]
+G=-C
+
+
 md = dwi.multiplyMask(md)
 rd = dwi.multiplyMask(rd)
 ad = dwi.multiplyMask(ad)
