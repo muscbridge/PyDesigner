@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special import expit as sigmoid
-from scipy.optimize import linprog
+from cvxopt import matrix, solvers
+from cvxopt.blas import dot
 import nibabel as nib
 import os
 import multiprocessing
@@ -300,14 +301,29 @@ class DWI(object):
         rk = np.mean(akc)
         return ak, rk
 
-    def wlls(self, shat, dwi, b, constraints=None):
+    def wlls(self, shat, dwi, b, constraints=None, G=None, h=None):
         # compute a wlls fit using weights from inital fit shat
         w = np.diag(shat)
         if constraints is None:
             dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
         # Constrained fitting
+        # The equation |Mx -b|^2 expands to 0.5*x.T(A.T*A)*x -(A.T*b).T
+        #                                      -------      ------
+        #                                         P           q
+        # where A is denoted by multiplier matrix (w * b)
+        # Multiplying by a positive constant (0.5) does not change the value of optimum x*. Similarly, the
+        # constant offset b.T*b does not affect x*, therefore we can leave these out.
         else:
-            dt = opt.linprog(c=np.matmul(w, b), np.matmul(w, np.log(dwi)), A_eq=)
+            M = matrix(np.matmul(w, b).astype('double'))
+            P = dot(M.T, M)
+            const_vec = np.matmul(w, np.log(dwi)).astype('double')
+            dt = solvers.qp(P=P,
+                                 q=-matrix(const_vec)),
+                                 G=matrix(-C),
+                                 h=matrix(h))
+        return dt
+
+
         # for constrained fitting I'll need to modify this line. It is much slower than pinv so lets ignore for now.
         #dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
         #     method='bvls', tol=1e-12, max_iter=22000, lsq_solver='exact')
@@ -348,12 +364,15 @@ class DWI(object):
 
         # Create constraints
         C = self.createConstraints(constraints)     # Linear inequality constraint matrix A_ub
-        d = np.zeros(C.shape[0])                    # Linear inequality constraint vector b_ub
+        h = np.zeros(C.shape[0])                    # Linear inequality constraint vector b_ub
 
         print('...fitting with wlls')
         inputs = tqdm(range(0, dwi_.shape[1]),
                       desc='WLLS',
                       unit='vox')
+        for i in inputs:
+            dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, constraints=constraints, G=-C, h=h)
+
         num_cores = multiprocessing.cpu_count()
         self.dt = Parallel(n_jobs=num_cores,prefer='processes')\
             (delayed(self.wlls)(shat[:,i], dwi_[:,i], self.b) for i in inputs)
