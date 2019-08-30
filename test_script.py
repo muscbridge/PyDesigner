@@ -19,9 +19,10 @@ dwi = dp.DWI(niiPath)
 # leverage=3
 # bounds=3
 reject, dt_hat = dwi.irlls()
-dt = dwi.fit([0,0,0], reject)
+dt = dwi.fit([0,1,0], reject)
 
-propviol = dwi.irllsviolmask(reject)
+propviol = reject
+#propviol = dwi.irllsviolmask(reject)
 # viols = dwi.detectOutliers(1)
 md, rd, ad, fa, fe, trace, mk, rk, ak = dwi.extract()
 
