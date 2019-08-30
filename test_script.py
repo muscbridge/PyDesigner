@@ -18,27 +18,21 @@ dwi = dp.DWI(niiPath)
 # mode='DKI'
 # leverage=3
 # bounds=3
-reject = dwi.irlls()
+reject, dt_hat = dwi.irlls()
+dt = dwi.fit([0,0,0], reject)
+
 propviol = dwi.irllsviolmask(reject)
-viols = dwi.detectOutliers(1)
+# viols = dwi.detectOutliers(1)
 md, rd, ad, fa, fe, trace, mk, rk, ak = dwi.extract()
 
-i=50000
-shat=shat[:,i]
-dwi = dwi_[:,i]
-b=self.b
-constraints=[0,1,0]
-G=-C
-
-
-md = dwi.multiplyMask(md)
-rd = dwi.multiplyMask(rd)
-ad = dwi.multiplyMask(ad)
-fa = dwi.multiplyMask(fa)
-mk = dwi.multiplyMask(mk)
-rk = dwi.multiplyMask(rk)
-ak = dwi.multiplyMask(rk)
-viols = dwi.multiplyMask(viols)
+# md = dwi.multiplyMask(md)
+# rd = dwi.multiplyMask(rd)
+# ad = dwi.multiplyMask(ad)
+# fa = dwi.multiplyMask(fa)
+# mk = dwi.multiplyMask(mk)
+# rk = dwi.multiplyMask(rk)
+# ak = dwi.multiplyMask(rk)
+# viols = dwi.multiplyMask(viols)
 
 mdPath = os.path.join(savePath, 'md.nii')
 rdPath = os.path.join(savePath, 'rd.nii')
@@ -51,16 +45,16 @@ rkPath = os.path.join(savePath, 'rk.nii')
 akPath = os.path.join(savePath, 'ak.nii')
 violPath = os.path.join(savePath, 'outliers.nii')
 
-dp.writeNii(md, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/md.nii', [0, 3])
-dp.writeNii(rd, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/rd.nii',[0, 3])
-dp.writeNii(ad, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/ad.nii',[0, 3])
-dp.writeNii(fa, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/fa.nii',[0, 1])
-dp.writeNii(fe, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/fe.nii')
-dp.writeNii(trace, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/trace.nii')
-dp.writeNii(mk, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/mk.nii',[0, 2])
-dp.writeNii(rk, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/rk.nii',[0, 2])
-dp.writeNii(ak, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/ak.nii',[0, 2])
-dp.writeNii(viols, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/outliers.nii')
+# dp.writeNii(md, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/md.nii', [0, 3])
+# dp.writeNii(rd, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/rd.nii',[0, 3])
+# dp.writeNii(ad, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/ad.nii',[0, 3])
+# dp.writeNii(fa, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/fa.nii',[0, 1])
+# dp.writeNii(fe, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/fe.nii')
+# dp.writeNii(trace, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/trace.nii')
+# dp.writeNii(mk, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/mk.nii',[0, 2])
+# dp.writeNii(rk, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/rk.nii',[0, 2])
+# dp.writeNii(ak, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/ak.nii',[0, 2])
+# dp.writeNii(viols, dwi.hdr, '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/PyDesigner/outliers.nii')
 
 dp.writeNii(md, dwi.hdr, mdPath)
 dp.writeNii(rd, dwi.hdr, rdPath)
