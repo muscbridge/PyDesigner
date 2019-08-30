@@ -858,13 +858,13 @@ class DWI(object):
                 reject = tmp2
 
             # Robust parameter estimation
-            # keep = ~reject.reshape(-1)
-            # bmat_i = bmat[keep,:]
-            # dwi_i = dwi[keep]
-            # dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
-            # w = np.exp(np.matmul(bmat_i, dt_))
-            # dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
-            #                            rcond=None)[0]
+            keep = ~reject.reshape(-1)
+            bmat_i = bmat[keep,:]
+            dwi_i = dwi[keep]
+            dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
+            w = np.exp(np.matmul(bmat_i, dt_))
+            dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
+                                       rcond=None)[0]
             # dt_tmp = dt.reshape(-1)
             # dt2 = np.array([[dt_tmp[1], dt_tmp[2]/2, dt_tmp[3]],
             #        [dt_tmp[2]/2, dt_tmp[4], dt_tmp[5]/2],
@@ -874,7 +874,7 @@ class DWI(object):
             #      (np.sqrt(np.square(eigv[0] - eigv[1]) + np.square(eigv[0] - eigv[2]) + np.square(eigv[1] - eigv[2])) / \
             #      np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
             # md = np.sum(eigv)/3
-            return reject.reshape(-1) #, dt.reshape(-1), fa, md
+            return reject.reshape(-1), dt.reshape(-1)#, fa, md
 
         inputs = tqdm(range(nvox),
                           desc='Reweighted Fitting',
