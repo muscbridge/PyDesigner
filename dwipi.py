@@ -1,6 +1,7 @@
 import numpy as np
 from scipy.special import expit as sigmoid
-from scipy.optimize import linprog
+from cvxopt import matrix
+from cvxopt import solvers
 import nibabel as nib
 import os
 import multiprocessing
@@ -300,22 +301,62 @@ class DWI(object):
         rk = np.mean(akc)
         return ak, rk
 
-    def wlls(self, shat, dwi, b):
-        # compute a wlls fit using weights from inital fit shat
+    def wlls(self, shat, dwi, b, cons=None):#, dt_hat=None):
+        """
+        Estimates diffusion and kurtosis tenor at voxel with unconstrained Moore-Penrose pseudoinverse or constrained
+        quadratic convex optimization.
+
+        :param shat:
+        :param dwi:
+        :param b:
+        :param cons:
+        :param dt_hat:
+        :return:
+        """
         w = np.diag(shat)
-        dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
+        if cons is None:
+            dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
         # Constrained fitting
-        # dt = opt.linprog(c=np.matmul(w, b), np.matmul(w, np.log(dwi)), A_eq=)
-        # for constrained fitting I'll need to modify this line. It is much slower than pinv so lets ignore for now.
-        #dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
-        #     method='bvls', tol=1e-12, max_iter=22000, lsq_solver='exact')
+        # The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
+        #                                      -------      ------
+        #                                         P           q
+        # where A is denoted by multiplier matrix (w * b)
+        # Multiplying by a positive constant (0.5) does not change the value of optimum x*. Similarly, the
+        # constant offset b.T*b does not affect x*, therefore we can leave these out.
+        #
+        # Minimize: || C*x -b ||_2^2
+        #   subject to A*x <= b
+        # No lower or upper bounds
+        else:
+            C = matrix(np.matmul(w, b).astype('double'))
+            d = matrix(np.matmul(w, np.log(dwi)).astype('double').reshape(-1))
+            m, n = C.size
+            P = C.T * C
+            q = -C.T * d
+            cons = matrix(cons)
+            G = -cons.T * cons
+            h = matrix(np.zeros(cons.size[0]))
+            h = cons.T * h
+            # starting_vals = {'x': dt_hat}
+            dims = {'l': m, 'q': [], 's': []}
+            solvers.options['show_progress'] = False  # Solver options
+            solvers.options['maxiters'] = 22000
+            # if dt_hat=None:
+            dt = np.array(solvers.qp(P, q, G, h)['x']).reshape(-1)  # If estimated dt exists; initialize
+            # else:
+            #     dt = np.array(solvers.qp(P, q, G, h)['x'], initvals=starting_vals).reshape(-1)  # If estimated dt does not exist
         return dt
 
-    def fit(self, constraints=[0, 1, 0], reject=None):
+    def fit(self, constraints=None, reject=None):
         """
         Returns fitted diffusion or kurtosis tensor
         :return:
         """
+        # Create constraints
+
+        if reject is None:
+            reject = np.zeros(self.img.shape)
+
         order = np.floor(np.log(np.abs(np.max(self.grad[:,-1])+1))/np.log(10))
         if order >= 2:
             self.grad[:, -1] = self.grad[:, -1]/1000
@@ -340,20 +381,32 @@ class DWI(object):
         self.b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
 
         dwi_ = self.vectorize(self.img, self.mask)
-        reject_ = self.vectorize(reject, self.mask)
+        reject_ = self.vectorize(reject, self.mask).astype(bool)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
 
-        # Create constraints
-        C = self.createConstraints(constraints)
-
         print('...fitting with wlls')
-        inputs = tqdm(range(0, dwi_.shape[1]),
-                      desc='WLLS',
-                      unit='vox')
+        # dt = np.zeros((22, dwi_.shape[1]))
         num_cores = multiprocessing.cpu_count()
-        self.dt = Parallel(n_jobs=num_cores,prefer='processes')\
-            (delayed(self.wlls)(shat[:,i], dwi_[:,i], self.b) for i in inputs)
+
+        # for i in inputs:
+        #     dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, cons=C)
+        if constraints is None or (constraints[0] == 0 and constraints[1] == 0 and constraints[2] == 0):
+            inputs = tqdm(range(0, dwi_.shape[1]),
+                          desc='Unconstrained WLLS',
+                          unit='vox')
+            self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
+                (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]]) for i in inputs)
+
+        else:
+            C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
+            inputs = tqdm(range(0, dwi_.shape[1]),
+                          desc='Constrainted Convex',
+                          unit='vox')
+            self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
+                (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]],
+                                    cons=C[~reject_[:, i]]) for i in inputs)
+
         self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
         self.s0 = np.exp(self.dt[0,:])
         self.dt = self.dt[1:,:]
@@ -380,8 +433,10 @@ class DWI(object):
         if sum(constraints) >= 0 and sum(constraints) <= 3:
             dcnt, dind = self.createTensorOrder(2)
             wcnt, wind = self.createTensorOrder(4)
-            ndirs = self.getndirs()
-            cDirs = self.grad[(self.grad[:, 3] == self.maxBval()), 0:3]
+            #ndirs = self.getndirs()
+            #cDirs = self.grad[(self.grad[:, 3] == self.maxBval()), 0:3]
+            ndirs = len(self.grad)
+            cDirs = self.grad[:, 0:3]       # Modified to compute constraints at each b0
             C = np.empty((0, 22))
             if constraints[0] > 0:  # D > 0
                 C = np.append(C, np.hstack((np.zeros((ndirs, 1)),np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]] * cDirs[:, dind[:, 1]],np.zeros((ndirs, 15)))), axis=0)
@@ -435,7 +490,7 @@ class DWI(object):
         l1 = self.vectorize(values[:, 0], self.mask)
         l2 = self.vectorize(values[:, 1], self.mask)
         l3 = self.vectorize(values[:, 2], self.mask)
-        v1 = self.vectorize(vectors[:, :, 0], self.mask)
+        v1 = self.vectorize(vectors[:, :, 0].T, self.mask)
 
         md = (l1 + l2 + l3) / 3
         rd = (l2 + l3) / 2
@@ -826,13 +881,13 @@ class DWI(object):
                 reject = tmp2
 
             # Robust parameter estimation
-            # keep = ~reject.reshape(-1)
-            # bmat_i = bmat[keep,:]
-            # dwi_i = dwi[keep]
-            # dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
-            # w = np.exp(np.matmul(bmat_i, dt_))
-            # dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
-            #                            rcond=None)[0]
+            keep = ~reject.reshape(-1)
+            bmat_i = bmat[keep,:]
+            dwi_i = dwi[keep]
+            dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
+            w = np.exp(np.matmul(bmat_i, dt_))
+            dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
+                                       rcond=None)[0]
             # dt_tmp = dt.reshape(-1)
             # dt2 = np.array([[dt_tmp[1], dt_tmp[2]/2, dt_tmp[3]],
             #        [dt_tmp[2]/2, dt_tmp[4], dt_tmp[5]/2],
@@ -842,13 +897,13 @@ class DWI(object):
             #      (np.sqrt(np.square(eigv[0] - eigv[1]) + np.square(eigv[0] - eigv[2]) + np.square(eigv[1] - eigv[2])) / \
             #      np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
             # md = np.sum(eigv)/3
-            return reject.reshape(-1) #, dt.reshape(-1), fa, md
+            return reject.reshape(-1), dt.reshape(-1)#, fa, md
 
         inputs = tqdm(range(nvox),
                           desc='Reweighted Fitting',
                           unit='vox')
-        reject = Parallel(n_jobs=num_cores, prefer='processes') \
-            (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs)
+        (reject, dt) = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
+            (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
         # for i in inputs:
         #     reject[:,i], dt[:,i], fa[i], md[i] = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
         # dt = np.array(dt)
@@ -858,10 +913,11 @@ class DWI(object):
             dt[1, :] = dt[1, :] + np.log(sc/1000)
         #Unvectorizing
         reject = self.vectorize(np.array(reject).T, self.mask)
+        dt = np.array(dt)
         # fa = self.vectorize(np.array(fa), self.mask)
         # md = self.vectorize(np.array(md), self.mask)
 
-        return reject#, dt, fa, md
+        return reject, dt#, fa, md
 
     def irllsviolmask(self, reject):
         img = self.vectorize(reject, self.mask)
