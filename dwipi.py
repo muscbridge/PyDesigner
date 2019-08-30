@@ -347,7 +347,7 @@ class DWI(object):
             #     dt = np.array(solvers.qp(P, q, G, h)['x'], initvals=starting_vals).reshape(-1)  # If estimated dt does not exist
         return dt
 
-    def fit(self, constraints=[0, 1, 0]):
+    def fit(self, constraints=None):
         """
         Returns fitted diffusion or kurtosis tensor
         :return:
@@ -381,18 +381,23 @@ class DWI(object):
         shat = np.exp(np.matmul(self.b, init))
 
         # Create constraints
-        C = self.createConstraints(constraints)     # Linear inequality constraint matrix A_ub
-        h = np.zeros(C.shape[0])                    # Linear inequality constraint vector b_ub
+        if constraints is None:
+            C = None
+            tqdmDesc = 'Unconstrained WLLS'
+        else:
+            C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
+            tqdmDesc = 'Constrainted Convex'
 
         print('...fitting with wlls')
         # dt = np.zeros((22, dwi_.shape[1]))
+        num_cores = multiprocessing.cpu_count()
         inputs = tqdm(range(0, dwi_.shape[1]),
-                      desc='WLLS',
+                      desc=tqdmDesc,
                       unit='vox')
         # for i in inputs:
         #     dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, cons=C)
 
-        num_cores = multiprocessing.cpu_count()
+
         self.dt = Parallel(n_jobs=num_cores,prefer='processes')\
             (delayed(self.wlls)(shat[:,i], dwi_[:,i], self.b, cons=C) for i in inputs)
         self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
@@ -478,7 +483,7 @@ class DWI(object):
         l1 = self.vectorize(values[:, 0], self.mask)
         l2 = self.vectorize(values[:, 1], self.mask)
         l3 = self.vectorize(values[:, 2], self.mask)
-        v1 = self.vectorize(vectors[:, :, 0], self.mask)
+        v1 = self.vectorize(vectors[:, :, 0].T, self.mask)
 
         md = (l1 + l2 + l3) / 3
         rd = (l2 + l3) / 2
