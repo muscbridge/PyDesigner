@@ -393,7 +393,7 @@ class DWI(object):
         #     dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, cons=C)
         if constraints is None or (constraints[0] == 0 and constraints[1] == 0 and constraints[2] == 0):
             inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Unconstrained WLLS',
+                          desc='Unconstrained Moore-Penrose Pseudoinverse',
                           unit='vox')
             self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
                 (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]]) for i in inputs)
@@ -401,11 +401,11 @@ class DWI(object):
         else:
             C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
             inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Constrainted Convex',
+                          desc='Constrainted Convex Optimization',
                           unit='vox')
             self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
                 (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]],
-                                    cons=C[~reject_[:, i]]) for i in inputs)
+                                    cons=C) for i in inputs)
 
         self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
         self.s0 = np.exp(self.dt[0,:])
@@ -433,10 +433,8 @@ class DWI(object):
         if sum(constraints) >= 0 and sum(constraints) <= 3:
             dcnt, dind = self.createTensorOrder(2)
             wcnt, wind = self.createTensorOrder(4)
-            #ndirs = self.getndirs()
-            #cDirs = self.grad[(self.grad[:, 3] == self.maxBval()), 0:3]
-            ndirs = len(self.grad)
-            cDirs = self.grad[:, 0:3]       # Modified to compute constraints at each b0
+            ndirs = self.getndirs()
+            cDirs = self.grad[(self.grad[:, 3] == self.maxBval()), 0:3]
             C = np.empty((0, 22))
             if constraints[0] > 0:  # D > 0
                 C = np.append(C, np.hstack((np.zeros((ndirs, 1)),np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]] * cDirs[:, dind[:, 1]],np.zeros((ndirs, 15)))), axis=0)
