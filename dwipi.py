@@ -301,10 +301,20 @@ class DWI(object):
         rk = np.mean(akc)
         return ak, rk
 
-    def wlls(self, shat, dwi, b, constraints=None, G=None, h=None):
-        # compute a wlls fit using weights from inital fit shat
+    def wlls(self, shat, dwi, b, cons=None):#, dt_hat=None):
+        """
+        Estimates diffusion and kurtosis tenor at voxel with unconstrained Moore-Penrose pseudoinverse or constrained
+        quadratic convex optimization.
+
+        :param shat:
+        :param dwi:
+        :param b:
+        :param cons:
+        :param dt_hat:
+        :return:
+        """
         w = np.diag(shat)
-        if constraints is None:
+        if cons is None:
             dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
         # Constrained fitting
         # The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
@@ -318,26 +328,26 @@ class DWI(object):
         #   subject to A*x <= b
         # No lower or upper bounds
         else:
-            M = np.matmul(w, b).astype('double')
-            idx2add = M.shape[0] - M.shape[1]
-            M = matrix(np.hstack((M, np.zeros((M.shape[0], idx2add)))))     # To create a pseudo square matrix
-            P = dot(M.T, M)
-            const_vec = np.matmul(w, np.log(dwi)).astype('double')
-            P = M,
-            q = -matrix(const_vec)
-            G = matrix(-C)
-            h = matrix(h)
-            dt = solvers.qp(M, q, G, h)
-
+            C = matrix(np.matmul(w, b).astype('double'))
+            d = matrix(np.matmul(w, np.log(dwi)).astype('double').reshape(-1))
+            m, n = C.size
+            P = C.T * C
+            q = -C.T * d
+            cons = matrix(cons)
+            G = -cons.T * cons
+            h = matrix(np.zeros(cons.size[0]))
+            h = cons.T * h
+            # starting_vals = {'x': dt_hat}
+            dims = {'l': m, 'q': [], 's': []}
+            solvers.options['show_progress'] = False  # Solver options
+            solvers.options['maxiters'] = 22000
+            # if dt_hat=None:
+            dt = np.array(solvers.qp(P, q, G, h)['x']).reshape(-1)  # If estimated dt exists; initialize
+            # else:
+            #     dt = np.array(solvers.qp(P, q, G, h)['x'], initvals=starting_vals).reshape(-1)  # If estimated dt does not exist
         return dt
 
-
-        # for constrained fitting I'll need to modify this line. It is much slower than pinv so lets ignore for now.
-        #dt = opt.lsq_linear(np.matmul(w, b), np.matmul(w, np.log(dwi)), \
-        #     method='bvls', tol=1e-12, max_iter=22000, lsq_solver='exact')
-        return dt
-
-    def fit(self, constraints=[0, 1, 0], reject=None):
+    def fit(self, constraints=[0, 1, 0]):
         """
         Returns fitted diffusion or kurtosis tensor
         :return:
@@ -366,7 +376,7 @@ class DWI(object):
         self.b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
 
         dwi_ = self.vectorize(self.img, self.mask)
-        reject_ = self.vectorize(reject, self.mask)
+        # reject_ = self.vectorize(reject, self.mask)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
 
@@ -375,15 +385,16 @@ class DWI(object):
         h = np.zeros(C.shape[0])                    # Linear inequality constraint vector b_ub
 
         print('...fitting with wlls')
+        # dt = np.zeros((22, dwi_.shape[1]))
         inputs = tqdm(range(0, dwi_.shape[1]),
                       desc='WLLS',
                       unit='vox')
-        for i in inputs:
-            dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, constraints=constraints, G=-C, h=h)
+        # for i in inputs:
+        #     dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, cons=C)
 
         num_cores = multiprocessing.cpu_count()
         self.dt = Parallel(n_jobs=num_cores,prefer='processes')\
-            (delayed(self.wlls)(shat[:,i], dwi_[:,i], self.b) for i in inputs)
+            (delayed(self.wlls)(shat[:,i], dwi_[:,i], self.b, cons=C) for i in inputs)
         self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
         self.s0 = np.exp(self.dt[0,:])
         self.dt = self.dt[1:,:]
@@ -879,8 +890,8 @@ class DWI(object):
         inputs = tqdm(range(nvox),
                           desc='Reweighted Fitting',
                           unit='vox')
-        reject = Parallel(n_jobs=num_cores, prefer='processes') \
-            (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs)
+        (reject, dt) = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
+            (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
         # for i in inputs:
         #     reject[:,i], dt[:,i], fa[i], md[i] = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
         # dt = np.array(dt)
@@ -890,10 +901,11 @@ class DWI(object):
             dt[1, :] = dt[1, :] + np.log(sc/1000)
         #Unvectorizing
         reject = self.vectorize(np.array(reject).T, self.mask)
+        dt = np.array(dt)
         # fa = self.vectorize(np.array(fa), self.mask)
         # md = self.vectorize(np.array(md), self.mask)
 
-        return reject#, dt, fa, md
+        return reject, dt#, fa, md
 
     def irllsviolmask(self, reject):
         img = self.vectorize(reject, self.mask)
