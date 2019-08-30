@@ -347,11 +347,16 @@ class DWI(object):
             #     dt = np.array(solvers.qp(P, q, G, h)['x'], initvals=starting_vals).reshape(-1)  # If estimated dt does not exist
         return dt
 
-    def fit(self, constraints=None):
+    def fit(self, constraints=None, reject=None):
         """
         Returns fitted diffusion or kurtosis tensor
         :return:
         """
+        # Create constraints
+
+        if reject is None:
+            reject = np.zeros(self.img.shape)
+
         order = np.floor(np.log(np.abs(np.max(self.grad[:,-1])+1))/np.log(10))
         if order >= 2:
             self.grad[:, -1] = self.grad[:, -1]/1000
@@ -376,30 +381,32 @@ class DWI(object):
         self.b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
 
         dwi_ = self.vectorize(self.img, self.mask)
-        # reject_ = self.vectorize(reject, self.mask)
+        reject_ = self.vectorize(reject, self.mask).astype(bool)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
-
-        # Create constraints
-        if constraints is None:
-            C = None
-            tqdmDesc = 'Unconstrained WLLS'
-        else:
-            C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
-            tqdmDesc = 'Constrainted Convex'
 
         print('...fitting with wlls')
         # dt = np.zeros((22, dwi_.shape[1]))
         num_cores = multiprocessing.cpu_count()
-        inputs = tqdm(range(0, dwi_.shape[1]),
-                      desc=tqdmDesc,
-                      unit='vox')
+
         # for i in inputs:
         #     dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, cons=C)
+        if constraints is None or (constraints[0] == 0 and constraints[1] == 0 and constraints[2] == 0):
+            inputs = tqdm(range(0, dwi_.shape[1]),
+                          desc='Unconstrained WLLS',
+                          unit='vox')
+            self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
+                (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]]) for i in inputs)
 
+        else:
+            C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
+            inputs = tqdm(range(0, dwi_.shape[1]),
+                          desc='Constrainted Convex',
+                          unit='vox')
+            self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
+                (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]],
+                                    cons=C[~reject_[:, i]]) for i in inputs)
 
-        self.dt = Parallel(n_jobs=num_cores,prefer='processes')\
-            (delayed(self.wlls)(shat[:,i], dwi_[:,i], self.b, cons=C) for i in inputs)
         self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
         self.s0 = np.exp(self.dt[0,:])
         self.dt = self.dt[1:,:]
