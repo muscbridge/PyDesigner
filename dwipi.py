@@ -158,7 +158,7 @@ class DWI(object):
        12 |   W2223
        13 |   W2233
        14 |   W2333
-       15 |   W3000
+       15 |   W3333
         """
         imType = self.tensorType()
         if order is None:
