@@ -555,7 +555,7 @@ class DWI(object):
             dcnt, dind = self.createTensorOrder(2)
             wcnt, wind = self.createTensorOrder(4)
             ndirs = self.getndirs()
-            cDirs = self.grad[(self.grad[:, 3] == self.maxBval()), 0:3]
+            cDirs = self.grad[(self.grad[:, -1] == self.maxBval()), 0:3]
             C = np.empty((0, 22))
             if constraints[0] > 0:  # Dapp > 0
                 C = np.append(C, np.hstack((np.zeros((ndirs, 1)),np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]] * cDirs[:, dind[:, 1]],np.zeros((ndirs, 15)))), axis=0)
