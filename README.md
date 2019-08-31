@@ -43,29 +43,34 @@ PyDesigner is a join collarobation and as such consists of several developers.
 
 ### Developer
 <img src="https://avatars0.githubusercontent.com/u/13654344?s=400&v=4" align="left"
-     title="Siddhartha Dhiman GitHub" height="128"> 
-**Siddhartha Dhiman**
-    
-    Research Specialist<br/>
-    Department of Neuroscience<br/>
-    Medical University of South Carolina<br/>
+     title="GitHub: Siddhartha Dhiman" height="163"> 
+
+    Siddhartha Dhiman
+
+    Research Specialist
+    Department of Neuroscience
+    Medical University of South Carolina<
     dhiman@musc.edu
 
 ### Developer
 <img src="https://avatars2.githubusercontent.com/u/26722533?s=400&v=4" align="right"
-     title="Siddhartha Dhiman GitHub" height="128"> 
+     title="GitHub: Joshua Teves" height="163"> 
 
-     Joshua Teves<br/>
-     Systems Programmer<br/>
-     Medical University of South Carolina<br/>
-     teves@musc.edu<br/>
+     Joshua Teves
+
+     Systems Programmer
+     Department of Neuroscience
+     Medical University of South Carolina
+     teves@musc.edu
 
 ### Advisor
-<img src="https://muschealth.org/MUSCApps/HealthAssets/ProfileImages/jej50.jpg" align="right"
-     title="Siddhartha Dhiman GitHub" height="128">
+<img src="https://muschealth.org/MUSCApps/HealthAssets/ProfileImages/jej50.jpg" align="left"
+     title="MUSC: Jens Jensen" height="163">
 
      Jens Jensen, Ph.D.
+
      Professor
+     Department of Neuroscience
      Medical University of South Carolina
      <email placeholder>
      
