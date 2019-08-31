@@ -31,7 +31,7 @@ class DWI(object):
             bvecPath = os.path.join(path, fName + '.bvec')      # Add .bvec to NIFTI filename
             if os.path.exists(bvalPath) and os.path.exists(bvecPath):
                 bvecs = np.loadtxt(bvecPath)                    # Load bvecs
-                bvals = np.rint(np.loadtxt(bvalPath))           # Load bvals
+                bvals = np.rint(np.loadtxt(bvalPath)) / 1000    # Load bvals
                 self.grad = np.c_[np.transpose(bvecs), bvals]   # Combine bvecs and bvals into [n x 4] array where n is
                                                                 #   number of DWI volumes. [Gx Gy Gz Bval]
             else:
@@ -105,9 +105,9 @@ class DWI(object):
         -------
         a: 'dti' or 'dki' (string)
         """
-        if self.maxBval() <= 1500:
+        if self.maxBval() <= 1.5:
             type = 'dti'
-        elif self.maxBval() > 1500:
+        elif self.maxBval() > 1.5:
             type = 'dki'
         else:
             raise ValueError('tensortype: Error in determining maximum BVAL')
@@ -474,28 +474,29 @@ class DWI(object):
         if reject is None:
             reject = np.zeros(self.img.shape)
 
-        order = np.floor(np.log(np.abs(np.max(self.grad[:,-1])+1))/np.log(10))
+        grad = self.grad
+        order = np.floor(np.log(np.abs(np.max(grad[:,-1])+1))/np.log(10))
         if order >= 2:
-            self.grad[:, -1] = self.grad[:, -1]/1000
+            grad[:, -1] = grad[:, -1]
 
         self.img.astype(np.double)
         self.img[self.img <= 0] = np.finfo(np.double).eps
 
-        self.grad.astype(np.double)
-        normgrad = np.sqrt(np.sum(self.grad[:,:3]**2, 1))
+        grad.astype(np.double)
+        normgrad = np.sqrt(np.sum(grad[:,:3]**2, 1))
         normgrad[normgrad == 0] = 1
 
-        self.grad[:,:3] = self.grad[:,:3]/np.tile(normgrad, (3,1)).T
-        self.grad[np.isnan(self.grad)] = 0
+        grad[:,:3] = grad[:,:3]/np.tile(normgrad, (3,1)).T
+        grad[np.isnan(grad)] = 0
 
         dcnt, dind = self.createTensorOrder(2)
         wcnt, wind = self.createTensorOrder(4)
 
         ndwis = self.img.shape[-1]
         bs = np.ones((ndwis, 1))
-        bD = np.tile(dcnt,(ndwis, 1))*self.grad[:,dind[:, 0]]*self.grad[:,dind[:, 1]]
-        bW = np.tile(wcnt,(ndwis, 1))*self.grad[:,wind[:, 0]]*self.grad[:,wind[:, 1]]*self.grad[:,wind[:, 2]]*self.grad[:,wind[:, 3]]
-        self.b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
+        bD = np.tile(dcnt,(ndwis, 1))*grad[:,dind[:, 0]]*grad[:,dind[:, 1]]
+        bW = np.tile(wcnt,(ndwis, 1))*grad[:,wind[:, 0]]*grad[:,wind[:, 1]]*grad[:,wind[:, 2]]*grad[:,wind[:, 3]]
+        self.b = np.concatenate((bs, (np.tile(-grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(grad[:,-1], (15,1)).T**2)*bW), 1)
 
         dwi_ = self.vectorize(self.img, self.mask)
         reject_ = self.vectorize(reject, self.mask).astype(bool)
@@ -554,7 +555,7 @@ class DWI(object):
             dcnt, dind = self.createTensorOrder(2)
             wcnt, wind = self.createTensorOrder(4)
             ndirs = self.getndirs()
-            cDirs = self.grad[(self.grad[:, 3] == self.maxBval()), 0:3]
+            cDirs = self.grad[(self.grad[:, -1] == self.maxBval()), 0:3]
             C = np.empty((0, 22))
             if constraints[0] > 0:  # Dapp > 0
                 C = np.append(C, np.hstack((np.zeros((ndirs, 1)),np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]] * cDirs[:, dind[:, 1]],np.zeros((ndirs, 15)))), axis=0)
@@ -1078,7 +1079,7 @@ class DWI(object):
 
         return reject, dt#, fa, md
 
-    def tensorReorder(self):
+    def tensorReorder(self, dwiType):
         """Reorders tensors in DT to those of MRTRIX in accordance to the table below
 
         MRTRIX3 Tensors                     DESIGNER Tensors
@@ -1141,38 +1142,55 @@ class DWI(object):
 
         Parameters
         ----------
-        None:   just ensure you have run dwi.fit() prior to generate DT
+        dwiType:   'dti' or 'dki' (string)
+                    Indicates whether image is DTI or DKI
 
         Returns
         -------
-        dt:     reordered tensor to same format as MRTRIX
+        DT:         4D image containing DT tensor
+        KT:         4D image containing KT tensor
         """
         if self.dt is None:
             assert('Please run dwi.fit() to generate a tensor')
 
-        dt = np.zeros(self.dt.shape)
-        dt[0,:] =   self.dt[0, :]       # D0
-        dt[1, :] =  self.dt[3, :]       # D1
-        dt[2, :] =  self.dt[5, :]       # D2
-        dt[3, :] =  self.dt[1, :]       # D3
-        dt[4, :] =  self.dt[2, :]       # D4
-        dt[5, :] =  self.dt[4, :]       # D5
-        dt[6, :] =  self.dt[6, :]       # K0
-        dt[7, :] =  self.dt[16, :]      # K1
-        dt[8, :] =  self.dt[20, :]      # K2
-        dt[9, :] =  self.dt[7, :]       # K3
-        dt[10, :] = self.dt[8, :]       # K4
-        dt[11, :] = self.dt[12, :]      # K5
-        dt[12, :] = self.dt[15, :]      # K6
-        dt[13, :] = self.dt[17, :]      # K7
-        dt[14, :] = self.dt[19, :]      # K8
-        dt[15, :] = self.dt[9, :]       # K9
-        dt[16, :] = self.dt[11, :]      # K10
-        dt[17, :] = self.dt[18, :]      # K11
-        dt[18, :] = self.dt[10, :]      # K12
-        dt[19, :] = self.dt[13, :]      # K13
-        dt[20, :] = self.dt[8, :]       # K14
-        return dt
+
+        if dwiType == 'dti':
+            dt = np.zeros((6, self.dt.shape[1]))
+            dt[0,:] =   self.dt[0, :]       # D0
+            dt[1, :] =  self.dt[3, :]       # D1
+            dt[2, :] =  self.dt[5, :]       # D2
+            dt[3, :] =  self.dt[1, :]       # D3
+            dt[4, :] =  self.dt[2, :]       # D4
+            dt[5, :] =  self.dt[4, :]       # D5
+            DT = self.vectorize(dt[0:6, :], self.mask)
+            return DT
+
+        if dwiType == 'dki':
+            dt = np.zeros(self.dt.shape)
+            dt[0, :] =  self.dt[0, :]       # D0
+            dt[1, :] =  self.dt[3, :]       # D1
+            dt[2, :] =  self.dt[5, :]       # D2
+            dt[3, :] =  self.dt[1, :]       # D3
+            dt[4, :] =  self.dt[2, :]       # D4
+            dt[5, :] =  self.dt[4, :]       # D5
+            dt[6, :] =  self.dt[6, :]       # K0
+            dt[7, :] =  self.dt[16, :]      # K1
+            dt[8, :] =  self.dt[20, :]      # K2
+            dt[9, :] =  self.dt[7, :]       # K3
+            dt[10, :] = self.dt[8, :]       # K4
+            dt[11, :] = self.dt[12, :]      # K5
+            dt[12, :] = self.dt[15, :]      # K6
+            dt[13, :] = self.dt[17, :]      # K7
+            dt[14, :] = self.dt[19, :]      # K8
+            dt[15, :] = self.dt[9, :]       # K9
+            dt[16, :] = self.dt[11, :]      # K10
+            dt[17, :] = self.dt[18, :]      # K11
+            dt[18, :] = self.dt[10, :]      # K12
+            dt[19, :] = self.dt[13, :]      # K13
+            dt[20, :] = self.dt[8, :]       # K14
+            DT = self.vectorize(dt[0:6, :], self.mask)
+            KT = self.vectorize(dt[6:21, :], self.mask)
+            return (DT, KT)
 
     def irllsviolmask(self, reject):
         """Computes 3D violation mask of outliers detected from IRLLS method
