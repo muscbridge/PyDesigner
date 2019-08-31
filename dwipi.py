@@ -541,9 +541,9 @@ class DWI(object):
         Parameter(s)
         -----------
         constraints:    [1 X 3] logical vector indicating which constraints out of three to enable
-                        C[0] is D > 0
-                        C[1] is K > 0
-                        C[3] is K > 3/(b*D)
+                        C1 is Dapp > 0
+                        C1 is Kapp > 0
+                        C3 is Kapp < 3/(b*Dapp)
 
         Return(s)
         ---------
