@@ -31,7 +31,7 @@ class DWI(object):
             bvecPath = os.path.join(path, fName + '.bvec')      # Add .bvec to NIFTI filename
             if os.path.exists(bvalPath) and os.path.exists(bvecPath):
                 bvecs = np.loadtxt(bvecPath)                    # Load bvecs
-                bvals = np.rint(np.loadtxt(bvalPath))           # Load bvals
+                bvals = np.rint(np.loadtxt(bvalPath)) / 1000    # Load bvals
                 self.grad = np.c_[np.transpose(bvecs), bvals]   # Combine bvecs and bvals into [n x 4] array where n is
                                                                 #   number of DWI volumes. [Gx Gy Gz Bval]
             else:
@@ -105,9 +105,9 @@ class DWI(object):
         -------
         a: 'dti' or 'dki' (string)
         """
-        if self.maxBval() <= 1500:
+        if self.maxBval() <= 1.5:
             type = 'dti'
-        elif self.maxBval() > 1500:
+        elif self.maxBval() > 1.5:
             type = 'dki'
         else:
             raise ValueError('tensortype: Error in determining maximum BVAL')
@@ -476,7 +476,7 @@ class DWI(object):
 
         order = np.floor(np.log(np.abs(np.max(self.grad[:,-1])+1))/np.log(10))
         if order >= 2:
-            self.grad[:, -1] = self.grad[:, -1]/1000
+            self.grad[:, -1] = self.grad[:, -1]
 
         self.img.astype(np.double)
         self.img[self.img <= 0] = np.finfo(np.double).eps
