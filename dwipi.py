@@ -1079,7 +1079,7 @@ class DWI(object):
 
         return reject, dt#, fa, md
 
-    def tensorReorder(self):
+    def tensorReorder(self, dwiType):
         """Reorders tensors in DT to those of MRTRIX in accordance to the table below
 
         MRTRIX3 Tensors                     DESIGNER Tensors
@@ -1142,38 +1142,55 @@ class DWI(object):
 
         Parameters
         ----------
-        None:   just ensure you have run dwi.fit() prior to generate DT
+        dwiType:   'dti' or 'dki' (string)
+                    Indicates whether image is DTI or DKI
 
         Returns
         -------
-        dt:     reordered tensor to same format as MRTRIX
+        DT:         4D image containing DT tensor
+        KT:         4D image containing KT tensor
         """
         if self.dt is None:
             assert('Please run dwi.fit() to generate a tensor')
 
-        dt = np.zeros(self.dt.shape)
-        dt[0,:] =   self.dt[0, :]       # D0
-        dt[1, :] =  self.dt[3, :]       # D1
-        dt[2, :] =  self.dt[5, :]       # D2
-        dt[3, :] =  self.dt[1, :]       # D3
-        dt[4, :] =  self.dt[2, :]       # D4
-        dt[5, :] =  self.dt[4, :]       # D5
-        dt[6, :] =  self.dt[6, :]       # K0
-        dt[7, :] =  self.dt[16, :]      # K1
-        dt[8, :] =  self.dt[20, :]      # K2
-        dt[9, :] =  self.dt[7, :]       # K3
-        dt[10, :] = self.dt[8, :]       # K4
-        dt[11, :] = self.dt[12, :]      # K5
-        dt[12, :] = self.dt[15, :]      # K6
-        dt[13, :] = self.dt[17, :]      # K7
-        dt[14, :] = self.dt[19, :]      # K8
-        dt[15, :] = self.dt[9, :]       # K9
-        dt[16, :] = self.dt[11, :]      # K10
-        dt[17, :] = self.dt[18, :]      # K11
-        dt[18, :] = self.dt[10, :]      # K12
-        dt[19, :] = self.dt[13, :]      # K13
-        dt[20, :] = self.dt[8, :]       # K14
-        return dt
+
+        if dwiType == 'dti':
+            dt = np.zeros((6, self.dt.shape[1]))
+            dt[0,:] =   self.dt[0, :]       # D0
+            dt[1, :] =  self.dt[3, :]       # D1
+            dt[2, :] =  self.dt[5, :]       # D2
+            dt[3, :] =  self.dt[1, :]       # D3
+            dt[4, :] =  self.dt[2, :]       # D4
+            dt[5, :] =  self.dt[4, :]       # D5
+            DT = self.vectorize(dt[0:6, :], self.mask)
+            return DT
+
+        if dwiType == 'dki':
+            dt = np.zeros(self.dt.shape)
+            dt[0, :] =  self.dt[0, :]       # D0
+            dt[1, :] =  self.dt[3, :]       # D1
+            dt[2, :] =  self.dt[5, :]       # D2
+            dt[3, :] =  self.dt[1, :]       # D3
+            dt[4, :] =  self.dt[2, :]       # D4
+            dt[5, :] =  self.dt[4, :]       # D5
+            dt[6, :] =  self.dt[6, :]       # K0
+            dt[7, :] =  self.dt[16, :]      # K1
+            dt[8, :] =  self.dt[20, :]      # K2
+            dt[9, :] =  self.dt[7, :]       # K3
+            dt[10, :] = self.dt[8, :]       # K4
+            dt[11, :] = self.dt[12, :]      # K5
+            dt[12, :] = self.dt[15, :]      # K6
+            dt[13, :] = self.dt[17, :]      # K7
+            dt[14, :] = self.dt[19, :]      # K8
+            dt[15, :] = self.dt[9, :]       # K9
+            dt[16, :] = self.dt[11, :]      # K10
+            dt[17, :] = self.dt[18, :]      # K11
+            dt[18, :] = self.dt[10, :]      # K12
+            dt[19, :] = self.dt[13, :]      # K13
+            dt[20, :] = self.dt[8, :]       # K14
+            DT = self.vectorize(dt[0:6, :], self.mask)
+            KT = self.vectorize(dt[6:21, :], self.mask)
+            return (DT, KT)
 
     def irllsviolmask(self, reject):
         """Computes 3D violation mask of outliers detected from IRLLS method
