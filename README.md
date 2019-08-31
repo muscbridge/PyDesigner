@@ -23,7 +23,7 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 </p>
 
 <p align="center">
-  <a href="https://github.com/NYU-DiffusionMRI">
+  <a href="http://www.diffusion-mri.com/">
     <img src="https://greatoakscharter.org/wp-content/uploads/2017/03/NYU-Logo.png"
          alt="Sponsored by Evil Martians" width="128">
   </a>
