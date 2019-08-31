@@ -30,9 +30,9 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 </p>
 
 ## Table of Contents
-**[Abstract](#PyDesigner)**<br>
-**[General Information](##general-information)**<br>
-**[Meet the Team](##meet-the-team)**<br>
+**[Abstract](#pydesigner)**<br>
+**[General Information](#general-information)**<br>
+**[Meet the Team](#meet-the-team)**<br>
 
 ## General Information
 We here provide the code to estimate the diffusion kurtosis tensors from diffusion-weighted images. The (constrained) weighted linear least squares estimator is here preferred because of its accuracy and precision. See “Veraart, J., Sijbers, J., Sunaert, S., Leemans, A. & Jeurissen, B.,  Weighted linear least squares estimation of diffusion MRI parameters: strengths, limitations, and pitfalls. NeuroImage, 2013, 81, 335-346” for more details. Next, a set of diffusion and kurtosis parameter, including the white matter tract integrity metrics, can be calculated form the resulting kurtosis tensor.
