@@ -158,7 +158,7 @@ class DWI(object):
        12 |   W2223
        13 |   W2233
        14 |   W2333
-       15 |   W3000
+       15 |   W3333
         """
         imType = self.tensorType()
         if order is None:
@@ -1077,6 +1077,102 @@ class DWI(object):
         # md = self.vectorize(np.array(md), self.mask)
 
         return reject, dt#, fa, md
+
+    def tensorReorder(self):
+        """Reorders tensors in DT to those of MRTRIX in accordance to the table below
+
+        MRTRIX3 Tensors                     DESIGNER Tensors
+        ---------------                     ----------------
+
+        0   D0      1   1                       1   1
+        1   D1      2   2                       1   2
+        2   D2      3   3                       1   3
+        3   D3      1   2                       2   2
+        4   D4      1   3                       2   3
+        5   D5      2   3                       3   3
+
+        6   K0      1   1   1   1               1   1   1   1
+        7   K1      2   2   2   2               1   1   1   2
+        8   K2      3   3   3   3               1   1   1   3
+        9   K3      1   1   1   2               1   1   2   2
+        10  K4      1   1   1   3               1   1   2   3
+        11  K5      1   2   2   2               1   1   3   3
+        12  K6      1   3   3   3               1   2   2   2
+        13  K7      2   2   2   3               1   2   2   3
+        14  K8      2   3   3   3               1   2   3   3
+        15  K9      1   1   2   2               1   3   3   3
+        16  K10     1   1   3   3               2   2   2   2
+        17  K11     2   2   3   3               2   2   2   3
+        18  K12     1   1   2   3               2   2   3   3
+        19  K13     1   2   2   3               2   3   3   3
+        20  K14     1   2   3   3               3   3   3   3
+
+        Value Assignment
+        ----------------
+
+        MRTRIX3         DESIGNER
+        -------         --------
+            0               0
+            1               3
+            2               5
+            3               1
+            4               2
+            5               4
+
+            6               6
+            7               16
+            8               20
+            9               7
+            10              8
+            11              12
+            12              15
+            13              17
+            14              19
+            15              9
+            16              11
+            17              18
+            18              10
+            19              13
+            20              8
+
+        Usage
+        -----
+        dt = dwi.tensorReorder()
+
+        Parameters
+        ----------
+        None:   just ensure you have run dwi.fit() prior to generate DT
+
+        Returns
+        -------
+        dt:     reordered tensor to same format as MRTRIX
+        """
+        if self.dt is None:
+            assert('Please run dwi.fit() to generate a tensor')
+
+        dt = np.zeros(self.dt.shape)
+        dt[0,:] =   self.dt[0, :]       # D0
+        dt[1, :] =  self.dt[3, :]       # D1
+        dt[2, :] =  self.dt[5, :]       # D2
+        dt[3, :] =  self.dt[1, :]       # D3
+        dt[4, :] =  self.dt[2, :]       # D4
+        dt[5, :] =  self.dt[4, :]       # D5
+        dt[6, :] =  self.dt[6, :]       # K0
+        dt[7, :] =  self.dt[16, :]      # K1
+        dt[8, :] =  self.dt[20, :]      # K2
+        dt[9, :] =  self.dt[7, :]       # K3
+        dt[10, :] = self.dt[8, :]       # K4
+        dt[11, :] = self.dt[12, :]      # K5
+        dt[12, :] = self.dt[15, :]      # K6
+        dt[13, :] = self.dt[17, :]      # K7
+        dt[14, :] = self.dt[19, :]      # K8
+        dt[15, :] = self.dt[9, :]       # K9
+        dt[16, :] = self.dt[11, :]      # K10
+        dt[17, :] = self.dt[18, :]      # K11
+        dt[18, :] = self.dt[10, :]      # K12
+        dt[19, :] = self.dt[13, :]      # K13
+        dt[20, :] = self.dt[8, :]       # K14
+        return dt
 
     def irllsviolmask(self, reject):
         """Computes 3D violation mask of outliers detected from IRLLS method
