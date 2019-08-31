@@ -474,28 +474,29 @@ class DWI(object):
         if reject is None:
             reject = np.zeros(self.img.shape)
 
-        order = np.floor(np.log(np.abs(np.max(self.grad[:,-1])+1))/np.log(10))
+        grad = self.grad
+        order = np.floor(np.log(np.abs(np.max(grad[:,-1])+1))/np.log(10))
         if order >= 2:
-            self.grad[:, -1] = self.grad[:, -1]
+            grad[:, -1] = grad[:, -1]
 
         self.img.astype(np.double)
         self.img[self.img <= 0] = np.finfo(np.double).eps
 
-        self.grad.astype(np.double)
-        normgrad = np.sqrt(np.sum(self.grad[:,:3]**2, 1))
+        grad.astype(np.double)
+        normgrad = np.sqrt(np.sum(grad[:,:3]**2, 1))
         normgrad[normgrad == 0] = 1
 
-        self.grad[:,:3] = self.grad[:,:3]/np.tile(normgrad, (3,1)).T
-        self.grad[np.isnan(self.grad)] = 0
+        grad[:,:3] = grad[:,:3]/np.tile(normgrad, (3,1)).T
+        grad[np.isnan(grad)] = 0
 
         dcnt, dind = self.createTensorOrder(2)
         wcnt, wind = self.createTensorOrder(4)
 
         ndwis = self.img.shape[-1]
         bs = np.ones((ndwis, 1))
-        bD = np.tile(dcnt,(ndwis, 1))*self.grad[:,dind[:, 0]]*self.grad[:,dind[:, 1]]
-        bW = np.tile(wcnt,(ndwis, 1))*self.grad[:,wind[:, 0]]*self.grad[:,wind[:, 1]]*self.grad[:,wind[:, 2]]*self.grad[:,wind[:, 3]]
-        self.b = np.concatenate((bs, (np.tile(-self.grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(self.grad[:,-1], (15,1)).T**2)*bW), 1)
+        bD = np.tile(dcnt,(ndwis, 1))*grad[:,dind[:, 0]]*grad[:,dind[:, 1]]
+        bW = np.tile(wcnt,(ndwis, 1))*grad[:,wind[:, 0]]*grad[:,wind[:, 1]]*grad[:,wind[:, 2]]*grad[:,wind[:, 3]]
+        self.b = np.concatenate((bs, (np.tile(-grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(grad[:,-1], (15,1)).T**2)*bW), 1)
 
         dwi_ = self.vectorize(self.img, self.mask)
         reject_ = self.vectorize(reject, self.mask).astype(bool)
