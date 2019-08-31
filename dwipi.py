@@ -912,7 +912,7 @@ class DWI(object):
             dwi[dwi < 1] = 1
         else:
             scaling = True
-            if self.maxBval()/1000 < 0.001:
+            if self.maxBval() < 10:
                 tmp = dwi[dwi < 0.05]
             else:
                 tmp = dwi[dwi < 50]
@@ -936,10 +936,10 @@ class DWI(object):
         # Initialization
         b0_pos = np.zeros(b.shape,dtype=bool, order='F')
         if excludeb0:
-            if self.maxBval() < 10000:
-                b0_pos = b < 10
+            if self.maxBval() < 10:
+                b0_pos = b < 0.01
             else:
-                b0_pos = b < 10000
+                b0_pos = b < 10
 
         reject = np.zeros(dwi.shape, dtype=bool, order='F')
         conv = np.zeros((nvox, 1))
@@ -975,9 +975,9 @@ class DWI(object):
         def outlierHelper(dwi, bmat, sigma, b, b0_pos, maxiter=25, convcrit=1e-3, leverage=3, bounds=3):
             # Preliminary rough outlier check
             dwi_i = dwi.reshape((len(dwi), 1))
-            dwi0 = np.median(dwi_i[b.reshape(-1)/1000 < 0.01])
+            dwi0 = np.median(dwi_i[b.reshape(-1) < 0.01])
             out = dwi_i > (dwi0 + 3 * sigma)
-            if np.sum(~out[b.reshape(-1)/1000 > 0.01]) < (bmat.shape[1] - 1):
+            if np.sum(~out[b.reshape(-1) > 0.01]) < (bmat.shape[1] - 1):
                 out = np.zeros((out.shape),dtype=bool)
             out[b0_pos.reshape(-1)] = False
             bmat_i = bmat[~out.reshape(-1)]
