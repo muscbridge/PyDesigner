@@ -986,10 +986,13 @@ class DWI(object):
             ndof_i = n_i - bmat_i.shape[1]
 
             # WLLS estimation
-            dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
+            # dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
+            dt_i = np.linalg.solve(np.dot(bmat_i.T, bmat_i), np.dot(bmat_i.T, np.log(dwi_i)))
             w = np.exp(np.matmul(bmat_i, dt_i))
-            dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
-                                   rcond=None)[0]
+            # dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
+            #                        rcond=None)[0]
+            dt_i = np.linalg.solve(np.dot((bmat_i * np.tile(w, (1, nparam))).T, (bmat_i * np.tile(w, (1, nparam)))), \
+                                   np.dot((bmat_i * np.tile(w, (1, nparam))).T, (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w)))
             dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
 
             # Goodness-of-fit
@@ -1006,8 +1009,10 @@ class DWI(object):
                 GMM = np.square(C) / np.square(np.square(residu) + np.square(C))
                 w = np.sqrt(GMM) * dwi_hat
                 dt_imin1 = dt_i
-                dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
-                                       rcond=None)[0]
+                # dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
+                #                        rcond=None)[0]
+                dt_i = np.linalg.solve(np.dot((bmat_i * np.tile(w, (1, nparam))).T, (bmat_i * np.tile(w, (1, nparam)))), \
+                                       np.dot((bmat_i * np.tile(w, (1, nparam))).T,  (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w)))
                 dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
                 dwi_hat[dwi_hat < 1] = 1
                 residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
@@ -1020,9 +1025,16 @@ class DWI(object):
 
             # Outlier detection
             if ~gof2:
-                lev = np.diag(np.matmul(bmat_i, np.linalg.lstsq(np.matmul(np.transpose(bmat_i),
-                                                        np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i)),
-                                      np.matmul(np.transpose(bmat_i), np.diag(np.square(w.reshape(-1)))), rcond=None)[0]))
+                # lev = np.diag(np.matmul(bmat_i, np.linalg.lstsq(np.matmul(np.transpose(bmat_i),
+                #                                         np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i)),
+                #                       np.matmul(np.transpose(bmat_i), np.diag(np.square(w.reshape(-1)))), rcond=None)[0]))
+                lev = np.diag(\
+                    np.matmul(bmat_i, \
+                              np.linalg.solve(\
+                                  np.dot((np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i))).T, \
+                                         (np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i)))), \
+                                  np.dot((np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i))).T, \
+                                         np.matmul(np.transpose(bmat_i), np.diag(np.square(w.reshape(-1))))))))
                 lev = lev.reshape((lev.shape[0], 1))
                 lowerbound_linear = -bounds * np.sqrt(1 -lev) * sigma / dwi_hat
                 upperbound_nonlinear = bounds * np.sqrt(1 - lev) * sigma
@@ -1044,10 +1056,16 @@ class DWI(object):
             keep = ~reject.reshape(-1)
             bmat_i = bmat[keep,:]
             dwi_i = dwi[keep]
-            dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
+            # dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
+            dt_ = np.linalg.solve(np.dot(bmat_i.T, bmat_i), \
+                                  np.dot(bmat_i.T, np.log(dwi_i)))
             w = np.exp(np.matmul(bmat_i, dt_))
-            dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
-                                       rcond=None)[0]
+            # dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
+            #                            rcond=None)[0]
+            dt = np.linalg.solve(\
+                np.dot((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))).T, (bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam)))), \
+                np.dot((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))).T, \
+                       (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1)))))
             # dt_tmp = dt.reshape(-1)
             # dt2 = np.array([[dt_tmp[1], dt_tmp[2]/2, dt_tmp[3]],
             #        [dt_tmp[2]/2, dt_tmp[4], dt_tmp[5]/2],
@@ -1211,7 +1229,7 @@ class DWI(object):
         (ndwi, nvox) = img.shape
         b = np.array(self.grad[:, 3])
         b = np.reshape(b, (len(b), 1))
-        b_pos = ~(b < 10).reshape(-1)
+        b_pos = ~(b < 0.01).reshape(-1)
         img = img[b_pos, :]
         propViol = np.sum(img,axis=0).astype(int) / np.sum(b_pos)
         propViol = self.vectorize(propViol, self.mask)
