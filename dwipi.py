@@ -474,6 +474,7 @@ class DWI(object):
         if reject is None:
             reject = np.zeros(self.img.shape)
 
+
         grad = self.grad
         order = np.floor(np.log(np.abs(np.max(grad[:,-1])+1))/np.log(10))
         if order >= 2:
@@ -722,6 +723,40 @@ class DWI(object):
         map = np.reshape(map, nvox)
         map = self.vectorize(map, self.mask)
         return map
+
+    def goodDirections(self, outliers):
+        """Creates a 3D maps of good directions from IRLLS outlier map
+
+        Usage
+        -----
+        map = dwi.goodDirections(outliers)
+
+        Parameters
+        ----------
+        outliers:   4D maps of outliers from IRLLS
+
+        Returns
+        -------
+        map:        3D maps of number of good directions
+
+        """
+        # Compute number of good directions
+        maxB = self.maxBval()
+        outliers_ = self.vectorize(outliers, self.mask)
+        goodDirs = np.zeros(outliers_.shape[1])
+        nonB0 = ~(self.grad[:, -1] < 0.01)
+        bvals = np.unique(self.grad[nonB0, -1])
+        uniqueDirs = np.zeros((self.getndirs(), bvals.size), dtype='int')
+        for i in range(bvals.size):
+            uniqueDirs[:, i] = np.array(np.where(self.grad[:, -1] == bvals[i]))
+        tmpVals = np.zeros(uniqueDirs.shape)
+        for i in range(outliers_.shape[1]):
+            for j in range(bvals.size):
+                reject_vals[]
+
+
+
+            self.goodDirs[i] = maxB - np.sum(outliers_[nonB0, i])
 
     def findVoxelViol(self, adcVox, akcVox, maxB, c):
         """
@@ -1236,8 +1271,8 @@ class DWI(object):
         return propViol
 
 class medianFilter(object):
-    def __init__(self, img, violmask, th=1, sz=3, conn='face'):
-        assert th > 0, 'Threshold cannot be zero, disable median filtering instead'
+    def __init__(self, img, violmask, th=15, sz=3, conn='face'):
+        assert th < 0, 'Threshold cannot be less than zero, disable median filtering instead'
         assert violmask.shape == img.shape, 'Image dimensions not the same as violation mask dimensions'
         self.Threshold = th
         self.Size = sz
