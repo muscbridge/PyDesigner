@@ -338,3 +338,34 @@ if args.denoise:
     filetable['denoised'] = DWIFile(denoised)
     filetable['noisemap'] = DWIFile(noisemap)
     filetable['HEAD'] = filetable['denoised']
+
+#----------------------------------------------------------------------
+# Run Gibbs Unringing
+#----------------------------------------------------------------------
+if args.degibbs:
+    # add to HEAD name
+    degibbs_name = 'g' + filetable['HEAD'].getName() + '.nii'
+    degibbs = op.join(outpath, degibbs_name)
+    # check to see if this already exists
+    if not (args.resume and op.exists(degibbs)):
+        # system call
+        degibbs_args = ['mrdegibbs']
+        if args.force:
+            degibbs_args.append('-force')
+        else:
+            if op.exists(degibbs) and not args.resume:
+                raise Exception('Running mrdegibbs would cause an '
+                                'overwrite. '
+                                'In order to run this please delete the '
+                                'files, use --force, use --resume, or '
+                                'chnage output destination.')
+        if not args.verbose:
+            degibbs_args.append('-quiet')
+        degibbs_args.append(filetable['HEAD'].getFull())
+        degibbs_args.append(degibbs)
+        completion = subprocess.run(degibbs_args)
+        if completion.returncode != 0:
+            raise Exception('mrdegibbs failed, please look above for '
+                            'error sources')
+    filetable['unrung'] = DWIFile(degibbs)
+    filetable['HEAD'] = filetable['unrung']
