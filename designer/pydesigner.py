@@ -178,6 +178,9 @@ parser.add_argument('--pe_dir', metavar='<phase encoding direction>',
                     'in dwipreproc. Can be signed axis number, (-0,1,+2) '
                     'axis designator (RL, PA, IS), or '
                     'NIfTI axis codes (i-,j,k)')
+parser.add_argument('--resume', action='store_true',
+                    help='Continue from an aborted or partial previous '
+                    'run of pydesigner.')
 parser.add_argument('--force', action='store_true',
                     help='Force overwrites of existing files. Otherwise, '
                     'there will be an error at runtime.')
@@ -252,6 +255,10 @@ if not args.denoise:
 if args.DKI:
     args.DTI = True
 
+# --force and --resume given
+if args.resume and args.force:
+    errmsg+=msgstart+'--continue and --force\n'
+
 if args.output:
     if not op.isdir(args.output):
         try:
@@ -289,7 +296,7 @@ else:
 
 # Make the pipeline point to dwi as the last file since it's the only one
 # so far
-filetable['last'] = filetable['dwi']
+filetable['HEAD'] = filetable['dwi']
 
 #----------------------------------------------------------------------
 # Run Denoising
@@ -302,25 +309,32 @@ if args.denoise:
     # output the noise map even without user permission, space is cheap
     noisemap_name = 'n' + filetable['dwi'].getName() + '.nii'
     noisemap = op.join(outpath, noisemap_name)
-    # system call
-    denoise_args = ['dwidenoise', '-noise', noisemap]
-    if args.force:
-        denoise_args.append('-force')
-    else:
-        if op.exists(denoised) or op.exists(noisemap):
-            raise Exception('Running dwidenoise would cause an overwrite. '
-                            'In order to run this please delete the '
-                            'files, use --force, or change output '
-                            'destination.')
-    if not args.verbose:
-        denoise_args.append('-quiet')
+    # check to see if this already exists
+    if not (args.resume and op.exists(denoised) and op.exists(noisemap)):
+        # system call
+        denoise_args = ['dwidenoise', '-noise', noisemap]
+        if args.force:
+            denoise_args.append('-force')
+        else:
+            if (op.exists(denoised) or op.exists(noisemap) and
+                not args.resume):
+                raise Exception('Running dwidenoise would cause an '
+                                'overwrite. '
+                                'In order to run this please delete the '
+                                'files, use --force, or change output '
+                                'destination.')
+        if not args.verbose:
+            denoise_args.append('-quiet')
 
-    if args.extent:
-        denoise_args.append('-extent')
-        denoise_args.append(args.extent)
-    denoise_args.append(filetable['dwi'].getFull())
-    denoise_args.append(denoised)
-    completion = subprocess.run(denoise_args)
-    if completion.returncode != 0:
-        raise Exception('dwidenoise failed, please look above for error '
-                        ' sources')
+        if args.extent:
+            denoise_args.append('-extent')
+            denoise_args.append(args.extent)
+        denoise_args.append(filetable['dwi'].getFull())
+        denoise_args.append(denoised)
+        completion = subprocess.run(denoise_args)
+        if completion.returncode != 0:
+            raise Exception('dwidenoise failed, please look above for '
+                            ' error sources')
+    filetable['denoised'] = DWIFile(denoised)
+    filetable['noisemap'] = DWIFile(noisemap)
+    filetable['HEAD'] = filetable['denoised']
