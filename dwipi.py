@@ -755,14 +755,15 @@ class DWI(object):
         for i in range(bvals.size):
             bidx[:, i] = np.array(np.where(self.grad[:, -1] == bvals[i]))
 
-        tmpVals = np.zeros(bidx.shape)
-        sumViols = np.zeros(nvox)
+        tmpVals = np.zeros(bidx.shape, dtype=bool)
+        sumViols = np.zeros(nvox, dtype=int)
         for i in range(nvox):
             for j in range(bvals.size):
                 tmpVals[:,j] = outliers_[bidx[:,j], i]
                 sumViols[i] = np.sum(np.any(tmpVals, axis=1))
 
-        map = sumViols/self.getndirs()  # Proprotional violations
+        map = self.getndirs() - sumViols        # Number of good directions
+        map = self.vectorize(map, self.mask)
         return map
 
     def findVoxelViol(self, adcVox, akcVox, maxB, c):
