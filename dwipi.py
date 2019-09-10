@@ -726,6 +726,9 @@ class DWI(object):
 
     def goodDirections(self, outliers):
         """Creates a 3D maps of good directions from IRLLS outlier map
+        For any given voxel, a violation is computed using logical or operant for all b-values. Whether
+        an outlier occurs at b1000 or b1000 and b2000, that voxel is still a violation unless none of
+        the b-values have outliers.
 
         Usage
         -----
@@ -743,20 +746,24 @@ class DWI(object):
         # Compute number of good directions
         maxB = self.maxBval()
         outliers_ = self.vectorize(outliers, self.mask)
-        goodDirs = np.zeros(outliers_.shape[1])
+        nvox = outliers_.shape[1]
         nonB0 = ~(self.grad[:, -1] < 0.01)
         bvals = np.unique(self.grad[nonB0, -1])
-        uniqueDirs = np.zeros((self.getndirs(), bvals.size), dtype='int')
+
+        # bidx is an index locator where rows are indexes of b-value and columns are unique b-values
+        bidx = np.zeros((self.getndirs(), bvals.size), dtype='int')
         for i in range(bvals.size):
-            uniqueDirs[:, i] = np.array(np.where(self.grad[:, -1] == bvals[i]))
-        tmpVals = np.zeros(uniqueDirs.shape)
-        for i in range(outliers_.shape[1]):
+            bidx[:, i] = np.array(np.where(self.grad[:, -1] == bvals[i]))
+
+        tmpVals = np.zeros(bidx.shape)
+        sumViols = np.zeros(nvox)
+        for i in range(nvox):
             for j in range(bvals.size):
-                reject_vals[]
+                tmpVals[:,j] = outliers_[bidx[:,j], i]
+                sumViols[i] = np.sum(np.any(tmpVals, axis=1))
 
-
-
-            self.goodDirs[i] = maxB - np.sum(outliers_[nonB0, i])
+        map = sumViols/self.getndirs()  # Proprotional violations
+        return map
 
     def findVoxelViol(self, adcVox, akcVox, maxB, c):
         """
