@@ -181,45 +181,6 @@ class DWI(object):
             raise ValueError('createTensorOrder: Please enter valid order values (2 or 4).')
         return cnt, ind
 
-    def vectorize(self, img, mask):
-        """ Returns vectorized image based on brain mask, requires no input parameters
-        If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
-        If the input is 3D or 4D, vectorize it using a mask
-        Classification: Method
-
-        Usage
-        -----
-        vec = dwi.vectorize(img) if there's no mask
-        vec = dwi.vectorize(img, mask) if there's a mask
-
-        Returns
-        -------
-        vec: N X number_of_voxels vector or array, where N is the number of DWI volumes
-        """
-        if mask is None:
-            mask = np.ones((img.shape[0], img.shape[1], img.shape[2]), order='F')
-        mask = mask.astype(bool)
-        if img.ndim == 1:
-            n = img.shape[0]
-            s = np.zeros((mask.shape[0], mask.shape[1], mask.shape[2]), order='F')
-            s[mask] = img
-        if img.ndim == 2:
-            n = img.shape[0]
-            s = np.zeros((mask.shape[0], mask.shape[1], mask.shape[2], n), order='F')
-            for i in range(0, n):
-                s[mask, i] = img[i,:]
-        if img.ndim == 3:
-            maskind = np.ma.array(img, mask=np.logical_not(mask))
-            s = np.ma.compressed(maskind)
-        if img.ndim == 4:
-            s = np.zeros((img.shape[-1], np.sum(mask).astype(int)), order='F')
-            for i in range(0, img.shape[-1]):
-                tmp = img[:,:,:,i]
-                # Compressed returns non-masked area, so invert the mask first
-                maskind = np.ma.array(tmp, mask=np.logical_not(mask))
-                s[i,:] = np.ma.compressed(maskind)
-        return np.squeeze(s)
-
     def fibonacciSphere(self, samples=1, randomize=True):
         """Returns evenly spaced points on a sphere
         Classification: Method
@@ -499,8 +460,8 @@ class DWI(object):
         bW = np.tile(wcnt,(ndwis, 1))*grad[:,wind[:, 0]]*grad[:,wind[:, 1]]*grad[:,wind[:, 2]]*grad[:,wind[:, 3]]
         self.b = np.concatenate((bs, (np.tile(-grad[:,-1], (6,1)).T*bD), np.squeeze(1/6*np.tile(grad[:,-1], (15,1)).T**2)*bW), 1)
 
-        dwi_ = self.vectorize(self.img, self.mask)
-        reject_ = self.vectorize(reject, self.mask).astype(bool)
+        dwi_ = vectorize(self.img, self.mask)
+        reject_ = vectorize(reject, self.mask).astype(bool)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
 
@@ -620,21 +581,21 @@ class DWI(object):
         ak = np.reshape(ak, (nvox))
         rk = np.reshape(rk, (nvox))
 
-        l1 = self.vectorize(values[:, 0], self.mask)
-        l2 = self.vectorize(values[:, 1], self.mask)
-        l3 = self.vectorize(values[:, 2], self.mask)
-        v1 = self.vectorize(vectors[:, :, 0].T, self.mask)
+        l1 = vectorize(values[:, 0], self.mask)
+        l2 = vectorize(values[:, 1], self.mask)
+        l3 = vectorize(values[:, 2], self.mask)
+        v1 = vectorize(vectors[:, :, 0].T, self.mask)
 
         md = (l1 + l2 + l3) / 3
         rd = (l2 + l3) / 2
         ad = l1
         fa = np.sqrt(1 / 2) * np.sqrt((l1 - l2) ** 2 + (l2 - l3) ** 2 + (l3 - l1) ** 2) / np.sqrt(
             l1 ** 2 + l2 ** 2 + l3 ** 2)
-        trace = self.vectorize(trace.T, self.mask)
+        trace = vectorize(trace.T, self.mask)
         fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1], fa * v1[:, :, :, 2]), axis=3))
-        ak = self.vectorize(ak, self.mask)
-        rk = self.vectorize(rk, self.mask)
-        mk = self.vectorize(mk, self.mask)
+        ak = vectorize(ak, self.mask)
+        rk = vectorize(rk, self.mask)
+        mk = vectorize(mk, self.mask)
         return md, rd, ad, fa, fe, trace, mk, ak, rk
 
     def findViols(self, c=[0, 1, 0]):
@@ -721,7 +682,7 @@ class DWI(object):
             map = sumViols / (3 * dirSample)
 
         map = np.reshape(map, nvox)
-        map = self.vectorize(map, self.mask)
+        map = vectorize(map, self.mask)
         return map
 
     def goodDirections(self, outliers):
@@ -745,7 +706,7 @@ class DWI(object):
         """
         # Compute number of good directions
         maxB = self.maxBval()
-        outliers_ = self.vectorize(outliers, self.mask)
+        outliers_ = vectorize(outliers, self.mask)
         nvox = outliers_.shape[1]
         nonB0 = ~(self.grad[:, -1] < 0.01)
         bvals = np.unique(self.grad[nonB0, -1])
@@ -763,7 +724,7 @@ class DWI(object):
                 sumViols[i] = np.sum(np.any(tmpVals, axis=1))
 
         map = self.getndirs() - sumViols        # Number of good directions
-        map = self.vectorize(map, self.mask)
+        map = vectorize(map, self.mask)
         return map
 
     def findVoxelViol(self, adcVox, akcVox, maxB, c):
@@ -844,7 +805,7 @@ class DWI(object):
         map = Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.findVoxelViol)(adc[:,i], akc[:,i], maxB, [0, 1, 0]) for i in inputs)
         map = np.reshape(pViols2, nvox)
-        map = self.multiplyMask(self.vectorize(map,self.mask))
+        map = self.multiplyMask(vectorize(map,self.mask))
         return map
 
     def multiplyMask(self, img):
@@ -889,7 +850,7 @@ class DWI(object):
             akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
             akc_out.astype('bool')
         self.outliers = akc_out
-        return self.multiplyMask(self.vectorize(akc_out, self.mask))
+        return self.multiplyMask(vectorize(akc_out, self.mask))
 
     def irlls(self, excludeb0=True, maxiter=25, convcrit=1e-3, mode='DKI', leverage=0.85, bounds=3):
         """This functions performs outlier detection and robust parameter estimation for diffusion MRI using the
@@ -943,7 +904,7 @@ class DWI(object):
 
         print('...iterative reweighted linear least squares')
         # Vectorize DWI
-        dwi = self.vectorize(self.img, self.mask)
+        dwi = vectorize(self.img, self.mask)
         (ndwi, nvox) = dwi.shape
         b = np.array(self.grad[:, 3])
         b = np.reshape(b, (len(b), 1))
@@ -1133,10 +1094,10 @@ class DWI(object):
         if scaling:
             dt[1, :] = dt[1, :] + np.log(sc/1000)
         #Unvectorizing
-        reject = self.vectorize(np.array(reject).T, self.mask)
+        reject = vectorize(np.array(reject).T, self.mask)
         dt = np.array(dt)
-        # fa = self.vectorize(np.array(fa), self.mask)
-        # md = self.vectorize(np.array(md), self.mask)
+        # fa = vectorize(np.array(fa), self.mask)
+        # md = vectorize(np.array(md), self.mask)
 
         return reject, dt#, fa, md
 
@@ -1223,7 +1184,7 @@ class DWI(object):
             dt[3, :] =  self.dt[1, :]       # D3
             dt[4, :] =  self.dt[2, :]       # D4
             dt[5, :] =  self.dt[4, :]       # D5
-            DT = self.vectorize(dt[0:6, :], self.mask)
+            DT = vectorize(dt[0:6, :], self.mask)
             return DT
 
         if dwiType == 'dki':
@@ -1249,8 +1210,8 @@ class DWI(object):
             dt[18, :] = self.dt[10, :]      # K12
             dt[19, :] = self.dt[13, :]      # K13
             dt[20, :] = self.dt[8, :]       # K14
-            DT = self.vectorize(dt[0:6, :], self.mask)
-            KT = self.vectorize(dt[6:21, :], self.mask)
+            DT = vectorize(dt[0:6, :], self.mask)
+            KT = vectorize(dt[6:21, :], self.mask)
             return (DT, KT)
 
     def irllsviolmask(self, reject):
@@ -1268,14 +1229,14 @@ class DWI(object):
         Returns
         propviol:   3D mask where voxel value is the percentage of directional violations
         """
-        img = self.vectorize(reject, self.mask)
+        img = vectorize(reject, self.mask)
         (ndwi, nvox) = img.shape
         b = np.array(self.grad[:, 3])
         b = np.reshape(b, (len(b), 1))
         b_pos = ~(b < 0.01).reshape(-1)
         img = img[b_pos, :]
         propViol = np.sum(img,axis=0).astype(int) / np.sum(b_pos)
-        propViol = self.vectorize(propViol, self.mask)
+        propViol = vectorize(propViol, self.mask)
         return propViol
 
 class medianFilter(object):
@@ -1407,8 +1368,8 @@ class medianFilter(object):
         d2move = np.int(
             np.abs(self.Size - (centralIdx + 1)))  # Add 1 to central idx because first index starts with zero
 
-        # Pad Image
-        img = np.pad(img, d2move, 'constant', constant_values=np.nan)
+        # Pad image with zeros
+        img = np.pad(img, d2move, 'constant', constant_values=0)
 
         violIdx = np.array(np.where(self.Mask))  # Locate coordinates of violations
         # self.PatchIdx = np.array(np.zeros(violIdx.shape[1]),dtype='int')
@@ -1444,6 +1405,45 @@ class medianFilter(object):
         img = np.delete(img, [0, img.shape[1] - 1], axis=1)
         img = np.delete(img, [0, img.shape[2] - 1], axis=2)
         return img
+
+def vectorize(img, mask):
+    """ Returns vectorized image based on brain mask, requires no input parameters
+    If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
+    If the input is 3D or 4D, vectorize it using a mask
+    Classification: Method
+
+    Usage
+    -----
+    vec = dwi.vectorize(img) if there's no mask
+    vec = dwi.vectorize(img, mask) if there's a mask
+
+    Returns
+    -------
+    vec: N X number_of_voxels vector or array, where N is the number of DWI volumes
+    """
+    if mask is None:
+        mask = np.ones((img.shape[0], img.shape[1], img.shape[2]), order='F')
+    mask = mask.astype(bool)
+    if img.ndim == 1:
+        n = img.shape[0]
+        s = np.zeros((mask.shape[0], mask.shape[1], mask.shape[2]), order='F')
+        s[mask] = img
+    if img.ndim == 2:
+        n = img.shape[0]
+        s = np.zeros((mask.shape[0], mask.shape[1], mask.shape[2], n), order='F')
+        for i in range(0, n):
+            s[mask, i] = img[i,:]
+    if img.ndim == 3:
+        maskind = np.ma.array(img, mask=np.logical_not(mask))
+        s = np.ma.compressed(maskind)
+    if img.ndim == 4:
+        s = np.zeros((img.shape[-1], np.sum(mask).astype(int)), order='F')
+        for i in range(0, img.shape[-1]):
+            tmp = img[:,:,:,i]
+            # Compressed returns non-masked area, so invert the mask first
+            maskind = np.ma.array(tmp, mask=np.logical_not(mask))
+            s[i,:] = np.ma.compressed(maskind)
+    return np.squeeze(s)
 
 def writeNii(map, hdr, outDir, range=None):
     """Write clipped NifTi images
