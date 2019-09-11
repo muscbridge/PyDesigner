@@ -1246,7 +1246,7 @@ class medianFilter(object):
         self.Threshold = th
         self.Size = sz
         self.Connectivity = conn
-        self.Mask = violmask < th
+        self.Mask = np.logical_and(violmask < th, violmask > 0)
         self.Img = img
 
         # Get box filter properties
