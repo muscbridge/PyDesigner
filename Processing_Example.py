@@ -55,6 +55,8 @@ dp.writeNii(goodDirs, myimage.hdr, dirPath)
 medFilt = dp.medianFilter(img=mk,
                          violmask=goodDirs,
                          th=30)
+medMask = os.path.join(savePath, 'median_mask.nii')
+dp.writeNii(medFilt.Mask, myimage.hdr, medMask)
 
 medFilt.findReplacement(bias='rand')
 
