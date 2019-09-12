@@ -53,8 +53,8 @@ dirPath = os.path.join(savePath, 'good_directions.nii')
 dp.writeNii(goodDirs, myimage.hdr, dirPath)
 
 medFilt = dp.medianFilter(img=mk,
-                         violmask=goodDirs,
-                         th=30)
+                         violmask=goodDirs)
+
 medMask = os.path.join(savePath, 'median_mask.nii')
 dp.writeNii(medFilt.Mask, myimage.hdr, medMask)
 
