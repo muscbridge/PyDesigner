@@ -1040,8 +1040,8 @@ class DWI(object):
                                   np.dot((np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i))).T, \
                                          np.matmul(np.transpose(bmat_i), np.diag(np.square(w.reshape(-1))))))))
                 lev = lev.reshape((lev.shape[0], 1))
-                lowerbound_linear = -bounds * np.sqrt(1 -lev) * sigma / dwi_hat
-                upperbound_nonlinear = bounds * np.sqrt(1 - lev) * sigma
+                lowerbound_linear = -bounds * np.lib.scimath.sqrt(1 -lev) * sigma / dwi_hat
+                upperbound_nonlinear = bounds * np.lib.scimath.sqrt(1 - lev) * sigma
 
                 tmp = np.zeros(residu.shape, dtype=bool, order='F')
                 tmp[residu < lowerbound_linear] = True
