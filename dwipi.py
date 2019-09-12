@@ -723,7 +723,7 @@ class DWI(object):
                 tmpVals[:,j] = outliers_[bidx[:,j], i]
                 sumViols[i] = np.sum(np.any(tmpVals, axis=1))
 
-        map = self.getndirs() - sumViols        # Number of good directions
+        map = np.full(sumViols.shape, self.getndirs()) - sumViols   # Number of good directions
         map = vectorize(map, self.mask)
         return map
 
