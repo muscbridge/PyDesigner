@@ -1292,11 +1292,11 @@ class medianFilter(object):
         for i in inputs:
             # Index beginning and ending of patch
             Ib = violIdx[0, i] - d2move
-            Ie = violIdx[0, i] + d2move     # Mitigate Python's [X,Y) indexing
+            Ie = violIdx[0, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
             Jb = violIdx[1, i] - d2move
-            Je = violIdx[1, i] + d2move     # Mitigate Python's [X,Y) indexing
+            Je = violIdx[1, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
             Kb = violIdx[2, i] - d2move
-            Ke = violIdx[2, i] + d2move     # Mitigate Python's [X,Y) indexing
+            Ke = violIdx[2, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
 
             if self.Connectivity == 'all':
                 patchViol = np.delete(np.ravel(self.Mask[Ib:Ie, Jb:Je, Kb:Ke]), 13)     # Remove 14th (centroid) element
@@ -1378,11 +1378,11 @@ class medianFilter(object):
         for i in inputs:
             # Index beginning and ending of patch
             Ib = violIdx[0, i] - d2move
-            Ie = violIdx[0, i] + d2move  # Mitigate Python's [X,Y) indexing
+            Ie = violIdx[0, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
             Jb = violIdx[1, i] - d2move
-            Je = violIdx[1, i] + d2move  # Mitigate Python's [X,Y) indexing
+            Je = violIdx[1, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
             Kb = violIdx[2, i] - d2move
-            Ke = violIdx[2, i] + d2move  # Mitigate Python's [X,Y) indexing
+            Ke = violIdx[2, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
 
             if self.Connectivity == 'all':
                 patchViol = np.delete(np.ravel(self.Mask[Ib:Ie, Jb:Je, Kb:Ke]), 13)     # Remove 14th (centroid) element
