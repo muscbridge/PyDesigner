@@ -127,13 +127,6 @@ parser.add_argument('--degibbs', action='store_true', default=False,
 parser.add_argument('--eddy', action='store_true', default=False,
                     help='Run FSL eddy. NOTE: requires phase encoding '
                     'specification to run.')
-parser.add_argument('--b1correct', action='store_true', default=False,
-                    help='Include a bias correction step in dwi '
-                    ' preprocessing. ')
-parser.add_argument('--scaleb0median', action='store_true',
-                    default=False,
-                    help='Scale the dwi volume to median b0 CSF intensity '
-                    'of 1000 (useful for multiple acquisitions). ')
 parser.add_argument('--smooth', action='store_true', default=False,
                     help='Include a CSF-free smoothing step during dwi '
                     'preprocessing. FWHM is usually 1.2 times voxel '
