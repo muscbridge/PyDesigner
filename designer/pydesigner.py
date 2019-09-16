@@ -362,3 +362,10 @@ if args.degibbs:
                             'error sources')
     filetable['unrung'] = DWIFile(degibbs)
     filetable['HEAD'] = filetable['unrung']
+
+#----------------------------------------------------------------------
+# Undistort
+#----------------------------------------------------------------------
+if args.eddy:
+    # TODO: construct
+    print('UNDER CONSTRUCTION, SORRY, SKIPPING...');
