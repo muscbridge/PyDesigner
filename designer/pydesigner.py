@@ -218,8 +218,8 @@ if not args.denoise:
     if args.extent:
         warningmsg+=stdmsg+'--extent given; overriding with --denoise'
         args.denoise = True
-    if args.degibbs:
-        warningmsg+=stdmsg+'--degibbs given; overriding with --denoise'
+    if args.rician:
+        warningmsg+=stdmsg+'--rician given; overriding with --denoise'
         args.denoise = True
 
 # --force and --resume given
@@ -343,3 +343,9 @@ if args.degibbs:
 if args.eddy:
     # TODO: construct
     print('UNDER CONSTRUCTION, SORRY, SKIPPING...');
+
+#----------------------------------------------------------------------
+# Rician Noise Correction
+#----------------------------------------------------------------------
+if args.rician:
+    print('rician!')
