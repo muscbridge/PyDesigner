@@ -1141,14 +1141,14 @@ class DWI(object):
             (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
         # for i in inputs:
         #     reject[:,i], dt[:,i], fa[i], md[i] = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
-        # dt = np.array(dt)
+        dt = np.array(dt)
         # self.dt = dt
         #Unscaling
         if scaling:
             dt[1, :] = dt[1, :] + np.log(sc/1000)
         #Unvectorizing
         reject = vectorize(np.array(reject).T, self.mask)
-        dt = np.array(dt)
+        # dt = np.array(dt)
         # fa = vectorize(np.array(fa), self.mask)
         # md = vectorize(np.array(md), self.mask)
 
