@@ -1,2 +1,22 @@
+__pycache__/designerfunc\.cpython-37\.pyc
 
-\.DS_Store
+\.idea/libraries/R_User_Library\.xml
+
+\.idea/misc\.xml
+
+\.idea/modules\.xml
+
+\.idea/other\.xml
+
+\.idea/PyDesigner\.iml
+
+\.idea/vcs\.xml
+
+\.idea/workspace\.xml
+=======
+__pycache__
+*.pyc
+
+.DS_Store
+
+.ipynb_checkpoints/
