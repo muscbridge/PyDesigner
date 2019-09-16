@@ -1324,7 +1324,7 @@ class medianFilter(object):
         (Ix, Iy, Iz) = img.shape
         (Mx, My, Mz) = self.Mask.shape
 
-    def findReplacement(self, bias='left'):
+    def findReplacement(self, bias='rand'):
         """
         Returns information on replacements for violating voxels
 
