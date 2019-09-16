@@ -1457,9 +1457,11 @@ class medianFilter(object):
                 patchViol = self.Mask[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
                 patchViol = np.hstack((patchViol, self.Mask[violIdx[0,i], [Jb, Je], violIdx[2, i]]))
                 patchViol = np.hstack((patchViol, self.Mask[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
-                patchImg = self.Img[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
-                patchImg = np.hstack((patchImg, self.Img[violIdx[0, i], [Jb, Je], violIdx[2, i]]))
-                patchImg = np.hstack((patchImg, self.Img[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
+                patchImg = img[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
+                patchImg = np.hstack((patchImg, img[violIdx[0, i], [Jb,
+                                                                  Je], violIdx[2, i]]))
+                patchImg = np.hstack((patchImg, img[violIdx[0, i],
+                                                  violIdx[1, i], [Kb, Ke]]))
 
             if np.isnan(self.PatchIdx[i]) == True:
                 continue
