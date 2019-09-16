@@ -131,12 +131,9 @@ parser.add_argument('--smooth', action='store_true', default=False,
                     help='Include a CSF-free smoothing step during dwi '
                     'preprocessing. FWHM is usually 1.2 times voxel '
                     'size. ')
-parser.add_argument('-d', '--DTI', action='store_true', default=False,
-                    help='Include DTI parameters in output folder: '
-                    'MD, AD, RD, FA, eigen-values/vectors. ')
-parser.add_argument('-k', '--DKI', action='store_true', default=False,
-                    help='Include DKI parameters in output folder: '
-                    'MK, AK, RK. Will run DTI in addition. ')
+parser.add_argument('--rician', action='store_true', default=False,
+                    help='Perform Rician noise correction on the data '
+                    '(requires --denoise to generate a noisemap).')
 parser.add_argument('-w', '--WMTI', action='store_true', default=False,
                     help='Include DKI WMTI parameters (forces DKI): '
                     'AWF, IAS_params, EAS_params. ')
@@ -197,19 +194,6 @@ override = '; overriding with '
 if args.rpe_pair and args.rpe_all:
     errmsg+=msgstart+'--rpe_pair and --rpe_all\n'
 
-# DKI
-if not args.DKI:
-    nodki='no --DKI but uses '
-    if args.WMTI:
-        warningmsg+=msgstart+nodki+'--WMTI'+override+'--DKI\n'
-        args.DKI = True
-    if args.kcumulants:
-        warningmsg+=msgstart+nodki+'--kcumulants'+override+'--DKI\n'
-        args.DKI = True
-    if args.fit_constraints != '0,1,0':
-        warningmsg+=msgstart+nodki+'--fit_constraints'+override+'--DKI\n'
-        args.DKI = True
-
 # Warn if --standard and cherry-picking
 if args.standard:
     stdmsg= '--standard but cherry-picking '
@@ -222,17 +206,11 @@ if args.standard:
         warningmsg+=msgstart+stdmsg+'--b1correct'+override
     if args.smooth:
         warningmsg+=msgstart+stdmsg+'--smooth'+override
-    if args.DTI:
-        warningmsg+=msgstart+stdmsg+'--DTI'+override
-    if args.DKI:
-        warningmsg+=msgstart+stdmsg+'--DKI'+override
     # Coerce all of the above to be true
     args.denoise = True
     args.eddy = True
     args.b1correct = True
     args.smooth = True
-    args.DTI = True
-    args.DKI = True
 
 # (Extent or Degibbs) and no Denoise
 if not args.denoise:
@@ -244,10 +222,6 @@ if not args.denoise:
         warningmsg+=stdmsg+'--degibbs given; overriding with --denoise'
         args.denoise = True
 
-# Coerce DTI if given DKI; not warning-worthy since this step is obvious
-if args.DKI:
-    args.DTI = True
-
 # --force and --resume given
 if args.resume and args.force:
     errmsg+=msgstart+'--continue and --force\n'
@@ -257,7 +231,7 @@ if args.output:
         try:
             os.mkdir(args.output)
         except:
-            raise Exception('Output directory doesn not exist and cannot '
+            raise Exception('Output directory does not exist and cannot '
                             'be made.')
 
 # Print warnings
