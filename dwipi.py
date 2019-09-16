@@ -485,13 +485,20 @@ class DWI(object):
         ndwis = self.img.shape[-1]
         bs = np.ones((ndwis, 1))
         bD = np.tile(dcnt,(ndwis, 1))*grad[:,dind[:, 0]]*grad[:,dind[:, 1]]
-        bW = np.tile(wcnt,
-                     (ndwis, 1))*grad[:,wind[:, 0]]*grad[:,wind[:, 1]]grad[:,wind[:, 2]]*grad[:,wind[:, 3]]
-        self.b = np.concatenate((bs,
-                                 (np.tile(-grad[:,-1], (6,1)).T*bD),
-                                 np.squeeze(1/6*np.tile(grad[:,-1],
-                                                        (15,1)).T**2)*bW),
-                                1)
+        bW = np.tile(wcnt, (ndwis, 1)) * self.grad[:,
+                                         wind[:, 0]] * self.grad[:, wind[:,
+                                                                    1]] * self.grad[
+                                                                          :,
+                                                                          wind[
+                                                                          :,
+                                                                          2]] * self.grad[
+                                                                                :,
+                                                                                wind[
+                                                                                :,
+                                                                                3]]
+        self.b = np.concatenate((bs, (
+                    np.tile(-self.grad[:, -1], (6, 1)).T * bD), np.squeeze(
+            1 / 6 * np.tile(self.grad[:, -1], (15, 1)).T ** 2) * bW), 1)
 
         dwi_ = vectorize(self.img, self.mask)
         reject_ = vectorize(reject, self.mask).astype(bool)
