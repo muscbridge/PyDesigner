@@ -924,11 +924,10 @@ class DWI(object):
             np.where(akc_out))  # Locate coordinates of violations
         nvox = violIdx.shape[1]
 
-        dtinputs = tqdm(range(dt.shape[-1]))
-        inputs = tqdm(range(nvox))
-
-        for i in dtinputs:
-            for j in inputs:
+        for i in tqdm(range(dt.shape[-1]),
+                      desc='AKC Correction',
+                      unit='tensor'):
+            for j in range(nvox):
                 # Index beginning and ending of patch
                 Ib = violIdx[0, j] - d2move
                 Ie = violIdx[0, j] + d2move + 1
