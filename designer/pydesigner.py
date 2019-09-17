@@ -11,7 +11,7 @@ import shutil # which
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy # array, ndarray
-from preprocessing import util, smoothing
+from preprocessing import util, smoothing, rician
 DWIFile = util.DWIFile
 
 # Locate mrtrix3 via which-ing dwidenoise
@@ -348,4 +348,6 @@ if args.eddy:
 # Rician Noise Correction
 #----------------------------------------------------------------------
 if args.rician:
-    print('rician!')
+    rician.rician_img_correct(filetable['HEAD'].getFull(),
+                              filetable['noisemap'].getFull(),
+                              outpath)
