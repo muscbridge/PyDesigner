@@ -875,10 +875,12 @@ class DWI(object):
         ak = self.multiplyMask(ak)
         return map, md, rd, ad, fa, fe, trace, mk, rk, ak
 
-    def outlierdetection(self, iter=10):
+    def akcoutliers(self, iter=10):
         """
         Uses 100,000 direction in chunks of 10 to iteratively find
-        outliers. Returns a mask of locations where said violations occur
+        outliers. Returns a mask of locations where said violations
+        occur. Multiprocessing is disabled becase this is a
+        memory-intensive task.
         Classification: Method
         :return:
         """
