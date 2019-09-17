@@ -14,15 +14,20 @@ import matplotlib.pyplot as plt
 import time
 import os
 
-
-niiPath = 'D:\SystemFiles\siddh\Box Sync\Home-Work\PARAMAPS\dwi_designer.nii'
-savePath = 'C:\\Users\siddh\Desktop\PyDesigner_Test'
+niiPath = '/Users/sid/Downloads/nii_test/DWI/PARAMAPS/dwi_designer.nii'
+savePath = '/Users/sid/Downloads/PyDesigner_Test'
 
 myimage = dp.DWI(niiPath)
 
 outliers, dt_hat = myimage.irlls()
+outlierPath = os.path.join(savePath, 'outliers.nii')
+dp.writeNii(outliers, myimage.hdr, outlierPath)
 
 myimage.fit(constraints=[0,1,0], reject=outliers)
+
+akc_out = myimage.outlierdetection()
+akcPath = os.path.join(savePath, 'akc_out.nii')
+dp.writeNii(akc_out, myimage.hdr, akcPath)
 
 md, rd, ad, fa, fe, trace, mk, rk, ak = myimage.extract()
 
@@ -35,7 +40,6 @@ tracePath = os.path.join(savePath, 'trace.nii')
 mkPath = os.path.join(savePath, 'mk.nii')
 rkPath = os.path.join(savePath, 'rk.nii')
 akPath = os.path.join(savePath, 'ak.nii')
-violPath = os.path.join(savePath, 'outliers.nii')
 
 dp.writeNii(md, myimage.hdr, mdPath)
 dp.writeNii(rd, myimage.hdr, rdPath)
@@ -46,14 +50,14 @@ dp.writeNii(trace, myimage.hdr, tracePath)
 dp.writeNii(mk, myimage.hdr, mkPath)
 dp.writeNii(rk, myimage.hdr, rkPath)
 dp.writeNii(ak, myimage.hdr, akPath)
-dp.writeNii(outliers, myimage.hdr, violPath)
 
 goodDirs = myimage.goodDirections(outliers)
 dirPath = os.path.join(savePath, 'good_directions.nii')
 dp.writeNii(goodDirs, myimage.hdr, dirPath)
 
 medFilt = dp.medianFilter(img=mk,
-                         violmask=goodDirs)
+                         violmask=goodDirs,
+                          th=30)
 
 medMask = os.path.join(savePath, 'median_mask.nii')
 dp.writeNii(medFilt.Mask, myimage.hdr, medMask)

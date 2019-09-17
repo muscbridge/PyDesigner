@@ -899,8 +899,7 @@ class DWI(object):
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
             akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
             akc_out.astype('bool')
-        self.outliers = akc_out
-        return self.multiplyMask(vectorize(akc_out, self.mask))
+        return vectorize(akc_out, self.mask)
 
     def irlls(self, excludeb0=True, maxiter=25, convcrit=1e-3, mode='DKI', leverage=0.85, bounds=3):
         """This functions performs outlier detection and robust parameter
