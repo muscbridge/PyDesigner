@@ -125,6 +125,24 @@ class DWI(object):
                              'BVAL')
         return type
 
+    def isdki(self):
+        """Returns logical value to answer the mystical question whether
+        the input image is DKI
+
+        Usage
+        -----
+        ans = dwi.isdki(), where dwi is the DWI class object
+
+        Returns
+        -------
+        ans:    True or False (bool)
+        """
+        if self.tensorType() == 'dki':
+            ans = True
+        else:
+            ans = False
+        return ans
+
     def createTensorOrder(self, order=None):
         """Creates tensor order array and indices
         Classification: Method
