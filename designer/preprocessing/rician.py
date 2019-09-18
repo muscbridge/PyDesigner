@@ -41,13 +41,16 @@ def rician_img_correct(dwiname, noisemapname, outpath=None):
 
     # determine the output name
     path = op.dirname(outpath)
-    name = op.basename(outpath)
+    print('Path: ' + path)
+    [name, ext] = op.splitext(op.basename(outpath))
+    print('Name: ' + name)
 
     if not name:
         name = 'rdwi.nii'
     else:
         name += '.nii'
     out = op.join(path, name)
+    print('Full: ' + out)
 
     nib.save(newimg, out)
 
