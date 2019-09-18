@@ -48,16 +48,15 @@ class DWI(object):
                 tmp = nib.load(maskPath)
                 self.mask = np.array(tmp.dataobj).astype(bool)
                 self.maskStatus = True
-                print('Found brain mask')
             else:
                 self.mask = np.ones((self.img.shape[0], self.img.shape[
                     1], self.img.shape[2]), order='F')
                 self.maskStatus = False
-                print('No brain mask found')
+                print('No brain mask supplied')
         else:
             assert('File in path not found. Please locate file and try '
                    'again')
-        print('Image ' + fName + '.nii loaded successfully')
+        tqdm.write('Image ' + fName + '.nii loaded successfully')
 
     def getBvals(self):
         """Returns a vector of b-values, requires no input arguments
@@ -505,7 +504,6 @@ class DWI(object):
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
 
-        print('...fitting with wlls')
         # dt = np.zeros((22, dwi_.shape[1]))
         num_cores = multiprocessing.cpu_count()
 
@@ -513,7 +511,7 @@ class DWI(object):
         #     dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, cons=C)
         if constraints is None or (constraints[0] == 0 and constraints[1] == 0 and constraints[2] == 0):
             inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Unconstrained Moore-Penrose Pseudoinverse',
+                          desc=' Tensor Fitting: Unconstrained Moore-Penrose Pseudoinverse',
                           unit='vox')
             self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
                 (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]]) for i in inputs)
@@ -521,7 +519,7 @@ class DWI(object):
         else:
             C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
             inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Constrainted Convex Optimization',
+                          desc='Tensor Fitting: Constrainted Convex Optimization',
                           unit='vox')
             self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
                 (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]],
@@ -591,7 +589,6 @@ class DWI(object):
         # extract all tensor parameters from dt
         num_cores = multiprocessing.cpu_count()
 
-        print('...extracting dti parameters')
         DT = np.reshape(
             np.concatenate((self.dt[0, :], self.dt[1, :], self.dt[2, :], self.dt[1, :], self.dt[3, :], self.dt[4, :], self.dt[2, :], self.dt[4, :], self.dt[5, :])),
             (3, 3, self.dt.shape[1]))
@@ -614,7 +611,6 @@ class DWI(object):
         values = np.reshape(np.abs(values), (nvox, 3))
         vectors = np.reshape(vectors, (nvox, 3, 3))
 
-        print('...extracting dki parameters')
         self.dirs = np.array(self.fibonacciSphere(dirSample, True))
         akc = self.kurtosisCoeff(self.dt, self.dirs)
         mk = np.mean(akc, 0)
@@ -892,10 +888,8 @@ class DWI(object):
         if iter > nblocks:
             print('Entered iteration value exceeds 10...resetting to 10')
             iter = 10
-        else:
-            print('...computing outliers with %d iterations' %(iter))
         inputs = tqdm(range(iter),
-                      desc='AKC Outliers',
+                      desc='AKC Outlier Detection',
                       unit='blk')
         for i in inputs:
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
@@ -1050,7 +1044,6 @@ class DWI(object):
         if bounds < 1:
             assert('option: Bounds should be set to a value >= 1')
 
-        print('...iterative reweighted linear least squares')
         # Vectorize DWI
         dwi = vectorize(self.img, self.mask)
         (ndwi, nvox) = dwi.shape
@@ -1114,7 +1107,7 @@ class DWI(object):
                 return sigma_
             sigma_ = np.zeros((nvox,1))
             inputs = tqdm(range(nvox),
-                          desc='Noise Estimation',
+                          desc='IRLLS: Noise Estimation',
                           unit='vox')
             num_cores = multiprocessing.cpu_count()
             sigma_ = Parallel(n_jobs=num_cores, prefer='processes') \
@@ -1230,7 +1223,7 @@ class DWI(object):
             return reject.reshape(-1), dt.reshape(-1)#, fa, md
 
         inputs = tqdm(range(nvox),
-                          desc='Reweighted Fitting',
+                          desc='IRLLS: Outlier Detection',
                           unit='vox')
         (reject, dt) = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
