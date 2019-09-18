@@ -48,16 +48,15 @@ class DWI(object):
                 tmp = nib.load(maskPath)
                 self.mask = np.array(tmp.dataobj).astype(bool)
                 self.maskStatus = True
-                print('Found brain mask')
             else:
                 self.mask = np.ones((self.img.shape[0], self.img.shape[
                     1], self.img.shape[2]), order='F')
                 self.maskStatus = False
-                print('No brain mask found')
+                print('No brain mask supplied')
         else:
             assert('File in path not found. Please locate file and try '
                    'again')
-        print('Image ' + fName + '.nii loaded successfully')
+        tqdm.write('Image ' + fName + '.nii loaded successfully')
 
     def getBvals(self):
         """Returns a vector of b-values, requires no input arguments
@@ -125,6 +124,24 @@ class DWI(object):
             raise ValueError('tensortype: Error in determining maximum '
                              'BVAL')
         return type
+
+    def isdki(self):
+        """Returns logical value to answer the mystical question whether
+        the input image is DKI
+
+        Usage
+        -----
+        ans = dwi.isdki(), where dwi is the DWI class object
+
+        Returns
+        -------
+        ans:    True or False (bool)
+        """
+        if self.tensorType() == 'dki':
+            ans = True
+        else:
+            ans = False
+        return ans
 
     def createTensorOrder(self, order=None):
         """Creates tensor order array and indices
@@ -505,7 +522,6 @@ class DWI(object):
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
 
-        print('...fitting with wlls')
         # dt = np.zeros((22, dwi_.shape[1]))
         num_cores = multiprocessing.cpu_count()
 
@@ -513,7 +529,7 @@ class DWI(object):
         #     dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, cons=C)
         if constraints is None or (constraints[0] == 0 and constraints[1] == 0 and constraints[2] == 0):
             inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Unconstrained Moore-Penrose Pseudoinverse',
+                          desc=' Tensor Fitting: Unconstrained Moore-Penrose Pseudoinverse',
                           unit='vox')
             self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
                 (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]]) for i in inputs)
@@ -521,7 +537,7 @@ class DWI(object):
         else:
             C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
             inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Constrainted Convex Optimization',
+                          desc='Tensor Fitting: Constrainted Convex Optimization',
                           unit='vox')
             self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
                 (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]],
@@ -573,27 +589,36 @@ class DWI(object):
             print('Invalid constraints. Please use format "[0, 0, 0]"')
         return C
 
-    def extract(self):
-        """Extract all tensor parameters from diffusion tensor. Warning,
-        this can only be run after running dwi.fit()
+
+    def extractDTI(self):
+        """Extract all DTI parameters from DT tensor. Warning, this can
+        only be run after tensor fitting dwi.fit()
 
         Usage
         -----
-        (md, rd, ad, fa, fe, trace, mk, ak, rk) = dwi.fit()
+        (md, rd, ad, fa) = dwi.extractDTI(), where dwi is the DWI class
+        object
 
         Parameters
         ----------
-        None
+        (none)
 
         Returns
-        MD, RD, AD, FA, FE, TRACE, MK, AK, RK
+        -------
+        md:     mean diffusivity
+        rd:     radial diffusivity
+        ad:     axial diffusivity
+        fa:     fractional anisotropy
+        fe:     first eigenvectors
+        trace:  sum of first eigenvalues
         """
         # extract all tensor parameters from dt
         num_cores = multiprocessing.cpu_count()
 
-        print('...extracting dti parameters')
         DT = np.reshape(
-            np.concatenate((self.dt[0, :], self.dt[1, :], self.dt[2, :], self.dt[1, :], self.dt[3, :], self.dt[4, :], self.dt[2, :], self.dt[4, :], self.dt[5, :])),
+            np.concatenate((self.dt[0, :], self.dt[1, :], self.dt[2, :],
+                            self.dt[1, :], self.dt[3, :], self.dt[4, :],
+                            self.dt[2, :], self.dt[4, :], self.dt[5, :])),
             (3, 3, self.dt.shape[1]))
 
         # get the trace
@@ -604,44 +629,80 @@ class DWI(object):
         for ib in range(0, uB.shape[0]):
             t = np.where(B == uB[ib])
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
-
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
                       desc='DTI params',
                       unit='vox')
-        values, vectors = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
-            (delayed(self.dtiTensorParams)(DT[:, :, i]) for i in inputs))
+        values, vectors = zip(
+            *Parallel(n_jobs=num_cores, prefer='processes') \
+                (delayed(self.dtiTensorParams)(DT[:, :, i]) for i in
+                 inputs))
         values = np.reshape(np.abs(values), (nvox, 3))
         vectors = np.reshape(vectors, (nvox, 3, 3))
-
-        print('...extracting dki parameters')
-        self.dirs = np.array(self.fibonacciSphere(dirSample, True))
-        akc = self.kurtosisCoeff(self.dt, self.dirs)
-        mk = np.mean(akc, 0)
-        inputs = tqdm(range(0, nvox),
-                      desc='DKI params',
-                      unit='vox')
-        ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
-            (delayed(self.dkiTensorParams)(vectors[i, :, 0], self.dt[:, i]) for i in inputs))
-        ak = np.reshape(ak, (nvox))
-        rk = np.reshape(rk, (nvox))
-
+        self.DTIvectors = vectors
         l1 = vectorize(values[:, 0], self.mask)
         l2 = vectorize(values[:, 1], self.mask)
         l3 = vectorize(values[:, 2], self.mask)
         v1 = vectorize(vectors[:, :, 0].T, self.mask)
-
         md = (l1 + l2 + l3) / 3
         rd = (l2 + l3) / 2
         ad = l1
-        fa = np.sqrt(1 / 2) * np.sqrt((l1 - l2) ** 2 + (l2 - l3) ** 2 + (l3 - l1) ** 2) / np.sqrt(
+        fa = np.sqrt(1 / 2) * np.sqrt(
+            (l1 - l2) ** 2 + (l2 - l3) ** 2 + (l3 - l1) ** 2) / np.sqrt(
             l1 ** 2 + l2 ** 2 + l3 ** 2)
+        fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1],
+                              fa * v1[:, :, :, 2]), axis=3))
         trace = vectorize(trace.T, self.mask)
-        fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1], fa * v1[:, :, :, 2]), axis=3))
+        return md, rd, ad, fa, fe, trace
+
+    def extractDKI(self):
+        """Extract all DKI parameters from DT tensor. Warning, this can
+        only be run after tensor fitting dwi.fit()
+
+        Usage
+        -----
+        (mk, rk, ak, fe, trace) = dwi.extractDTI(), where dwi is the DWI
+        class object
+
+        Parameters
+        ----------
+        (none)
+
+        Returns
+        -------
+        mk:     mean diffusivity
+        rk:     radial diffusivity
+        ak:     axial diffusivity
+        fe:     first eigenvectors
+        trace:  sum of first eigenvalues
+        """
+        num_cores = multiprocessing.cpu_count()
+        # get the trace
+        rdwi = sigmoid(np.matmul(self.b[:, 1:], self.dt))
+        B = np.round(-(self.b[:, 0] + self.b[:, 3] + self.b[:, 5]) * 1000)
+        uB = np.unique(B)
+        trace = np.zeros((self.dt.shape[1], uB.shape[0]))
+        for ib in range(0, uB.shape[0]):
+            t = np.where(B == uB[ib])
+            trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
+        self.dirs = np.array(self.fibonacciSphere(dirSample, True))
+        akc = self.kurtosisCoeff(self.dt, self.dirs)
+        mk = np.mean(akc, 0)
+        nvox = self.dt.shape[1]
+        inputs = tqdm(range(0, nvox),
+                      desc='DKI params',
+                      unit='vox')
+        ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
+            (delayed(self.dkiTensorParams)(self.DTIvectors[i, :, 0],
+                                           self.dt[:, i])
+             for i in inputs))
+        ak = np.reshape(ak, (nvox))
+        rk = np.reshape(rk, (nvox))
+        trace = vectorize(trace.T, self.mask)
         ak = vectorize(ak, self.mask)
         rk = vectorize(rk, self.mask)
         mk = vectorize(mk, self.mask)
-        return md, rd, ad, fa, fe, trace, mk, ak, rk
+        return mk, rk, ak, trace
 
     def findViols(self, c=[0, 1, 0]):
         """
@@ -875,12 +936,29 @@ class DWI(object):
         ak = self.multiplyMask(ak)
         return map, md, rd, ad, fa, fe, trace, mk, rk, ak
 
-    def outlierdetection(self, iter=10):
+    def akcoutliers(self, iter=10):
         """
         Uses 100,000 direction in chunks of 10 to iteratively find
-        outliers. Returns a mask of locations where said violations occur
+        outliers. Returns a mask of locations where said violations
+        occur. Multiprocessing is disabled because this is a
+        memory-intensive task.
+        To be run only after tensor fitting.
         Classification: Method
-        :return:
+
+        Usage
+        -----
+        akc_out = dwi.akoutliers(), where dwi is the DWI class object
+
+        Parameters
+        ----------
+        iter:       number of iterations to perform out of 10. Default: 10
+                    reduce this number if your computer does not have
+                    sufficient RAM
+
+        Returns
+        -------
+        akc_out:    3D map containing outliers where AKC falls fails the
+                    inequality test -2 < AKC < 10
         """
         dir = np.genfromtxt('dirs100000.csv', delimiter=",")
         nvox = self.dt.shape[1]
@@ -890,17 +968,118 @@ class DWI(object):
         if iter > nblocks:
             print('Entered iteration value exceeds 10...resetting to 10')
             iter = 10
-        else:
-            print('...computing outliers with %d iterations' %(iter))
         inputs = tqdm(range(iter),
-                      desc='AKC Outlier',
+                      desc='AKC Outlier Detection',
                       unit='blk')
         for i in inputs:
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
             akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
             akc_out.astype('bool')
-        self.outliers = akc_out
-        return self.multiplyMask(vectorize(akc_out, self.mask))
+        return vectorize(akc_out, self.mask)
+
+    def akccorrect(self, akc_out, window=5, connectivity='all'):
+        """Applies AKC outlier map to DT to replace outliers with a
+        moving median.
+        Run this only after tensor fitting and akc outlier detection
+        Classification: Method
+
+        Usage
+        -----
+        dwi.akccorrect(akc_out), where dwi is the DWI class object
+
+        Parameters
+        ----------
+        akc_out:        3D map containing outliers from DWI.akcoutliers
+        window:         width of square matrix filter.
+                        default: 5
+                        type: int
+        connectivity:   specifies what kind of connected-component
+                        connectivity to use for median determination
+                        choices: 'all' (default) or 'face'
+                        type: string
+        """
+        # Get box filter properties
+        centralIdx = np.median(range(window))
+        d2move = np.int(np.abs(window - (centralIdx + 1)))  # Add 1 to
+        # central idx because first index starts with zero
+
+        # Vectorize and Pad
+        dt = np.pad(vectorize(self.dt, self.mask),
+                     ((d2move, d2move), (d2move, d2move),
+                     (d2move, d2move), (0, 0)),
+                     'constant', constant_values=np.nan)
+        akc_out = np.pad(akc_out, d2move, 'constant',
+                         constant_values=False)
+
+        violIdx = np.array(
+            np.where(akc_out))  # Locate coordinates of violations
+        nvox = violIdx.shape[1]
+
+        for i in tqdm(range(dt.shape[-1]),
+                      desc='AKC Correction',
+                      unit='tensor'):
+            for j in range(nvox):
+                # Index beginning and ending of patch
+                Ib = violIdx[0, j] - d2move
+                Ie = violIdx[0, j] + d2move + 1
+                Jb = violIdx[1, j] - d2move
+                Je = violIdx[1, j] + d2move + 1
+                Kb = violIdx[2, j] - d2move
+                Ke = violIdx[2, j] + d2move + 1
+
+                if connectivity == 'all':
+                    patchViol = np.delete(
+                        np.ravel(akc_out[Ib:Ie, Jb:Je, Kb:Ke]),
+                        np.median(range(np.power(window,3))))  # Remove
+                    # centroid element
+                    patchImg = np.delete(
+                        np.ravel(dt[Ib:Ie, Jb:Je, Kb:Ke, i]),
+                        np.median(range(np.power(window,3))))  # Remove
+                    # centroid element
+                    connLimit = np.power(window,3) -1
+                elif connectivity == 'face':
+                    patchViol = akc_out[
+                        [Ib, Ie], violIdx[1, j], violIdx[2, j]]
+                    patchViol = np.hstack((patchViol, akc_out[
+                        violIdx[0, j], [Jb, Je], violIdx[2, j]]))
+                    patchViol = np.hstack((patchViol, akc_out[
+                        violIdx[0, j], violIdx[1, j], [Kb, Ke]]))
+                    patchImg = dt[
+                        [Ib, Ie], violIdx[1, j], violIdx[2, j], i]
+                    patchImg = np.hstack((patchImg, dt[
+                        violIdx[0, j], [Jb, Je], violIdx[2, j], i]))
+                    patchImg = np.hstack((patchImg, dt[
+                        violIdx[0, j], violIdx[1, j], [Kb, Ke], i]))
+                    if window == 3:
+                        connLimit = 6
+                    elif window == 5:
+                        connLimit = 12
+                    elif window == 7:
+                        connLimit = 18
+                    elif window == 9:
+                        connLimit = 24
+                else:
+                    raise Exception(
+                        'Connectivity choice "{}" is invalid. Please '
+                        'enter either "all" or "face".'.format(
+                            connectivity))
+
+                nVoil = np.sum(patchViol)
+
+                # Here a check is performed to compute the number of
+                # violations in a patch. If all voxels are violations,
+                # do nothing. Otherwise, exclude violation voxels from
+                # the median calculation
+                if nVoil == connLimit:
+                    continue
+                else:
+                   dt[violIdx[0, j], violIdx[1, j], violIdx[2, j],
+                      i] = np.nanmedian(patchImg)
+
+        # Remove padding
+        dt = dt[d2move:-d2move, d2move:-d2move,
+             d2move:-d2move, :]
+        self.dt = vectorize(dt, self.mask)
 
     def irlls(self, excludeb0=True, maxiter=25, convcrit=1e-3, mode='DKI', leverage=0.85, bounds=3):
         """This functions performs outlier detection and robust parameter
@@ -962,7 +1141,6 @@ class DWI(object):
         if bounds < 1:
             assert('option: Bounds should be set to a value >= 1')
 
-        print('...iterative reweighted linear least squares')
         # Vectorize DWI
         dwi = vectorize(self.img, self.mask)
         (ndwi, nvox) = dwi.shape
@@ -1026,7 +1204,7 @@ class DWI(object):
                 return sigma_
             sigma_ = np.zeros((nvox,1))
             inputs = tqdm(range(nvox),
-                          desc='Noise Estimation',
+                          desc='IRLLS: Noise Estimation',
                           unit='vox')
             num_cores = multiprocessing.cpu_count()
             sigma_ = Parallel(n_jobs=num_cores, prefer='processes') \
@@ -1142,7 +1320,7 @@ class DWI(object):
             return reject.reshape(-1), dt.reshape(-1)#, fa, md
 
         inputs = tqdm(range(nvox),
-                          desc='Reweighted Fitting',
+                          desc='IRLLS: Outlier Detection',
                           unit='vox')
         (reject, dt) = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
@@ -1324,7 +1502,7 @@ class medianFilter(object):
         (Ix, Iy, Iz) = img.shape
         (Mx, My, Mz) = self.Mask.shape
 
-    def findReplacement(self, bias='left'):
+    def findReplacement(self, bias='rand'):
         """
         Returns information on replacements for violating voxels
 
@@ -1457,9 +1635,11 @@ class medianFilter(object):
                 patchViol = self.Mask[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
                 patchViol = np.hstack((patchViol, self.Mask[violIdx[0,i], [Jb, Je], violIdx[2, i]]))
                 patchViol = np.hstack((patchViol, self.Mask[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
-                patchImg = self.Img[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
-                patchImg = np.hstack((patchImg, self.Img[violIdx[0, i], [Jb, Je], violIdx[2, i]]))
-                patchImg = np.hstack((patchImg, self.Img[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
+                patchImg = img[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
+                patchImg = np.hstack((patchImg, img[violIdx[0, i], [Jb,
+                                                                  Je], violIdx[2, i]]))
+                patchImg = np.hstack((patchImg, img[violIdx[0, i],
+                                                  violIdx[1, i], [Kb, Ke]]))
 
             if np.isnan(self.PatchIdx[i]) == True:
                 continue
