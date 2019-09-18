@@ -124,8 +124,9 @@ parser.add_argument('--degibbs', action='store_true', default=False,
                     help='Perform gibbs unringing. Only perform if you '
                     'have full Fourier encoding. The program will check '
                     'for you if you have a .json sidecar.')
-parser.add_argument('--eddy', action='store_true', default=False,
-                    help='Run FSL eddy. NOTE: requires phase encoding '
+parser.add_argument('--undistort', action='store_true', default=False,
+                    help='Run FSL eddy to perform image undistortion. '
+                    'NOTE: needs a phase encoding '
                     'specification to run.')
 parser.add_argument('--smooth', action='store_true', default=False,
                     help='Include a CSF-free smoothing step during dwi '
@@ -200,15 +201,13 @@ if args.standard:
     override='; overriding with standard pipeline.\n'
     if args.denoise:
         warningmsg+=msgstart+stdmsg+'--denoise'+override
-    if args.eddy:
+    if args.undistort:
         warningmsg+=msgstart+stdmsg+'--eddy'+override
-    if args.b1correct:
-        warningmsg+=msgstart+stdmsg+'--b1correct'+override
     if args.smooth:
         warningmsg+=msgstart+stdmsg+'--smooth'+override
     # Coerce all of the above to be true
     args.denoise = True
-    args.eddy = True
+    args.undistort = True
     args.b1correct = True
     args.smooth = True
 
@@ -340,7 +339,7 @@ if args.degibbs:
 #----------------------------------------------------------------------
 # Undistort
 #----------------------------------------------------------------------
-if args.eddy:
+if args.undistort:
     # TODO: construct
     print('UNDER CONSTRUCTION, SORRY, SKIPPING...');
 
