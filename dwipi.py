@@ -639,6 +639,7 @@ class DWI(object):
                  inputs))
         values = np.reshape(np.abs(values), (nvox, 3))
         vectors = np.reshape(vectors, (nvox, 3, 3))
+        self.DTIvectors = vectors
         l1 = vectorize(values[:, 0], self.mask)
         l2 = vectorize(values[:, 1], self.mask)
         l3 = vectorize(values[:, 2], self.mask)
@@ -687,20 +688,21 @@ class DWI(object):
         self.dirs = np.array(self.fibonacciSphere(dirSample, True))
         akc = self.kurtosisCoeff(self.dt, self.dirs)
         mk = np.mean(akc, 0)
+        nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
                       desc='DKI params',
                       unit='vox')
         ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
-            (delayed(self.dkiTensorParams)(vectors[i, :, 0], self.dt[:, i])
+            (delayed(self.dkiTensorParams)(self.DTIvectors[i, :, 0],
+                                           self.dt[:, i])
              for i in inputs))
         ak = np.reshape(ak, (nvox))
         rk = np.reshape(rk, (nvox))
-        fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1], fa * v1[:, :, :, 2]), axis=3))
         trace = vectorize(trace.T, self.mask)
         ak = vectorize(ak, self.mask)
         rk = vectorize(rk, self.mask)
         mk = vectorize(mk, self.mask)
-        return mk, rk, ak, fe,
+        return mk, rk, ak, trace
 
     def findViols(self, c=[0, 1, 0]):
         """
