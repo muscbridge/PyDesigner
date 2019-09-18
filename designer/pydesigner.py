@@ -214,7 +214,8 @@ if args.standard:
 # (Extent or Degibbs) and no Denoise
 if not args.denoise:
     stdmsg='No --denoise but '
-    if args.extent:
+    if args.extent != '5,5,5':
+        print(args)
         warningmsg+=stdmsg+'--extent given; overriding with --denoise'
         args.denoise = True
     if args.rician:
