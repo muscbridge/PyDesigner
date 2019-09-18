@@ -1,22 +1,7 @@
-__pycache__/designerfunc\.cpython-37\.pyc
-
-\.idea/libraries/R_User_Library\.xml
-
-\.idea/misc\.xml
-
-\.idea/modules\.xml
-
-\.idea/other\.xml
-
-\.idea/PyDesigner\.iml
-
-\.idea/vcs\.xml
-
-\.idea/workspace\.xml
-=======
-__pycache__
-*.pyc
-
-.DS_Store
-
+# Folders to ignore
+.idea/
+__pycache__/
 .ipynb_checkpoints/
+
+# Files to ignore
+.DS_Store
