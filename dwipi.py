@@ -875,10 +875,25 @@ class DWI(object):
         """
         Uses 100,000 direction in chunks of 10 to iteratively find
         outliers. Returns a mask of locations where said violations
-        occur. Multiprocessing is disabled becase this is a
+        occur. Multiprocessing is disabled because this is a
         memory-intensive task.
+        To be run only after tensor fitting.
         Classification: Method
-        :return:
+
+        Usage
+        -----
+        akc_out = dwi.akoutliers(), where dwi is the DWI class object
+
+        Parameters
+        ----------
+        iter:       number of iterations to perform out of 10. Default: 10
+                    reduce this number if your computer does not have
+                    sufficient RAM
+
+        Returns
+        -------
+        akc_out:    3D map containing outliers where AKC falls fails the
+                    inequality test -2 < AKC < 10
         """
         dir = np.genfromtxt('dirs100000.csv', delimiter=",")
         nvox = self.dt.shape[1]
@@ -898,9 +913,26 @@ class DWI(object):
         return vectorize(akc_out, self.mask)
 
     def akccorrect(self, akc_out, window=5, connectivity='all'):
-        """Applies AKC outlier map to DT to repalce outliers with a
-        moving median"""
+        """Applies AKC outlier map to DT to replace outliers with a
+        moving median.
+        Run this only after tensor fitting and akc outlier detection
+        Classification: Method
 
+        Usage
+        -----
+        dwi.akccorrect(akc_out), where dwi is the DWI class object
+
+        Parameters
+        ----------
+        akc_out:        3D map containing outliers from DWI.akcoutliers
+        window:         width of square matrix filter.
+                        default: 5
+                        type: int
+        connectivity:   specifies what kind of connected-component
+                        connectivity to use for median determination
+                        choices: 'all' (default) or 'face'
+                        type: string
+        """
         # Get box filter properties
         centralIdx = np.median(range(window))
         d2move = np.int(np.abs(window - (centralIdx + 1)))  # Add 1 to
