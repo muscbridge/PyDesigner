@@ -135,6 +135,8 @@ parser.add_argument('--smooth', action='store_true', default=False,
 parser.add_argument('--rician', action='store_true', default=False,
                     help='Perform Rician noise correction on the data '
                     '(requires --denoise to generate a noisemap).')
+parser.add_argument('--nofit', action='store_true', default=False,
+                    help='Do not fit DTI or DKI tensors.')
 parser.add_argument('-w', '--WMTI', action='store_true', default=False,
                     help='Include DKI WMTI parameters (forces DKI): '
                     'AWF, IAS_params, EAS_params. ')
@@ -210,6 +212,13 @@ if args.standard:
     args.undistort = True
     args.b1correct = True
     args.smooth = True
+
+# Can't do WMTI if no fit
+if args.nofit:
+    stdmsg='--nofit given but '
+    if args.WMTI:
+        warningmsg+=msgstart+stdmsg+'--WMTI'+override+'tensor fitting.'
+        args.nofit = False
 
 # (Extent or Degibbs) and no Denoise
 if not args.denoise:
