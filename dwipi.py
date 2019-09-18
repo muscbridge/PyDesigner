@@ -125,6 +125,24 @@ class DWI(object):
                              'BVAL')
         return type
 
+    def isdki(self):
+        """Returns logical value to answer the mystical question whether
+        the input image is DKI
+
+        Usage
+        -----
+        ans = dwi.isdki(), where dwi is the DWI class object
+
+        Returns
+        -------
+        ans:    True or False (bool)
+        """
+        if self.tensorType() == 'dki':
+            ans = True
+        else:
+            ans = False
+        return ans
+
     def createTensorOrder(self, order=None):
         """Creates tensor order array and indices
         Classification: Method
@@ -571,26 +589,36 @@ class DWI(object):
             print('Invalid constraints. Please use format "[0, 0, 0]"')
         return C
 
-    def extract(self):
-        """Extract all tensor parameters from diffusion tensor. Warning,
-        this can only be run after running dwi.fit()
+
+    def extractDTI(self):
+        """Extract all DTI parameters from DT tensor. Warning, this can
+        only be run after tensor fitting dwi.fit()
 
         Usage
         -----
-        (md, rd, ad, fa, fe, trace, mk, ak, rk) = dwi.fit()
+        (md, rd, ad, fa) = dwi.extractDTI(), where dwi is the DWI class
+        object
 
         Parameters
         ----------
-        None
+        (none)
 
         Returns
-        MD, RD, AD, FA, FE, TRACE, MK, AK, RK
+        -------
+        md:     mean diffusivity
+        rd:     radial diffusivity
+        ad:     axial diffusivity
+        fa:     fractional anisotropy
+        fe:     first eigenvectors
+        trace:  sum of first eigenvalues
         """
         # extract all tensor parameters from dt
         num_cores = multiprocessing.cpu_count()
 
         DT = np.reshape(
-            np.concatenate((self.dt[0, :], self.dt[1, :], self.dt[2, :], self.dt[1, :], self.dt[3, :], self.dt[4, :], self.dt[2, :], self.dt[4, :], self.dt[5, :])),
+            np.concatenate((self.dt[0, :], self.dt[1, :], self.dt[2, :],
+                            self.dt[1, :], self.dt[3, :], self.dt[4, :],
+                            self.dt[2, :], self.dt[4, :], self.dt[5, :])),
             (3, 3, self.dt.shape[1]))
 
         # get the trace
@@ -601,43 +629,80 @@ class DWI(object):
         for ib in range(0, uB.shape[0]):
             t = np.where(B == uB[ib])
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
-
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
                       desc='DTI params',
                       unit='vox')
-        values, vectors = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
-            (delayed(self.dtiTensorParams)(DT[:, :, i]) for i in inputs))
+        values, vectors = zip(
+            *Parallel(n_jobs=num_cores, prefer='processes') \
+                (delayed(self.dtiTensorParams)(DT[:, :, i]) for i in
+                 inputs))
         values = np.reshape(np.abs(values), (nvox, 3))
         vectors = np.reshape(vectors, (nvox, 3, 3))
-
-        self.dirs = np.array(self.fibonacciSphere(dirSample, True))
-        akc = self.kurtosisCoeff(self.dt, self.dirs)
-        mk = np.mean(akc, 0)
-        inputs = tqdm(range(0, nvox),
-                      desc='DKI params',
-                      unit='vox')
-        ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
-            (delayed(self.dkiTensorParams)(vectors[i, :, 0], self.dt[:, i]) for i in inputs))
-        ak = np.reshape(ak, (nvox))
-        rk = np.reshape(rk, (nvox))
-
+        self.DTIvectors = vectors
         l1 = vectorize(values[:, 0], self.mask)
         l2 = vectorize(values[:, 1], self.mask)
         l3 = vectorize(values[:, 2], self.mask)
         v1 = vectorize(vectors[:, :, 0].T, self.mask)
-
         md = (l1 + l2 + l3) / 3
         rd = (l2 + l3) / 2
         ad = l1
-        fa = np.sqrt(1 / 2) * np.sqrt((l1 - l2) ** 2 + (l2 - l3) ** 2 + (l3 - l1) ** 2) / np.sqrt(
+        fa = np.sqrt(1 / 2) * np.sqrt(
+            (l1 - l2) ** 2 + (l2 - l3) ** 2 + (l3 - l1) ** 2) / np.sqrt(
             l1 ** 2 + l2 ** 2 + l3 ** 2)
+        fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1],
+                              fa * v1[:, :, :, 2]), axis=3))
         trace = vectorize(trace.T, self.mask)
-        fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1], fa * v1[:, :, :, 2]), axis=3))
+        return md, rd, ad, fa, fe, trace
+
+    def extractDKI(self):
+        """Extract all DKI parameters from DT tensor. Warning, this can
+        only be run after tensor fitting dwi.fit()
+
+        Usage
+        -----
+        (mk, rk, ak, fe, trace) = dwi.extractDTI(), where dwi is the DWI
+        class object
+
+        Parameters
+        ----------
+        (none)
+
+        Returns
+        -------
+        mk:     mean diffusivity
+        rk:     radial diffusivity
+        ak:     axial diffusivity
+        fe:     first eigenvectors
+        trace:  sum of first eigenvalues
+        """
+        num_cores = multiprocessing.cpu_count()
+        # get the trace
+        rdwi = sigmoid(np.matmul(self.b[:, 1:], self.dt))
+        B = np.round(-(self.b[:, 0] + self.b[:, 3] + self.b[:, 5]) * 1000)
+        uB = np.unique(B)
+        trace = np.zeros((self.dt.shape[1], uB.shape[0]))
+        for ib in range(0, uB.shape[0]):
+            t = np.where(B == uB[ib])
+            trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
+        self.dirs = np.array(self.fibonacciSphere(dirSample, True))
+        akc = self.kurtosisCoeff(self.dt, self.dirs)
+        mk = np.mean(akc, 0)
+        nvox = self.dt.shape[1]
+        inputs = tqdm(range(0, nvox),
+                      desc='DKI params',
+                      unit='vox')
+        ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
+            (delayed(self.dkiTensorParams)(self.DTIvectors[i, :, 0],
+                                           self.dt[:, i])
+             for i in inputs))
+        ak = np.reshape(ak, (nvox))
+        rk = np.reshape(rk, (nvox))
+        trace = vectorize(trace.T, self.mask)
         ak = vectorize(ak, self.mask)
         rk = vectorize(rk, self.mask)
         mk = vectorize(mk, self.mask)
-        return md, rd, ad, fa, fe, trace, mk, ak, rk
+        return mk, rk, ak, trace
 
     def findViols(self, c=[0, 1, 0]):
         """
