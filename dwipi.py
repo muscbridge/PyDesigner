@@ -743,18 +743,13 @@ class DWI(object):
             (delayed(self.dkiTensorParams)(vectors[i, :, 0], self.dt[:, i])
              for i in inputs))
         ak = np.reshape(ak, (nvox))
-        rk = np.reshape(rk, (nvox))trace = vectorize(trace.T, self.mask)
+        rk = np.reshape(rk, (nvox))
         fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1], fa * v1[:, :, :, 2]), axis=3))
+        trace = vectorize(trace.T, self.mask)
         ak = vectorize(ak, self.mask)
         rk = vectorize(rk, self.mask)
         mk = vectorize(mk, self.mask)
         return mk, rk, ak, fe,
-
-
-
-
-
-
 
     def findViols(self, c=[0, 1, 0]):
         """
