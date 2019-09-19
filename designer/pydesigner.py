@@ -129,9 +129,12 @@ parser.add_argument('--undistort', action='store_true', default=False,
                     'NOTE: needs a phase encoding '
                     'specification to run.')
 parser.add_argument('--smooth', action='store_true', default=False,
-                    help='Include a CSF-free smoothing step during dwi '
-                    'preprocessing. FWHM is usually 1.2 times voxel '
-                    'size. ')
+                    help='Perform smoothing on the DWI data. '
+                    'Recommended to also supply --csfmask in order to '
+                    'avoid contaminating the voxels which border CSF.')
+parser.add_argument('--csfmask', default=None,
+                    help='CSF mask for exclusion during smoothing. '
+                    'Must be in the DWI space and resolution. ')
 parser.add_argument('--rician', action='store_true', default=False,
                     help='Perform Rician noise correction on the data '
                     '(requires --denoise to generate a noisemap).')
@@ -225,11 +228,16 @@ if not args.denoise:
     stdmsg='No --denoise but '
     if args.extent != '5,5,5':
         print(args)
-        warningmsg+=stdmsg+'--extent given; overriding with --denoise'
+        warningmsg+=stdmsg+'--extent given; overriding with --denoise\n'
         args.denoise = True
     if args.rician:
-        warningmsg+=stdmsg+'--rician given; overriding with --denoise'
+        warningmsg+=stdmsg+'--rician given; overriding with --denoise\n'
         args.denoise = True
+
+# Check to make sure CSF mask exists if given
+if args.csfmask:
+    if not op.exists(args.csfmask):
+        errmsg+='--csfmask file '+args.csfmask+' not found\n'
 
 # --force and --resume given
 if args.resume and args.force:
@@ -352,6 +360,27 @@ if args.degibbs:
 if args.undistort:
     # TODO: construct
     print('UNDER CONSTRUCTION, SORRY, SKIPPING...');
+
+#---------------------------------------------------------------------- 
+# Smooth
+#---------------------------------------------------------------------- 
+if args.smooth:
+    # add to HEAD name
+    smoothing_name = 's' + filetable['HEAD'].getName() + '.nii'
+    smoothing_full = op.join(outpath, smoothing_name)
+    # check to see if this already exists
+    if op.exists(smoothing_full):
+        if not (args.resume or args.force):
+            raise Exception('Running smoothing would cause an overwrite. '
+                            'In order to run please delete the files, use '
+                            '--force, use --resume, or change output '
+                            'destination.')
+    smoothing.smooth_image(filetable['HEAD'].getFull(),
+                           csfname=args.csfmask,
+                           outname=smoothing_full,
+                           width=1.2)
+    filetable['smoothed'] = DWIFile(smoothing_full)
+    filetable['HEAD'] = filetable['smoothed']
 
 #----------------------------------------------------------------------
 # Rician Noise Correction

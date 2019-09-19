@@ -6,7 +6,7 @@ import nibabel as nib
 import scipy as sc
 from scipy import ndimage
 
-def smooth_image(dwiname, csfname=None, width=1.25):
+def smooth_image(dwiname, csfname=None, outname='dwism.nii', width=1.2):
     """
     Smooths a DWI dataset
 
@@ -14,10 +14,12 @@ def smooth_image(dwiname, csfname=None, width=1.25):
     ----------
     dwiname : :obj: `string`
         Filename of image to be smoothed
-    width : :obj: `float`
-        The full width half max in voxels to be smoothed. Default: 1.25
     csfname : :obj: `string`
         Filename of CSF mask
+    outname : :obj: `string`
+        Filename to be written out
+    width : :obj: `float`
+        The full width half max in voxels to be smoothed. Default: 1.25
 
     Returns
     -------
@@ -37,7 +39,7 @@ def smooth_image(dwiname, csfname=None, width=1.25):
         smoothed = smooth(dwiimg, width=width)
 
     newimg = nib.Nifti1Image(smoothed, dwiimg.affine, dwiimg.header)
-    nib.save(newimg, 'dwism.nii')
+    nib.save(newimg, outname)
 
     return
 
@@ -74,7 +76,8 @@ def smooth(dwi, csfmask=None, width=1.25):
         raise ValueError('Input dwi dataset is not 4-D')
 
     dwidata = dwi.get_fdata()
-    csfdata = csfmask.get_fdata()
+    if csfmask:
+        csfdata = csfmask.get_fdata()
 
     if csfmask is not None:
         for i in range(dwi.shape[-1]):
