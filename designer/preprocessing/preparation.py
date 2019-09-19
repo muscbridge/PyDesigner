@@ -12,6 +12,7 @@ import json # decode
 from enum import Enum
 import nibabel as nib # various utilities for reading Nifti images
 import subprocess
+import re # regex substitution
 
 def prealign(d4img, outname, force=False, resume=False):
     """Takes a 4D nifti and aligns them with affine registration
@@ -83,13 +84,13 @@ def prealign(d4img, outname, force=False, resume=False):
 
     # Begin aligning volumes to first
     splitfiles = os.listdir(tmpdir)
-    alignvol = 'vol_0001.nii.gz'
+    alignvol = 'vol_0000.nii.gz'
     for f in splitfiles:
         if f == alignvol:
             continue
         else:
-            flirt_args = ['flirt', '-in', f, '-ref', alignvol,
-                          '-out', f]
+            flirt_args = ['flirt', '-in', op.join(tmpdir,f), '-ref', 
+                    op.join(tmpdir,alignvol), '-out', op.join(tmpdir,f)]
             completion = subprocess.run(flirt_args)
             if completion.returncode != 0:
                 raise Exception('flirt alignment failed during prealign '
@@ -97,3 +98,31 @@ def prealign(d4img, outname, force=False, resume=False):
                                 +completion.returncode+
                                 'Contact developers for assistance at '
                                 'https://github.com/m-ama/PyDesigner/issues')
+
+    # Merge volumes into one
+
+def fix_bval(bvalfile):
+    """Converts all whitespace into newlines in the file
+
+    Parameters
+    ----------
+    bvalfile :obj: `str`
+        The .bval to ensure is the correct format for mrtrix
+
+    Returns
+    -------
+    None, overwrites bval
+    """
+
+    if not op.exists(bvalfile):
+        raise Exception('File '+ bvalfile + ' does not exist.')
+
+    with open(bvalfile, 'r') as f:
+        data = f.read()
+
+    # replace whitespace with lines
+    data = re.sub(r'\s+', '\n', data)
+
+    # write to file
+    with open(bvalfile, 'w') as f:
+        f.write(data)
