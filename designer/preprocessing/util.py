@@ -31,35 +31,12 @@ def find_valid_ext(pathname):
 
     # Figure out which extensions are valid
     valid_extensions = ('.nii.gz', '.nii', '.json', '.bval',
-                        '.bvec', '.txt', '.ini')
+                        '.bvec')
     for ext in valid_extensions:
         if op.exists(pathname + ext):
             exts.append(ext)
     
     return exts
-
-def interactive_get_file(name):
-    """Interactively asks user to supply a valid filename
-
-    Parameters
-    ----------
-    name : string
-        The name to note can't be found in the initial pass
-
-    Returns
-    -------
-    string
-        A string containing a valid pathname
-    """
-    while not find_valid_ext(name):
-        print('Cannot find any valid extensions for ' + name +
-              ', plese enter a valid name')
-        name = str(input('>>'))
-        if name == 'q':
-            print('Exiting at user request.')
-            sys.exit(1)
-
-    return op.splitext(name)[0]
 
 class DWIFile:
     """
@@ -104,10 +81,7 @@ class DWIFile:
         # Check for existence of the name
         self.ext = find_valid_ext(pathname)
         if not self.ext:
-            pathname = interactive_get_file(pathname)
-            self.path = op.dirname(pathname)
-            self.name = op.basename(pathname)
-            self.ext = find_valid_ext(pathname)
+            raise Exception('File '+name+' is not a valid file.')
 
         # Figure out if dwi acquisition
         if (('.bval' in self.ext) and
