@@ -1494,7 +1494,7 @@ class DWI(object):
         outlierPath = os.path.join(qcPath, 'Outliers_IRLLS.nii')
         writeNii(outliers, self.hdr, outlierPath)
         self.fit(constraints=[0, 1, 0], reject=outliers)
-        if ~self.isdki():
+        if not self.isdki():
             tqdm.write('Detected DTI')
             md, rd, ad, fa, fe, trace = self.extractDTI()
             mdPath = os.path.join(savePath, 'MD.nii')
