@@ -99,6 +99,13 @@ def make_se_epi(filetable):
 
     completion = subprocess.run(dwi_convert_args)
 
+    # move dwi to non-temp directory as well
+    final_dwi = op.join(finalpath, 'tmp_dwi.mif')
+    shutil.copyfile(tmp_dwi, final_dwi)
+
+    # add it to the filetable
+    filetable['dwimif'] = final_dwi
+
     if completion.returncode != 0:
         raise Exception('DWI conversion failed, please see above.')
 

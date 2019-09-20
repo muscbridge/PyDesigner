@@ -6,12 +6,13 @@ Runs the PyDesigner pipeline
 # Package Management
 #----------------------------------------------------------------------
 import subprocess #subprocess
+import os # mkdir
 import os.path as op # path
-import shutil # which
+import shutil # which, rmtree
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy # array, ndarray
-from preprocessing import util, smoothing, rician
+from preprocessing import util, smoothing, rician, preparation
 DWIFile = util.DWIFile
 
 # Locate mrtrix3 via which-ing dwidenoise
@@ -126,8 +127,11 @@ parser.add_argument('--degibbs', action='store_true', default=False,
                     'for you if you have a .json sidecar.')
 parser.add_argument('--undistort', action='store_true', default=False,
                     help='Run FSL eddy to perform image undistortion. '
-                    'NOTE: needs a phase encoding '
-                    'specification to run.')
+                    'NOTE: needs a --topup to run.')
+parser.add_argument('--topup', default=None,
+                    help='The topup b0 series with a reverse phase encode '
+                    'direction opposite the dwi. REQUIRED for '
+                    '--undistort')
 parser.add_argument('--smooth', action='store_true', default=False,
                     help='Perform smoothing on the DWI data. '
                     'Recommended to also supply --csfmask in order to '
@@ -196,10 +200,6 @@ errmsg = ''
 warningmsg = ''
 msgstart = 'Incompatible arguments: '
 override = '; overriding with '
-# --rpe*
-if args.rpe_pair and args.rpe_all:
-    errmsg+=msgstart+'--rpe_pair and --rpe_all\n'
-
 # Warn if --standard and cherry-picking
 if args.standard:
     stdmsg= '--standard but cherry-picking '
@@ -239,6 +239,18 @@ if args.csfmask:
     if not op.exists(args.csfmask):
         errmsg+='--csfmask file '+args.csfmask+' not found\n'
 
+# Check that topup is given if --undistort is
+if args.undistort and not args.topup:
+    errmsg+='--undistort given but not topup\n'
+
+# Check output directory exists if given
+if args.output:
+    if not op.exists(args.output):
+        try:
+            os.mkdir(args.output)
+        except:
+            errmsg+='Cannot find or create output directory'
+
 # --force and --resume given
 if args.resume and args.force:
     errmsg+=msgstart+'--continue and --force\n'
@@ -248,8 +260,8 @@ if args.output:
         try:
             os.mkdir(args.output)
         except:
-            raise Exception('Output directory does not exist and cannot '
-                            'be made.')
+            errmsg+=('Output directory does not exist and cannot '
+                     'be made.')
 
 # Print warnings
 if warningmsg is not '':
@@ -269,7 +281,10 @@ if args.rpe_pair:
 if args.rpe_all:
     filetable['rpe_all'] = DWIFile(args.rpe_all)
 
-# TODO: add check for the rpe specifiers so we fail BEFORE running things
+if args.topup:
+    filetable['topup'] = DWIFile(args.topup)
+
+# TODO: add non-json RPE support, additional RPE type support
 
 # Get naming and location information
 dwiname = filetable['dwi'].getName()
@@ -277,6 +292,7 @@ if not args.output:
     outpath = filetable['dwi'].getPath()
 else:
     outpath = args.output
+filetable['outpath'] = outpath
 
 # Make the pipeline point to dwi as the last file since it's the only one
 # so far
@@ -358,8 +374,51 @@ if args.degibbs:
 # Undistort
 #----------------------------------------------------------------------
 if args.undistort:
-    # TODO: construct
-    print('UNDER CONSTRUCTION, SORRY, SKIPPING...');
+    # Add to HEAD name
+    undistorted_name = 'u' + filetable['HEAD'].getName() + '.nii'
+    undistorted_full = op.join(outpath, undistorted_name)
+    eddyqc = op.join(outpath, 'EDDYQC')
+    if op.exists(eddyqc):
+        if args.force:
+            shutil.rmtree(eddyqc)
+        else:
+            raise Exception('Running undistortion would cause an '
+                            'overwrite. In order to run this please delete '
+                            'files, use --force, use --resume, or '
+                            'change output destination')
+
+    # check to see if this already exists
+    if not (args.resume and op.exists(undistorted_full)):
+        # prepare; makes se-epi.mif
+        preparation.make_se_epi(filetable)
+
+        # system call
+        dwipreproc_args = ['dwipreproc']
+        if args.force:
+            dwipreproc_args.append('-force')
+        else:
+            if op.exists(undistorted_full) and not args.resume:
+                raise Exception('Running undistortion would cause an '
+                                'overwrite. '
+                                'In order to run this please delete the '
+                                'files, use --force, use --resume, or '
+                                'change output destination')
+        if not args.verbose:
+            dwipreproc_args.append('-quiet')
+        dwipreproc_args.append('-eddyqc_all')
+        dwipreproc_args.append(eddyqc)
+        dwipreproc_args.append('-rpe_header')
+        dwipreproc_args.append('-se_epi')
+        dwipreproc_args.append(filetable['se-epi'])
+        # Note: we skip align_seepi because it's handled in make_se_epi
+        dwipreproc_args.append(filetable['dwimif'])
+        dwipreproc_args.append(undistorted_full)
+        completion = subprocess.run(dwipreproc_args)
+        if completion.returncode != 0:
+            raise Exception('dwipreproc failed, please look above for '
+                            'error sources.')
+        filetable['undistorted'] = DWIFile(undistorted_full)
+        filetable['HEAD'] = filetable['undistorted']
 
 #---------------------------------------------------------------------- 
 # Smooth
