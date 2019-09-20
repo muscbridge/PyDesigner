@@ -28,6 +28,8 @@ class DWI(object):
             assert isinstance(imPath, object)
             self.hdr = nib.load(imPath)
             self.img = np.array(self.hdr.dataobj)
+            nanidx = np.isnan(self.img)
+            self.img[nanidx] = minZero
             # Get just NIFTI filename + extensio
             (path, file) = os.path.split(imPath)
             # Remove extension from NIFTI filename
