@@ -13,7 +13,7 @@ from tqdm import tqdm
 import random as rnd
 import warnings
 
-# Define the lowest number possible before it is considred a zero
+# Define the lowest number possible before it is considered a zero
 minZero = 1e-8
 
 # Define number of directions to resample after computing all tensors
