@@ -1,4 +1,13 @@
-# PyDesigner
+# PyDesigner [UNDER CONSTRUCTION]
+**Project is currently under construction and will not run. Official release will be marked by the removal of 'under construction' header.**
+
+**_Disclaimer:_**
+```
+This project is in very early stages of development and most likely will not work as intended. 
+We are not responsible for any data corruption, loss of valuable data, computer issues, you 
+getting fired because you chose to run this, or a thermonuclear war. We strongle enocurage 
+all potential users to wait for an official release.
+```
 <p align="center">
   <img src="https://avatars1.githubusercontent.com/u/47674287?s=400&u=9ca45aeafe30730e26fb70865c14e736f3a4dabf&v=4" alt="MAMA Logo" width="256">
 </p>
