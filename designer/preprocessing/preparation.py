@@ -265,4 +265,4 @@ def make_se_epi(filetable):
     filetable['se-epi'] = se_epi
 
     # Clean up temp dir
-    shutil.rmtree(outpath)
+    # shutil.rmtree(outpath)
