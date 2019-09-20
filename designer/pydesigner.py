@@ -13,6 +13,7 @@ import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy # array, ndarray
 from preprocessing import util, smoothing, rician, preparation
+from fitting import dwipi as dp
 DWIFile = util.DWIFile
 
 # Locate mrtrix3 via which-ing dwidenoise
@@ -463,3 +464,33 @@ if args.rician:
                           outpath=rician_full)
     filetable['rician_corrected'] = DWIFile(rician_full)
     filetable['HEAD'] = filetable['rician_corrected']
+
+#---------------------------------------------------------------------- 
+# Make preprocessed file
+#----------------------------------------------------------------------
+preprocessed = op.join(outpath, 'preprocessed_dwi')
+shutil.copyfile(filetable['HEAD'].getFull(), preprocessed + '.nii')
+shutil.copyfile(filetable['dwi'].getBVAL(), preprocessed + '.bval')
+shutil.copyfile(filetable['dwi'].getBVEC(), preprocessed + '.bvec')
+filetable['preprocessed'] = DWIFile(preprocessed)
+filetable['HEAD'] = filetable['preprocessed']
+
+#----------------------------------------------------------------------
+# Tensor Fitting
+#----------------------------------------------------------------------
+if not args.nofit:
+    # make metric map directory
+    metricpath = op.join(outpath, 'metrics')
+    if op.exists(metricpath):
+        if args.force:
+            shutil.rmtree(metricpath)
+        else:
+            raise Exception('Running fitting would cause an overwrite. '
+                            'In order to run this please delete the '
+                            'files, use --force, use --resume, or '
+                            'change output destination.')
+    else:
+        os.mkdir(metricpath)
+        print(filetable['HEAD'].getFull())
+        img = dp.DWI(filetable['HEAD'].getFull())
+        img.optimPipeline(savePath=metricpath)
