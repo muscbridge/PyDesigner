@@ -5,3 +5,4 @@ __pycache__/
 
 # Files to ignore
 .DS_Store
+designer/._DESIGNER.py
