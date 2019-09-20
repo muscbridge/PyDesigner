@@ -95,6 +95,8 @@ class DWIFile:
         if ('.json' in self.ext):
             with open(op.join(self.path, self.name + '.json')) as f:
                 self.json = json.load(f)
+        else:
+            self.json = None
 
     def getName(self):
         """Get the name without the path for this dwifile
@@ -140,6 +142,67 @@ class DWIFile:
         """
 
         return self.acquisition
+
+    def hasJSON(self):
+        """Checks if this object has a .json file
+
+        Returns
+        -------
+            True if has .json, False if not
+        """
+        if self.json:
+            return True
+        else:
+            return False
+
+    def getJSON(self):
+        """Returns the .json filename for this DWIFile
+
+        Returns
+        -------
+        string
+            The full path to the .json file
+        """
+        if self.hasJSON():
+            if self.path:
+                return op.join(self.path, self.name + '.json')
+            else:
+                return self.name + '.json'
+        else:
+            return None
+
+    def getBVAL(self):
+        """Returns the .bval filename for this DWIFile
+
+        Returns
+        -------
+        string
+            The full path to the .bval
+        """
+        if self.isAcquisition():
+            if self.path:
+                return op.join(self.path, self.name + '.bval')
+            else:
+                return self.name + '.bval'
+        else:
+            return None
+
+    def getBVEC(self):
+        """Returns the .bvec filename for this DWIFile
+
+        Returns
+        -------
+        string
+            The full path to the .bvec
+        """
+
+        if self.isAcquisition():
+            if self.path:
+                return op.join(self.path, self.name + '.bvec')
+            else:
+                return self.name + '.bvec'
+        else:
+            return None
 
     def print(self, json=False):
         print('Path: ' + self.path)
