@@ -923,19 +923,6 @@ class DWI(object):
         # Returns an image multiplied by the brain mask to remove all values outside the brain
         return np.multiply(self.mask.astype(bool), img)
 
-    def main(self):
-        self.fit()
-        md, rd, ad, fa, fe, trace, mk, rk, ak = self.extract()
-        map = self.findViols([0, 1, 0])
-        md = self.multiplyMask(md)
-        rd = self.multiplyMask(rd)
-        ad = self.multiplyMask(ad)
-        fa = self.multiplyMask(fa)
-        mk = self.multiplyMask(mk)
-        rk = self.multiplyMask(rk)
-        ak = self.multiplyMask(ak)
-        return map, md, rd, ad, fa, fe, trace, mk, rk, ak
-
     def akcoutliers(self, iter=10):
         """
         Uses 100,000 direction in chunks of 10 to iteratively find
