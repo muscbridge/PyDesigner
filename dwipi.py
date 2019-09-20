@@ -923,19 +923,6 @@ class DWI(object):
         # Returns an image multiplied by the brain mask to remove all values outside the brain
         return np.multiply(self.mask.astype(bool), img)
 
-    def main(self):
-        self.fit()
-        md, rd, ad, fa, fe, trace, mk, rk, ak = self.extract()
-        map = self.findViols([0, 1, 0])
-        md = self.multiplyMask(md)
-        rd = self.multiplyMask(rd)
-        ad = self.multiplyMask(ad)
-        fa = self.multiplyMask(fa)
-        mk = self.multiplyMask(mk)
-        rk = self.multiplyMask(rk)
-        ak = self.multiplyMask(ak)
-        return map, md, rd, ad, fa, fe, trace, mk, rk, ak
-
     def akcoutliers(self, iter=10):
         """
         Uses 100,000 direction in chunks of 10 to iteratively find
@@ -1479,6 +1466,80 @@ class DWI(object):
         propViol = np.sum(img,axis=0).astype(int) / np.sum(b_pos)
         propViol = vectorize(propViol, self.mask)
         return propViol
+
+    def optimPipeline(self, savePath=os.getcwd()):
+        """Runs the recommended tensor fitting pipeline
+
+        Usage
+        -----
+        DWI.optimPipeline()
+
+        Parameters
+        ----------
+        savePath:   directory where to save maps
+
+        Returns
+        -------
+        MD, AD, RD, FA, trace, fe, MK, AK, RK
+        """
+        if savePath == os.getcwd():
+            savePath = os.path.join(savePath, 'Output')
+            qcPath = os.path.join(savePath, 'QC')
+            os.mkdir(savePath)
+            os.mkdir(qcPath)
+        else:
+            qcPath = os.path.join(savePath, 'QC')
+            os.mkdir(qcPath)
+        outliers, dt_hat = self.irlls()
+        outlierPath = os.path.join(qcPath, 'Outliers_IRLLS.nii')
+        writeNii(outliers, self.hdr, outlierPath)
+        self.fit(constraints=[0, 1, 0], reject=outliers)
+        if not self.isdki():
+            tqdm.write('Detected DTI')
+            md, rd, ad, fa, fe, trace = self.extractDTI()
+            mdPath = os.path.join(savePath, 'MD.nii')
+            rdPath = os.path.join(savePath, 'RD.nii')
+            adPath = os.path.join(savePath, 'AD.nii')
+            faPath = os.path.join(savePath, 'FA.nii')
+            fePath = os.path.join(savePath, 'FE.nii')
+            tracePath = os.path.join(savePath, 'Trace.nii')
+            writeNii(md, self.hdr, mdPath)
+            writeNii(rd, self.hdr, rdPath)
+            writeNii(ad, self.hdr, adPath)
+            writeNii(fa, self.hdr, faPath)
+            writeNii(fe, self.hdr, fePath)
+            writeNii(trace, self.hdr, tracePath)
+        else:
+            tqdm.write('Detected DKI')
+            md, rd, ad, fa, fe, trace = self.extractDTI()
+            akc_out = self.akcoutliers()
+            self.akccorrect(akc_out=akc_out)
+            mk, rk, ak, trace = self.extractDKI()
+            mdPath = os.path.join(savePath, 'MD.nii')
+            rdPath = os.path.join(savePath, 'RD.nii')
+            adPath = os.path.join(savePath, 'AD.nii')
+            faPath = os.path.join(savePath, 'FA.nii')
+            fePath = os.path.join(savePath, 'FE.nii')
+            tracePath = os.path.join(savePath, 'Trace.nii')
+            mkPath = os.path.join(savePath, 'MK.nii')
+            rkPath = os.path.join(savePath, 'RK.nii')
+            akPath = os.path.join(savePath, 'AK.nii')
+            akcPath = os.path.join(qcPath, 'Outliers_AKC.nii')
+            writeNii(md, self.hdr, mdPath)
+            writeNii(rd, self.hdr, rdPath)
+            writeNii(ad, self.hdr, adPath)
+            writeNii(fa, self.hdr, faPath)
+            writeNii(fe, self.hdr, fePath)
+            writeNii(trace, self.hdr, tracePath)
+            writeNii(mk, self.hdr, mkPath)
+            writeNii(rk, self.hdr, rkPath)
+            writeNii(ak, self.hdr, akPath)
+            writeNii(akc_out, self.hdr, akcPath)
+        DT, KT = self.tensorReorder(self.tensorType())
+        dtPath = os.path.join(savePath, 'DT.nii')
+        ktPath = os.path.join(savePath, 'KT.nii')
+        writeNii(DT, self.hdr, dtPath)
+        writeNii(KT, self.hdr, ktPath)
 
 class medianFilter(object):
     def __init__(self, img, violmask, th=15, sz=3, conn='face'):
