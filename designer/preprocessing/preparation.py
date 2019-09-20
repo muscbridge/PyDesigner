@@ -246,7 +246,7 @@ def make_se_epi(filetable):
     # Concatenate all b0 into one se-epi
     # NOTE: uses finalpath instead of outpath
     se_epi = op.join(finalpath, 'se-epi.mif')
-    mrcat_args = ['mrcat', '-quiet', '-axis', '3']
+    mrcat_args = ['mrcat', '-force', '-quiet', '-axis', '3']
     for f in to_cat:
         mrcat_args.append(f)
     mrcat_args.append(se_epi)
