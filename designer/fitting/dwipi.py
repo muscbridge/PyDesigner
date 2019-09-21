@@ -23,7 +23,7 @@ dirSample = 256
 warnings.filterwarnings("ignore")
 
 # Progress bar Properties
-tqdmWidth = 10  # Number of columns of progress bar
+tqdmWidth = 100  # Number of columns of progress bar
 
 class DWI(object):
     def __init__(self, imPath):
