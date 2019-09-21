@@ -13,7 +13,7 @@ from tqdm import tqdm
 import random as rnd
 import warnings
 
-# Define the lowest number possible before it is considred a zero
+# Define the lowest number possible before it is considered a zero
 minZero = 1e-8
 
 # Define number of directions to resample after computing all tensors
@@ -28,6 +28,8 @@ class DWI(object):
             assert isinstance(imPath, object)
             self.hdr = nib.load(imPath)
             self.img = np.array(self.hdr.dataobj)
+            nanidx = np.isnan(self.img)
+            self.img[nanidx] = minZero
             # Get just NIFTI filename + extensio
             (path, file) = os.path.split(imPath)
             # Remove extension from NIFTI filename
@@ -950,7 +952,7 @@ class DWI(object):
         akc_out:    3D map containing outliers where AKC falls fails the
                     inequality test -2 < AKC < 10
         """
-        dir = np.genfromtxt('dirs100000.csv', delimiter=",")
+        dir = np.genfromtxt('fitting/dirs100000.csv', delimiter=",")
         nvox = self.dt.shape[1]
         akc_out = np.zeros(nvox, dtype=bool)
         N = dir.shape[0]
@@ -1185,9 +1187,16 @@ class DWI(object):
         except NameError:
             def estSigma(dwi, bmat):
                 dwi = np.reshape(dwi, (len(dwi), 1))
-                dt_ = np.linalg.lstsq(bmat, np.log(dwi), rcond=None)[0]
+                # dt_ = np.linalg.lstsq(bmat, np.log(dwi), rcond=None)[0]
+                dt_ = np.linalg.solve(np.dot(bmat.T, bmat), np.dot(
+                    bmat.T, np.log(dwi)))
                 w = np.exp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
-                dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))), (np.log(dwi) * w), rcond=None)[0]
+                # dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))), (np.log(dwi) * w), rcond=None)[0]
+                dt_ = np.linalg.solve(
+                    np.dot((bmat * np.tile(w, (1, nparam))).T,
+                           (bmat * np.tile(w, (1, nparam)))), \
+                    np.dot((bmat * np.tile(w, (1, nparam))).T, (np.log(
+                        dwi) * w)))
                 e = np.log(dwi) - np.matmul(bmat, dt_)
                 m = np.median(np.abs((e * w) - np.median(e * w)))
                 sigma_ = np.sqrt(ndwi / ndof) * 1.4826 * m
