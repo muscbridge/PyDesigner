@@ -537,7 +537,7 @@ class DWI(object):
         #     dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, cons=C)
         if constraints is None or (constraints[0] == 0 and constraints[1] == 0 and constraints[2] == 0):
             inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc=' Tensor Fitting: Unconstrained Moore-Penrose Pseudoinverse',
+                          desc=' Tensor Fitting: Unconstrained',
                           unit='vox',
                           ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
@@ -546,7 +546,7 @@ class DWI(object):
         else:
             C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
             inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Tensor Fitting: Constrainted Convex Optimization',
+                          desc='Tensor Fitting: Constrainted',
                           unit='vox',
                           ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
