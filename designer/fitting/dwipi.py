@@ -22,6 +22,9 @@ dirSample = 256
 # Suppress warnings because mitigations are applied in code
 warnings.filterwarnings("ignore")
 
+# Progress bar Properties
+tqdmWidth = 10  # Number of columns of progress bar
+
 class DWI(object):
     def __init__(self, imPath):
         if os.path.exists(imPath):
@@ -535,7 +538,8 @@ class DWI(object):
         if constraints is None or (constraints[0] == 0 and constraints[1] == 0 and constraints[2] == 0):
             inputs = tqdm(range(0, dwi_.shape[1]),
                           desc=' Tensor Fitting: Unconstrained Moore-Penrose Pseudoinverse',
-                          unit='vox')
+                          unit='vox',
+                          ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
                 (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]]) for i in inputs)
 
@@ -543,7 +547,8 @@ class DWI(object):
             C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
             inputs = tqdm(range(0, dwi_.shape[1]),
                           desc='Tensor Fitting: Constrainted Convex Optimization',
-                          unit='vox')
+                          unit='vox',
+                          ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
                 (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]],
                                     cons=C) for i in inputs)
@@ -637,7 +642,8 @@ class DWI(object):
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
                       desc='DTI params',
-                      unit='vox')
+                      unit='vox',
+                      ncols=tqdmWidth)
         values, vectors = zip(
             *Parallel(n_jobs=num_cores, prefer='processes') \
                 (delayed(self.dtiTensorParams)(DT[:, :, i]) for i in
@@ -696,7 +702,8 @@ class DWI(object):
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
                       desc='DKI params',
-                      unit='vox')
+                      unit='vox',
+                      ncols=tqdmWidth)
         ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(self.dkiTensorParams)(self.DTIvectors[i, :, 0],
                                            self.dt[:, i])
@@ -962,7 +969,8 @@ class DWI(object):
             iter = 10
         inputs = tqdm(range(iter),
                       desc='AKC Outlier Detection',
-                      unit='blk')
+                      unit='blk',
+                      ncols=tqdmWidth)
         for i in inputs:
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
             akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
@@ -1009,7 +1017,8 @@ class DWI(object):
 
         for i in tqdm(range(dt.shape[-1]),
                       desc='AKC Correction',
-                      unit='tensor'):
+                      unit='tensor',
+                      ncols=tqdmWidth):
             for j in range(nvox):
                 # Index beginning and ending of patch
                 Ib = violIdx[0, j] - d2move
@@ -1204,7 +1213,8 @@ class DWI(object):
             sigma_ = np.zeros((nvox,1))
             inputs = tqdm(range(nvox),
                           desc='IRLLS: Noise Estimation',
-                          unit='vox')
+                          unit='vox',
+                          ncols=tqdmWidth)
             num_cores = multiprocessing.cpu_count()
             sigma_ = Parallel(n_jobs=num_cores, prefer='processes') \
                 (delayed(estSigma)(dwi[:, i], bmat) for i in inputs)
@@ -1320,7 +1330,8 @@ class DWI(object):
 
         inputs = tqdm(range(nvox),
                           desc='IRLLS: Outlier Detection',
-                          unit='vox')
+                          unit='vox',
+                          ncols=tqdmWidth)
         (reject, dt) = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
             (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
         # for i in inputs:
