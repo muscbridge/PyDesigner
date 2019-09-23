@@ -23,7 +23,7 @@ dirSample = 256
 warnings.filterwarnings("ignore")
 
 # Progress bar Properties
-tqdmWidth = 100  # Number of columns of progress bar
+tqdmWidth = 70  # Number of columns of progress bar
 
 class DWI(object):
     def __init__(self, imPath):
@@ -537,7 +537,7 @@ class DWI(object):
         #     dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, cons=C)
         if constraints is None or (constraints[0] == 0 and constraints[1] == 0 and constraints[2] == 0):
             inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Tensor Fitting: Unconstrained',
+                          desc='Unconstrained Tensor Fit',
                           unit='vox',
                           ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
@@ -546,7 +546,7 @@ class DWI(object):
         else:
             C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
             inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Tensor Fitting: Constrainted ',
+                          desc='Constrained Tensor Fit  ',
                           unit='vox',
                           ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
@@ -641,7 +641,7 @@ class DWI(object):
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
-                      desc='DTI params                   ',
+                      desc='DTI params              ',
                       unit='vox',
                       ncols=tqdmWidth)
         values, vectors = zip(
@@ -701,7 +701,7 @@ class DWI(object):
         mk = np.mean(akc, 0)
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
-                      desc='DKI params                   ',
+                      desc='DKI params              ',
                       unit='vox',
                       ncols=tqdmWidth)
         ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
@@ -968,7 +968,7 @@ class DWI(object):
             print('Entered iteration value exceeds 10...resetting to 10')
             iter = 10
         inputs = tqdm(range(iter),
-                      desc='AKC Outlier Detection        ',
+                      desc='AKC Outlier Detection   ',
                       unit='blk',
                       ncols=tqdmWidth)
         for i in inputs:
@@ -1016,7 +1016,7 @@ class DWI(object):
         nvox = violIdx.shape[1]
 
         for i in tqdm(range(dt.shape[-1]),
-                      desc='AKC Correction               ',
+                      desc='AKC Correction          ',
                       unit='tensor',
                       ncols=tqdmWidth):
             for j in range(nvox):
@@ -1212,7 +1212,7 @@ class DWI(object):
                 return sigma_
             sigma_ = np.zeros((nvox,1))
             inputs = tqdm(range(nvox),
-                          desc='IRLLS: Noise Estimation      ',
+                          desc='IRLLS: Noise Estimation ',
                           unit='vox',
                           ncols=tqdmWidth)
             num_cores = multiprocessing.cpu_count()
@@ -1329,7 +1329,7 @@ class DWI(object):
             return reject.reshape(-1), dt.reshape(-1)#, fa, md
 
         inputs = tqdm(range(nvox),
-                          desc='IRLLS: Outlier Detection     ',
+                          desc='IRLLS: Outlier Detection',
                           unit='vox',
                           ncols=tqdmWidth)
         (reject, dt) = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
