@@ -11,7 +11,7 @@ import os.path as op # path
 import shutil # which, rmtree
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
-import numpy # array, ndarray
+import numpy as np # array, ndarray
 from preprocessing import util, smoothing, rician, preparation
 from fitting import dwipi as dp
 DWIFile = util.DWIFile
@@ -145,6 +145,11 @@ parser.add_argument('--rician', action='store_true', default=False,
                     '(requires --denoise to generate a noisemap).')
 parser.add_argument('--nofit', action='store_true', default=False,
                     help='Do not fit DTI or DKI tensors.')
+parser.add_argument('--noakc', action='store_true', default=False,
+                    help='Do not brute force K tensor outlier rejection.')
+parser.add_argument('--nooutliers', action='store_true', default=False,
+                    help='Do not perform outlier correction on kurtosis '
+                    'fitting metrics.')
 parser.add_argument('-w', '--WMTI', action='store_true', default=False,
                     help='Include DKI WMTI parameters (forces DKI): '
                     'AWF, IAS_params, EAS_params. ')
@@ -221,7 +226,14 @@ if args.standard:
 if args.nofit:
     stdmsg='--nofit given but '
     if args.WMTI:
-        warningmsg+=msgstart+stdmsg+'--WMTI'+override+'tensor fitting.'
+        warningmsg+=msgstart+stdmsg+'--WMTI'+override+'tensor fitting.\n'
+        args.nofit = False
+    if args.noakc:
+        warningmsg+=msgstart+stdmsg+'--noakc'+override+'tensor fitting.\n'
+        args.nofit = False
+    if args.nooutliers:
+        warningmsg+=msgstart+stdmsg+'--nooutliers'
+        warningmsg+=override+'tensor fitting.\n'
         args.nofit = False
 
 # (Extent or Degibbs) and no Denoise
@@ -251,6 +263,14 @@ if args.output:
             os.mkdir(args.output)
         except:
             errmsg+='Cannot find or create output directory'
+
+# Check that --fit_constraints can be converted to int array
+fit_constraints = np.fromstring(args.fit_constraints,
+                                    dtype=int, sep=',')
+for i in fit_constraints:
+    if i < 0 or i > 1:
+        errmsg+='Invalid --fit_constraints value, should be 0 or 1\n'
+        break
 
 # --force and --resume given
 if args.resume and args.force:
@@ -481,6 +501,7 @@ filetable['HEAD'] = filetable['preprocessed']
 if not args.nofit:
     # make metric map directory
     metricpath = op.join(outpath, 'metrics')
+    fitqcpath = op.join(outpath, 'metric_qc')
     if op.exists(metricpath):
         if args.force:
             shutil.rmtree(metricpath)
@@ -489,8 +510,51 @@ if not args.nofit:
                             'In order to run this please delete the '
                             'files, use --force, use --resume, or '
                             'change output destination.')
-    else:
+    if op.exists(fitqcpath):
+        if args.force:
+            shutil.rmtree(fitqcpath)
+        else:
+            raise Exception('Running fitting would cause an overwrite. '
+                            'In order to run this please delete the '
+                            'files, use --force, use --resume, or '
+                            'change output destination.')
+
+    if not args.resume and (not
+    (op.exists(metricpath) and op.exists(fitqcpath))):
         os.mkdir(metricpath)
-        print(filetable['HEAD'].getFull())
+        os.mkdir(fitqcpath)
+
+        # create dwi fitting object
         img = dp.DWI(filetable['HEAD'].getFull())
-        img.optimPipeline(savePath=metricpath)
+        # detect outliers
+        if not args.nooutliers:
+            outliers, dt_hat = img.irlls()
+            # write outliers to qc folder
+            outlier_full = op.join(fitqcpath, 'Outliers_IRLLS.nii')
+            dp.writeNii(outliers, img.hdr, outlier_full)
+            # fit while rejecting outliers
+            img.fit(fit_constraints, reject=outliers)
+        else:
+            # fit without rejecting outliers
+            img.fit(fit_constraints)
+
+        md, rd, ad, fa, fe, trace = img.extractDTI()
+        for f in ('md', 'rd', 'ad', 'fa', 'fe', 'trace'):
+            fpath = op.join(metricpath, f+'.nii')
+            dp.writeNii(exec(f), img.hdr, fpath)
+        if img.isdki():
+            # do akc, DKI fitting
+            if not args.noakc:
+                # do akc
+                akc_out = img.akcoutliers()
+                img.akccorrect(akc_out)
+            mk, rk, ak, trace = img.extractDKI()
+            # NOTE: overwrites DTI trace
+            for f in ('mk', 'rk', 'ak', 'trace'):
+                fpath = op.join(metricpath, f+'.nii')
+                dp.writeNii(exec(f), img.hdr, fpath)
+            # reorder tensor for mrtrix3
+            DT, KT = img.tensorReorder(img.tensorType())
+            for f in ('DT', 'KT'):
+                fpath = op.join(metricpath, f+'.nii')
+                dp.writeNii(exec(f), img.hdr, fpath)
