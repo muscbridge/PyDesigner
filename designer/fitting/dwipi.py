@@ -1215,7 +1215,7 @@ class DWI(object):
                           desc='IRLLS: Noise Estimation ',
                           unit='vox',
                           ncols=tqdmWidth)
-            num_cores = multiprocessing.cpu_count()
+            num_cores = round(multiprocessing.cpu_count())
             sigma_ = Parallel(n_jobs=num_cores, prefer='processes') \
                 (delayed(estSigma)(dwi[:, i], bmat) for i in inputs)
             sigma = np.median(sigma_)
