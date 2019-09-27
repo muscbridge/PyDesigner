@@ -26,7 +26,7 @@ warnings.filterwarnings("ignore")
 tqdmWidth = 70  # Number of columns of progress bar
 
 class DWI(object):
-    def __init__(self, imPath, num_cores=-1):
+    def __init__(self, imPath, nthreads=-1):
         if os.path.exists(imPath):
             assert isinstance(imPath, object)
             self.hdr = nib.load(imPath)
@@ -65,14 +65,14 @@ class DWI(object):
             assert('File in path not found. Please locate file and try '
                    'again')
         tqdm.write('Image ' + fName + '.nii loaded successfully')
-        if not isinstance(num_cores, int):
-            assert('Variable num_cores need to be an integer')
-        if num_cores < -2:
-            assert('Variable num_cores cannot be set below -2')
-        if num_cores is None:
+        if not isinstance(nthreads, int):
+            assert('Variable nthreads need to be an integer')
+        if nthreads < -2:
+            assert('Variable nthreads cannot be set below -2')
+        if nthreads is None:
             self.workers = -1
         else:
-            self.workers = num_cores
+            self.workers = nthreads
         if self.workers == -2:
             tqdm.write('Processing with ' + np.str(multiprocessing.cpu_count() - 1) + ' workers...')
         elif self.workers == -1:
