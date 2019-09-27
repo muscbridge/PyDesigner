@@ -63,15 +63,14 @@ class DWI(object):
         tqdm.write('Image ' + fName + '.nii loaded successfully')
         if not isinstance(nthreads, int):
             raise Exception('Variable nthreads need to be an integer')
-        if nthreads < -2:
-            raise Exception('Variable nthreads cannot be set below -2')
+        if nthreads < -1 or nthreads == 0:
+            raise Exception('Variable nthreads is a positive integer or '
+                            '-1')
         if nthreads is None:
             self.workers = -1
         else:
             self.workers = nthreads
-        if self.workers < -1:
-            raise Exception('nthreads cannot be set below -1')
-        elif self.workers == -1:
+        if self.workers == -1:
             tqdm.write('Processing with ' +
                        np.str(multiprocessing.cpu_count()) +
                        ' workers...')
