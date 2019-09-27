@@ -65,11 +65,20 @@ class DWI(object):
             assert('File in path not found. Please locate file and try '
                    'again')
         tqdm.write('Image ' + fName + '.nii loaded successfully')
+        if not isinstance(num_cores, int):
+            assert('Variable num_cores need to be an integer')
+        if num_cores < -2:
+            assert('Variable num_cores cannot be set below -2')
         if num_cores is None:
-            self.workers = multiprocessing.cpu_count()
+            self.workers = -1
         else:
             self.workers = num_cores
-        tqdm.write('Processing with ' + np.str(self.workers) + ' workers...')
+        if self.workers == -2:
+            tqdm.write('Processing with ' + np.str(multiprocessing.cpu_count() - 1) + ' workers...')
+        elif self.workers == -1:
+            tqdm.write('Processing with ' + np.str(multiprocessing.cpu_count()) + ' workers...')
+        else:
+            tqdm.write('Processing with ' + np.str(self.workers) + ' workers...')
 
     def getBvals(self):
         """Returns a vector of b-values, requires no input arguments
