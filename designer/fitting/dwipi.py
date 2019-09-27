@@ -62,9 +62,9 @@ class DWI(object):
                    'again')
         tqdm.write('Image ' + fName + '.nii loaded successfully')
         if not isinstance(nthreads, int):
-            assert('Variable nthreads need to be an integer')
+            raise Exception('Variable nthreads need to be an integer')
         if nthreads < -2:
-            assert('Variable nthreads cannot be set below -2')
+            raise Exception('Variable nthreads cannot be set below -2')
         if nthreads is None:
             self.workers = -1
         else:
