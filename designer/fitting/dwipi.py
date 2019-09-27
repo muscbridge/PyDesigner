@@ -46,7 +46,7 @@ class DWI(object):
                 # number of DWI volumes. [Gx Gy Gz Bval]
                 self.grad = np.c_[np.transpose(bvecs), bvals]
             else:
-                assert('Unable to locate BVAL or BVEC files')
+                raise NameError('Unable to locate BVAL or BVEC files')
             maskPath = os.path.join(path,'brain_mask.nii')
             if os.path.exists(maskPath):
                 tmp = nib.load(maskPath)
