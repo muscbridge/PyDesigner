@@ -331,6 +331,7 @@ class DWI(object):
         wcnt, wind = self.createTensorOrder(4)
         ndir = dir.shape[0]
         adc = self.diffusionCoeff(dt[:6], dir)
+        adc[adc == 0] = minZero
         md = np.sum(dt[np.array([0,3,5])], 0)/3
         bW = np.tile(wcnt,(ndir, 1)) * dir[:,wind[:, 0]] * \
              dir[:,wind[:,1]] * dir[:,wind[:, 2]] * dir[:,wind[:, 3]]
