@@ -11,16 +11,12 @@ import multiprocessing
 from joblib import Parallel, delayed
 from tqdm import tqdm
 import random as rnd
-import warnings
 
 # Define the lowest number possible before it is considered a zero
 minZero = 1e-8
 
 # Define number of directions to resample after computing all tensors
 dirSample = 256
-
-# Suppress warnings because mitigations are applied in code
-warnings.filterwarnings("ignore")
 
 # Progress bar Properties
 tqdmWidth = 70  # Number of columns of progress bar
