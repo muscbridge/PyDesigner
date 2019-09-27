@@ -536,8 +536,6 @@ class DWI(object):
         shat = np.exp(np.matmul(self.b, init))
 
         # dt = np.zeros((22, dwi_.shape[1]))
-        num_cores = multiprocessing.cpu_count()
-
         # for i in inputs:
         #     dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, cons=C)
         if constraints is None or (constraints[0] == 0 and constraints[1] == 0 and constraints[2] == 0):
@@ -545,7 +543,7 @@ class DWI(object):
                           desc='Unconstrained Tensor Fit',
                           unit='vox',
                           ncols=tqdmWidth)
-            self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
+            self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
                 (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]]) for i in inputs)
 
         else:
@@ -554,7 +552,7 @@ class DWI(object):
                           desc='Constrained Tensor Fit  ',
                           unit='vox',
                           ncols=tqdmWidth)
-            self.dt = Parallel(n_jobs=num_cores, prefer='processes') \
+            self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
                 (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]],
                                     cons=C) for i in inputs)
 
@@ -628,7 +626,6 @@ class DWI(object):
         trace:  sum of first eigenvalues
         """
         # extract all tensor parameters from dt
-        num_cores = multiprocessing.cpu_count()
 
         DT = np.reshape(
             np.concatenate((self.dt[0, :], self.dt[1, :], self.dt[2, :],
@@ -650,7 +647,7 @@ class DWI(object):
                       unit='vox',
                       ncols=tqdmWidth)
         values, vectors = zip(
-            *Parallel(n_jobs=num_cores, prefer='processes') \
+            *Parallel(n_jobs=self.workers, prefer='processes') \
                 (delayed(self.dtiTensorParams)(DT[:, :, i]) for i in
                  inputs))
         values = np.reshape(np.abs(values), (nvox, 3))
@@ -692,7 +689,6 @@ class DWI(object):
         fe:     first eigenvectors
         trace:  sum of first eigenvalues
         """
-        num_cores = multiprocessing.cpu_count()
         # get the trace
         rdwi = sigmoid(np.matmul(self.b[:, 1:], self.dt))
         B = np.round(-(self.b[:, 0] + self.b[:, 3] + self.b[:, 5]) * 1000)
@@ -709,7 +705,7 @@ class DWI(object):
                       desc='DKI params              ',
                       unit='vox',
                       ncols=tqdmWidth)
-        ak, rk = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
+        ak, rk = zip(*Parallel(n_jobs=self.workers, prefer='processes') \
             (delayed(self.dkiTensorParams)(self.DTIvectors[i, :, 0],
                                            self.dt[:, i])
              for i in inputs))
@@ -928,9 +924,8 @@ class DWI(object):
         maxB = self.maxBval()
         adc = self.diffusionCoeff(self.dt[:6], self.dirs)
         akc = self.kurtosisCoeff(self.dt, self.dirs)
-        num_cores = multiprocessing.cpu_count()
         inputs = tqdm(range(0, nvox))
-        map = Parallel(n_jobs=num_cores, prefer='processes') \
+        map = Parallel(n_jobs=self.workers, prefer='processes') \
             (delayed(self.findVoxelViol)(adc[:,i], akc[:,i], maxB, [0, 1, 0]) for i in inputs)
         map = np.reshape(pViols2, nvox)
         map = self.multiplyMask(vectorize(map,self.mask))
@@ -1220,8 +1215,7 @@ class DWI(object):
                           desc='IRLLS: Noise Estimation ',
                           unit='vox',
                           ncols=tqdmWidth)
-            num_cores = multiprocessing.cpu_count()
-            sigma_ = Parallel(n_jobs=num_cores, prefer='processes') \
+            sigma_ = Parallel(n_jobs=self.workers, prefer='processes') \
                 (delayed(estSigma)(dwi[:, i], bmat) for i in inputs)
             sigma = np.median(sigma_)
             sigma = np.tile(sigma,(nvox,1))
@@ -1337,7 +1331,7 @@ class DWI(object):
                           desc='IRLLS: Outlier Detection',
                           unit='vox',
                           ncols=tqdmWidth)
-        (reject, dt) = zip(*Parallel(n_jobs=num_cores, prefer='processes') \
+        (reject, dt) = zip(*Parallel(n_jobs=self.workers, prefer='processes') \
             (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
         # for i in inputs:
         #     reject[:,i], dt[:,i], fa[i], md[i] = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
