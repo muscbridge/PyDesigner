@@ -70,9 +70,7 @@ class DWI(object):
         else:
             self.workers = nthreads
         if self.workers < -1:
-            tqdm.write('Processing with ' +
-                       np.str(multiprocessing.cpu_count() + self.workers + 1)
-                       + ' workers...')
+            raise Exception('nthreads cannot be set below -1')
         elif self.workers == -1:
             tqdm.write('Processing with ' +
                        np.str(multiprocessing.cpu_count()) +
