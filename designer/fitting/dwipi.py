@@ -25,7 +25,7 @@ dirSample = 256
 tqdmWidth = 70  # Number of columns of progress bar
 
 class DWI(object):
-    def __init__(self, imPath, num_cores=None):
+    def __init__(self, imPath, num_cores=-1):
         if os.path.exists(imPath):
             assert isinstance(imPath, object)
             self.hdr = nib.load(imPath)
