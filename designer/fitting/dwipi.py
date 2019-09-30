@@ -706,8 +706,8 @@ class DWI(object):
         for ib in range(0, uB.shape[0]):
             t = np.where(B == uB[ib])
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
-        self.dirs = np.array(self.fibonacciSphere(dirSample, True))
-        akc = self.kurtosisCoeff(self.dt, self.dirs)
+        dirs = np.genfromtxt('fitting/dirs256.csv', delimiter=",")
+        akc = self.kurtosisCoeff(self.dt, dirs)
         mk = np.mean(akc, 0)
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
