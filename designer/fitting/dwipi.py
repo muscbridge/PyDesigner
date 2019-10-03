@@ -3,8 +3,7 @@
 
 import numpy as np
 from scipy.special import expit as sigmoid
-from cvxopt import matrix
-from cvxopt import solvers
+import cvxpy as cvx
 import nibabel as nib
 import os
 import multiprocessing
@@ -457,25 +456,18 @@ class DWI(object):
 
         # Constrained fitting
         else:
-            C = matrix(np.matmul(w, b).astype('double'))
-            d = matrix(np.matmul(w,
-                                 np.log(dwi)).astype('double').reshape(-1))
-            m, n = C.size
-            P = C.T * C
-            q = -C.T * d
-            cons = matrix(cons)
-            G = -cons.T * cons
-            h = matrix(np.zeros(cons.size[0]))
-            h = cons.T * h
-            # starting_vals = {'x': dt_hat}
-            dims = {'l': m, 'q': [], 's': []}
-            solvers.options['show_progress'] = False  # Solver options
-            solvers.options['maxiters'] = 22000
-            # if dt_hat=None:
-            # If estimated dt exists; initialize
-            dt = np.array(solvers.qp(P, q, G, h)['x']).reshape(-1)
-            # else:
-            #     dt = np.array(solvers.qp(P, q, G, h)['x'], initvals=starting_vals).reshape(-1)  # If estimated dt does not exist
+            C = np.matmul(w, b).astype('double')
+            d = np.matmul(w, np.log(dwi)).astype('double').reshape(-1)
+            m, n = C.shape
+            x = cvx.Variable(n)
+            objective = cvx.Minimize(0.5 * cvx.sum_squares(C * x - d))
+            constraints = [cons * x >= np.zeros((len(cons)))]
+            prob = cvx.Problem(objective, constraints)
+            try:
+                prob.solve()
+                dt = x.value
+            except:
+                dt = np.full((22,), minZero)
         return dt
 
     def fit(self, constraints=None, reject=None):
