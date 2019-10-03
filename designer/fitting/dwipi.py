@@ -554,8 +554,10 @@ class DWI(object):
                           unit='vox',
                           ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
-                (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]],
-                                    cons=C) for i in inputs)
+                (delayed(self.wlls)(shat[~reject_[:, i], i],
+                                         dwi_[~reject_[:, i], i],
+                                         self.b[~reject_[:, i]],
+                                         cons=C) for i in inputs)
 
         self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
         self.s0 = np.exp(self.dt[0,:])
@@ -708,8 +710,7 @@ class DWI(object):
                       ncols=tqdmWidth)
         ak, rk = zip(*Parallel(n_jobs=self.workers, prefer='processes') \
             (delayed(self.dkiTensorParams)(self.DTIvectors[i, :, 0],
-                                           self.dt[:, i])
-             for i in inputs))
+                                           self.dt[:, i]) for i in inputs))
         ak = np.reshape(ak, (nvox))
         rk = np.reshape(rk, (nvox))
         trace = vectorize(trace.T, self.mask)
