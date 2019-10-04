@@ -500,7 +500,6 @@ class DWI(object):
         if reject is None:
             reject = np.zeros(self.img.shape)
 
-
         grad = self.grad
         order = np.floor(np.log(np.abs(np.max(grad[:,-1])+1))/np.log(10))
         if order >= 2:
@@ -522,17 +521,9 @@ class DWI(object):
         ndwis = self.img.shape[-1]
         bs = np.ones((ndwis, 1))
         bD = np.tile(dcnt,(ndwis, 1))*grad[:,dind[:, 0]]*grad[:,dind[:, 1]]
-        bW = np.tile(wcnt, (ndwis, 1)) * self.grad[:,
-                                         wind[:, 0]] * self.grad[:, wind[:,
-                                                                    1]] * self.grad[
-                                                                          :,
-                                                                          wind[
-                                                                          :,
-                                                                          2]] * self.grad[
-                                                                                :,
-                                                                                wind[
-                                                                                :,
-                                                                                3]]
+        bW = np.tile(wcnt, (ndwis, 1)) * self.grad[:,wind[:, 0]] * \
+             self.grad[:, wind[:, 1]] * self.grad[:, wind[:,2]] *  \
+             self.grad[:,wind[:,3]]
         self.b = np.concatenate((bs, (
                     np.tile(-self.grad[:, -1], (6, 1)).T * bD), np.squeeze(
             1 / 6 * np.tile(self.grad[:, -1], (15, 1)).T ** 2) * bW), 1)
@@ -542,16 +533,18 @@ class DWI(object):
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
 
-        # dt = np.zeros((22, dwi_.shape[1]))
-        # for i in inputs:
-        #     dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, cons=C)
-        if constraints is None or (constraints[0] == 0 and constraints[1] == 0 and constraints[2] == 0):
+        if constraints is None or (constraints[0] == 0 and
+                                   constraints[1] == 0 and
+                                   constraints[2] == 0):
             inputs = tqdm(range(0, dwi_.shape[1]),
                           desc='Unconstrained Tensor Fit',
                           unit='vox',
                           ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
-                (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]]) for i in inputs)
+                (delayed(self.wlls)(shat[~reject_[:, i], i], \
+                                    dwi_[~reject_[:, i], i], \
+                                    self.b[~reject_[:, i]]) \
+                 for i in inputs)
 
         else:
             C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
