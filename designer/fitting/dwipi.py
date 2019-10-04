@@ -401,7 +401,7 @@ class DWI(object):
         rk = np.mean(akc)
         return ak, rk
 
-    def wlls(self, shat, dwi, b, cons=None):#, dt_hat=None):
+    def wlls(self, shat, dwi, b, cons=None, warmup=None):
         """Estimates diffusion and kurtosis tenor at voxel with
         unconstrained Moore-Penrose pseudoinverse or constrained
         quadratic convex optimization. This is a helper function for
@@ -443,6 +443,7 @@ class DWI(object):
                 b-values vector
         cons:   [(n * dir) x 22) vector (float)
                 matrix containing inequality constraints for fitting
+        warmup: estimate dt vector (22, 0) at each voxel
 
         Returns
         -------
@@ -460,17 +461,20 @@ class DWI(object):
             d = np.matmul(w, np.log(dwi)).astype('double').reshape(-1)
             m, n = C.shape
             x = cvx.Variable(n)
+            if warmup is not None:
+                x.value = warmup
             objective = cvx.Minimize(0.5 * cvx.sum_squares(C * x - d))
             constraints = [cons * x >= np.zeros((len(cons)))]
             prob = cvx.Problem(objective, constraints)
             try:
-                prob.solve()
+                prob.solve(warm_start=True,
+                           max_iter=20000)
                 dt = x.value
             except:
-                dt = np.full((22,), minZero)
+                dt = np.full((22, ), minZero)
         return dt
 
-    def fit(self, constraints=None, reject=None):
+    def fit(self, constraints=None, reject=None, dt_hat=None):
         """
         Returns fitted diffusion or kurtosis tensor
 
@@ -484,7 +488,9 @@ class DWI(object):
         constraits: [1 x 3] vector (int)
                     Specifies which constraints to use
         reject:     4D matrix containing information on voxels to exclude
-        from DT estimation
+                    from DT estimation
+        dt_hat:     [22 x nvox] matrix with estimated dt to speedup
+                    minimization (optional)
 
         Returns
         -------
@@ -553,11 +559,20 @@ class DWI(object):
                           desc='Constrained Tensor Fit  ',
                           unit='vox',
                           ncols=tqdmWidth)
-            self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
-                (delayed(self.wlls)(shat[~reject_[:, i], i],
-                                         dwi_[~reject_[:, i], i],
-                                         self.b[~reject_[:, i]],
-                                         cons=C) for i in inputs)
+            if dt_hat is None:
+                self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
+                    (delayed(self.wlls)(shat[~reject_[:, i], i],
+                                             dwi_[~reject_[:, i], i],
+                                             self.b[~reject_[:, i]],
+                                             cons=C) for i in inputs)
+            else:
+                self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
+                    (delayed(self.wlls)(shat[~reject_[:, i], i],
+                                        dwi_[~reject_[:, i], i],
+                                        self.b[~reject_[:, i]],
+                                        cons=C,
+                                        warmup=dt_hat[:, i]) \
+                     for i in inputs)
 
         self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
         self.s0 = np.exp(self.dt[0,:])
