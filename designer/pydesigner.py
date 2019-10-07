@@ -528,12 +528,12 @@ if not args.nofit:
         img = dp.DWI(filetable['HEAD'].getFull())
         # detect outliers
         if not args.nooutliers:
-            outliers, dt_hat = img.irlls()
+            outliers, dt_est = img.irlls()
             # write outliers to qc folder
             outlier_full = op.join(fitqcpath, 'Outliers_IRLLS.nii')
             dp.writeNii(outliers, img.hdr, outlier_full)
             # fit while rejecting outliers
-            img.fit(fit_constraints, reject=outliers)
+            img.fit(fit_constraints, reject=outliers, dt_hat=dt_est)
         else:
             # fit without rejecting outliers
             img.fit(fit_constraints)

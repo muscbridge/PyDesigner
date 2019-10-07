@@ -3,8 +3,7 @@
 
 import numpy as np
 from scipy.special import expit as sigmoid
-from cvxopt import matrix
-from cvxopt import solvers
+import cvxpy as cvx
 import nibabel as nib
 import os
 import multiprocessing
@@ -402,7 +401,7 @@ class DWI(object):
         rk = np.mean(akc)
         return ak, rk
 
-    def wlls(self, shat, dwi, b, cons=None):#, dt_hat=None):
+    def wlls(self, shat, dwi, b, cons=None, warmup=None):
         """Estimates diffusion and kurtosis tenor at voxel with
         unconstrained Moore-Penrose pseudoinverse or constrained
         quadratic convex optimization. This is a helper function for
@@ -444,6 +443,7 @@ class DWI(object):
                 b-values vector
         cons:   [(n * dir) x 22) vector (float)
                 matrix containing inequality constraints for fitting
+        warmup: estimate dt vector (22, 0) at each voxel
 
         Returns
         -------
@@ -457,28 +457,24 @@ class DWI(object):
 
         # Constrained fitting
         else:
-            C = matrix(np.matmul(w, b).astype('double'))
-            d = matrix(np.matmul(w,
-                                 np.log(dwi)).astype('double').reshape(-1))
-            m, n = C.size
-            P = C.T * C
-            q = -C.T * d
-            cons = matrix(cons)
-            G = -cons.T * cons
-            h = matrix(np.zeros(cons.size[0]))
-            h = cons.T * h
-            # starting_vals = {'x': dt_hat}
-            dims = {'l': m, 'q': [], 's': []}
-            solvers.options['show_progress'] = False  # Solver options
-            solvers.options['maxiters'] = 22000
-            # if dt_hat=None:
-            # If estimated dt exists; initialize
-            dt = np.array(solvers.qp(P, q, G, h)['x']).reshape(-1)
-            # else:
-            #     dt = np.array(solvers.qp(P, q, G, h)['x'], initvals=starting_vals).reshape(-1)  # If estimated dt does not exist
+            C = np.matmul(w, b).astype('double')
+            d = np.matmul(w, np.log(dwi)).astype('double').reshape(-1)
+            m, n = C.shape
+            x = cvx.Variable(n)
+            if warmup is not None:
+                x.value = warmup
+            objective = cvx.Minimize(0.5 * cvx.sum_squares(C * x - d))
+            constraints = [cons * x >= np.zeros((len(cons)))]
+            prob = cvx.Problem(objective, constraints)
+            try:
+                prob.solve(warm_start=True,
+                           max_iter=20000)
+                dt = x.value
+            except:
+                dt = np.full((22, ), minZero)
         return dt
 
-    def fit(self, constraints=None, reject=None):
+    def fit(self, constraints=None, reject=None, dt_hat=None):
         """
         Returns fitted diffusion or kurtosis tensor
 
@@ -492,7 +488,9 @@ class DWI(object):
         constraits: [1 x 3] vector (int)
                     Specifies which constraints to use
         reject:     4D matrix containing information on voxels to exclude
-        from DT estimation
+                    from DT estimation
+        dt_hat:     [22 x nvox] matrix with estimated dt to speedup
+                    minimization (optional)
 
         Returns
         -------
@@ -501,7 +499,6 @@ class DWI(object):
         # Create constraints
         if reject is None:
             reject = np.zeros(self.img.shape)
-
 
         grad = self.grad
         order = np.floor(np.log(np.abs(np.max(grad[:,-1])+1))/np.log(10))
@@ -524,17 +521,9 @@ class DWI(object):
         ndwis = self.img.shape[-1]
         bs = np.ones((ndwis, 1))
         bD = np.tile(dcnt,(ndwis, 1))*grad[:,dind[:, 0]]*grad[:,dind[:, 1]]
-        bW = np.tile(wcnt, (ndwis, 1)) * self.grad[:,
-                                         wind[:, 0]] * self.grad[:, wind[:,
-                                                                    1]] * self.grad[
-                                                                          :,
-                                                                          wind[
-                                                                          :,
-                                                                          2]] * self.grad[
-                                                                                :,
-                                                                                wind[
-                                                                                :,
-                                                                                3]]
+        bW = np.tile(wcnt, (ndwis, 1)) * self.grad[:,wind[:, 0]] * \
+             self.grad[:, wind[:, 1]] * self.grad[:, wind[:,2]] *  \
+             self.grad[:,wind[:,3]]
         self.b = np.concatenate((bs, (
                     np.tile(-self.grad[:, -1], (6, 1)).T * bD), np.squeeze(
             1 / 6 * np.tile(self.grad[:, -1], (15, 1)).T ** 2) * bW), 1)
@@ -544,16 +533,18 @@ class DWI(object):
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
 
-        # dt = np.zeros((22, dwi_.shape[1]))
-        # for i in inputs:
-        #     dt[:,i] = self.wlls(shat[:,i], dwi_[:,i], self.b, cons=C)
-        if constraints is None or (constraints[0] == 0 and constraints[1] == 0 and constraints[2] == 0):
+        if constraints is None or (constraints[0] == 0 and
+                                   constraints[1] == 0 and
+                                   constraints[2] == 0):
             inputs = tqdm(range(0, dwi_.shape[1]),
                           desc='Unconstrained Tensor Fit',
                           unit='vox',
                           ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
-                (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]]) for i in inputs)
+                (delayed(self.wlls)(shat[~reject_[:, i], i], \
+                                    dwi_[~reject_[:, i], i], \
+                                    self.b[~reject_[:, i]]) \
+                 for i in inputs)
 
         else:
             C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
@@ -561,9 +552,20 @@ class DWI(object):
                           desc='Constrained Tensor Fit  ',
                           unit='vox',
                           ncols=tqdmWidth)
-            self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
-                (delayed(self.wlls)(shat[~reject_[:, i], i], dwi_[~reject_[:, i], i], self.b[~reject_[:, i]],
-                                    cons=C) for i in inputs)
+            if dt_hat is None:
+                self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
+                    (delayed(self.wlls)(shat[~reject_[:, i], i],
+                                             dwi_[~reject_[:, i], i],
+                                             self.b[~reject_[:, i]],
+                                             cons=C) for i in inputs)
+            else:
+                self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
+                    (delayed(self.wlls)(shat[~reject_[:, i], i],
+                                        dwi_[~reject_[:, i], i],
+                                        self.b[~reject_[:, i]],
+                                        cons=C,
+                                        warmup=dt_hat[:, i]) \
+                     for i in inputs)
 
         self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
         self.s0 = np.exp(self.dt[0,:])
@@ -706,8 +708,8 @@ class DWI(object):
         for ib in range(0, uB.shape[0]):
             t = np.where(B == uB[ib])
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
-        self.dirs = np.array(self.fibonacciSphere(dirSample, True))
-        akc = self.kurtosisCoeff(self.dt, self.dirs)
+        dirs = np.genfromtxt('fitting/dirs256.csv', delimiter=",")
+        akc = self.kurtosisCoeff(self.dt, dirs)
         mk = np.mean(akc, 0)
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
@@ -716,8 +718,7 @@ class DWI(object):
                       ncols=tqdmWidth)
         ak, rk = zip(*Parallel(n_jobs=self.workers, prefer='processes') \
             (delayed(self.dkiTensorParams)(self.DTIvectors[i, :, 0],
-                                           self.dt[:, i])
-             for i in inputs))
+                                           self.dt[:, i]) for i in inputs))
         ak = np.reshape(ak, (nvox))
         rk = np.reshape(rk, (nvox))
         trace = vectorize(trace.T, self.mask)
@@ -968,7 +969,7 @@ class DWI(object):
         akc_out:    3D map containing outliers where AKC falls fails the
                     inequality test -2 < AKC < 10
         """
-        dir = np.genfromtxt('fitting/dirs100000.csv', delimiter=",")
+        dir = np.genfromtxt('fitting/dirs10000.csv', delimiter=",")
         nvox = self.dt.shape[1]
         akc_out = np.zeros(nvox, dtype=bool)
         N = dir.shape[0]
