@@ -969,7 +969,7 @@ class DWI(object):
         akc_out:    3D map containing outliers where AKC falls fails the
                     inequality test -2 < AKC < 10
         """
-        dir = np.genfromtxt('fitting/dirs100000.csv', delimiter=",")
+        dir = np.genfromtxt('fitting/dirs10000.csv', delimiter=",")
         nvox = self.dt.shape[1]
         akc_out = np.zeros(nvox, dtype=bool)
         N = dir.shape[0]
