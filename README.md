@@ -50,6 +50,7 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 **[L- FSL](#fsl)**<br>
 **[L- MRTRIX3](#mrtrix3)**<br>
 **[L- Python](#python)**<br>
+**[Running PyDesigner](#running-pydesigner)**<br>
 **[Meet the Team](#meet-the-team)**<br>
 
 ## General Information
@@ -156,6 +157,35 @@ pip install numpy scipy cvxpy nibabel multiprocessing joblib tqdm
 ```
 
 Completion of this step will ready your system for dMRI processing. Let's go!
+
+## Running PyDesigner
+PyDesigner is easy to run on a subject. Ensure that all your DICOMS are converted to NifTi files and that all diffusion series have a valid `.json` file. Switch to the appropriate conda environment; run `conda activate deep` if you followed this guide. Then, for any given subject, call:
+```
+python pydesigner.py \
+--denoise \
+--degibbs \
+--smooth \
+--rician \
+--undistort \
+--verbose \
+--topup <path_to_reverse_phase.nii>
+<path_to_input.nii> \
+-o <path_to_output_folder>
+```
+
+For example, I can process a subject with the following commands
+```
+python pydesigner.py \
+--denoise \
+--degibbs \
+--undistort \
+--topup /Users/sid/Documents/Projects/IAM/Dataset/NifTi/IAM_1047/14_DKI_BIPOLAR_2_5mm_64dir_50slices_TOP_UP_PA.nii \
+--smooth \
+--rician \
+--verbose \
+/Users/sid/Documents/Projects/IAM/Dataset/NifTi/IAM_1047/13_DKI_BIPOLAR_2_5mm_64dir_50slices.nii \
+-o /Users/sid/Documents/Projects/IAM/Dataset/Processed/IAM_1047
+```
 
 ## Meet the Team
 PyDesigner is a join collarobation and as such consists of several developers.
