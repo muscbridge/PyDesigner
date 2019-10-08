@@ -429,6 +429,16 @@ if args.undistort:
         dwipreproc_args.append('-eddyqc_all')
         dwipreproc_args.append(eddyqc)
         dwipreproc_args.append('-rpe_header')
+        # full vs half sphere
+        dwipreproc_args.append('-eddy_options')
+        repol_string = '--repol '
+        if util.bvec_is_fullsphere(filetable['dwi'].getBVEC()):
+            # is full, add appropriate dwipreproc option
+            repol_string += '--data_is_shelled'
+        else:
+            # half
+            repol_string += '--slm=linear'
+        dwipreproc_args.append(repol_string)
         dwipreproc_args.append('-se_epi')
         dwipreproc_args.append(filetable['se-epi'])
         # Note: we skip align_seepi because it's handled in make_se_epi
