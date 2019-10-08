@@ -41,9 +41,20 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 ## Table of Contents
 **[Abstract](#pydesigner)**<br>
 **[General Information](#general-information)**<br>
+**[Introduction](#introduction)**<br>
+**[L- The PyDesigner Pipeline](#the-pydesigner-pipeline)**<br>
+**[L-- Image Acquisition](#image-acquisition)**<br>
+**[L-- Preprocessing](#preprocessing)**<br>
+**[L-- Tensor Estimation](#tensor-estimation)**<br>
+**[Installation](#installation)**<br>
+**[L- FSL](#fsl)**<br>
+**[L- MRTRIX3](#mrtrix3)**<br>
+**[L- Python](#python)**<br>
+**[Running PyDesigner](#running-pydesigner)**<br>
 **[Meet the Team](#meet-the-team)**<br>
 
 ## General Information
+### Introduction
 We here provide the code to estimate the diffusion kurtosis tensors from diffusion-weighted images. The (constrained) weighted linear least squares estimator is here preferred because of its accuracy and precision. See “Veraart, J., Sijbers, J., Sunaert, S., Leemans, A. & Jeurissen, B.,  Weighted linear least squares estimation of diffusion MRI parameters: strengths, limitations, and pitfalls. NeuroImage, 2013, 81, 335-346” for more details. Next, a set of diffusion and kurtosis parameter, including the white matter tract integrity metrics, can be calculated form the resulting kurtosis tensor.
 
 Some important notes needs to be considered:
@@ -51,6 +62,130 @@ Some important notes needs to be considered:
 1. Since the apparent diffusion tensor has 6 independent elements and the kurtosis tensor has 15 elements, there is a total of 21 parameters to be estimated. As an additional degree of freedom is associated with the noise free nondiffusion-weighted signal at least 22 diffusion-weighted images must be acquired for DKI. It can be further shown that there must be at least three distinct b-values, which only differ in the gradient magnitude. Furthermore, at least 15 distinct diffusion (gradient) directions are required (Jensen et al. 2005). Some additional consideration must be made.  The maximal b-value should be chosen carefully and is a trade-off between accuracy and precision. While for DTI, diffusion-weighted images are typically acquired with rather low b-values, about 1000 s⁄mm^2 , somewhat stronger diffusion sensitizing gradients need to be applied for DKI as the quadratic term in the b-value needs to be apparent. It is shown that b-values of about 2000 s⁄mm^2  are sufficient to measure the degree of non-Gaussianity with an acceptable precision (Jensen & Helpern 2010). 
 
 2. Outliers, or “black voxels”, in kurtosis maps are not uncommon. They result from undesired signal fluctuations due to motion, Gibbs ringing, or noise, which can often only be reduced using sophisticated tools.  Unfortunately, those outliers will interfere with the visual and statistical inspection of the kurtosis parameters maps. Smoothing is typically used to suppress those outliers. Use of smoothing must be done with care as image blur partial voluming effects might be introduced.
+
+### The PyDesigner Pipeline
+There are three main stages involved in DTI/DKI: image acquisition, preprocessing, and tensor estiamation. The scanner handles the first stage, while our PyDesigner pipeline handles the last two.
+
+#### Image acquisition
+Like with any other bioimaging modalities, the first step is always acquiring imaging data. Depending on your institution, ensure that you are using the most recent protocol for either DTI or DKI.
+
+#### Preprocessing
+The next step is to boost SNR of the acquired image through various preprocessing steps. These steps include:
+
+1. Denoising (MRTRIX3's `dwidenoise`)
+2. Removal of Gibbs ringing artifact (MRTRIX3's `mrdegibbs`)
+3. Rigid body alignment of multiple DWI series (MRTRIX3's `mrregister` and `mrtransform`)
+4. Distortion correction (FSL's `eddy` and `topup` via MRTRIX3's `dwidenoise`)
+5. Brain mask extraction (FSL's `bet`)
+6. Smoothing
+7. Rician correction (MRTRIX3's `mrcalc`)
+
+These corrections are performs with command-line executables from FSL and MRTRIX, making it mandatory to have these installed prior to running PyDesigner.
+
+#### Tensor Estimation
+The third and final stage performs actual metric extraction using mathematical means entirely via Pyhton dependencies. The basic tensor estiamtion pipeline flows something like this:
+
+1. IRLLS outlier detection and tensor estimation
+2. Precise tensor fitting with constraints
+3. DTI parameter extraction
+4. AKC outlier detection
+5. DKI parameter extraction
+
+Performing these calculations require only Python dependencies which can easily be obtained via `pip install ...` or `conda install ...`. More information will be provided in the [installation](#installation) section.
+
+## Installation
+There are essentially three overall dependencies for PyDesigner: 1) FSL, 2) MRTRIX3, and 3) Python. Configuration and means of obtaining said dependencies are listed below.
+
+### FSL
+FSL is a collection of tools and software used to process fMRI, MRI and DWI data. [Visit their installation page](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation) for download and installation guide.
+
+**Advanced Users Only:**
+
+As of most recent FSL 6.0.3, `eddy` does not support CUDA 10, while `bedpost` and `probtrakx` do. Moreover, the version supplied after FSL v6.0.1 fails on certain datasets. If running on a CUDA system, users are advised to downgrade to CUDA 9.1 for maximum compatibility, and to do so prior to installing FSL.
+
+After the installation of FSL, replace `eddy_cuda` with the one from [FSL v6.0.1](https://users.fmrib.ox.ac.uk/~thanayik/eddy_cuda9.1). Create a backup of original rename `eddy_cuda9.1` to `eddy_cuda` Then, make the file executable with `chmod +x /path/to/eddy_cuda`.
+
+Replace/Install [bedpostx for GPU](https://users.fmrib.ox.ac.uk/~moisesf/Bedpostx_GPU/Installation.html) for CUDA 9.1.
+
+### MRTRIX3
+MRTRIX3 is another software suite aimed at analysis of DWI data. Here are some of their helpful pages.
+1. [Homepage](https://www.mrtrix.org/)
+2. [Download and Install](https://www.mrtrix.org/download/)
+
+### Python
+PyDesigner was built and tested on Pyhron 3.7, so we enourage all users to adopt this version as well. While you may use the Python supplied by default on your OS, we highly enocurage users to adopt a Conda-based Python like [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/). Refer to either of these distributions' page for installation. This guide assumes a conda installation for setting up Python.
+
+First, update conda with
+```
+conda update conda
+```
+
+Next, create a conda environment specifically for dMRI preprocessing, called `dmri`. If you prefer not to create this environment, skip to package installation. In addition, we'll be installing `pip` to this environment.
+
+```
+conda create -n deep python=3.7
+conda install -n dmi pip
+
+```
+Activate the new environment with:
+```
+conda activate dmri
+```
+Take note that this needs to be done each time a new terminal window is opened. If this behavior is undesired, you may set this environment as default python environemtn 
+
+Once the base environment is created and activated, proceed with the installation of all packages.
+
+1. [NumPy](https://numpy.org/)
+2. [SciPy](https://www.scipy.org/)
+3. [CVXPY](https://www.cvxpy.org/)
+4. [NiBabel](https://nipy.org/nibabel/)
+5. [Multiprocessing](https://docs.python.org/3.4/library/multiprocessing.html?highlight=process)
+6. [Joblib](https://joblib.readthedocs.io/en/latest/)
+7. [TQDM](https://tqdm.github.io/)
+
+On conda environments, one can install them with the command
+```
+conda install -c anaconda numpy scipy joblib
+conda install -c conda-forge tqdm nibabel multiprocess
+pip install --upgrade setuptools
+pip install cvxpy
+```
+
+If setting up on a non-conda distribution or if you prefer a `pip` installation, run the following command:
+```
+pip install numpy scipy cvxpy nibabel multiprocessing joblib tqdm
+```
+
+Completion of this step will ready your system for dMRI processing. Let's go!
+
+## Running PyDesigner
+PyDesigner is easy to run on a subject. Ensure that all your DICOMS are converted to NifTi files and that all diffusion series have a valid `.json` file. Switch to the appropriate conda environment; run `conda activate deep` if you followed this guide. Then, for any given subject, call:
+```
+python pydesigner.py \
+--denoise \
+--degibbs \
+--smooth \
+--rician \
+--undistort \
+--verbose \
+--topup <path_to_reverse_phase.nii>
+<path_to_input.nii> \
+-o <path_to_output_folder>
+```
+
+For example, I can process a subject with the following commands
+```
+python pydesigner.py \
+--denoise \
+--degibbs \
+--undistort \
+--topup /Users/sid/Documents/Projects/IAM/Dataset/NifTi/IAM_1047/14_DKI_BIPOLAR_2_5mm_64dir_50slices_TOP_UP_PA.nii \
+--smooth \
+--rician \
+--verbose \
+/Users/sid/Documents/Projects/IAM/Dataset/NifTi/IAM_1047/13_DKI_BIPOLAR_2_5mm_64dir_50slices.nii \
+-o /Users/sid/Documents/Projects/IAM/Dataset/Processed/IAM_1047
+```
 
 ## Meet the Team
 PyDesigner is a join collarobation and as such consists of several developers.
