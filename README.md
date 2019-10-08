@@ -123,8 +123,8 @@ conda update conda
 Next, create a conda environment specifically for dMRI preprocessing, called `dmri`. If you prefer not to create this environment, skip to package installation. In addition, we'll be installing `pip` to this environment.
 
 ```
-conda create -n deep python=3.7
-conda install -n dmi pip
+conda create -n dmri python=3.7
+conda install -n dmri pip
 ```
 Activate the new environment with:
 ```
@@ -158,7 +158,7 @@ pip install numpy scipy cvxpy nibabel multiprocessing joblib tqdm
 Completion of this step will ready your system for dMRI processing. Let's go!
 
 ## Running PyDesigner
-PyDesigner is easy to run on a subject. Ensure that all your DICOMS are converted to NifTi files and that all diffusion series have a valid `.json` file. Switch to the appropriate conda environment; run `conda activate deep` if you followed this guide. Then, for any given subject, call:
+PyDesigner is easy to run on a subject. Ensure that all your DICOMS are converted to NifTi files and that all diffusion series have a valid `.json` file. Switch to the appropriate conda environment; run `conda activate dmri` if you followed this guide. Then, for any given subject, call:
 ```
 python pydesigner.py \
 --denoise \
