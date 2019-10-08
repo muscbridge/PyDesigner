@@ -6,6 +6,85 @@ import os.path as op # dirname, basename, join, splitext
 import sys # exit
 import json # decode
 import pprint #pprint
+import numpy as np
+import math
+
+def bvec_is_fullsphere(bvec):
+    """Determines if .bvec file is full or half-sphere
+
+    Parameters
+    ----------
+    bvec : string
+        The filename of the bvec
+
+    Returns
+    -------
+    True if full-sphere, False if half
+    """
+
+    # Check for existence
+    if not op.exists(bvec):
+        raise Exception('.bvec file '+bvec+' does not exist.')
+    # Attempt to load file
+    try:
+        data = np.loadtxt(bvec)
+    except:
+        raise Exception('.bvec file '+bvec+' cannot be read.')
+
+    # Transpose data so 2nd dimension is the axis i,j,k (x,y,z)
+    data = np.transpose(data)
+    # Check that data has correct dimensions
+    size_dim0 = np.size(data, 0)
+    if np.size(data, 1) != 3:
+        raise Exception('.bvec file '+bvec+' is not 3D; is '+str(size_dim0))
+
+    return vecs_are_fullsphere(data)
+
+def vecs_are_fullsphere(bvecs):
+    """Determines if input vectors are full or half-sphere
+
+    Parameters
+    ----------
+    bvecs : ndarray
+        Matrix of size [n_vectors x 3]
+
+    Returns
+    -------
+    True if full-sphere, False if half
+
+    Notes
+    -----
+    Adapted from Chris Rorden's nii_preprocess as seen here:
+    https://github.com/neurolabusc/nii_preprocess/blob/dd1c84f23f8828923dd5fc493a22156b7006a3d4/nii_preprocess.m#L1786-L1824
+    and reproduced from the original designer pipeline here:
+    https://github.com/m-ama/PyDesigner/blob/7a39ec4cb9679f1c3e9ead68baa8f8c111b0618a/designer/designer.py#L347-L368
+    """
+    # TODO: figure out why this math works
+    # Check dimensions
+    if np.size(bvecs, 1) != 3:
+        raise Exception('bvecs are not 3-dimensional.')
+    # Remove NaNs
+    bvecs[~np.isnan(bvecs.any(axis=1))]
+    # Remove any 0-vectors
+    bvecs[~np.all(bvecs == 0, axis=1)]
+    # Assume half-sphere if no vectors remaining
+    if not bvecs.any():
+        raise Exception('bvecs do not point anywhere.')
+    # Get mean length
+    mean = np.mean(bvecs, 0)
+    # Get x-component of direction
+    x_component = np.sqrt(np.sum(np.power(mean, 2)))
+    # Create a matrix to divide by this length
+    Dx = np.repeat(x_component, 3)
+    # Get mean unit length
+    mean_ulength = np.divide(mean, Dx)
+    # Scale by mean unit length
+    mean = np.ones([np.size(bvecs, 0), 3])* mean_ulength
+    # UNKNOWN
+    minV = min(np.sum(bvecs.conj() * mean, axis=1))
+    # Get angle in degrees
+    theta = math.degrees(math.acos(minV))
+    return (theta >= 110)
 
 def find_valid_ext(pathname):
     """Finds valid extensions for dwifile, helper function
@@ -203,6 +282,27 @@ class DWIFile:
                 return self.name + '.bvec'
         else:
             return None
+    def isPartialFourier(self):
+        """Returns whether the volume is partial fourier encoded
+
+        Returns
+        -------
+        boolean
+            Whether the encoding is partial fourier or not
+        """
+
+        if not self.isAcquisition():
+            raise Exception('Volume is not an acquisition volume.')
+        else:
+            if not self.getJSON():
+                raise Exception('No access to Partial Fourier information.')
+            else:
+                encoding = self.json['PartialFourier']
+                encodingnumber = float(encoding)
+                if encodingnumber != 1:
+                    return True
+                else:
+                    return False
 
     def print(self, json=False):
         print('Path: ' + self.path)

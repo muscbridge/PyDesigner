@@ -297,6 +297,12 @@ filetable = {'dwi' : DWIFile(args.dwi)}
 if not filetable['dwi'].isAcquisition():
     raise Exception('Input dwi does not have .bval/.bvec pair')
 
+# Check to make sure no partial fourier if --degibbs given
+if args.degibbs and filetable['dwi'].isPartialFourier():
+    print('Given DWI is partial fourier, overriding --degibbs; '
+          'no unringing correction will be done to avoid artifacts.')
+    args.degibbs = False
+
 if args.rpe_pair:
     filetable['rpe_pair'] = DWIFile(args.rpe_pair)
 if args.rpe_all:
@@ -429,6 +435,16 @@ if args.undistort:
         dwipreproc_args.append('-eddyqc_all')
         dwipreproc_args.append(eddyqc)
         dwipreproc_args.append('-rpe_header')
+        # full vs half sphere
+        dwipreproc_args.append('-eddy_options')
+        repol_string = '--repol '
+        if util.bvec_is_fullsphere(filetable['dwi'].getBVEC()):
+            # is full, add appropriate dwipreproc option
+            repol_string += '--data_is_shelled'
+        else:
+            # half
+            repol_string += '--slm=linear'
+        dwipreproc_args.append(repol_string)
         dwipreproc_args.append('-se_epi')
         dwipreproc_args.append(filetable['se-epi'])
         # Note: we skip align_seepi because it's handled in make_se_epi
