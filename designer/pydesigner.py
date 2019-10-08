@@ -297,6 +297,12 @@ filetable = {'dwi' : DWIFile(args.dwi)}
 if not filetable['dwi'].isAcquisition():
     raise Exception('Input dwi does not have .bval/.bvec pair')
 
+# Check to make sure no partial fourier if --degibbs given
+if args.degibbs and filetable['dwi'].isPartialFourier():
+    print('Given DWI is partial fourier, overriding --degibbs; '
+          'no unringing correction will be done to avoid artifacts.')
+    args.degibbs = False
+
 if args.rpe_pair:
     filetable['rpe_pair'] = DWIFile(args.rpe_pair)
 if args.rpe_all:

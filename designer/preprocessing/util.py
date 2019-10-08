@@ -203,6 +203,27 @@ class DWIFile:
                 return self.name + '.bvec'
         else:
             return None
+    def isPartialFourier(self):
+        """Returns whether the volume is partial fourier encoded
+
+        Returns
+        -------
+        boolean
+            Whether the encoding is partial fourier or not
+        """
+
+        if not self.isAcquisition():
+            raise Exception('Volume is not an acquisition volume.')
+        else:
+            if not self.getJSON():
+                raise Exception('No access to Partial Fourier information.')
+            else:
+                encoding = self.json['PartialFourier']
+                encodingnumber = float(encoding)
+                if encodingnumber != 1:
+                    return True
+                else:
+                    return False
 
     def print(self, json=False):
         print('Path: ' + self.path)
