@@ -103,7 +103,7 @@ FSL is a collection of tools and software used to process fMRI, MRI and DWI data
 
 As of most recent FSL 6.0.3, `eddy` does not support CUDA 10, while `bedpost` and `probtrakx` do. Moreover, the version supplied after FSL v6.0.1 fails on certain datasets. If running on a CUDA system, users are advised to downgrade to CUDA 9.1 for maximum compatibility, and to do so prior to installing FSL.
 
-After the installation of FSL, replace `eddy_cuda` with the one from [FSL v6.0.1](https://users.fmrib.ox.ac.uk/~thanayik/eddy_cuda9.1). Create a backup of original rename `eddy_cuda9.1` to `eddy_cuda` Then, make the file executable with `chmod +x /path/to/eddy_cuda`.
+After the installation of FSL, replace `eddy_cuda` with the one from [FSL v6.0.1](https://users.fmrib.ox.ac.uk/~thanayik/eddy_cuda9.1). Create a backup of original rename `eddy_cuda9.1` to `eddy_cuda` Then, make the file executable with `sudo chmod +x /path/to/eddy_cuda`.
 
 Replace/Install [bedpostx for GPU](https://users.fmrib.ox.ac.uk/~moisesf/Bedpostx_GPU/Installation.html) for CUDA 9.1.
 
@@ -125,7 +125,6 @@ Next, create a conda environment specifically for dMRI preprocessing, called `dm
 ```
 conda create -n deep python=3.7
 conda install -n dmi pip
-
 ```
 Activate the new environment with:
 ```
