@@ -10,6 +10,8 @@ import multiprocessing
 from joblib import Parallel, delayed
 from tqdm import tqdm
 import random as rnd
+import warnings
+warnings.filterwarnings("ignore")
 
 # Define the lowest number possible before it is considered a zero
 minZero = 1e-8
