@@ -10,6 +10,8 @@ import multiprocessing
 from joblib import Parallel, delayed
 from tqdm import tqdm
 import random as rnd
+import warnings
+warnings.filterwarnings("ignore")
 
 # Define the lowest number possible before it is considered a zero
 minZero = 1e-8
@@ -471,7 +473,7 @@ class DWI(object):
                            max_iter=20000)
                 dt = x.value
             except:
-                dt = np.full((22, ), minZero)
+                dt = np.full_like(x.value, minZero)
         return dt
 
     def fit(self, constraints=None, reject=None, dt_hat=None):
