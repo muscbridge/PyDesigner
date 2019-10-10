@@ -471,7 +471,7 @@ class DWI(object):
                            max_iter=20000)
                 dt = x.value
             except:
-                dt = np.full((22, ), minZero)
+                dt = np.full_like(x.value, minZero)
         return dt
 
     def fit(self, constraints=None, reject=None, dt_hat=None):
