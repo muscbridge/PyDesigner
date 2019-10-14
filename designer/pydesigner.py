@@ -471,10 +471,11 @@ if args.smooth:
                             'In order to run please delete the files, use '
                             '--force, use --resume, or change output '
                             'destination.')
-    smoothing.smooth_image(filetable['HEAD'].getFull(),
-                           csfname=args.csfmask,
-                           outname=smoothing_full,
-                           width=1.2)
+    if not args.resume:
+        smoothing.smooth_image(filetable['HEAD'].getFull(),
+                               csfname=args.csfmask,
+                               outname=smoothing_full,
+                               width=1.2)
     filetable['smoothed'] = DWIFile(smoothing_full)
     filetable['HEAD'] = filetable['smoothed']
 
@@ -486,18 +487,20 @@ if args.rician:
     rician_name = 'r' + filetable['HEAD'].getName() + '.nii'
     rician_full = op.join(outpath, rician_name)
     # check to see if this already exists
-    if not (args.resume and op.exists(rician_full)):
+    if op.exists(rician_full):
         # system call
-        if op.exists(rician_full) and not args.resume:
+        if not (args.resume or args.force):
             raise Exception('Running rician correction would cause an '
                             'overwrite. '
                             'In order to run this please delete the '
                             'files, use --force, use --resume, or '
                             'change output destination.')
-        else:
-            rician.rician_img_correct(filetable['HEAD'].getFull(),
-                          filetable['noisemap'].getFull(),
-                          outpath=rician_full)
+
+    if not args.resume:
+        rician.rician_img_correct(filetable['HEAD'].getFull(),
+                      filetable['noisemap'].getFull(),
+                      outpath=rician_full)
+
     filetable['rician_corrected'] = DWIFile(rician_full)
     filetable['HEAD'] = filetable['rician_corrected']
 
@@ -568,9 +571,9 @@ if not args.nofit:
             # NOTE: overwrites DTI trace
             for f in ('mk', 'rk', 'ak', 'trace'):
                 fpath = op.join(metricpath, f+'.nii')
-                dp.writeNii(exec(f), img.hdr, fpath)
+                dp.writeNii(fpath, img.hdr, fpath)
             # reorder tensor for mrtrix3
             DT, KT = img.tensorReorder(img.tensorType())
             for f in ('DT', 'KT'):
                 fpath = op.join(metricpath, f+'.nii')
-                dp.writeNii(exec(f), img.hdr, fpath)
+                dp.writeNii(fpath, img.hdr, fpath)
