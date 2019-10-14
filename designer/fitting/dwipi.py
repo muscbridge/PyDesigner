@@ -394,6 +394,8 @@ class DWI(object):
         -------
         rk:     radial kurtosis
         ak:     axial kurtosis
+        kfa:    kurtosis fractional anisotropy
+        mkt:    mean kurtosis tensor
         """
         dirs = np.vstack((v1, -v1))
         akc = self.kurtosisCoeff(dt, dirs)
@@ -401,7 +403,54 @@ class DWI(object):
         dirs = self.radialSampling(v1, dirSample).T
         akc = self.kurtosisCoeff(dt, dirs)
         rk = np.mean(akc)
-        return ak, rk
+        # W_F
+        # W_F = sqrt(
+        #      W1111 ^ 2 + W2222 ^ 2 + W3333 ^ 2 + 6 * W1122 ^ 2 + 6 *
+        #   W1133 ^ 2 + 6 * W2233 ^ 2 + 4 * W1112 ^ 2 + 4 * W1113 ^ 2 + 4 *
+        #   W1222 ^ 2 + 4 * W2223 ^ 2 + 4 * W1333 ^ 2 + 4 * W2333 ^ 2 +
+        #   12 * W1123 ^ 2 + 12 * W1223 ^ 2 + 12 * W1233 ^ 2)
+        #
+        # Wbar = 1/5*(W1111 + W2222+ W3333 + 2*(W1122 + W1133 + W2233)
+
+        W_F = np.sqrt(self.dt[6]**2 + \         # W1111
+                      self.dt[17]**2) + \       # W2222
+                      self.dt[21]**2 + \        # W3333
+                      6 * self.dt[9]**2+ \      # W1122
+                      6 * self.dt[11]**2 + \    # W1133
+                      6 * self.dt[19]**2 + \    # W2233
+                      4 * self.dt[7]**2 + \     # W1112
+                      4 * self.dt[8]**2 + \     # W1113
+                      4 * self.dt[12]**2 + \    # W1222
+                      4 * self.dt[18]**2 + \    # W2223
+                      4 * self.dt[16]**2 + \    # W1333
+                      4 * self.dt[20]**2 + \    # W2333
+                      12 * self.dt[10]**2 + \   # W1123
+                      12 * self.dt[13]**2 + \   # W1223
+                      12 * self.dt[14]**2       # W1233
+        Wbar = 1/5 * (self.dt[6] + self.dt[17] + self.dt[21] + 2 *
+                      (self.dt[9] + self.dt[11] + self.dt[19]))
+        if W_F < 1E-3:
+            kfa = 0
+        else:
+            W_diff = np.sqrt(
+                (self.dt[6] - Wbar)**2 + \                  # W1111
+                (self.dt[17] - Wbar) ** 2 + \               # W2222
+                (self.dt[21] - Wbar)**2 + \                 # W3333
+                6 * (self.dt[9] - Wbar / 3)**2 + \          # W1122
+                6 * (self.dt[11] - Wbar / 3)**2 + \         # W1133
+                6 * (self.dt[19] - Wbar / 3)**2 + \         # W2233
+                4 * self.dt[7]**2 + \                       # W1112
+                4 * self.dt[8]**2 + \                       # W1113
+                4 * self.dt[12]**2 + \                      # W1222
+                4 * self.dt[18]**2 + \                      # W2223
+                4 * self.dt[16]**2 + \                      # W1333
+                4 * self.dt[20]**2 + \                      # W2333
+                12 * self.dt[10]**2 + \                     # W1123
+                12 * self.dt[13]**2 + \                     # W1223
+                      12 * self.dt[14]**2                   # W1233
+            kfa = W_diff / W_F
+        mkt = Wbar
+        return ak, rk, kfa, mkt
 
     def wlls(self, shat, dwi, b, cons=None, warmup=None):
         """Estimates diffusion and kurtosis tenor at voxel with
@@ -709,7 +758,8 @@ class DWI(object):
                       desc='DKI params              ',
                       unit='vox',
                       ncols=tqdmWidth)
-        ak, rk = zip(*Parallel(n_jobs=self.workers, prefer='processes') \
+        ak, rk, kfa, mkt = zip(*Parallel(n_jobs=self.workers,
+                                  prefer='processes') \
             (delayed(self.dkiTensorParams)(self.DTIvectors[i, :, 0],
                                            self.dt[:, i]) for i in inputs))
         ak = np.reshape(ak, (nvox))
@@ -718,7 +768,9 @@ class DWI(object):
         ak = vectorize(ak, self.mask)
         rk = vectorize(rk, self.mask)
         mk = vectorize(mk, self.mask)
-        return mk, rk, ak, trace
+        kfa = vectorize(kfa, self.mask)
+        mkt = vectorize(mkt, self.mask)
+        return mk, rk, ak, kfa, mkt, trace
 
     def findViols(self, c=[0, 1, 0]):
         """
