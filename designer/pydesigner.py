@@ -489,7 +489,6 @@ if args.mask:
         else:
             maskthr = args.maskthr
         # Extract B0s
-        print(filetable['HEAD'].getFull())
         mask_arg = ['dwiextract', '-force', '-fslgrad',
                        filetable['dwi'].getBVEC(), filetable['dwi'].getBVAL(),
                        '-bzero']
