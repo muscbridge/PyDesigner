@@ -492,12 +492,17 @@ if args.mask:
     print(filetable['HEAD'].getFull())
     executeThis = ['dwiextract', '-force', '-fslgrad',
                    filetable['dwi'].getBVEC(), filetable['dwi'].getBVAL(),
-                   '-bzero', filetable['HEAD'].getFull(), B0_full]
+                   '-bzero']
+    if not args.verbose:
+        executeThis.append('-quiet')
+    executeThis.extend([filetable['HEAD'].getFull(), B0_full])
     print(executeThis)
     completion = subprocess.run(executeThis)
     # Compute mean B0s
-    executeThis = ['mrmath', '-force', '-axis', '3', B0_full, 'mean',
-                   B0_mean_full]
+    executeThis = ['mrmath', '-force']
+    if not args.verbose:
+        executeThis.append('-quiet')
+    executeThis.extend(['-axis', '3', B0_full, 'mean', B0_mean_full])
     completion = subprocess.run(executeThis)
     if completion.returncode != 0:
         raise Exception('B0 extraction failed: check your .bval file')
@@ -517,7 +522,6 @@ if args.mask:
         os.remove(B0_full + fsl_suffix)
     executeThis = ['bet', B0_full, brainmask_fsl_full, '-m', '-f',
                    np.str(maskthr)]
-    print(executeThis)
     completion = subprocess.run(executeThis)
     if completion.returncode != 0:
         raise Exception('Brain extraction failed. Check your B0.nii file '
