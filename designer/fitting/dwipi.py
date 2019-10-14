@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy as np
-from scipy.special import expit as sigmoid
-import cvxpy as cvx
-import nibabel as nib
-import os
 import multiprocessing
-from joblib import Parallel, delayed
-from tqdm import tqdm
+import os
 import random as rnd
 import warnings
+import cvxpy as cvx
+import nibabel as nib
+import numpy as np
+from joblib import Parallel, delayed
+from scipy.special import expit as sigmoid
+from tqdm import tqdm
 warnings.filterwarnings("ignore")
 
 # Define the lowest number possible before it is considered a zero
@@ -501,25 +501,19 @@ class DWI(object):
         # Create constraints
         if reject is None:
             reject = np.zeros(self.img.shape)
-
         grad = self.grad
         order = np.floor(np.log(np.abs(np.max(grad[:,-1])+1))/np.log(10))
         if order >= 2:
             grad[:, -1] = grad[:, -1]
-
         self.img.astype(np.double)
         self.img[self.img <= 0] = np.finfo(np.double).eps
-
         grad.astype(np.double)
         normgrad = np.sqrt(np.sum(grad[:,:3]**2, 1))
         normgrad[normgrad == 0] = 1
-
         grad[:,:3] = grad[:,:3]/np.tile(normgrad, (3,1)).T
         grad[np.isnan(grad)] = 0
-
         dcnt, dind = self.createTensorOrder(2)
         wcnt, wind = self.createTensorOrder(4)
-
         ndwis = self.img.shape[-1]
         bs = np.ones((ndwis, 1))
         bD = np.tile(dcnt,(ndwis, 1))*grad[:,dind[:, 0]]*grad[:,dind[:, 1]]
@@ -546,7 +540,6 @@ class DWI(object):
                                     dwi_[~reject_[:, i], i], \
                                     self.b[~reject_[:, i]]) \
                  for i in inputs)
-
         else:
             C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
             inputs = tqdm(range(0, dwi_.shape[1]),
@@ -567,7 +560,6 @@ class DWI(object):
                                         cons=C,
                                         warmup=dt_hat[:, i]) \
                      for i in inputs)
-
         self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
         self.s0 = np.exp(self.dt[0,:])
         self.dt = self.dt[1:,:]
