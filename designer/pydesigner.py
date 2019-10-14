@@ -9,6 +9,7 @@ import subprocess #subprocess
 import os # mkdir
 import os.path as op # path
 import shutil # which, rmtree
+import gzip # handles fsl's .gz suffix
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy as np # array, ndarray
@@ -158,7 +159,12 @@ parser.add_argument('--kcumulants', action='store_true', default=False,
                     'rather than K. ')
 parser.add_argument('--mask', action='store_true', default=False,
                     help='Compute a brain mask prior to tensor fitting '
-                    'to strip skull and improve efficiency. ')
+                    'to strip skull and improve efficiency. Use '
+                     '--maskthr to specify a threshold manually.')
+parser.add_argument('--maskthr', metavar='< fractional intensity '
+                                             ' threshold>',
+                    help='FSL bet threshold used for brain masking. '
+                    'Default: 0.25')
 parser.add_argument('--fit_constraints', default='0,1,0',
                     help='Constrain the WLLS fit. '
                     'Default: 0,1,0.')
@@ -458,6 +464,85 @@ if args.undistort:
         filetable['HEAD'] = filetable['undistorted']
 
 #---------------------------------------------------------------------- 
+# Create Brain Mask
+#----------------------------------------------------------------------
+if args.mask:
+    fsl_suffix = '.gz'
+    brainmask_fsl_name = 'brain'
+    brainmask_fsl_full = op.join(outpath, brainmask_fsl_name)
+    brainmask_fsl_out = op.join(outpath, brainmask_fsl_name + '_mask' +
+    '.nii' + fsl_suffix)
+    brainmask_out = op.join(outpath, brainmask_fsl_name + '_mask' + '.nii')
+    B0_name = 'B0.nii'
+    B0_mean = 'B0_mean.nii'
+    B0_full = op.join(outpath, B0_name)
+    B0_mean_full = op.join(outpath, B0_mean)
+    # check to see if this already exists
+    if (op.exists(brainmask_out) and not args.resume):
+            raise Exception('Running mask would cause an overwrite. '
+                            'In order to run please delete the files, use '
+                            '--force, use --resume, or change output '
+                            'destination.')
+    if not (args.resume and op.exists(brainmask_out)):
+        if args.maskthr is None:
+            maskthr = 0.25
+        else:
+            maskthr = args.maskthr
+        # Extract B0s
+        mask_arg = ['dwiextract', '-force', '-fslgrad',
+                       filetable['dwi'].getBVEC(), filetable['dwi'].getBVAL(),
+                       '-bzero']
+        if not args.verbose:
+            mask_arg.append('-quiet')
+        mask_arg.extend([filetable['HEAD'].getFull(), B0_full])
+        completion = subprocess.run(mask_arg)
+        # Compute mean B0s
+        mask_arg = ['mrmath', '-force']
+        if not args.verbose:
+            mask_arg.append('-quiet')
+        mask_arg.extend(['-axis', '3', B0_full, 'mean', B0_mean_full])
+        completion = subprocess.run(mask_arg)
+        if completion.returncode != 0:
+            raise Exception('B0 extraction failed: check your .bval file')
+        # Remove NaNs
+        mask_arg = ['fslmaths', B0_mean_full, '-nan', B0_full + fsl_suffix]
+        completion = subprocess.run(mask_arg)
+        if completion.returncode != 0:
+            raise Exception('Unable to remove NaNs from B0.nii. '
+                            'Try manually extracting a brain mask '
+                            'and saving it in working directory '
+                            'as brain_mask.nii. Then use the --resume '
+                            'option to continue from here.')
+        with gzip.open(B0_full + fsl_suffix, 'r') as f_in, \
+                open(B0_full,'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+        if os.path.exists(B0_full + fsl_suffix):
+            os.remove(B0_full + fsl_suffix)
+        mask_arg = ['bet', B0_full, brainmask_fsl_full, '-m', '-f',
+                       np.str(maskthr)]
+        completion = subprocess.run(mask_arg)
+        if completion.returncode != 0:
+            raise Exception('Brain extraction failed. Check your B0.nii file '
+                            'to verify correct extraction, then run with '
+                            '--resume flag to continue preprocessing from '
+                            'here.')
+        # Decompress fsl's gunzip format
+        with gzip.open(brainmask_fsl_out, 'r') as f_in, \
+                open(brainmask_out,'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+        # Remove .gz file
+        if op.exists(brainmask_fsl_out):
+            os.remove(brainmask_fsl_out)
+        if op.exists(brainmask_fsl_full + '.nii.gz'):
+            os.remove(brainmask_fsl_full + '.nii.gz')
+        # Remove all other files
+        if op.exists(B0_mean_full):
+            os.remove(B0_mean_full)
+        # Update filetable
+        filetable['mask'] = DWIFile(brainmask_out)
+        filetable['b0'] = DWIFile(B0_full)
+
+#----------------------------------------------------------------------
 # Smooth
 #---------------------------------------------------------------------- 
 if args.smooth:
