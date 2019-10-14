@@ -527,8 +527,12 @@ if args.mask:
         os.remove(brainmask_fsl_out)
     if op.exists(brainmask_fsl_full + '.nii.gz'):
         os.remove(brainmask_fsl_full + '.nii.gz')
+    # Remove all other files
+    if op.exists(B0_mean_full):
+        os.remove(B0_mean_full)
     # Update filetable
     filetable['mask'] = DWIFile(brainmask_out)
+    filetable['b0'] = DWIFile(B0_full)
 
 #----------------------------------------------------------------------
 # Smooth
