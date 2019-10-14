@@ -568,9 +568,9 @@ if not args.nofit:
             # NOTE: overwrites DTI trace
             for f in ('mk', 'rk', 'ak', 'trace'):
                 fpath = op.join(metricpath, f+'.nii')
-                dp.writeNii(exec(f), img.hdr, fpath)
+                dp.writeNii(fpath, img.hdr, fpath)
             # reorder tensor for mrtrix3
             DT, KT = img.tensorReorder(img.tensorType())
             for f in ('DT', 'KT'):
                 fpath = op.join(metricpath, f+'.nii')
-                dp.writeNii(exec(f), img.hdr, fpath)
+                dp.writeNii(fpath, img.hdr, fpath)
