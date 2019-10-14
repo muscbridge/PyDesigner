@@ -529,12 +529,11 @@ class DWI(object):
         self.b = np.concatenate((bs, (
                     np.tile(-self.grad[:, -1], (6, 1)).T * bD), np.squeeze(
             1 / 6 * np.tile(self.grad[:, -1], (15, 1)).T ** 2) * bW), 1)
-
         dwi_ = vectorize(self.img, self.mask)
         reject_ = vectorize(reject, self.mask).astype(bool)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
-
+        self.dt = np.zeros(init.shape)
         if constraints is None or (constraints[0] == 0 and
                                    constraints[1] == 0 and
                                    constraints[2] == 0):
