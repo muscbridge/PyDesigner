@@ -490,25 +490,24 @@ if args.mask:
         maskthr = args.maskthr
     # Extract B0s
     print(filetable['HEAD'].getFull())
-    executeThis = ['dwiextract', '-force', '-fslgrad',
+    mask_arg = ['dwiextract', '-force', '-fslgrad',
                    filetable['dwi'].getBVEC(), filetable['dwi'].getBVAL(),
                    '-bzero']
     if not args.verbose:
-        executeThis.append('-quiet')
-    executeThis.extend([filetable['HEAD'].getFull(), B0_full])
-    print(executeThis)
-    completion = subprocess.run(executeThis)
+        mask_arg.append('-quiet')
+    mask_arg.extend([filetable['HEAD'].getFull(), B0_full])
+    completion = subprocess.run(mask_arg)
     # Compute mean B0s
-    executeThis = ['mrmath', '-force']
+    mask_arg = ['mrmath', '-force']
     if not args.verbose:
-        executeThis.append('-quiet')
-    executeThis.extend(['-axis', '3', B0_full, 'mean', B0_mean_full])
-    completion = subprocess.run(executeThis)
+        mask_arg.append('-quiet')
+    mask_arg.extend(['-axis', '3', B0_full, 'mean', B0_mean_full])
+    completion = subprocess.run(mask_arg)
     if completion.returncode != 0:
         raise Exception('B0 extraction failed: check your .bval file')
     # Remove NaNs
-    executeThis = ['fslmaths', B0_mean_full, '-nan', B0_full + fsl_suffix]
-    completion = subprocess.run(executeThis)
+    mask_arg = ['fslmaths', B0_mean_full, '-nan', B0_full + fsl_suffix]
+    completion = subprocess.run(mask_arg)
     if completion.returncode != 0:
         raise Exception('Unable to remove NaNs from B0.nii. '
                         'Try manually extracting a brain mask '
@@ -520,9 +519,9 @@ if args.mask:
         shutil.copyfileobj(f_in, f_out)
     if os.path.exists(B0_full + fsl_suffix):
         os.remove(B0_full + fsl_suffix)
-    executeThis = ['bet', B0_full, brainmask_fsl_full, '-m', '-f',
+    mask_arg = ['bet', B0_full, brainmask_fsl_full, '-m', '-f',
                    np.str(maskthr)]
-    completion = subprocess.run(executeThis)
+    completion = subprocess.run(mask_arg)
     if completion.returncode != 0:
         raise Exception('Brain extraction failed. Check your B0.nii file '
                         'to verify correct extraction, then run with '
