@@ -1358,7 +1358,7 @@ class DWI(object):
         # fa = vectorize(np.array(fa), self.mask)
         # md = vectorize(np.array(md), self.mask)
 
-        return reject, dt#, fa, md
+        return reject, dt.T #, fa, md
 
     def tensorReorder(self, dwiType):
         """Reorders tensors in DT to those of MRTRIX in accordance to
