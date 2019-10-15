@@ -403,15 +403,6 @@ class DWI(object):
         dirs = self.radialSampling(v1, dirSample).T
         akc = self.kurtosisCoeff(dt, dirs)
         rk = np.mean(akc)
-        # W_F
-        # W_F = sqrt(
-        #      W1111 ^ 2 + W2222 ^ 2 + W3333 ^ 2 + 6 * W1122 ^ 2 + 6 *
-        #   W1133 ^ 2 + 6 * W2233 ^ 2 + 4 * W1112 ^ 2 + 4 * W1113 ^ 2 + 4 *
-        #   W1222 ^ 2 + 4 * W2223 ^ 2 + 4 * W1333 ^ 2 + 4 * W2333 ^ 2 +
-        #   12 * W1123 ^ 2 + 12 * W1223 ^ 2 + 12 * W1233 ^ 2)
-        #
-        # Wbar = 1/5*(W1111 + W2222+ W3333 + 2*(W1122 + W1133 + W2233)
-
         W_F = np.sqrt(dt[6]**2 + \
                       dt[16]**2 + \
                       dt[20]**2 + \
