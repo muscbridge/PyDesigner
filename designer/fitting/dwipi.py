@@ -730,7 +730,8 @@ class DWI(object):
         mk:     mean diffusivity
         rk:     radial diffusivity
         ak:     axial diffusivity
-        fe:     first eigenvectors
+        kfa:    kurtosis fractional anisotropy
+        mkt:    mean kurtosis tensor
         trace:  sum of first eigenvalues
         """
         # get the trace
