@@ -413,38 +413,38 @@ class DWI(object):
         # Wbar = 1/5*(W1111 + W2222+ W3333 + 2*(W1122 + W1133 + W2233)
 
         W_F = np.sqrt(self.dt[6]**2 + \
-                      self.dt[17]**2 + \
-                      self.dt[21]**2 + \
+                      self.dt[16]**2 + \
+                      self.dt[20]**2 + \
                       6 * self.dt[9]**2+ \
                       6 * self.dt[11]**2 + \
-                      6 * self.dt[19]**2 + \
+                      6 * self.dt[18]**2 + \
                       4 * self.dt[7]**2 + \
                       4 * self.dt[8]**2 + \
                       4 * self.dt[12]**2 + \
-                      4 * self.dt[18]**2 + \
-                      4 * self.dt[16]**2 + \
-                      4 * self.dt[20]**2 + \
+                      4 * self.dt[17]**2 + \
+                      4 * self.dt[15]**2 + \
+                      4 * self.dt[19]**2 + \
                       12 * self.dt[10]**2 + \
                       12 * self.dt[13]**2 + \
                       12 * self.dt[14]**2)
-        Wbar = 1/5 * (self.dt[6] + self.dt[17] + self.dt[21] + 2 *
-                      (self.dt[9] + self.dt[11] + self.dt[19]))
+        Wbar = 1/5 * (self.dt[6] + self.dt[16] + self.dt[20] + 2 *
+                      (self.dt[9] + self.dt[11] + self.dt[18]))
         if W_F < 1E-3:
             kfa = 0
         else:
             W_diff = np.sqrt(
                 (self.dt[6] - Wbar)**2 + \
-                (self.dt[17] - Wbar) ** 2 + \
-                (self.dt[21] - Wbar)**2 + \
+                (self.dt[16] - Wbar) ** 2 + \
+                (self.dt[20] - Wbar)**2 + \
                 6 * (self.dt[9] - Wbar / 3)**2 + \
                 6 * (self.dt[11] - Wbar / 3)**2 + \
-                6 * (self.dt[19] - Wbar / 3)**2 + \
+                6 * (self.dt[18] - Wbar / 3)**2 + \
                 4 * self.dt[7]**2 + \
                 4 * self.dt[8]**2 + \
                 4 * self.dt[12]**2 + \
-                4 * self.dt[18]**2 + \
-                4 * self.dt[16]**2 + \
-                4 * self.dt[20]**2 + \
+                4 * self.dt[17]**2 + \
+                4 * self.dt[15]**2 + \
+                4 * self.dt[19]**2 + \
                 12 * self.dt[10]**2 + \
                 12 * self.dt[13]**2 + \
                 12 * self.dt[14]**2)
