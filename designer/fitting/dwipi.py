@@ -633,8 +633,8 @@ class DWI(object):
         if sum(constraints) >= 0 and sum(constraints) <= 3:
             dcnt, dind = self.createTensorOrder(2)
             wcnt, wind = self.createTensorOrder(4)
-            ndirs = self.getndirs()
-            cDirs = self.grad[(self.grad[:, -1] == self.maxBval()), 0:3]
+            cDirs = np.genfromtxt('fitting/dirs60.csv', delimiter=",")
+            ndirs = cDirs.shape[0]
             C = np.empty((0, 22))
             if constraints[0] > 0:  # Dapp > 0
                 C = np.append(C, np.hstack((np.zeros((ndirs, 1)),np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]] * cDirs[:, dind[:, 1]],np.zeros((ndirs, 15)))), axis=0)
@@ -645,7 +645,6 @@ class DWI(object):
         else:
             print('Invalid constraints. Please use format "[0, 0, 0]"')
         return C
-
 
     def extractDTI(self):
         """Extract all DTI parameters from DT tensor. Warning, this can
