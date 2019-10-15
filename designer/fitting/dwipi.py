@@ -412,42 +412,42 @@ class DWI(object):
         #
         # Wbar = 1/5*(W1111 + W2222+ W3333 + 2*(W1122 + W1133 + W2233)
 
-        W_F = np.sqrt(self.dt[6]**2 + \
-                      self.dt[16]**2 + \
-                      self.dt[20]**2 + \
-                      6 * self.dt[9]**2+ \
-                      6 * self.dt[11]**2 + \
-                      6 * self.dt[18]**2 + \
-                      4 * self.dt[7]**2 + \
-                      4 * self.dt[8]**2 + \
-                      4 * self.dt[12]**2 + \
-                      4 * self.dt[17]**2 + \
-                      4 * self.dt[15]**2 + \
-                      4 * self.dt[19]**2 + \
-                      12 * self.dt[10]**2 + \
-                      12 * self.dt[13]**2 + \
-                      12 * self.dt[14]**2)
-        Wbar = 1/5 * (self.dt[6] + self.dt[16] + self.dt[20] + 2 *
-                      (self.dt[9] + self.dt[11] + self.dt[18]))
-        if W_F < 1E-3:
+        W_F = np.sqrt(dt[6]**2 + \
+                      dt[16]**2 + \
+                      dt[20]**2 + \
+                      6 * dt[9]**2+ \
+                      6 * dt[11]**2 + \
+                      6 * dt[18]**2 + \
+                      4 * dt[7]**2 + \
+                      4 * dt[8]**2 + \
+                      4 * dt[12]**2 + \
+                      4 * dt[17]**2 + \
+                      4 * dt[15]**2 + \
+                      4 * dt[19]**2 + \
+                      12 * dt[10]**2 + \
+                      12 * dt[13]**2 + \
+                      12 * dt[14]**2)
+        Wbar = 1/5 * (dt[6] + dt[16] + dt[20] + 2 *
+                      (dt[9] + dt[11] + dt[18]))
+        if W_F < minZero:
             kfa = 0
         else:
             W_diff = np.sqrt(
-                (self.dt[6] - Wbar)**2 + \
-                (self.dt[16] - Wbar) ** 2 + \
-                (self.dt[20] - Wbar)**2 + \
-                6 * (self.dt[9] - Wbar / 3)**2 + \
-                6 * (self.dt[11] - Wbar / 3)**2 + \
-                6 * (self.dt[18] - Wbar / 3)**2 + \
-                4 * self.dt[7]**2 + \
-                4 * self.dt[8]**2 + \
-                4 * self.dt[12]**2 + \
-                4 * self.dt[17]**2 + \
-                4 * self.dt[15]**2 + \
-                4 * self.dt[19]**2 + \
-                12 * self.dt[10]**2 + \
-                12 * self.dt[13]**2 + \
-                12 * self.dt[14]**2)
+                (dt[6] - Wbar)**2 + \
+                (dt[16] - Wbar) ** 2 + \
+                (dt[20] - Wbar)**2 + \
+                6 * (dt[9] - Wbar / 3)**2 + \
+                6 * (dt[11] - Wbar / 3)**2 + \
+                6 * (dt[18] - Wbar / 3)**2 + \
+                4 * dt[7]**2 + \
+                4 * dt[8]**2 + \
+                4 * dt[12]**2 + \
+                4 * dt[17]**2 + \
+                4 * dt[15]**2 + \
+                4 * dt[19]**2 + \
+                12 * dt[10]**2 + \
+                12 * dt[13]**2 + \
+                12 * dt[14]**2)
             kfa = W_diff / W_F
         mkt = Wbar
         return ak, rk, kfa, mkt
