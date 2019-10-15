@@ -394,6 +394,8 @@ class DWI(object):
         -------
         rk:     radial kurtosis
         ak:     axial kurtosis
+        kfa:    kurtosis fractional anisotropy
+        mkt:    mean kurtosis tensor
         """
         dirs = np.vstack((v1, -v1))
         akc = self.kurtosisCoeff(dt, dirs)
@@ -401,7 +403,45 @@ class DWI(object):
         dirs = self.radialSampling(v1, dirSample).T
         akc = self.kurtosisCoeff(dt, dirs)
         rk = np.mean(akc)
-        return ak, rk
+        W_F = np.sqrt(dt[6]**2 + \
+                      dt[16]**2 + \
+                      dt[20]**2 + \
+                      6 * dt[9]**2+ \
+                      6 * dt[11]**2 + \
+                      6 * dt[18]**2 + \
+                      4 * dt[7]**2 + \
+                      4 * dt[8]**2 + \
+                      4 * dt[12]**2 + \
+                      4 * dt[17]**2 + \
+                      4 * dt[15]**2 + \
+                      4 * dt[19]**2 + \
+                      12 * dt[10]**2 + \
+                      12 * dt[13]**2 + \
+                      12 * dt[14]**2)
+        Wbar = 1/5 * (dt[6] + dt[16] + dt[20] + 2 *
+                      (dt[9] + dt[11] + dt[18]))
+        if W_F < minZero:
+            kfa = 0
+        else:
+            W_diff = np.sqrt(
+                (dt[6] - Wbar)**2 + \
+                (dt[16] - Wbar) ** 2 + \
+                (dt[20] - Wbar)**2 + \
+                6 * (dt[9] - Wbar / 3)**2 + \
+                6 * (dt[11] - Wbar / 3)**2 + \
+                6 * (dt[18] - Wbar / 3)**2 + \
+                4 * dt[7]**2 + \
+                4 * dt[8]**2 + \
+                4 * dt[12]**2 + \
+                4 * dt[17]**2 + \
+                4 * dt[15]**2 + \
+                4 * dt[19]**2 + \
+                12 * dt[10]**2 + \
+                12 * dt[13]**2 + \
+                12 * dt[14]**2)
+            kfa = W_diff / W_F
+        mkt = Wbar
+        return ak, rk, kfa, mkt
 
     def wlls(self, shat, dwi, b, cons=None, warmup=None):
         """Estimates diffusion and kurtosis tenor at voxel with
@@ -690,7 +730,8 @@ class DWI(object):
         mk:     mean diffusivity
         rk:     radial diffusivity
         ak:     axial diffusivity
-        fe:     first eigenvectors
+        kfa:    kurtosis fractional anisotropy
+        mkt:    mean kurtosis tensor
         trace:  sum of first eigenvalues
         """
         # get the trace
@@ -709,16 +750,21 @@ class DWI(object):
                       desc='DKI params              ',
                       unit='vox',
                       ncols=tqdmWidth)
-        ak, rk = zip(*Parallel(n_jobs=self.workers, prefer='processes') \
+        ak, rk, kfa, mkt = zip(*Parallel(n_jobs=self.workers,
+                                  prefer='processes') \
             (delayed(self.dkiTensorParams)(self.DTIvectors[i, :, 0],
                                            self.dt[:, i]) for i in inputs))
         ak = np.reshape(ak, (nvox))
         rk = np.reshape(rk, (nvox))
+        kfa = np.reshape(kfa, (nvox))
+        mkt = np.reshape(mkt, (nvox))
         trace = vectorize(trace.T, self.mask)
         ak = vectorize(ak, self.mask)
         rk = vectorize(rk, self.mask)
         mk = vectorize(mk, self.mask)
-        return mk, rk, ak, trace
+        kfa = vectorize(kfa, self.mask)
+        mkt = vectorize(mkt, self.mask)
+        return mk, rk, ak, kfa, mkt, trace
 
     def findViols(self, c=[0, 1, 0]):
         """

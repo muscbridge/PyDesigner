@@ -652,9 +652,9 @@ if not args.nofit:
                 # do akc
                 akc_out = img.akcoutliers()
                 img.akccorrect(akc_out)
-            mk, rk, ak, trace = img.extractDKI()
+            mk, rk, ak, kfa, mkt, trace = img.extractDKI()
             # NOTE: overwrites DTI trace
-            for f in ('mk', 'rk', 'ak', 'trace'):
+            for f in ('mk', 'rk', 'ak', 'kfa', 'mkt', 'trace'):
                 fpath = op.join(metricpath, f+'.nii')
                 dp.writeNii(fpath, img.hdr, fpath)
             # reorder tensor for mrtrix3
