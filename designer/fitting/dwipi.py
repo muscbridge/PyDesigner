@@ -633,7 +633,7 @@ class DWI(object):
         if sum(constraints) >= 0 and sum(constraints) <= 3:
             dcnt, dind = self.createTensorOrder(2)
             wcnt, wind = self.createTensorOrder(4)
-            cDirs = np.genfromtxt('fitting/dirs60.csv', delimiter=",")
+            cDirs = np.genfromtxt('fitting/dirs30.csv', delimiter=",")
             ndirs = cDirs.shape[0]
             C = np.empty((0, 22))
             if constraints[0] > 0:  # Dapp > 0
