@@ -1469,9 +1469,8 @@ class DWI(object):
         KT:         4D image containing KT tensor
         """
         if self.dt is None:
-            assert('Please run dwi.fit() to generate a tensor prior to '
-                   'reordering tensors.')
-
+            raise Exception('Please run dwi.fit() to generate a tensor '
+                            'prior to reordering tensors.')
 
         if dwiType == 'dti':
             dt = np.zeros((6, self.dt.shape[1]))
