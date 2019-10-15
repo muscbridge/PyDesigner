@@ -764,6 +764,8 @@ class DWI(object):
                                            self.dt[:, i]) for i in inputs))
         ak = np.reshape(ak, (nvox))
         rk = np.reshape(rk, (nvox))
+        kfa = np.reshape(kfa, (nvox))
+        mkt = np.reshape(mkt, (nvox))
         trace = vectorize(trace.T, self.mask)
         ak = vectorize(ak, self.mask)
         rk = vectorize(rk, self.mask)
