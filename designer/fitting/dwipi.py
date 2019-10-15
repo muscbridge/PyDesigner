@@ -1452,7 +1452,7 @@ class DWI(object):
             17              18
             18              10
             19              13
-            20              8
+            20              14
 
         Usage
         -----
@@ -1469,8 +1469,8 @@ class DWI(object):
         KT:         4D image containing KT tensor
         """
         if self.dt is None:
-            assert('Please run dwi.fit() to generate a tensor')
-
+            raise Exception('Please run dwi.fit() to generate a tensor '
+                            'prior to reordering tensors.')
 
         if dwiType == 'dti':
             dt = np.zeros((6, self.dt.shape[1]))
@@ -1505,7 +1505,7 @@ class DWI(object):
             dt[17, :] = self.dt[18, :]      # K11
             dt[18, :] = self.dt[10, :]      # K12
             dt[19, :] = self.dt[13, :]      # K13
-            dt[20, :] = self.dt[8, :]       # K14
+            dt[20, :] = self.dt[14, :]      # K14
             DT = vectorize(dt[0:6, :], self.mask)
             KT = vectorize(dt[6:21, :], self.mask)
             return (DT, KT)
