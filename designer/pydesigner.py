@@ -643,7 +643,7 @@ if not args.nofit:
             img.fit(fit_constraints)
 
         md, rd, ad, fa, fe, trace = img.extractDTI()
-        for f in ('md', 'rd', 'ad', 'fa', 'fe', 'trace'):
+        for f in ('md', 'rd', 'ad', 'fa', 'fe'):
             fpath = op.join(metricpath, f+'.nii')
             dp.writeNii(exec(f), img.hdr, fpath)
         if img.isdki():
