@@ -1317,6 +1317,8 @@ class DWI(object):
                 chi2 = minZero
             try:
                 gof = np.abs(chi2) < 3 * np.sqrt(2/ndof_i)
+            except:
+                gof = True  # If ndof_i = 0, right inequality becomes inf and makes the logic True
             gof2 = gof
 
             # Iterative reweighning procedure
