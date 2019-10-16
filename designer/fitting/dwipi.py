@@ -1323,7 +1323,7 @@ class DWI(object):
 
             # Iterative reweighning procedure
             iter = 0
-            while ~gof and iter < maxiter:
+            while (not gof) and (iter < maxiter):
                 try:
                     C = np.sqrt(n_i/(n_i-nparam)) * 1.4826 * np.median(np.abs(residu_ - np.median(residu_))) / dwi_hat
                 except:
