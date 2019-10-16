@@ -1234,7 +1234,7 @@ class DWI(object):
 
         reject = np.zeros(dwi.shape, dtype=bool, order='F')
         conv = np.zeros((nvox, 1))
-        # dt = np.zeros((nparam, nvox))
+        dt = np.zeros((nparam, nvox))
         # fa = np.zeros((nvox, 1))
         # md = np.zeros((nvox, 1))
 
