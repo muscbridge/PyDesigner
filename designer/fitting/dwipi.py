@@ -11,6 +11,7 @@ import numpy as np
 from joblib import Parallel, delayed
 from scipy.special import expit as sigmoid
 from tqdm import tqdm
+from . import dwidirs
 warnings.filterwarnings("ignore")
 
 # Define the lowest number possible before it is considered a zero
@@ -633,7 +634,7 @@ class DWI(object):
         if sum(constraints) >= 0 and sum(constraints) <= 3:
             dcnt, dind = self.createTensorOrder(2)
             wcnt, wind = self.createTensorOrder(4)
-            cDirs = np.genfromtxt('fitting/dirs30.csv', delimiter=",")
+            cDirs = dwidirs.dirs30
             ndirs = cDirs.shape[0]
             C = np.empty((0, 22))
             if constraints[0] > 0:  # Dapp > 0
@@ -741,7 +742,7 @@ class DWI(object):
         for ib in range(0, uB.shape[0]):
             t = np.where(B == uB[ib])
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
-        dirs = np.genfromtxt('fitting/dirs256.csv', delimiter=",")
+        dirs = dwidirs.dirs256
         akc = self.kurtosisCoeff(self.dt, dirs)
         mk = np.mean(akc, 0)
         nvox = self.dt.shape[1]
@@ -1007,7 +1008,7 @@ class DWI(object):
         akc_out:    3D map containing outliers where AKC falls fails the
                     inequality test -2 < AKC < 10
         """
-        dir = np.genfromtxt('fitting/dirs10000.csv', delimiter=",")
+        dir = dwidirs.dirs10000
         nvox = self.dt.shape[1]
         akc_out = np.zeros(nvox, dtype=bool)
         N = dir.shape[0]
