@@ -202,9 +202,12 @@ parser.add_argument('--verbose', action='store_true',
                     'if you use this option.')
 parser.add_argument('--adv', action='store_true',
                     help='Disables safety checks for advanced users who '
-                         'want to force a preprocessing step. Warning: '
-                         'Disabling these checks could yield '
-                         'undersirable results.')
+                         'want to force a preprocessing step. WARNING: '
+                         'THIS FLAG IS FOR ADVANCED USERS ONLY WHO FULLY '
+                         'UNDERSTAND THE MRI SYSTEM AND ITS OUTPUTS. '
+                         'RUNNING WITH THIS FLAG COULD POTENTIALLY '
+                         'RESULT IN IMPRECISE AND INACCURATE RESULTS, '
+                         'OR A THERMONUCLEAR WAR.')
 
 # Use argument specification to actually get args
 args = parser.parse_args()
