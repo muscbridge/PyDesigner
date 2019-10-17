@@ -488,7 +488,7 @@ if args.mask:
     B0_full = op.join(outpath, B0_name)
     B0_mean_full = op.join(outpath, B0_mean)
     # check to see if this already exists
-    if (op.exists(brainmask_out) and not args.resume):
+    if (op.exists(brainmask_out) and not args.resume) and not args.force:
             raise Exception('Running mask would cause an overwrite. '
                             'In order to run please delete the files, use '
                             '--force, use --resume, or change output '
@@ -653,22 +653,28 @@ if not args.nofit:
             img.fit(fit_constraints)
 
         md, rd, ad, fa, fe, trace = img.extractDTI()
-        for f in ('md', 'rd', 'ad', 'fa', 'fe', 'trace'):
-            fpath = op.join(metricpath, f+'.nii')
-            dp.writeNii(exec(f), img.hdr, fpath)
-        if img.isdki():
+        dp.writeNii(md, img.hdr, op.join(metricpath, 'md'))
+        dp.writeNii(rd, img.hdr, op.join(metricpath, 'rd'))
+        dp.writeNii(ad, img.hdr, op.join(metricpath, 'ad'))
+        dp.writeNii(fa, img.hdr, op.join(metricpath, 'fa'))
+        dp.writeNii(fe, img.hdr, op.join(metricpath, 'fe'))
+        if not img.isdki():
+            dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
+        else:
             # do akc, DKI fitting
             if not args.noakc:
                 # do akc
                 akc_out = img.akcoutliers()
                 img.akccorrect(akc_out)
             mk, rk, ak, kfa, mkt, trace = img.extractDKI()
-            # NOTE: overwrites DTI trace
-            for f in ('mk', 'rk', 'ak', 'kfa', 'mkt', 'trace'):
-                fpath = op.join(metricpath, f+'.nii')
-                dp.writeNii(fpath, img.hdr, fpath)
+            # naive implementation of writing these variables
+            dp.writeNii(mk, img.hdr, op.join(metricpath, 'mk'))
+            dp.writeNii(rk, img.hdr, op.join(metricpath, 'rk'))
+            dp.writeNii(ak, img.hdr, op.join(metricpath, 'ak'))
+            dp.writeNii(kfa, img.hdr, op.join(metricpath, 'kfa'))
+            dp.writeNii(mkt, img.hdr, op.join(metricpath, 'mkt'))
+            dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
             # reorder tensor for mrtrix3
             DT, KT = img.tensorReorder(img.tensorType())
-            for f in ('DT', 'KT'):
-                fpath = op.join(metricpath, f+'.nii')
-                dp.writeNii(fpath, img.hdr, fpath)
+            dp.writeNii(DT, img.hdr, op.join(metricpath, 'DT'))
+            dp.writeNii(KT, img.hdr, op.join(metricpath, 'KT'))
