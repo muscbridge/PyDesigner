@@ -200,6 +200,11 @@ parser.add_argument('--verbose', action='store_true',
                     help='Print out all output. This is a very messy '
                     'option. We recommend piping output to a text file '
                     'if you use this option.')
+parser.add_argument('--adv', action='store_true',
+                    help='Disables safety checks for advanced users who '
+                         'want to force a preprocessing step. Warning: '
+                         'Disabling these checks could yield '
+                         'undersirable results.')
 
 # Use argument specification to actually get args
 args = parser.parse_args()
