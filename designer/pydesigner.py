@@ -200,6 +200,13 @@ parser.add_argument('--verbose', action='store_true',
                     help='Print out all output. This is a very messy '
                     'option. We recommend piping output to a text file '
                     'if you use this option.')
+parser.add_argument('--adv', action='store_true',
+                    help='Disables safety checks for advanced users who '
+                         'want to force a preprocessing step. WARNING: '
+                         'THIS FLAG IS FOR ADVANCED USERS ONLY WHO FULLY '
+                         'UNDERSTAND THE MRI SYSTEM AND ITS OUTPUTS. '
+                         'RUNNING WITH THIS FLAG COULD POTENTIALLY '
+                         'RESULT IN IMPRECISE AND INACCURATE RESULTS.')
 
 # Use argument specification to actually get args
 args = parser.parse_args()
@@ -304,10 +311,13 @@ if not filetable['dwi'].isAcquisition():
     raise Exception('Input dwi does not have .bval/.bvec pair')
 
 # Check to make sure no partial fourier if --degibbs given
-if args.degibbs and filetable['dwi'].isPartialFourier():
-    print('Given DWI is partial fourier, overriding --degibbs; '
-          'no unringing correction will be done to avoid artifacts.')
-    args.degibbs = False
+if args.degibbs and args.adv:
+    args.degibbs = True
+else:
+    if args.degibbs and filetable['dwi'].isPartialFourier():
+        print('Given DWI is partial fourier, overriding --degibbs; '
+              'no unringing correction will be done to avoid artifacts.')
+        args.degibbs = False
 
 if args.rpe_pair:
     filetable['rpe_pair'] = DWIFile(args.rpe_pair)
