@@ -478,7 +478,7 @@ if args.mask:
     B0_full = op.join(outpath, B0_name)
     B0_mean_full = op.join(outpath, B0_mean)
     # check to see if this already exists
-    if (op.exists(brainmask_out) and not args.resume):
+    if (op.exists(brainmask_out) and not args.resume) and not args.force:
             raise Exception('Running mask would cause an overwrite. '
                             'In order to run please delete the files, use '
                             '--force, use --resume, or change output '
