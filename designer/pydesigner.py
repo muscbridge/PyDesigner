@@ -206,8 +206,7 @@ parser.add_argument('--adv', action='store_true',
                          'THIS FLAG IS FOR ADVANCED USERS ONLY WHO FULLY '
                          'UNDERSTAND THE MRI SYSTEM AND ITS OUTPUTS. '
                          'RUNNING WITH THIS FLAG COULD POTENTIALLY '
-                         'RESULT IN IMPRECISE AND INACCURATE RESULTS, '
-                         'OR A THERMONUCLEAR WAR.')
+                         'RESULT IN IMPRECISE AND INACCURATE RESULTS.')
 
 # Use argument specification to actually get args
 args = parser.parse_args()
