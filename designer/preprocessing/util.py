@@ -415,6 +415,7 @@ class DWIParser:
             if completion.returncode != 0:
                 raise Exception('Failed to concatenate multiple '
             'series.')
+            miflist.append(op.join(path, 'dwi_designer' + '.mif'))
             # Output concatenate .mif into .nii
             convert_args = ['mrconvert -stride 1,2,3,4']
             if verbose is False:
@@ -433,3 +434,5 @@ class DWIParser:
             completion = subprocess.run(cmd, shell=True)
             if completion.returncode != 0:
                 raise Exception('Conversion to ' + ext + ' failed.')
+            for i, fname in enumerate(miflist):
+                os.remove(fname)
