@@ -321,6 +321,10 @@ class DWIParser:
     ----------
     DWIlist :   list of strings
         Contains paths to all input series
+    DWInlist:   list of strings
+        Contains path to file names without extension
+    DWIext:     list of strings
+        Contains extension of input files
     BVALlist:   list of strings
         Contains paths to all BVAL files
     BVEClist:   list of strings
@@ -341,10 +345,11 @@ class DWIParser:
             'valid DWI acquisition. Ensure that the NifTi file is '
             'present with its BVEC/BVAL pair.')
         DWIflist = [os.path.splitext(i) for i in DWIlist]
-        DWInlist = [i[0] for i in DWIflist]
+        self.DWInlist = [i[0] for i in DWIflist]
         self.BVALlist = [i + '.bval' for i in DWInlist]
         self.BVEClist = [i + '.bvec' for i in DWInlist]
         self.JSONlist = [i + '.json' for i in DWInlist]
+        self.DWIext = [i[1] for i in DWIflist]
         self.nDWI = len(DWIlist)
 
     def cat(self, path):
@@ -360,18 +365,15 @@ class DWIParser:
             raise Exception('Nothing to concatenate when there is '
         'only one input series.')
         else:
-            DWIflist = [os.path.splitext(i) for i in self.DWIlist]
-            DWInlist = [i[0] for i in DWIflist]
-            DWIext = [i[1] for i in DWIflist]
             miflist = []
-            for (idx, i) in enumerate(DWInlist):
+            for (idx, i) in enumerate(self.DWInlist):
                 convert_arg = 'mrconvert -stride -1,2,3,4 -fslgrad ' + \
-                    bveclist[idx] + \
+                    self.BVEClist[idx] + \
                     ' ' + \
-                    bvallist[idx] + \
+                    self.BVALlist[idx] + \
                     ' ' + \
                     i + \
-                    DWIext[idx] + \
+                    self.DWIext[idx] + \
                     ' ' + \
                     os.path.join(path, ('dwi' + str(idx) + '.mif'))
                 miflist.append(os.path.join(path,
@@ -386,4 +388,3 @@ class DWIParser:
                 if completion.returncode != 0:
                     raise Exception('Failed to concatenate multiple '
                 'series.')
-                
