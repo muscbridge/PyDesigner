@@ -455,7 +455,6 @@ class DWIParser:
         path:   string
             Path to NifTi file
         """
-        print(path)
         image = DWIFile(path)
         args_info = ['mrinfo', path]
         cmd = ' '.join(str(e) for e in args_info)
@@ -465,7 +464,6 @@ class DWIParser:
                                 stdout=subprocess.PIPE)
         strlist = pipe.stdout.readlines()[3].split()
         dims = [int(i) for i in strlist if i.isdigit()]
-        print(dims)
         nDWI = dims[-1]
         # Check whether for inexistence of gradient table in JSON and
         # some mention of B0 in EPI
