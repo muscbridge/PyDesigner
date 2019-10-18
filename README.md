@@ -180,7 +180,7 @@ Completion of this step will ready your system for dMRI processing. Let's go!
 
 ## PyDesigner
 
-On the main PyDesigner Github page, click the green "Clone or download" button. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip. 
+On the [main PyDesigner Github page](https://github.com/m-ama/PyDesigner), click the green "Clone or download" button. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip. 
 
 PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
 
