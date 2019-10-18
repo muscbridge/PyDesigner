@@ -311,3 +311,79 @@ class DWIFile:
         print('Acquisition: ' + str(self.acquisition))
         if json:
             pprint.pprint(self.json)
+
+class DWIParser:
+    """
+    Parses a list of DWIs and concatenates them into a single 4D NifTi
+    with appropriate BVEC, BVALS.
+
+    Attributes
+    ----------
+    DWIlist :   list of strings
+        Contains paths to all input series
+    BVALlist:   list of strings
+        Contains paths to all BVAL files
+    BVEClist:   list of strings
+        Contains paths to all BVEC files
+    JSONlist:   list of strings
+        Contains paths to all JSON files
+    nDWI:       int
+        Number of DWIs entered   
+    """
+    def __init__(self, path):
+        UserCpath = path.rsplit(',')
+        self.DWIlist = [os.path.realpath(i) for i in UserCpath]
+        acq = np.zeros((len(DWIlist)),dtype=bool)
+        for i,fname in enumerate(DWIlist):
+            acq[i] = DWIFile(fname).isAcquisition
+        if not np.any(acq):
+            raise Exception('One of the input sequences in not a '
+            'valid DWI acquisition. Ensure that the NifTi file is '
+            'present with its BVEC/BVAL pair.')
+        DWIflist = [os.path.splitext(i) for i in DWIlist]
+        DWInlist = [i[0] for i in DWIflist]
+        self.BVALlist = [i + '.bval' for i in DWInlist]
+        self.BVEClist = [i + '.bvec' for i in DWInlist]
+        self.JSONlist = [i + '.json' for i in DWInlist]
+        self.nDWI = len(DWIlist)
+
+    def cat(self, path):
+        """Concatenates all input series when nDWI > 1 into a 4D NifTi
+        along with a appropriate BVAL, BVEC and JSON files.
+
+        Parameters
+        ----------
+        path:   string
+            Directory where to store concatenated series
+        """
+        if self.nDWI <= 1:
+            raise Exception('Nothing to concatenate when there is '
+        'only one input series.')
+        else:
+            DWIflist = [os.path.splitext(i) for i in self.DWIlist]
+            DWInlist = [i[0] for i in DWIflist]
+            DWIext = [i[1] for i in DWIflist]
+            miflist = []
+            for (idx, i) in enumerate(DWInlist):
+                convert_arg = 'mrconvert -stride -1,2,3,4 -fslgrad ' + \
+                    bveclist[idx] + \
+                    ' ' + \
+                    bvallist[idx] + \
+                    ' ' + \
+                    i + \
+                    DWIext[idx] + \
+                    ' ' + \
+                    os.path.join(path, ('dwi' + str(idx) + '.mif'))
+                miflist.append(os.path.join(path,
+                ('dwi' + str(idx) + '.mif'))
+                completion = subprocess.run(convert_arg)
+                if completion.returncode != 0:
+                    raise Exception('Conversion to .mif failed.')
+            cat_arg = 'mrcat -axis 3 ' + \
+                    DWImif + ' ' + \
+                    os.path.join(path, ('dwi_designer' + '.mif'))
+                    completion = subprocess.run(convert_arg)
+                if completion.returncode != 0:
+                    raise Exception('Failed to concatenate multiple '
+                'series.')
+                
