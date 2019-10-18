@@ -178,7 +178,7 @@ pip install [package name]
 
 Completion of this step will ready your system for dMRI processing. Let's go!
 
-## PyDesigner
+### PyDesigner
 
 On the [main PyDesigner Github page](https://github.com/m-ama/PyDesigner), click the green "Clone or download" button. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip. 
 
