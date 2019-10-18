@@ -434,10 +434,13 @@ class DWIParser:
             cmd = ' '.join(str(e) for e in convert_args)
             completion = subprocess.run(cmd, shell=True)
             if completion.returncode != 0:
-                raise Exception('Conversion to ' + ext + ' failed. Please '
-                                'ensure that your input NifTi files have '
-                                'the same phase encoding directions, and '
-                                'are accompanied by valid .bval, .bvec, '
+                for i, fname in enumerate(miflist):
+                    os.remove(fname)
+                os.remove(op.join(path, 'raw_dwi' + ext))
+                raise Exception('Concatenation to ' + str(ext) + 'failed. '
+                                'Please ensure that your input NifTi files '
+                                'have the same phase encoding directions, '
+                                'and are accompanied by valid .bval, .bvec, '
                                 'and .json. If this is not possible, '
                                 'please provide manually concatenated '
                                 'DWIs or run with single series input.')
