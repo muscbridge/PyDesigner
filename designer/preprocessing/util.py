@@ -430,9 +430,13 @@ class DWIParser:
             convert_args.append(op.join(path, 'dwi_designer.mif'))
             convert_args.append(op.join(path, 'dwi_designer' + ext))
             cmd = ' '.join(str(e) for e in convert_args)
-            print(cmd)
             completion = subprocess.run(cmd, shell=True)
             if completion.returncode != 0:
                 raise Exception('Conversion to ' + ext + ' failed.')
             for i, fname in enumerate(miflist):
                 os.remove(fname)
+    def getPath(self):
+        """Returns directory where first file in DWI list is stored
+        """
+        path = os.path.dirname(os.path.abspath(self.DWIlist[0]))
+        return path
