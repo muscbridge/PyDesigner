@@ -434,7 +434,13 @@ class DWIParser:
             cmd = ' '.join(str(e) for e in convert_args)
             completion = subprocess.run(cmd, shell=True)
             if completion.returncode != 0:
-                raise Exception('Conversion to ' + ext + ' failed.')
+                raise Exception('Conversion to ' + ext + ' failed. Please '
+                                'ensure that your input NifTi files have '
+                                'the same phase encoding directions, and '
+                                'are accompanied by valid .bval, .bvec, '
+                                'and .json. If this is not possible, '
+                                'please provide manually concatenated '
+                                'DWIs or run with single series input.')
             for i, fname in enumerate(miflist):
                 os.remove(fname)
     def getPath(self):
@@ -456,6 +462,11 @@ class DWIParser:
             Path to NifTi file
         """
         image = DWIFile(path)
+        if not image.hasJSON():
+            raise Exception('It is not advisable to run multi-series '
+                            'processing without `.json` files. Please '
+                            'ensure your NifTi files come with .json '
+                            'files.')
         args_info = ['mrinfo', path]
         cmd = ' '.join(str(e) for e in args_info)
         # Reads the "Dimension line of `mrinfo` and extracts the size
