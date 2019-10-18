@@ -377,6 +377,7 @@ class DWIParser:
             miflist = []
             # The following loop first converts NifTis to a .mif file
             for (idx, i) in enumerate(self.DWIlist):
+                self.json2fslgrad(i)
                 convert_args = ['mrconvert -stride 1,2,3,4']
                 if verbose is False:
                     convert_args.append('-quiet')
@@ -439,3 +440,44 @@ class DWIParser:
         """
         path = os.path.dirname(os.path.abspath(self.DWIlist[0]))
         return path
+
+    def json2fslgrad(self, path):
+        """Creates FSL .bvec and .bval for series missing that information.
+        Some datasets have their B0s separately that do not produce fsl
+        gradients upon conversion to NifTi. This function creates those
+        missing features for complete concatenation from .json file. Use
+        with caution if and only if you know your input series is a DWI.
+
+        Parameters
+        ----------
+        path:   string
+            Path to NifTi file
+        """
+        print(path)
+        image = DWIFile(path)
+        args_info = ['mrinfo', path]
+        cmd = ' '.join(str(e) for e in args_info)
+        # Reads the "Dimension line of `mrinfo` and extracts the size
+        # of NifTi
+        pipe = subprocess.Popen(cmd, shell=True,
+                                stdout=subprocess.PIPE)
+        strlist = pipe.stdout.readlines()[3].split()
+        dims = [int(i) for i in strlist if i.isdigit()]
+        print(dims)
+        nDWI = dims[-1]
+        # Check whether for inexistence of gradient table in JSON and
+        # some mention of B0 in EPI
+        if ('b0' in image.json['SeriesDescription'] or \
+                'B0' in image.json['SeriesDescription'] or \
+                'b0' in image.json['ProtocolName'] or \
+                'B0' in image.json['ProtocolName']):
+            bval = np.zeros(nDWI, dtype=int)
+            bvec = np.zeros((3, nDWI), dtype=int)
+            fPath = op.splitext(path)[0]
+            np.savetxt((fPath + '.bvec'), bvec, delimiter=' ', fmt='%d')
+            np.savetxt((fPath + '.bval'), np.c_[bval], delimiter=' ',
+                       fmt='%d')
+
+
+
+
