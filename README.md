@@ -227,7 +227,7 @@ python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask --top
 `--rician` - performs rician bias correction<br>
 `--mask` - computes brain mask prior to tensor fitting; recommended<br>
 `--undistort` - performs image undistortion via FSL eddy<br>
-`--topup` - incorperates top up B0 series; required for `--undistort`<br>
+`--topup` - incorporates top up B0 series; required for `--undistort`<br>
 `--o` - specifies output folder<br>
 `--verbose` - prints out all output<br>
 `--force` - overwrites existing files in output folder<br>
@@ -262,6 +262,17 @@ PyDesigner is a join collarobation and as such consists of several developers.
      Department of Neuroscience
      Medical University of South Carolina
      teves@musc.edu
+
+### 
+<img src="https://avatars1.githubusercontent.com/u/47329645?s=460&v=4" align="left"
+     title="GitHub: Kayti Keith" height="163">
+
+     Kayti Keith
+
+     Research Specialist
+     Department of Neuroscience
+     Medical University of South Carolina
+     keithka@musc.edu
 
 ### Advisor
 <img src="https://muschealth.org/MUSCApps/HealthAssets/ProfileImages/jej50.jpg" align="left"
