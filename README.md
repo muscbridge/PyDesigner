@@ -197,7 +197,7 @@ Ensure that none of your file or folder names contain a period (aside from the f
 Switch to the appropriate conda environment; run `conda activate dmri` if you followed this guide. Then, for any given subject, call PyDesigner with the relevant flags:
 
 ```
-python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask /Path/to/input_file.nii -o /Path/to/output/folder
+python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask /Users/kayti/Repos/PyDesigner/designer/pydesigner.py /Path/to/input_file.nii
 ```
 
 **Note**: Flags can be added and removed as needed. It is recommended to always run PyDesigner with the `--mask` flag, as this flag utilizes a brain mask with excludes non-brain voxels and subsequently speeds up processing.
@@ -205,7 +205,7 @@ python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask /Path
 If your dataset contains more than one DKI average per subject, your file input may contain all relevant nifti files separated by a comma:
 
 ```
-python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask /Path/to/DKI_avg_1.nii,/Path/to/DKI_avg_2.nii -o /Path/to/output/folder
+python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask -o /Path/to/output/folder /Path/to/DKI_avg_1.nii,/Path/to/DKI_avg_2.nii
 ```
 
 **Note**: Multiple average inputs with additional interleved B0s can be given to PyDesigner but separate B0 sequences cannot.
@@ -213,7 +213,7 @@ python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask /Path
 If your dataset contains a top up sequence, you can use the `--topup` and `--undistort` flags:
 
 ```
-python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask --topup /Path/to/reverse_phase.nii /Path/to/input_file.nii -o /Path/to/output/folder
+python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask --topup /Path/to/reverse_phase.nii -o /Path/to/output/folder /Path/to/input_file.nii
 ```
 
 **Note**: Using `--undistort` and `--topup` without supplying top up data will return an error.
