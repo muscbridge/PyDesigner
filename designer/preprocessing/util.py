@@ -491,7 +491,3 @@ class DWIParser:
             np.savetxt((fPath + '.bvec'), bvec, delimiter=' ', fmt='%d')
             np.savetxt((fPath + '.bval'), np.c_[bval], delimiter=' ',
                        fmt='%d')
-
-
-
-
