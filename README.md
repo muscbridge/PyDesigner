@@ -50,7 +50,7 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 **[L- FSL](#fsl)**<br>
 **[L- MRTRIX3](#mrtrix3)**<br>
 **[L- Python](#python)**<br>
-**[L-PyDesigner](#pydesigner)**<br>
+**[L- PyDesigner](#pydesigner)**<br>
 **[Running PyDesigner](#running-pydesigner)**<br>
 **[Meet the Team](#meet-the-team)**<br>
 
@@ -102,7 +102,7 @@ There are three dependencies for PyDesigner: 1) FSL, 2) MRTRIX3, and 3) Python. 
 ### FSL
 FSL is a collection of tools and software used to process fMRI, MRI and DWI data. [Visit their installation page](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation) for download and installation guide.
 
-**FSL 6.0.1 is recommended.** All testing has been done using FSL 6.0.1. DESIGNER has not been tested with other versions of FSL.
+**FSL 6.0.1 is recommended.** All testing has been done using FSL 6.0.1. PyDesigner has not been tested with other versions of FSL.
 
 To check your FSL version:
 
@@ -130,14 +130,18 @@ mrconvert - version
 ```
 
 ### Python
-PyDesigner was built and tested on Pyhron 3.7, so we enourage all users to adopt this version as well. While you may use the Python supplied by default on your OS, we highly enocurage users to adopt a Conda-based Python like [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/). Refer to either of these distributions' page for installation. This guide assumes a conda installation for setting up Python.
+PyDesigner was built and tested on Python 3.7, so we enourage all users to adopt this version as well. While you may use the Python supplied by default on your OS, we highly enocurage users to adopt a Conda-based Python like [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/). Refer to either of these distributions' page for installation. This guide assumes a conda installation for setting up Python.
 
 First, update conda with
 ```
 conda update conda
 ```
 
-Next, create a conda environment specifically for dMRI preprocessing, called `dmri`. If you prefer not to create this environment, skip to package installation. In addition, we'll be installing `pip` to this environment.
+Next, create a conda environment specifically for dMRI preprocessing, called `dmri`.
+
+Creating a conda environment is recommended as this will keep all of the dependencies required for this project isolated to just the conda environment called `dmri`. For more information about conda environments, see [The Definitive Guide to Conda Environments](https://towardsdatascience.com/a-guide-to-conda-environments-bc6180fc533). 
+
+If you prefer not to create this environment, skip to package installation. In addition, we'll be installing `pip` to this environment.
 
 ```
 conda create -n dmri python=3.7
@@ -147,7 +151,7 @@ Activate the new environment with:
 ```
 conda activate dmri
 ```
-Take note that this needs to be done each time a new terminal window is opened. If this behavior is undesired, you may set this environment as default python environemtn 
+**Note**: Environment activation (`conda activate dmri`) needs to be done each time a new terminal window is opened. If this behavior is undesired, you may set this environment as default python environment. 
 
 Once the base environment is created and activated, proceed with the installation of all packages.
 
@@ -159,7 +163,7 @@ Once the base environment is created and activated, proceed with the installatio
 6. [Joblib](https://joblib.readthedocs.io/en/latest/)
 7. [TQDM](https://tqdm.github.io/)
 
-On conda environments, one can install them with the command
+Install necessary packages with the commands:
 ```
 conda install -c anaconda numpy scipy joblib
 conda install -c conda-forge tqdm nibabel multiprocess
@@ -174,7 +178,8 @@ pip install [package name]
 
 Completion of this step will ready your system for dMRI processing. Let's go!
 
-##PyDesigner
+## PyDesigner
+
 On the main PyDesigner Github page, click the green "Clone or download" button. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip. 
 
 PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
@@ -182,11 +187,13 @@ PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
 ## Running PyDesigner
 
 **Before Running PyDesigner**
+
 Ensure that all your DICOMS are converted to NifTi files and that all diffusion series have a valid `.json` file, as well as `.bvec` and `.bval` files where applicable. Dicom to nifti conversion can be done with [dcm2niix available for download here](https://github.com/rordenlab/dcm2niix). 
 
 Ensure that none of your file or folder names contain a period (aside from the file extension; eg. DKI.nii). 
 
 **To Run PyDesigner**
+
 Switch to the appropriate conda environment; run `conda activate dmri` if you followed this guide. Then, for any given subject, call PyDesigner with the relevant flags:
 
 ```
@@ -213,17 +220,17 @@ python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask --top
 
 **Basic PyDesigner Flags**
 
-`--standard` - runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal)
-`--denoise` - performs denoising
-`--degibbs` - performs gibbs unringing correction
-`--smooth` - performs smoothing
-`--rician` - performs rician bias correction
-`--mask` - computes brain mask prior to tensor fitting; recommended
-`--undistort` - performs image undistortion via FSL eddy
-`--topup` - incorperates top up B0 series; required for `--undistort`
-`--o` - specifies output folder
-`--verbose` - prints out all output
-`--force` - overwrites existing files in output folder
+`--standard` - runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal)<br>
+`--denoise` - performs denoising<br>
+`--degibbs` - performs gibbs unringing correction<br>
+`--smooth` - performs smoothing<br>
+`--rician` - performs rician bias correction<br>
+`--mask` - computes brain mask prior to tensor fitting; recommended<br>
+`--undistort` - performs image undistortion via FSL eddy<br>
+`--topup` - incorperates top up B0 series; required for `--undistort`<br>
+`--o` - specifies output folder<br>
+`--verbose` - prints out all output<br>
+`--force` - overwrites existing files in output folder<br>
 
 ## Questions and Issues
 
