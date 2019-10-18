@@ -275,7 +275,7 @@ PyDesigner is a join collarobation and as such consists of several developers.
      keithka@musc.edu
 
 ### Advisor
-<img src="https://muschealth.org/MUSCApps/HealthAssets/ProfileImages/jej50.jpg" align="left"
+<img src="https://muschealth.org/MUSCApps/HealthAssets/ProfileImages/jej50.jpg" align="right"
      title="MUSC: Jens Jensen" height="163">
 
      Jens Jensen, Ph.D.
