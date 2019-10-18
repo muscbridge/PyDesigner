@@ -16,6 +16,7 @@ import numpy as np # array, ndarray
 from preprocessing import util, smoothing, rician, preparation
 from fitting import dwipi as dp
 DWIFile = util.DWIFile
+DWIParser = util.DWIParser
 
 # Locate mrtrix3 via which-ing dwidenoise
 dwidenoise_location = shutil.which('dwidenoise')
@@ -210,6 +211,20 @@ parser.add_argument('--adv', action='store_true',
 
 # Use argument specification to actually get args
 args = parser.parse_args()
+
+#---------------------------------------------------------------------
+# Parse Input Image
+#----------------------------------------------------------------------
+image = DWIParser(args.dwi)
+if image.nDWI > 1:
+    if not args.output:
+        outpath = image.getPath()
+    else:
+        outpath = args.output
+    image.cat(path=outpath,
+              verbose=args.verbose,
+              force=args.force)
+    args.dwi = op.join(outpath, 'dwi_designer.nii')
 
 #---------------------------------------------------------------------
 # Validate Arguments

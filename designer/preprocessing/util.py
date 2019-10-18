@@ -3,7 +3,9 @@ Adds utilities for the command-line interface
 """
 
 import os.path as op # dirname, basename, join, splitext
+import os
 import sys # exit
+import subprocess
 import json # decode
 import pprint #pprint
 import numpy as np
@@ -311,3 +313,129 @@ class DWIFile:
         print('Acquisition: ' + str(self.acquisition))
         if json:
             pprint.pprint(self.json)
+
+class DWIParser:
+    """
+    Parses a list of DWIs and concatenates them into a single 4D NifTi
+    with appropriate BVEC, BVALS.
+
+    Attributes
+    ----------
+    DWIlist :   list of strings
+        Contains paths to all input series
+    DWInlist:   list of strings
+        Contains path to file names without extension
+    DWIext:     list of strings
+        Contains extension of input files
+    BVALlist:   list of strings
+        Contains paths to all BVAL files
+    BVEClist:   list of strings
+        Contains paths to all BVEC files
+    JSONlist:   list of strings
+        Contains paths to all JSON files
+    nDWI:       int
+        Number of DWIs entered   
+    """
+    def __init__(self, path):
+        UserCpath = path.rsplit(',')
+        self.DWIlist = [op.realpath(i) for i in UserCpath]
+        acq = np.zeros((len(self.DWIlist)),dtype=bool)
+        for i,fname in enumerate(self.DWIlist):
+            acq[i] = DWIFile(fname).isAcquisition
+        if not np.any(acq):
+            raise Exception('One of the input sequences in not a '
+            'valid DWI acquisition. Ensure that the NifTi file is '
+            'present with its BVEC/BVAL pair.')
+        DWIflist = [op.splitext(i) for i in self.DWIlist]
+        self.DWInlist = [i[0] for i in DWIflist]
+        self.BVALlist = [i + '.bval' for i in self.DWInlist]
+        self.BVEClist = [i + '.bvec' for i in self.DWInlist]
+        self.JSONlist = [i + '.json' for i in self.DWInlist]
+        self.DWIext = [i[1] for i in DWIflist]
+        self.nDWI = len(self.DWIlist)
+
+    def cat(self, path, ext='.nii' ,verbose=False, force=False):
+        """Concatenates all input series when nDWI > 1 into a 4D NifTi
+        along with a appropriate BVAL, BVEC and JSON files.
+
+        Parameters
+        ----------
+        path:       string
+            Directory where to store concatenated series
+        ext:        string
+            Extenstion to save concatenated file in. Refer to MRTRIX3's
+            `mrconvert` function for a list of possible extensions
+        verbose:    bool
+            Displays MRTRIX3's console output
+        force:      bool
+            Forces file overwrite if they already exist
+        """
+        if self.nDWI <= 1:
+            raise Exception('Nothing to concatenate when there is '
+        'only one input series.')
+        else:
+            miflist = []
+            # The following loop first converts NifTis to a .mif file
+            for (idx, i) in enumerate(self.DWIlist):
+                convert_args = ['mrconvert -stride 1,2,3,4']
+                if verbose is False:
+                    convert_args.append('-quiet')
+                if force is True:
+                    convert_args.append('-force')
+                if op.exists(self.BVEClist[idx]) or \
+                        op.exists(self.BVALlist[idx]):
+                    convert_args.append('-fslgrad')
+                    convert_args.append(self.BVEClist[idx])
+                    convert_args.append(self.BVALlist[idx])
+                if op.exists(self.JSONlist[idx]):
+                    convert_args.append('-json_import')
+                    convert_args.append(self.JSONlist[idx])
+                convert_args.append(i)
+                convert_args.append(
+                    op.join(path, ('dwi' + str(idx) + '.mif')))
+                miflist.append(op.join(path, ('dwi' + str(idx) + '.mif')))
+                cmd = ' '.join(str(e) for e in convert_args)
+                completion = subprocess.run(cmd, shell=True)
+                if completion.returncode != 0:
+                    raise Exception('Conversion to .mif failed.')
+            # The following command concatenates all DWI(i) in a single
+            # .mif file
+            cat_arg = ['mrcat -axis 3']
+            if verbose is False:
+                cat_arg.append('-quiet')
+            if force is True:
+                cat_arg.append('-force')
+            for i,fname in enumerate(miflist):
+                cat_arg.append(fname)
+            cat_arg.append(
+                op.join(path, ('dwi_designer' + '.mif')))
+            cmd = ' '.join(str(e) for e in cat_arg)
+            completion = subprocess.run(cmd, shell=True)
+            if completion.returncode != 0:
+                raise Exception('Failed to concatenate multiple '
+            'series.')
+            miflist.append(op.join(path, 'dwi_designer' + '.mif'))
+            # Output concatenate .mif into .nii
+            convert_args = ['mrconvert -stride 1,2,3,4']
+            if verbose is False:
+                convert_args.append('-quiet')
+            if force is True:
+                convert_args.append('-force')
+            convert_args.append('-export_grad_fsl')
+            convert_args.append(op.join(path, 'dwi_designer.bvec'))
+            convert_args.append(op.join(path, 'dwi_designer.bval'))
+            convert_args.append('-json_export')
+            convert_args.append(op.join(path, 'dwi_designer.json'))
+            convert_args.append(op.join(path, 'dwi_designer.mif'))
+            convert_args.append(op.join(path, 'dwi_designer' + ext))
+            cmd = ' '.join(str(e) for e in convert_args)
+            completion = subprocess.run(cmd, shell=True)
+            if completion.returncode != 0:
+                raise Exception('Conversion to ' + ext + ' failed.')
+            for i, fname in enumerate(miflist):
+                os.remove(fname)
+    def getPath(self):
+        """Returns directory where first file in DWI list is stored
+        """
+        path = os.path.dirname(os.path.abspath(self.DWIlist[0]))
+        return path
