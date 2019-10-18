@@ -410,7 +410,6 @@ class DWIParser:
             cat_arg.append(
                 op.join(path, ('dwi_designer' + '.mif')))
             cmd = ' '.join(str(e) for e in cat_arg)
-            print(cmd)
             completion = subprocess.run(cmd, shell=True)
             if completion.returncode != 0:
                 raise Exception('Failed to concatenate multiple '
