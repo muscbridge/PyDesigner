@@ -411,13 +411,13 @@ class DWIParser:
             for i,fname in enumerate(miflist):
                 cat_arg.append(fname)
             cat_arg.append(
-                op.join(path, ('dwi_designer' + '.mif')))
+                op.join(path, ('raw_dwi' + '.mif')))
             cmd = ' '.join(str(e) for e in cat_arg)
             completion = subprocess.run(cmd, shell=True)
             if completion.returncode != 0:
                 raise Exception('Failed to concatenate multiple '
             'series.')
-            miflist.append(op.join(path, 'dwi_designer' + '.mif'))
+            miflist.append(op.join(path, 'raw_dwi' + '.mif'))
             # Output concatenate .mif into .nii
             convert_args = ['mrconvert -stride 1,2,3,4']
             if verbose is False:
@@ -425,12 +425,12 @@ class DWIParser:
             if force is True:
                 convert_args.append('-force')
             convert_args.append('-export_grad_fsl')
-            convert_args.append(op.join(path, 'dwi_designer.bvec'))
-            convert_args.append(op.join(path, 'dwi_designer.bval'))
+            convert_args.append(op.join(path, 'raw_dwi.bvec'))
+            convert_args.append(op.join(path, 'raw_dwi.bval'))
             convert_args.append('-json_export')
-            convert_args.append(op.join(path, 'dwi_designer.json'))
-            convert_args.append(op.join(path, 'dwi_designer.mif'))
-            convert_args.append(op.join(path, 'dwi_designer' + ext))
+            convert_args.append(op.join(path, 'raw_dwi.json'))
+            convert_args.append(op.join(path, 'raw_dwi.mif'))
+            convert_args.append(op.join(path, 'raw_dwi' + ext))
             cmd = ' '.join(str(e) for e in convert_args)
             completion = subprocess.run(cmd, shell=True)
             if completion.returncode != 0:

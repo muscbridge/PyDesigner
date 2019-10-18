@@ -224,7 +224,7 @@ if image.nDWI > 1:
     image.cat(path=outpath,
               verbose=args.verbose,
               force=args.force)
-    args.dwi = op.join(outpath, 'dwi_designer.nii')
+    args.dwi = op.join(outpath, 'raw_dwi.nii')
 
 #---------------------------------------------------------------------
 # Validate Arguments
