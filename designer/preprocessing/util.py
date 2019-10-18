@@ -357,6 +357,8 @@ class DWIParser:
     def cat(self, path, ext='.nii' ,verbose=False, force=False):
         """Concatenates all input series when nDWI > 1 into a 4D NifTi
         along with a appropriate BVAL, BVEC and JSON files.
+        Concatenation of series via MRTRIX3 requires every NifTi file to
+        come with BVAL/BVEC to produce a .json with `dw_scheme`.
 
         Parameters
         ----------
