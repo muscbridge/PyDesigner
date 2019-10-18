@@ -239,7 +239,8 @@ For any questions not answered in the above documentation, see the contacts belo
 To report any bugs or issues, see [the Issues tool on the PyDesigner GitHub page.](https://github.com/m-ama/PyDesigner/issues)
 
 ## Meet the Team
-PyDesigner is a join collarobation and as such consists of several developers.
+
+PyDesigner is a joint collarobation and as such consists of several developers.
 
 ### Developer
 <img src="https://avatars0.githubusercontent.com/u/13654344?s=400&v=4" align="left"
