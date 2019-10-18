@@ -50,6 +50,7 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 **[L- FSL](#fsl)**<br>
 **[L- MRTRIX3](#mrtrix3)**<br>
 **[L- Python](#python)**<br>
+**[L-PyDesigner](#pydesigner)**<br>
 **[Running PyDesigner](#running-pydesigner)**<br>
 **[Meet the Team](#meet-the-team)**<br>
 
@@ -94,12 +95,22 @@ The third and final stage performs actual metric extraction using mathematical m
 Performing these calculations require only Python dependencies which can easily be obtained via `pip install ...` or `conda install ...`. More information will be provided in the [installation](#installation) section.
 
 ## Installation
-There are essentially three overall dependencies for PyDesigner: 1) FSL, 2) MRTRIX3, and 3) Python. Configuration and means of obtaining said dependencies are listed below.
+There are three dependencies for PyDesigner: 1) FSL, 2) MRTRIX3, and 3) Python. Configuration and means of obtaining said dependencies are listed below.
+
+**Note**: All testing was conducted using Python 3.7, MRtrix3, and FSL 6.0.1. Usage of DESIGNER with alternative versions of these dependencies has not been tested and is not recommended. 
 
 ### FSL
 FSL is a collection of tools and software used to process fMRI, MRI and DWI data. [Visit their installation page](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FslInstallation) for download and installation guide.
 
-**Advanced Users Only:**
+**FSL 6.0.1 is recommended.** All testing has been done using FSL 6.0.1. DESIGNER has not been tested with other versions of FSL.
+
+To check your FSL version:
+
+```
+FLIRT -version
+```
+
+**If you are currently running an FSL version after v6.0.1:**
 
 As of most recent FSL 6.0.3, `eddy` does not support CUDA 10, while `bedpost` and `probtrakx` do. Moreover, the version supplied after FSL v6.0.1 fails on certain datasets. If running on a CUDA system, users are advised to downgrade to CUDA 9.1 for maximum compatibility, and to do so prior to installing FSL.
 
@@ -111,6 +122,12 @@ Replace/Install [bedpostx for GPU](https://users.fmrib.ox.ac.uk/~moisesf/Bedpost
 MRTRIX3 is another software suite aimed at analysis of DWI data. Here are some of their helpful pages.
 1. [Homepage](https://www.mrtrix.org/)
 2. [Download and Install](https://www.mrtrix.org/download/)
+
+To check your MRtrix version:
+
+```
+mrconvert - version
+```
 
 ### Python
 PyDesigner was built and tested on Pyhron 3.7, so we enourage all users to adopt this version as well. While you may use the Python supplied by default on your OS, we highly enocurage users to adopt a Conda-based Python like [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/). Refer to either of these distributions' page for installation. This guide assumes a conda installation for setting up Python.
@@ -150,41 +167,69 @@ pip install --upgrade setuptools
 pip install cvxpy
 ```
 
-If setting up on a non-conda distribution or if you prefer a `pip` installation, run the following command:
+If conda fails to install a package, use pip to install the package with:
 ```
-pip install numpy scipy cvxpy nibabel multiprocessing joblib tqdm
+pip install [package name]
 ```
 
 Completion of this step will ready your system for dMRI processing. Let's go!
 
+##PyDesigner
+On the main PyDesigner Github page, click the green "Clone or download" button. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip. 
+
+PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
+
 ## Running PyDesigner
-PyDesigner is easy to run on a subject. Ensure that all your DICOMS are converted to NifTi files and that all diffusion series have a valid `.json` file. Switch to the appropriate conda environment; run `conda activate dmri` if you followed this guide. Then, for any given subject, call:
+
+**Before Running PyDesigner**
+Ensure that all your DICOMS are converted to NifTi files and that all diffusion series have a valid `.json` file, as well as `.bvec` and `.bval` files where applicable. Dicom to nifti conversion can be done with [dcm2niix available for download here](https://github.com/rordenlab/dcm2niix). 
+
+Ensure that none of your file or folder names contain a period (aside from the file extension; eg. DKI.nii). 
+
+**To Run PyDesigner**
+Switch to the appropriate conda environment; run `conda activate dmri` if you followed this guide. Then, for any given subject, call PyDesigner with the relevant flags:
+
 ```
-python pydesigner.py \
---denoise \
---degibbs \
---smooth \
---rician \
---undistort \
---verbose \
---topup <path_to_reverse_phase.nii>
-<path_to_input.nii> \
--o <path_to_output_folder>
+python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask /Path/to/input_file.nii -o /Path/to/output/folder
 ```
 
-For example, I can process a subject with the following commands
+**Note**: Flags can be added and removed as needed. It is recommended to always run PyDesigner with the `--mask` flag, as this flag utilizes a brain mask with excludes non-brain voxels and subsequently speeds up processing.
+
+If your dataset contains more than one DKI average per subject, your file input may contain all relevant nifti files separated by a comma:
+
 ```
-python pydesigner.py \
---denoise \
---degibbs \
---undistort \
---topup /Users/sid/Documents/Projects/IAM/Dataset/NifTi/IAM_1047/14_DKI_BIPOLAR_2_5mm_64dir_50slices_TOP_UP_PA.nii \
---smooth \
---rician \
---verbose \
-/Users/sid/Documents/Projects/IAM/Dataset/NifTi/IAM_1047/13_DKI_BIPOLAR_2_5mm_64dir_50slices.nii \
--o /Users/sid/Documents/Projects/IAM/Dataset/Processed/IAM_1047
+python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask /Path/to/DKI_avg_1.nii,/Path/to/DKI_avg_2.nii -o /Path/to/output/folder
 ```
+
+**Note**: Multiple average inputs with additional interleved B0s can be given to PyDesigner but separate B0 sequences cannot.
+
+If your dataset contains a top up sequence, you can use the `--topup` and `--undistort` flags:
+
+```
+python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask --topup /Path/to/reverse_phase.nii /Path/to/input_file.nii -o /Path/to/output/folder
+```
+
+**Note**: Using `--undistort` and `--topup` without supplying top up data will return an error.
+
+**Basic PyDesigner Flags**
+
+`--standard` - runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal)
+`--denoise` - performs denoising
+`--degibbs` - performs gibbs unringing correction
+`--smooth` - performs smoothing
+`--rician` - performs rician bias correction
+`--mask` - computes brain mask prior to tensor fitting; recommended
+`--undistort` - performs image undistortion via FSL eddy
+`--topup` - incorperates top up B0 series; required for `--undistort`
+`--o` - specifies output folder
+`--verbose` - prints out all output
+`--force` - overwrites existing files in output folder
+
+## Questions and Issues
+
+For any questions not answered in the above documentation, see the contacts below.
+
+To report any bugs or issues, see [the Issues tool on the PyDesigner GitHub page.](https://github.com/m-ama/PyDesigner/issues)
 
 ## Meet the Team
 PyDesigner is a join collarobation and as such consists of several developers.
