@@ -357,6 +357,8 @@ class DWIParser:
     def cat(self, path, ext='.nii' ,verbose=False, force=False):
         """Concatenates all input series when nDWI > 1 into a 4D NifTi
         along with a appropriate BVAL, BVEC and JSON files.
+        Concatenation of series via MRTRIX3 requires every NifTi file to
+        come with BVAL/BVEC to produce a .json with `dw_scheme`.
 
         Parameters
         ----------
@@ -377,6 +379,7 @@ class DWIParser:
             miflist = []
             # The following loop first converts NifTis to a .mif file
             for (idx, i) in enumerate(self.DWIlist):
+                self.json2fslgrad(i)
                 convert_args = ['mrconvert -stride 1,2,3,4']
                 if verbose is False:
                     convert_args.append('-quiet')
@@ -408,13 +411,13 @@ class DWIParser:
             for i,fname in enumerate(miflist):
                 cat_arg.append(fname)
             cat_arg.append(
-                op.join(path, ('dwi_designer' + '.mif')))
+                op.join(path, ('raw_dwi' + '.mif')))
             cmd = ' '.join(str(e) for e in cat_arg)
             completion = subprocess.run(cmd, shell=True)
             if completion.returncode != 0:
                 raise Exception('Failed to concatenate multiple '
             'series.')
-            miflist.append(op.join(path, 'dwi_designer' + '.mif'))
+            miflist.append(op.join(path, 'raw_dwi' + '.mif'))
             # Output concatenate .mif into .nii
             convert_args = ['mrconvert -stride 1,2,3,4']
             if verbose is False:
@@ -422,16 +425,25 @@ class DWIParser:
             if force is True:
                 convert_args.append('-force')
             convert_args.append('-export_grad_fsl')
-            convert_args.append(op.join(path, 'dwi_designer.bvec'))
-            convert_args.append(op.join(path, 'dwi_designer.bval'))
+            convert_args.append(op.join(path, 'raw_dwi.bvec'))
+            convert_args.append(op.join(path, 'raw_dwi.bval'))
             convert_args.append('-json_export')
-            convert_args.append(op.join(path, 'dwi_designer.json'))
-            convert_args.append(op.join(path, 'dwi_designer.mif'))
-            convert_args.append(op.join(path, 'dwi_designer' + ext))
+            convert_args.append(op.join(path, 'raw_dwi.json'))
+            convert_args.append(op.join(path, 'raw_dwi.mif'))
+            convert_args.append(op.join(path, 'raw_dwi' + ext))
             cmd = ' '.join(str(e) for e in convert_args)
             completion = subprocess.run(cmd, shell=True)
             if completion.returncode != 0:
-                raise Exception('Conversion to ' + ext + ' failed.')
+                for i, fname in enumerate(miflist):
+                    os.remove(fname)
+                os.remove(op.join(path, 'raw_dwi' + ext))
+                raise Exception('Concatenation to ' + str(ext) + 'failed. '
+                                'Please ensure that your input NifTi files '
+                                'have the same phase encoding directions, '
+                                'and are accompanied by valid .bval, .bvec, '
+                                'and .json. If this is not possible, '
+                                'please provide manually concatenated '
+                                'DWIs or run with single series input.')
             for i, fname in enumerate(miflist):
                 os.remove(fname)
     def getPath(self):
@@ -439,3 +451,43 @@ class DWIParser:
         """
         path = os.path.dirname(os.path.abspath(self.DWIlist[0]))
         return path
+
+    def json2fslgrad(self, path):
+        """Creates FSL .bvec and .bval for series missing that information.
+        Some datasets have their B0s separately that do not produce fsl
+        gradients upon conversion to NifTi. This function creates those
+        missing features for complete concatenation from .json file. Use
+        with caution if and only if you know your input series is a DWI.
+
+        Parameters
+        ----------
+        path:   string
+            Path to NifTi file
+        """
+        image = DWIFile(path)
+        if not image.hasJSON():
+            raise Exception('It is not advisable to run multi-series '
+                            'processing without `.json` files. Please '
+                            'ensure your NifTi files come with .json '
+                            'files.')
+        args_info = ['mrinfo', path]
+        cmd = ' '.join(str(e) for e in args_info)
+        # Reads the "Dimension line of `mrinfo` and extracts the size
+        # of NifTi
+        pipe = subprocess.Popen(cmd, shell=True,
+                                stdout=subprocess.PIPE)
+        strlist = pipe.stdout.readlines()[3].split()
+        dims = [int(i) for i in strlist if i.isdigit()]
+        nDWI = dims[-1]
+        # Check whether for inexistence of gradient table in JSON and
+        # some mention of B0 in EPI
+        if ('b0' in image.json['SeriesDescription'] or \
+                'B0' in image.json['SeriesDescription'] or \
+                'b0' in image.json['ProtocolName'] or \
+                'B0' in image.json['ProtocolName']):
+            bval = np.zeros(nDWI, dtype=int)
+            bvec = np.zeros((3, nDWI), dtype=int)
+            fPath = op.splitext(path)[0]
+            np.savetxt((fPath + '.bvec'), bvec, delimiter=' ', fmt='%d')
+            np.savetxt((fPath + '.bval'), np.c_[bval], delimiter=' ',
+                       fmt='%d')
