@@ -1,12 +1,14 @@
-# PyDesigner [UNDER CONSTRUCTION]
-**Project is currently under construction and will not run. Official release will be marked by the removal of 'under construction' header.**
+# PyDesigner [DEVELOPMENTAL CYCLE]
+**Project is currently under developmental cycle and is undergoing stability testing and debugging. Users are recommended to wait for a stable public release instead.**
 
 **_Disclaimer:_**
 ```
-This project is in very early stages of development and most likely will not work as intended. 
+This project is in early stages of development and most likely will not work as intended. 
 We are not responsible for any data corruption, loss of valuable data, computer issues, you 
 getting fired because you chose to run this, or a thermonuclear war. We strongly encourage 
-all potential users to wait for an official release.
+all potential users to wait for an official release. Ina ll seriousness, do NOT used this for
+any data analysis, speculation, or writing papers: 1) not all citations have been incorporated, 
+and 2) this is a developmental cycle with no papers to cite back on.
 ```
 <p align="center">
   <img src="https://avatars1.githubusercontent.com/u/47674287?s=400&u=9ca45aeafe30730e26fb70865c14e736f3a4dabf&v=4" alt="MAMA Logo" width="256">
@@ -43,15 +45,18 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 **[General Information](#general-information)**<br>
 **[Introduction](#introduction)**<br>
 **[L- The PyDesigner Pipeline](#the-pydesigner-pipeline)**<br>
-**[L-- Image Acquisition](#image-acquisition)**<br>
-**[L-- Preprocessing](#preprocessing)**<br>
-**[L-- Tensor Estimation](#tensor-estimation)**<br>
+**[L-- _Image Acquisition_](#image-acquisition)**<br>
+**[L-- _Preprocessing_](#preprocessing)**<br>
+**[L-- _Tensor Estimation_](#tensor-estimation)**<br>
 **[Installation](#installation)**<br>
-**[L- FSL](#fsl)**<br>
-**[L- MRTRIX3](#mrtrix3)**<br>
-**[L- Python](#python)**<br>
-**[L- PyDesigner](#pydesigner)**<br>
+**[L- _FSL_](#fsl)**<br>
+**[L- _MRTRIX3_](#mrtrix3)**<br>
+**[L- _Python_](#python)**<br>
+**[L- _PyDesigner_](#pydesigner)**<br>
 **[Running PyDesigner](#running-pydesigner)**<br>
+**[L- _Before Running PyDesigner_](#before-running-pydesigner)**<br>
+**[L- _To Run PyDesigner_](#to-run-pydesigner)**<br>
+**[L- _Basic PyDesigner Flags_](#basic-pydesigner-flags)**<br>
 **[Meet the Team](#meet-the-team)**<br>
 
 ## General Information
@@ -186,13 +191,13 @@ PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
 
 ## Running PyDesigner
 
-**Before Running PyDesigner**
+### Before Running PyDesigner
 
 Ensure that all your DICOMS are converted to NifTi files and that all diffusion series have a valid `.json` file, as well as `.bvec` and `.bval` files where applicable. Dicom to nifti conversion can be done with [dcm2niix available for download here](https://github.com/rordenlab/dcm2niix). 
 
 Ensure that none of your file or folder names contain a period (aside from the file extension; eg. DKI.nii). 
 
-**To Run PyDesigner**
+### To Run PyDesigner
 
 Switch to the appropriate conda environment; run `conda activate dmri` if you followed this guide. Then, for any given subject, call PyDesigner with the relevant flags:
 
@@ -218,19 +223,26 @@ python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask --top
 
 **Note**: Using `--undistort` and `--topup` without supplying top up data will return an error.
 
-**Basic PyDesigner Flags**
+### Basic PyDesigner Flags
 
-`--standard` - runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal)<br>
-`--denoise` - performs denoising<br>
-`--degibbs` - performs gibbs unringing correction<br>
-`--smooth` - performs smoothing<br>
-`--rician` - performs rician bias correction<br>
-`--mask` - computes brain mask prior to tensor fitting; recommended<br>
-`--undistort` - performs image undistortion via FSL eddy<br>
-`--topup` - incorporates top up B0 series; required for `--undistort`<br>
-`--o` - specifies output folder<br>
-`--verbose` - prints out all output<br>
-`--force` - overwrites existing files in output folder<br>
+Flags are to be preceeded by `--`. For example, to parse a _denoise_ flag, one would type the flag as `--denoise`.
+
+  | Flag        | Description |
+  | :---------- | :- |
+  |`standard` | runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal) |
+  |`denoise`  |performs denoising|
+  |`degibbs`  |performs gibbs unringing correction|
+  |`smooth`   |performs smoothing|
+  |`rician`   |performs rician bias correction|
+  |`mask`     |computes brain mask prior to tensor fitting; recommended|
+  |`undistort`|performs image undistortion via FSL eddy|
+  |`topup`    | performs EPI correction byincorporating topup B0 series; required for `--undistort`|
+  |`o`        |specifies output folder|
+  |`force`    |overwrites existing files in output folder|
+  |`resume`   |resumes processing from a previous state; only if same output folder|
+  |`verbose`  |prints out all output: recommended for debugging|
+  |`adv`      |disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**|
+
 
 ## Questions and Issues
 
@@ -242,7 +254,7 @@ To report any bugs or issues, see [the Issues tool on the PyDesigner GitHub page
 
 PyDesigner is a joint collarobation and as such consists of several developers.
 
-### Developer
+### Developers
 <img src="https://avatars0.githubusercontent.com/u/13654344?s=400&v=4" align="left"
      title="GitHub: Siddhartha Dhiman" height="163"> 
 
@@ -253,7 +265,6 @@ PyDesigner is a joint collarobation and as such consists of several developers.
     Medical University of South Carolina<
     dhiman@musc.edu
 
-### Developer
 <img src="https://avatars2.githubusercontent.com/u/26722533?s=400&v=4" align="right"
      title="GitHub: Joshua Teves" height="163"> 
 
@@ -264,7 +275,6 @@ PyDesigner is a joint collarobation and as such consists of several developers.
      Medical University of South Carolina
      teves@musc.edu
 
-### 
 <img src="https://avatars1.githubusercontent.com/u/47329645?s=460&v=4" align="left"
      title="GitHub: Kayti Keith" height="163">
 
