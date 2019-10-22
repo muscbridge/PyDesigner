@@ -218,23 +218,25 @@ python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask --top
 
 **Note**: Using `--undistort` and `--topup` without supplying top up data will return an error.
 
-**Basic PyDesigner Flags**
+### Basic PyDesigner Flags
+
+Flags are to be preceeded by `--`. For example, to parse a _denoise_ flag, one would type the flag as `--denoise`.
 
   | Flag        | Description |
   | :---------- | :- |
-  |`--standard` | runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal) |
-  |`--denoise`  |performs denoising|
-  |`--degibbs`  |performs gibbs unringing correction|
-  |`--smooth`   |performs smoothing|
-  |`--rician`   |performs rician bias correction|
-  |`--mask`     |computes brain mask prior to tensor fitting; recommended|
-  |`--undistort`|performs image undistortion via FSL eddy|
-  |`--topup`    | performs EPI correction byincorporating topup B0 series; required for `--undistort`|
-  |`--o`        |specifies output folder|
-  |`--force`    |overwrites existing files in output folder|
-  |`--resume`   |resumes processing from a previous state; only if same output folder|
-  |`--verbose`  |prints out all output: recommended for debugging|
-  |`--adv`      |disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**|
+  |`standard` | runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal) |
+  |`denoise`  |performs denoising|
+  |`degibbs`  |performs gibbs unringing correction|
+  |`smooth`   |performs smoothing|
+  |`rician`   |performs rician bias correction|
+  |`mask`     |computes brain mask prior to tensor fitting; recommended|
+  |`undistort`|performs image undistortion via FSL eddy|
+  |`topup`    | performs EPI correction byincorporating topup B0 series; required for `--undistort`|
+  |`o`        |specifies output folder|
+  |`force`    |overwrites existing files in output folder|
+  |`resume`   |resumes processing from a previous state; only if same output folder|
+  |`verbose`  |prints out all output: recommended for debugging|
+  |`adv`      |disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**|
 
 
 ## Questions and Issues
