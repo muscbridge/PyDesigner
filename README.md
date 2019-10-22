@@ -231,6 +231,7 @@ python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask --top
 `--o` - specifies output folder<br>
 `--verbose` - prints out all output<br>
 `--force` - overwrites existing files in output folder<br>
+`--adv` - disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**<br>
 
 ## Questions and Issues
 
