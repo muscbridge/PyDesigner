@@ -213,7 +213,7 @@ If your dataset contains more than one DKI average per subject, your file input 
 python /Path/to/pydesigner.py --denoise --degibbs --smooth --rician --mask -o /Path/to/output/folder /Path/to/DKI_avg_1.nii,/Path/to/DKI_avg_2.nii
 ```
 
-**Note**: Multiple average inputs with additional interleved B0s can be given to PyDesigner but separate B0 sequences cannot.
+**Note**: Multiple average inputs with additional interleved B0s can be given to PyDesigner but suport for separate B0 sequences is experimental. See [PR #84](https://github.com/m-ama/PyDesigner/pull/84) for further information.
 
 If your dataset contains a top up sequence, you can use the `--topup` and `--undistort` flags:
 
