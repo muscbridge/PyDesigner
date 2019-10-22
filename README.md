@@ -52,6 +52,9 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 **[L- Python](#python)**<br>
 **[L- PyDesigner](#pydesigner)**<br>
 **[Running PyDesigner](#running-pydesigner)**<br>
+**[L- Before Running PyDesigner](#before-running-pydesigner)**<br>
+**[L- To Run PyDesigner](#to-run-pydesigner)**<br>
+**[L- Basic PyDesigner Flags](#basic-pydesigner-flags)**<br>
 **[Meet the Team](#meet-the-team)**<br>
 
 ## General Information
@@ -186,13 +189,13 @@ PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
 
 ## Running PyDesigner
 
-**Before Running PyDesigner**
+### Before Running PyDesigner
 
 Ensure that all your DICOMS are converted to NifTi files and that all diffusion series have a valid `.json` file, as well as `.bvec` and `.bval` files where applicable. Dicom to nifti conversion can be done with [dcm2niix available for download here](https://github.com/rordenlab/dcm2niix). 
 
 Ensure that none of your file or folder names contain a period (aside from the file extension; eg. DKI.nii). 
 
-**To Run PyDesigner**
+### To Run PyDesigner
 
 Switch to the appropriate conda environment; run `conda activate dmri` if you followed this guide. Then, for any given subject, call PyDesigner with the relevant flags:
 
