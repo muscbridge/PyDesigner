@@ -242,7 +242,7 @@ To report any bugs or issues, see [the Issues tool on the PyDesigner GitHub page
 
 PyDesigner is a joint collarobation and as such consists of several developers.
 
-### Developer
+### Developers
 <img src="https://avatars0.githubusercontent.com/u/13654344?s=400&v=4" align="left"
      title="GitHub: Siddhartha Dhiman" height="163"> 
 
@@ -253,7 +253,6 @@ PyDesigner is a joint collarobation and as such consists of several developers.
     Medical University of South Carolina<
     dhiman@musc.edu
 
-### Developer
 <img src="https://avatars2.githubusercontent.com/u/26722533?s=400&v=4" align="right"
      title="GitHub: Joshua Teves" height="163"> 
 
@@ -264,7 +263,6 @@ PyDesigner is a joint collarobation and as such consists of several developers.
      Medical University of South Carolina
      teves@musc.edu
 
-### 
 <img src="https://avatars1.githubusercontent.com/u/47329645?s=460&v=4" align="left"
      title="GitHub: Kayti Keith" height="163">
 
