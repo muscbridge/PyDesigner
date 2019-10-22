@@ -6,7 +6,9 @@
 This project is in early stages of development and most likely will not work as intended. 
 We are not responsible for any data corruption, loss of valuable data, computer issues, you 
 getting fired because you chose to run this, or a thermonuclear war. We strongly encourage 
-all potential users to wait for an official release.
+all potential users to wait for an official release. Ina ll seriousness, do NOT used this for
+any data analysis, speculation, or writing papers: 1) not all citations have been incorporated, 
+and 2) this is a developmental cycle with no papers to cite back on.
 ```
 <p align="center">
   <img src="https://avatars1.githubusercontent.com/u/47674287?s=400&u=9ca45aeafe30730e26fb70865c14e736f3a4dabf&v=4" alt="MAMA Logo" width="256">
