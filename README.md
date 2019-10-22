@@ -1,9 +1,9 @@
-# PyDesigner [UNDER CONSTRUCTION]
-**Project is currently under construction and will not run. Official release will be marked by the removal of 'under construction' header.**
+# PyDesigner [DEVELOPMENTAL CYCLE]
+**Project is currently under developmental cycle and is undergoing stability testing and debugging. Users are recommended to wait for a stable public release instead.**
 
 **_Disclaimer:_**
 ```
-This project is in very early stages of development and most likely will not work as intended. 
+This project is in early stages of development and most likely will not work as intended. 
 We are not responsible for any data corruption, loss of valuable data, computer issues, you 
 getting fired because you chose to run this, or a thermonuclear war. We strongly encourage 
 all potential users to wait for an official release.
