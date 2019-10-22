@@ -43,18 +43,18 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 **[General Information](#general-information)**<br>
 **[Introduction](#introduction)**<br>
 **[L- The PyDesigner Pipeline](#the-pydesigner-pipeline)**<br>
-**[L-- Image Acquisition](#image-acquisition)**<br>
-**[L-- Preprocessing](#preprocessing)**<br>
-**[L-- Tensor Estimation](#tensor-estimation)**<br>
+**[L-- _Image Acquisition_](#image-acquisition)**<br>
+**[L-- _Preprocessing_](#preprocessing)**<br>
+**[L-- _Tensor Estimation_](#tensor-estimation)**<br>
 **[Installation](#installation)**<br>
-**[L- FSL](#fsl)**<br>
-**[L- MRTRIX3](#mrtrix3)**<br>
-**[L- Python](#python)**<br>
-**[L- PyDesigner](#pydesigner)**<br>
+**[L- _FSL_](#fsl)**<br>
+**[L- _MRTRIX3_](#mrtrix3)**<br>
+**[L- _Python_](#python)**<br>
+**[L- _PyDesigner_](#pydesigner)**<br>
 **[Running PyDesigner](#running-pydesigner)**<br>
-**[L- Before Running PyDesigner](#before-running-pydesigner)**<br>
-**[L- To Run PyDesigner](#to-run-pydesigner)**<br>
-**[L- Basic PyDesigner Flags](#basic-pydesigner-flags)**<br>
+**[L- _Before Running PyDesigner_](#before-running-pydesigner)**<br>
+**[L- _To Run PyDesigner_](#to-run-pydesigner)**<br>
+**[L- _Basic PyDesigner Flags_](#basic-pydesigner-flags)**<br>
 **[Meet the Team](#meet-the-team)**<br>
 
 ## General Information
