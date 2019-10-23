@@ -32,7 +32,7 @@ def rician_img_correct(dwiname, noisemapname, outpath=None):
     # load files
     dwiimg = nib.load(dwiname)
     noiseimg = nib.load(noisemapname)
-   
+
     # run the correction
     corrected = rician_correct(dwiimg.get_fdata(), noiseimg.get_fdata())
 
@@ -75,6 +75,15 @@ def rician_correct(dwi, noisemap):
     corrected : (X x Y x Z x N) array_like or img_like object
         The rician-corrected version of dwi
     """
+
+    # Replace NaN with 0
+    minZero = 1e-8
+    # dwi
+    nanidx = np.isnan(dwi)
+    dwi[nanidx] = minZero
+    # noise
+    nanidx = np.isnan(noisemap)
+    noisemap[nanidx] = minZero
 
     sqr_noise = np.square(noisemap)
     sqr_data = np.square(dwi)
