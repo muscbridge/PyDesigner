@@ -44,19 +44,19 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 **[Abstract](#pydesigner)**<br>
 **[General Information](#general-information)**<br>
 **[Introduction](#introduction)**<br>
-**[L- The PyDesigner Pipeline](#the-pydesigner-pipeline)**<br>
-**[L-- _Image Acquisition_](#image-acquisition)**<br>
-**[L-- _Preprocessing_](#preprocessing)**<br>
-**[L-- _Tensor Estimation_](#tensor-estimation)**<br>
+[|__ The PyDesigner Pipeline](#the-pydesigner-pipeline)<br>
+[|__ _Image Acquisition_](#image-acquisition)<br>
+[|__ _Preprocessing_](#preprocessing)<br>
+[|__ _Tensor Estimation_](#tensor-estimation)<br>
 **[Installation](#installation)**<br>
-**[L- _FSL_](#fsl)**<br>
-**[L- _MRTRIX3_](#mrtrix3)**<br>
-**[L- _Python_](#python)**<br>
-**[L- _PyDesigner_](#pydesigner)**<br>
+[|__ _FSL_](#fsl)<br>
+[|__ _MRTRIX3_](#mrtrix3)<br>
+[|__ _Python_](#python)<br>
+[|__ _PyDesigner_](#pydesigner)<br>
 **[Running PyDesigner](#running-pydesigner)**<br>
-**[L- _Before Running PyDesigner_](#before-running-pydesigner)**<br>
-**[L- _To Run PyDesigner_](#to-run-pydesigner)**<br>
-**[L- _Basic PyDesigner Flags_](#basic-pydesigner-flags)**<br>
+[|__ _Before Running PyDesigner_](#before-running-pydesigner)<br>
+[|__ _To Run PyDesigner_](#to-run-pydesigner)<br>
+[|__ _Basic PyDesigner Flags_](#basic-pydesigner-flags)<br>
 **[Meet the Team](#meet-the-team)**<br>
 
 ## General Information
@@ -115,11 +115,11 @@ To check your FSL version:
 FLIRT -version
 ```
 
-**If you are currently running an FSL version after v6.0.1:**
+**If you are currently running an FSL version after v6.0.1 and using NVIDIA CUDA:**
 
 As of most recent FSL 6.0.3, `eddy` does not support CUDA 10, while `bedpost` and `probtrakx` do. Moreover, the version supplied after FSL v6.0.1 fails on certain datasets. If running on a CUDA system, users are advised to downgrade to CUDA 9.1 for maximum compatibility, and to do so prior to installing FSL.
 
-After the installation of FSL, replace `eddy_cuda` with the one from [FSL v6.0.1](https://users.fmrib.ox.ac.uk/~thanayik/eddy_cuda9.1). Create a backup of original rename `eddy_cuda9.1` to `eddy_cuda` Then, make the file executable with `sudo chmod +x /path/to/eddy_cuda`.
+After the installation of FSL, Create a backup of original `eddy_cuda9.1` by renaming it to to `eddy_cuda9.1.BAK`. Then, replace `eddy_cuda9.1` with the one from [FSL v6.0.1](https://users.fmrib.ox.ac.uk/~thanayik/eddy_cuda9.1). End by making the new file executable with `sudo chmod +x /path/to/eddy_cuda9.1`.
 
 Replace/Install [bedpostx for GPU](https://users.fmrib.ox.ac.uk/~moisesf/Bedpostx_GPU/Installation.html) for CUDA 9.1.
 
@@ -131,22 +131,22 @@ MRTRIX3 is another software suite aimed at analysis of DWI data. Here are some o
 To check your MRtrix version:
 
 ```
-mrconvert - version
+mrconvert -version
 ```
 
 ### Python
-PyDesigner was built and tested on Python 3.7, so we enourage all users to adopt this version as well. While you may use the Python supplied by default on your OS, we highly enocurage users to adopt a Conda-based Python like [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/). Refer to either of these distributions' page for installation. This guide assumes a conda installation for setting up Python.
+PyDesigner was built and tested on Python 3.7, so we enourage all users to adopt this version as well. While you may use the Python supplied by default on your OS, we highly enocurage users to adopt a Conda-based Python like [Miniconda](https://docs.conda.io/en/latest/miniconda.html) or [Anaconda](https://www.anaconda.com/). Conda is a command line tool that allows the creation of separated environments with different python versions and packages. This of it as running multiple virtual machines on the a single host - you can easily switch between any for different needs, or run them simultaneously.
+
+Refer to either of these distributions' page for installation. This guide assumes a conda (Miniconda) installation for setting up Python. If you already have conda, or prefer using the default Python supplied by your OS, skip to package installation at the end of this subsection.
 
 First, update conda with
 ```
 conda update conda
 ```
 
-Next, create a conda environment specifically for dMRI preprocessing, called `dmri`.
+Creating a conda environment is recommended as this will keep all of the dependencies required for this project isolated to just the conda environment called `dmri`. For more information about conda environments, see [The Definitive Guide to Conda Environments](https://towardsdatascience.com/a-guide-to-conda-environments-bc6180fc533). Next, create a conda environment specifically for dMRI preprocessing, called `dmri`. You can choose any name, but be sure to replace `dmri` in this guide with the name of your choice.
 
-Creating a conda environment is recommended as this will keep all of the dependencies required for this project isolated to just the conda environment called `dmri`. For more information about conda environments, see [The Definitive Guide to Conda Environments](https://towardsdatascience.com/a-guide-to-conda-environments-bc6180fc533). 
-
-If you prefer not to create this environment, skip to package installation. In addition, we'll be installing `pip` to this environment.
+If you prefer not to create this environment, skip to package installation. In addition, we'll be installing `pip` to this environment, in the even `conda install <package name>` fails to compile and install a package.
 
 ```
 conda create -n dmri python=3.7
@@ -156,7 +156,7 @@ Activate the new environment with:
 ```
 conda activate dmri
 ```
-**Note**: Environment activation (`conda activate dmri`) needs to be done each time a new terminal window is opened. If this behavior is undesired, you may set this environment as default python environment. 
+**Note**: Environment activation (`conda activate dmri`) needs to be done each time a new terminal window is opened. If this behavior is undesired, you may set this environment as default python environment. Refer to advanced conda user guides or Google search how to do this.
 
 Once the base environment is created and activated, proceed with the installation of all packages.
 
@@ -185,9 +185,11 @@ Completion of this step will ready your system for dMRI processing. Let's go!
 
 ### PyDesigner
 
-On the [main PyDesigner Github page](https://github.com/m-ama/PyDesigner), click the green "Clone or download" button. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip. 
+On the [main PyDesigner Github page](https://github.com/m-ama/PyDesigner), click the green "Clone or download" button to access the latest PyDesigner build. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip. 
 
 PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
+
+**Note:** If you need a stable and tested build, download the most recent release from the [Release tab](https://github.com/m-ama/PyDesigner/releases). Click on `Source code (zip)` link and decompress (unzip) to any folder you desire.
 
 ## Running PyDesigner
 
@@ -295,8 +297,3 @@ PyDesigner is a joint collarobation and as such consists of several developers.
      Department of Neuroscience
      Medical University of South Carolina
      <email placeholder>
-     
-
-
-
-
