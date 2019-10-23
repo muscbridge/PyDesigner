@@ -272,7 +272,6 @@ if args.nofit:
 if not args.denoise:
     stdmsg='No --denoise but '
     if args.extent != '5,5,5':
-        print(args)
         warningmsg+=stdmsg+'--extent given; overriding with --denoise\n'
         args.denoise = True
     if args.rician:
@@ -530,12 +529,18 @@ if args.mask:
         mask_arg = ['dwiextract', '-force', '-fslgrad',
                        filetable['dwi'].getBVEC(), filetable['dwi'].getBVAL(),
                        '-bzero']
+        if args.nthreads:
+            mask_arg.append('-nthreads')
+            mask_arg.append(str(args.nthreads))
         if not args.verbose:
             mask_arg.append('-quiet')
         mask_arg.extend([filetable['HEAD'].getFull(), B0_full])
         completion = subprocess.run(mask_arg)
         # Compute mean B0s
         mask_arg = ['mrmath', '-force']
+        if args.nthreads:
+            mask_arg.append('-nthreads')
+            mask_arg.append(str(args.nthreads))
         if not args.verbose:
             mask_arg.append('-quiet')
         mask_arg.extend(['-axis', '3', B0_full, 'mean', B0_mean_full])
