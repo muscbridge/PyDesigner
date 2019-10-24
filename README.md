@@ -11,9 +11,8 @@ any data analysis, speculation, or writing papers: 1) not all citations have bee
 and 2) this is a developmental cycle with no papers to cite back on.
 ```
 <p align="center">
-  <img src="https://avatars1.githubusercontent.com/u/47674287?s=400&u=9ca45aeafe30730e26fb70865c14e736f3a4dabf&v=4" alt="MAMA Logo" width="256">
+  <img src="https://avatars1.githubusercontent.com/u/47674287?s=400&u=9ca45aeafe30730e26fb70865c14e736f3a4dabf&v=4" alt="MAMA Logo" width="384">
 </p>
-
 
 PyDesigner is a complete Python port of NYU's DESIGNER pipeline for preprocessing diffusion MRI images (dMRI). This work was motivated by:
 
@@ -30,13 +29,13 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 
 <p align="center">
   <a href="https://medicine.musc.edu/departments/centers/cbi/dki">
-    <img src="https://tfcbt2.musc.edu/assets/musc_logo-69ee0f1483cd4d8772c5d114f89a0aace954f2f4a299d10f814fc532c7b3c719.png" alt="MUSC DKI Page" width="128">
+    <img src="https://tfcbt2.musc.edu/assets/musc_logo-69ee0f1483cd4d8772c5d114f89a0aace954f2f4a299d10f814fc532c7b3c719.png" alt="MUSC DKI Page" width="256">
 </p>
 
 <p align="center">
   <a href="http://www.diffusion-mri.com/">
     <img src="https://greatoakscharter.org/wp-content/uploads/2017/03/NYU-Logo.png"
-         alt="Sponsored by Evil Martians" width="128">
+         alt="NYU MRI Biophysics Group" width="256">
   </a>
 </p>
 
@@ -57,6 +56,11 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 [|__ _Before Running PyDesigner_](#before-running-pydesigner)<br>
 [|__ _To Run PyDesigner_](#to-run-pydesigner)<br>
 [|__ _Basic PyDesigner Flags_](#basic-pydesigner-flags)<br>
+**[Information for Developers](#information-for-developers)**<br>
+[|__ _General Pipeline Flow_](#general-pipeline-flow)<br>
+[|__ _List of Files_](#list-of-files)<br>
+**[Future Plans](#future-plans)**<br>
+**[Questions and Issues](#questions-and-issues)**<br>
 **[Meet the Team](#meet-the-team)**<br>
 
 ## General Information
@@ -184,7 +188,6 @@ pip install [package name]
 Completion of this step will ready your system for dMRI processing. Let's go!
 
 ### PyDesigner
-
 On the [main PyDesigner Github page](https://github.com/m-ama/PyDesigner), click the green "Clone or download" button to access the latest PyDesigner build. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip. 
 
 PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
@@ -192,15 +195,14 @@ PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
 **Note:** If you need a stable and tested build, download the most recent release from the [Release tab](https://github.com/m-ama/PyDesigner/releases). Click on `Source code (zip)` link and decompress (unzip) to any folder you desire.
 
 ## Running PyDesigner
+With PyDesigner installed and ready to run, let's floor the pedal.
 
 ### Before Running PyDesigner
-
 Ensure that all your DICOMS are converted to NifTi files and that all diffusion series have a valid `.json` file, as well as `.bvec` and `.bval` files where applicable. Dicom to nifti conversion can be done with [dcm2niix available for download here](https://github.com/rordenlab/dcm2niix). 
 
 Ensure that none of your file or folder names contain a period (aside from the file extension; eg. DKI.nii). 
 
 ### To Run PyDesigner
-
 Switch to the appropriate conda environment; run `conda activate dmri` if you followed this guide. Then, for any given subject, call PyDesigner with the relevant flags:
 
 ```
@@ -250,7 +252,6 @@ python /Path/to/pydesigner.py \
 **Note**: Using `--undistort` and `--topup` without supplying top up data will return an error.
 
 ### Basic PyDesigner Flags
-
 Flags are to be preceeded by `--`. For example, to parse a _denoise_ flag, one would type the flag as `--denoise`.
 
   | Flag        | Description |
@@ -276,54 +277,134 @@ Flags are to be preceeded by `--`. For example, to parse a _denoise_ flag, one w
   |`verbose`  |prints out all output: recommended for debugging|
   |`adv`      |disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**|
 
-## Questions and Issues
+## Information for Developers
+This sections covers information on the various files provided in this package. Users contributing to the project should refer to this section to understand the order of operations.
 
+### General Pipeline Flow
+The pipeline is designed to process NifTi acquisitions as a starting point, and end with DTI/DKI maps. This pipeline can be broken down into two important segments:
+
+1. Preprocessing
+2. Tensor estimation
+
+Each segment is responsible for unique sets of computations to produce useful metrics.
+
+### List of Files
+There are several files in this package that allow the two segemnts to flow smoothly. The table in this section lists all these files and their purpose.
+
+| File | Purpose |
+| :---------- | :- |
+|  **Main Script** |
+| `pydesigner.py` | main PyDesigner script that controls preprocessing steps and tensor fitting |
+| `Tensor_Fitting_Guide.ipynb` | a Jupyter Notebook that details functioning of `fitting/dwi.py` for tensor fitting only|
+| **Preprocessing** | found in `PyDesigner/designer/preprocessing` |
+| `preparation.py` | adds utilities for preparing the data for eddy and analysis |
+| `rician.py` | performs Rician correction on a DWI with a noisemap from MRTRIX3's `dwipreproc` |
+| `smoothing.py` | applies nan-smoothing to input DWI |
+| `ulti.py` | utilities for the command-line interface and file I/O handling |
+| **Tensor Estimation** | found in `PyDesigner/designer/fitting/`|
+| `dirs30.csv` | csv file containing 30 static directions for constraint creation |
+| `dirs256.csv` | csv file containing 250 static directions for parameter extraction  |
+| `dirs10000.csv` | csv file containing 10,000 static directions for AKC correction and WMTI parameter extraction |
+| `dwidirs.py` | handles loading of static directions into `np.array` |
+| `dwipi.py` | main tensor fitting script to handle IRWLLS, WLLS, parameter extraction and filtering |
+| **Extras**  |  found in 'PyDesigner/Extras'  |
+| `des2dke.m` | legacy MATLAB script for converting PyDesigner processed file to DKE-compatible input for validation |
+| `dke_parameters.txt` | DKE parameters file, used by `des2dke.m` to activate DKE compatibility |
+
+## Future Plans
+PyDesigner is still in early stages of development. Release of a stable build will allow us to explore extending the pipeline even further with the inclusion of (in no particular order of preference):
+
+1. Publishing PyDesigner on [PyPi](https://pypi.org/) and [Conda](https://docs.conda.io/en/latest/)
+2. Docker container with FSL, MRTRIX3 and Python dependencies for deployment on HPC clusters and cross-platform compute capabilites across Linux, Mac OS and Microsoft Windows
+3. Fiber ball imaging (FBI) for microstructural parameters. See [Fiber ball imaging](https://www.ncbi.nlm.nih.gov/pubmed/26432187), and [modeling white matter microstructure with fiber ball imaging](https://www.ncbi.nlm.nih.gov/pubmed/29660512) for more information
+4. Deterministic and probabilistic tractography
+
+## Questions and Issues
 For any questions not answered in the above documentation, see the contacts below.
 
 To report any bugs or issues, see [the Issues tool on the PyDesigner GitHub page.](https://github.com/m-ama/PyDesigner/issues)
 
 ## Meet the Team
-
 PyDesigner is a joint collarobation and as such consists of several developers.
 
 ### Developers
-<img src="https://avatars0.githubusercontent.com/u/13654344?s=400&v=4" align="left"
+<img src="https://avatars3.githubusercontent.com/u/13654344?s=400&u=c318d7dcc292486b87bc5c7e81bd8e02947d834e&v=4" align="left"
      title="GitHub: Siddhartha Dhiman" height="163"> 
 
-    Siddhartha Dhiman
+    Siddhartha Dhiman, MSc
 
     Research Specialist
+    MUSC Advanced Image Analysis
     Department of Neuroscience
     Medical University of South Carolina<
-    dhiman@musc.edu
 
 <img src="https://avatars2.githubusercontent.com/u/26722533?s=400&v=4" align="right"
      title="GitHub: Joshua Teves" height="163"> 
 
-     Joshua Teves
+     Joshua Teves, BSc
 
      Systems Programmer
+     MUSC Advanced Image Analysis
      Department of Neuroscience
      Medical University of South Carolina
-     teves@musc.edu
 
 <img src="https://avatars1.githubusercontent.com/u/47329645?s=460&v=4" align="left"
      title="GitHub: Kayti Keith" height="163">
 
-     Kayti Keith
+     Kayti Keith, BSc
 
      Research Specialist
+     MUSC Advanced Image Analysis
      Department of Neuroscience
      Medical University of South Carolina
-     keithka@musc.edu
 
-### Advisor
-<img src="https://muschealth.org/MUSCApps/HealthAssets/ProfileImages/jej50.jpg" align="right"
+<img src="http://www.diffusion-mri.com/sites/default/files/styles/medium/public/pictures/picture-48-1455813197.jpg?itok=B4goKbp-" align="right"
+  title="NYU MRI Biophysics Group: Benjamin Ades-Aron" height="163">
+
+    Benjamin Ades-Aron, MSc
+
+    PhD Student
+    MRI Biophysics Group
+    NYU School of Medicine
+    New York University
+
+### Advisors
+<img src="https://muschealth.org/MUSCApps/HealthAssets/ProfileImages/jej50.jpg" align="left"
      title="MUSC: Jens Jensen" height="163">
 
-     Jens Jensen, Ph.D.
+     Jens Jensen, PhD
 
      Professor
+     MUSC Advanced Image Analysis
      Department of Neuroscience
      Medical University of South Carolina
-     <email placeholder>
+
+<img src="http://www.diffusion-mri.com/sites/default/files/styles/medium/public/pictures/picture-2-1455646448.jpg?itok=ppO8NJs6" align="right"
+     title="NYU MRI Biophysics Group: Els Fieremans" height="163">
+
+     Els Fieremans, PhD
+
+     Assistant Professor
+     MRI Biophysics Group
+     NYU School of Medicine
+     New York University
+
+<img src="http://www.diffusion-mri.com/sites/default/files/styles/medium/public/pictures/picture-45-1455813153.jpg?itok=jnWxCQol" align="left"
+  title="NYU MRI Biophysics Group: Jelle Veraart" height="163">
+
+    Jelle Veraart, PhD
+
+    Postdoctoral Researcher
+    MRI Biophysics Group
+    NYU School of Medicine
+    New York University
+
+<img src="https://media.licdn.com/dms/image/C4D03AQHepgjpxgV2Uw/profile-displayphoto-shrink_800_800/0?e=1577318400&v=beta&t=k9IEREGye7VLB2FkNFzOVBFl1RJW1Rydt5JKh1V4oFk" align="right"
+  title="MUSC: Vitria Adisetiyo" height="163">
+
+    Vitria Adisetiyo, PhD
+
+    Senior Scientist
+    MUSC Advanced Image Analysis
+    Department of Neuroscience
+    Medical University of South Carolina
