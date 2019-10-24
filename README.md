@@ -312,7 +312,7 @@ There are several files in this package that allow the two segemnts to flow smoo
 | `dwipi.py` | main tensor fitting script to handle IRWLLS, WLLS, parameter extraction and filtering |
 | **Extras**  |  found in 'PyDesigner/Extras'  |
 | `des2dke.m` | legacy MATLAB script for converting PyDesigner processed file to DKE-compatible input for validation |
-| `dke_parameters.txt` | DKE parameters file, used by des2dke.m to activate DKE compatibility |
+| `dke_parameters.txt` | DKE parameters file, used by `des2dke.m` to activate DKE compatibility |
 
 ## Future Plans
 PyDesigner is still in early stages of development. Release of a stable build will allow us to explore extending the pipeline even further with the inclusion of (in no particular order of preference):
