@@ -14,7 +14,6 @@ and 2) this is a developmental cycle with no papers to cite back on.
   <img src="https://avatars1.githubusercontent.com/u/47674287?s=400&u=9ca45aeafe30730e26fb70865c14e736f3a4dabf&v=4" alt="MAMA Logo" width="384">
 </p>
 
-
 PyDesigner is a complete Python port of NYU's DESIGNER pipeline for preprocessing diffusion MRI images (dMRI). This work was motivated by:
 
 * Minimization of **dependencies** to make it easier to deploy
@@ -314,7 +313,6 @@ There are several files in this package that allow the two segemnts to flow smoo
 | **Extras**  |  found in 'PyDesigner/Extras'  |
 | `des2dke.m` | legacy MATLAB script for converting PyDesigner processed file to DKE-compatible input for validation |
 | `dke_parameters.txt` | DKE parameters file, used by des2dke.m to activate DKE compatibility |
-
 
 ## Future Plans
 PyDesigner is still in early stages of development. Release of a stable build will allow us to explore extending the pipeline even further with the inclusion of (in no particular order of preference):
