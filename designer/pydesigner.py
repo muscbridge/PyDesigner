@@ -191,6 +191,10 @@ parser.add_argument('--pe_dir', metavar='<phase encoding direction>',
                     'in dwipreproc. Can be signed axis number, (-0,1,+2) '
                     'axis designator (RL, PA, IS), or '
                     'NIfTI axis codes (i-,j,k)')
+parser.add_argument('--nthreads', type=int,
+                    help='Number of threads to use for computation. '
+                    'Note that using too many threads will cause a slow-'
+                    'down.')
 parser.add_argument('--resume', action='store_true',
                     help='Continue from an aborted or partial previous '
                     'run of pydesigner.')
@@ -268,7 +272,6 @@ if args.nofit:
 if not args.denoise:
     stdmsg='No --denoise but '
     if args.extent != '5,5,5':
-        print(args)
         warningmsg+=stdmsg+'--extent given; overriding with --denoise\n'
         args.denoise = True
     if args.rician:
@@ -356,6 +359,9 @@ filetable['outpath'] = outpath
 # so far
 filetable['HEAD'] = filetable['dwi']
 
+if args.nthreads and args.verbose:
+    print('Using ' + str(args.nthreads) + ' threads.')
+
 #----------------------------------------------------------------------
 # Run Denoising
 #----------------------------------------------------------------------
@@ -387,6 +393,9 @@ if args.denoise:
         if args.extent:
             denoise_args.append('-extent')
             denoise_args.append(args.extent)
+        if args.nthreads:
+            denoise_args.append('-nthreads')
+            denoise_args.append(str(args.nthreads))
         denoise_args.append(filetable['dwi'].getFull())
         denoise_args.append(denoised)
         completion = subprocess.run(denoise_args)
@@ -419,6 +428,9 @@ if args.degibbs:
                                 'change output destination.')
         if not args.verbose:
             degibbs_args.append('-quiet')
+        if args.nthreads:
+            degibbs_args.append('-nthreads')
+            degibbs_args.append(str(args.nthreads))
         degibbs_args.append(filetable['HEAD'].getFull())
         degibbs_args.append(degibbs)
         completion = subprocess.run(degibbs_args)
@@ -517,12 +529,18 @@ if args.mask:
         mask_arg = ['dwiextract', '-force', '-fslgrad',
                        filetable['dwi'].getBVEC(), filetable['dwi'].getBVAL(),
                        '-bzero']
+        if args.nthreads:
+            mask_arg.append('-nthreads')
+            mask_arg.append(str(args.nthreads))
         if not args.verbose:
             mask_arg.append('-quiet')
         mask_arg.extend([filetable['HEAD'].getFull(), B0_full])
         completion = subprocess.run(mask_arg)
         # Compute mean B0s
         mask_arg = ['mrmath', '-force']
+        if args.nthreads:
+            mask_arg.append('-nthreads')
+            mask_arg.append(str(args.nthreads))
         if not args.verbose:
             mask_arg.append('-quiet')
         mask_arg.extend(['-axis', '3', B0_full, 'mean', B0_mean_full])
@@ -654,7 +672,10 @@ if not args.nofit:
         os.mkdir(fitqcpath)
 
         # create dwi fitting object
-        img = dp.DWI(filetable['HEAD'].getFull())
+        if not args.nthreads:
+            img = dp.DWI(filetable['HEAD'].getFull())
+        else:
+            img = dp.DWI(filetable['HEAD'].getFull(), args.nthreads)
         # detect outliers
         if not args.nooutliers:
             outliers, dt_est = img.irlls()
