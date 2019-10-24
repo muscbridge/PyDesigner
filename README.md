@@ -61,6 +61,7 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 [|__ _General Pipeline Flow_](#general-pipeline-flow)<br>
 [|__ _List of Files_](#list-of-files)<br>
 [|__ _Basic PyDesigner Flags_](#basic-pydesigner-flags)<br>
+**[Future Plans](#future-plans)**<br>
 **[Questions and Issues](#questions-and-issues)**<br>
 **[Meet the Team](#meet-the-team)**<br>
 
@@ -311,6 +312,14 @@ There are several files in this package that allow the two segemnts to flow smoo
 | `dirs10000.csv` | csv file containing 10,000 static directions for AKC correction and WMTI parameter extraction |
 | `dwidirs.py` | handles loading of static directions into `np.array` |
 | `dwipi.py` | main tensor fitting script to handle IRWLLS, WLLS, parameter extraction and filtering |
+
+## Future Plans
+PyDesigner is still in early stages of development. Release of a stable build will allow us to explore extending the pipeline even further with the inclusion of (in no particular order of preference):
+
+1. Publishing PyDesigner on [PyPi](https://pypi.org/) and [Conda](https://docs.conda.io/en/latest/)
+2. Docker container with FSL, MRTRIX3 and Python dependencies for deployment on HPC clusters and cross-platform compute capabilites across Linux, Mac OS and Microsoft Windows
+3. [Fiber ball imaging (FBI) for microstructural parameters. See [Fiber ball imaging](https://www.ncbi.nlm.nih.gov/pubmed/26432187), and [modeling white matter microstructure with fiber ball imaging](https://www.ncbi.nlm.nih.gov/pubmed/29660512) for more information
+4. Deterministic and probabilistic tractography
 
 ## Questions and Issues
 
