@@ -60,7 +60,6 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 **[Information for Developers](#information-for-developers)**<br>
 [|__ _General Pipeline Flow_](#general-pipeline-flow)<br>
 [|__ _List of Files_](#list-of-files)<br>
-[|__ _Basic PyDesigner Flags_](#basic-pydesigner-flags)<br>
 **[Future Plans](#future-plans)**<br>
 **[Questions and Issues](#questions-and-issues)**<br>
 **[Meet the Team](#meet-the-team)**<br>
