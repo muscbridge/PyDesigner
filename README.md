@@ -364,7 +364,7 @@ PyDesigner is a joint collarobation and as such consists of several developers.
     Benjamin Ades-Aron, MSc
 
     PhD Student
-    NYU MRI Biophysics Group
+    MRI Biophysics Group
     NYU School of Medicine
     New York University
 
@@ -385,7 +385,7 @@ PyDesigner is a joint collarobation and as such consists of several developers.
      Els Fieremans, PhD
 
      Assistant Professor
-     NYU MRI Biophysics Group
+     MRI Biophysics Group
      NYU School of Medicine
      New York University
 
@@ -395,7 +395,7 @@ PyDesigner is a joint collarobation and as such consists of several developers.
     Jelle Veraart, PhD
 
     Postdoctoral Researcher
-    NYU MRI Biophysics Group
+    MRI Biophysics Group
     NYU School of Medicine
     New York University
 
