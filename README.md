@@ -57,6 +57,11 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 [|__ _Before Running PyDesigner_](#before-running-pydesigner)<br>
 [|__ _To Run PyDesigner_](#to-run-pydesigner)<br>
 [|__ _Basic PyDesigner Flags_](#basic-pydesigner-flags)<br>
+**[Information for Developers](#information-for-developers)**<br>
+[|__ _General Pipeline Flow_](#general-pipeline-flow)<br>
+[|__ _List of Files_](#list-of-files)<br>
+[|__ _Basic PyDesigner Flags_](#basic-pydesigner-flags)<br>
+**[Questions and Issues](#questions-and-issues)**<br>
 **[Meet the Team](#meet-the-team)**<br>
 
 ## General Information
@@ -275,6 +280,37 @@ Flags are to be preceeded by `--`. For example, to parse a _denoise_ flag, one w
   |`fit_constraints`|specifies constraints for WLLS fitting; formatted n,n,n|
   |`verbose`  |prints out all output: recommended for debugging|
   |`adv`      |disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**|
+
+## Information for Developers
+This sections covers information on the various files provided in this package. Users contributing to the project should refer to this section to under the order of operation.
+
+### General Pipeline Flow
+The pipeline is designed to process NifTi acquisitions as a starting point, and end with DTI/DKI maps. This pipeline can be broken down into two important segments:
+
+1. Preprocessing
+2. Tensor estimation
+
+Each segment is responsible for unique sets of computations to produce useful metrics.
+
+### List of Files
+There are several files in this package that allow the two segemnts to flow smoothly. The table in this section lists all these files and their purpose.
+
+| File | Purpose |
+| :---------- | :- |
+|  **Main Script** |
+| `pydesigner.py` | main PyDesigner script that controls preprocessing steps and tensor fitting |
+| `Tensor_Fitting_Guide.ipynb` | a Jupyter Notebook that details functioning of `fitting/dwi.py` for tensor fitting only|
+| **Preprocessing** in `fitting/preprocessing` |
+| `preparation.py` | adds utilities for preparing the data for eddy and analysis |
+| `rician.py` | performs Rician correction on a DWI with a noisemap from MRTRIX3's `dwipreproc` |
+| `smoothing.py` | applies nan-smoothing to input DWI |
+| `ulti.py` | utilities for the command-line interface and file I/O handling |
+|**Tensor Estimation** in `designer/fitting/`|
+| `dirs30.csv` | csv file containing 30 static directions for constraint creation |
+| `dirs256.csv` | csv file containing 250 static directions for parameter extraction  |
+| `dirs10000.csv` | csv file containing 10,000 static directions for AKC correction and WMTI parameter extraction |
+| `dwidirs.py` | handles loading of static directions into `np.array` |
+| `dwipi.py` | main tensor fitting script to handle IRWLLS, WLLS, parameter extraction and filtering |
 
 ## Questions and Issues
 
