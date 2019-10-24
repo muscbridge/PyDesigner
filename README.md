@@ -188,7 +188,6 @@ pip install [package name]
 Completion of this step will ready your system for dMRI processing. Let's go!
 
 ### PyDesigner
-
 On the [main PyDesigner Github page](https://github.com/m-ama/PyDesigner), click the green "Clone or download" button to access the latest PyDesigner build. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip. 
 
 PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
@@ -196,15 +195,14 @@ PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
 **Note:** If you need a stable and tested build, download the most recent release from the [Release tab](https://github.com/m-ama/PyDesigner/releases). Click on `Source code (zip)` link and decompress (unzip) to any folder you desire.
 
 ## Running PyDesigner
+With PyDesigner installed and ready to run, let's floor the pedal.
 
 ### Before Running PyDesigner
-
 Ensure that all your DICOMS are converted to NifTi files and that all diffusion series have a valid `.json` file, as well as `.bvec` and `.bval` files where applicable. Dicom to nifti conversion can be done with [dcm2niix available for download here](https://github.com/rordenlab/dcm2niix). 
 
 Ensure that none of your file or folder names contain a period (aside from the file extension; eg. DKI.nii). 
 
 ### To Run PyDesigner
-
 Switch to the appropriate conda environment; run `conda activate dmri` if you followed this guide. Then, for any given subject, call PyDesigner with the relevant flags:
 
 ```
@@ -254,7 +252,6 @@ python /Path/to/pydesigner.py \
 **Note**: Using `--undistort` and `--topup` without supplying top up data will return an error.
 
 ### Basic PyDesigner Flags
-
 Flags are to be preceeded by `--`. For example, to parse a _denoise_ flag, one would type the flag as `--denoise`.
 
   | Flag        | Description |
@@ -319,17 +316,15 @@ PyDesigner is still in early stages of development. Release of a stable build wi
 
 1. Publishing PyDesigner on [PyPi](https://pypi.org/) and [Conda](https://docs.conda.io/en/latest/)
 2. Docker container with FSL, MRTRIX3 and Python dependencies for deployment on HPC clusters and cross-platform compute capabilites across Linux, Mac OS and Microsoft Windows
-3. [Fiber ball imaging (FBI) for microstructural parameters. See [Fiber ball imaging](https://www.ncbi.nlm.nih.gov/pubmed/26432187), and [modeling white matter microstructure with fiber ball imaging](https://www.ncbi.nlm.nih.gov/pubmed/29660512) for more information
+3. Fiber ball imaging (FBI) for microstructural parameters. See [Fiber ball imaging](https://www.ncbi.nlm.nih.gov/pubmed/26432187), and [modeling white matter microstructure with fiber ball imaging](https://www.ncbi.nlm.nih.gov/pubmed/29660512) for more information
 4. Deterministic and probabilistic tractography
 
 ## Questions and Issues
-
 For any questions not answered in the above documentation, see the contacts below.
 
 To report any bugs or issues, see [the Issues tool on the PyDesigner GitHub page.](https://github.com/m-ama/PyDesigner/issues)
 
 ## Meet the Team
-
 PyDesigner is a joint collarobation and as such consists of several developers.
 
 ### Developers
