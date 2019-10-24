@@ -300,17 +300,21 @@ There are several files in this package that allow the two segemnts to flow smoo
 |  **Main Script** |
 | `pydesigner.py` | main PyDesigner script that controls preprocessing steps and tensor fitting |
 | `Tensor_Fitting_Guide.ipynb` | a Jupyter Notebook that details functioning of `fitting/dwi.py` for tensor fitting only|
-| **Preprocessing** in `fitting/preprocessing` |
+| **Preprocessing** | found in `PyDesigner/designer/preprocessing` |
 | `preparation.py` | adds utilities for preparing the data for eddy and analysis |
 | `rician.py` | performs Rician correction on a DWI with a noisemap from MRTRIX3's `dwipreproc` |
 | `smoothing.py` | applies nan-smoothing to input DWI |
 | `ulti.py` | utilities for the command-line interface and file I/O handling |
-|**Tensor Estimation** in `designer/fitting/`|
+| **Tensor Estimation** | found in `PyDesigner/designer/fitting/`|
 | `dirs30.csv` | csv file containing 30 static directions for constraint creation |
 | `dirs256.csv` | csv file containing 250 static directions for parameter extraction  |
 | `dirs10000.csv` | csv file containing 10,000 static directions for AKC correction and WMTI parameter extraction |
 | `dwidirs.py` | handles loading of static directions into `np.array` |
 | `dwipi.py` | main tensor fitting script to handle IRWLLS, WLLS, parameter extraction and filtering |
+| **Extras**  |  found in 'PyDesigner/Extras'  |
+| `des2dke.m` | legacy MATLAB script for converting PyDesigner processed file to DKE-compatible input for validation |
+| `dke_parameters.txt` | DKE parameters file, used by des2dke.m to activate DKE compatibility |
+
 
 ## Future Plans
 PyDesigner is still in early stages of development. Release of a stable build will allow us to explore extending the pipeline even further with the inclusion of (in no particular order of preference):
