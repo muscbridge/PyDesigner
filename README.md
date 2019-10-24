@@ -287,7 +287,7 @@ To report any bugs or issues, see [the Issues tool on the PyDesigner GitHub page
 PyDesigner is a joint collarobation and as such consists of several developers.
 
 ### Developers
-<img src="https://avatars0.githubusercontent.com/u/13654344?s=400&v=4" align="left"
+<img src="https://avatars3.githubusercontent.com/u/13654344?s=400&u=c318d7dcc292486b87bc5c7e81bd8e02947d834e&v=4" align="left"
      title="GitHub: Siddhartha Dhiman" height="163"> 
 
     Siddhartha Dhiman, MSc
