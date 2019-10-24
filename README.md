@@ -35,7 +35,7 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 <p align="center">
   <a href="http://www.diffusion-mri.com/">
     <img src="https://greatoakscharter.org/wp-content/uploads/2017/03/NYU-Logo.png"
-         alt="Sponsored by Evil Martians" width="256">
+         alt="NYU MRI Biophysics Group" width="256">
   </a>
 </p>
 
