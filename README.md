@@ -11,7 +11,7 @@ any data analysis, speculation, or writing papers: 1) not all citations have bee
 and 2) this is a developmental cycle with no papers to cite back on.
 ```
 <p align="center">
-  <img src="https://avatars1.githubusercontent.com/u/47674287?s=400&u=9ca45aeafe30730e26fb70865c14e736f3a4dabf&v=4" alt="MAMA Logo" width="256">
+  <img src="https://avatars1.githubusercontent.com/u/47674287?s=400&u=9ca45aeafe30730e26fb70865c14e736f3a4dabf&v=4" alt="MAMA Logo" width="384">
 </p>
 
 
@@ -30,13 +30,13 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 
 <p align="center">
   <a href="https://medicine.musc.edu/departments/centers/cbi/dki">
-    <img src="https://tfcbt2.musc.edu/assets/musc_logo-69ee0f1483cd4d8772c5d114f89a0aace954f2f4a299d10f814fc532c7b3c719.png" alt="MUSC DKI Page" width="128">
+    <img src="https://tfcbt2.musc.edu/assets/musc_logo-69ee0f1483cd4d8772c5d114f89a0aace954f2f4a299d10f814fc532c7b3c719.png" alt="MUSC DKI Page" width="256">
 </p>
 
 <p align="center">
   <a href="http://www.diffusion-mri.com/">
     <img src="https://greatoakscharter.org/wp-content/uploads/2017/03/NYU-Logo.png"
-         alt="Sponsored by Evil Martians" width="128">
+         alt="Sponsored by Evil Martians" width="256">
   </a>
 </p>
 
