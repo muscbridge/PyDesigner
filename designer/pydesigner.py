@@ -279,7 +279,7 @@ if not args.denoise:
         args.denoise = True
 
 # Incompatible eddy args
-if not args.topup and not args.rpe_none:
+if not args.topup and not args.rpe_none and args.undistort:
     errmsg+='Cannot undistort without rpe selection'
 elif args.rpe_pair:
     errmsg+='We are sorry but this feature is unsupported for now.'
