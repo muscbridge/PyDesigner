@@ -290,40 +290,80 @@ PyDesigner is a joint collarobation and as such consists of several developers.
 <img src="https://avatars0.githubusercontent.com/u/13654344?s=400&v=4" align="left"
      title="GitHub: Siddhartha Dhiman" height="163"> 
 
-    Siddhartha Dhiman
+    Siddhartha Dhiman, MSc
 
     Research Specialist
+    MUSC Advance Image Analysis
     Department of Neuroscience
     Medical University of South Carolina<
-    dhiman@musc.edu
 
 <img src="https://avatars2.githubusercontent.com/u/26722533?s=400&v=4" align="right"
      title="GitHub: Joshua Teves" height="163"> 
 
-     Joshua Teves
+     Joshua Teves, BSc
 
      Systems Programmer
+     MUSC Advance Image Analysis
      Department of Neuroscience
      Medical University of South Carolina
-     teves@musc.edu
 
 <img src="https://avatars1.githubusercontent.com/u/47329645?s=460&v=4" align="left"
      title="GitHub: Kayti Keith" height="163">
 
-     Kayti Keith
+     Kayti Keith, BSc
 
      Research Specialist
+     MUSC Advance Image Analysis
      Department of Neuroscience
      Medical University of South Carolina
-     keithka@musc.edu
 
-### Advisor
-<img src="https://muschealth.org/MUSCApps/HealthAssets/ProfileImages/jej50.jpg" align="right"
+<img src="http://www.diffusion-mri.com/sites/default/files/styles/medium/public/pictures/picture-48-1455813197.jpg?itok=B4goKbp-" align="right"
+  title="NYU MRI Biophysics Group: Benjamin Ades-Aron" height="163">
+
+    Benjamin Ades-Aron, MSc
+
+    PhD Student
+    NYU MRI Biophysics Group
+    NYU School of Medicine
+    New York University
+
+### Advisors
+<img src="https://muschealth.org/MUSCApps/HealthAssets/ProfileImages/jej50.jpg" align="left"
      title="MUSC: Jens Jensen" height="163">
 
-     Jens Jensen, Ph.D.
+     Jens Jensen, PhD
 
      Professor
+     MUSC Advance Image Analysis
      Department of Neuroscience
      Medical University of South Carolina
-     <email placeholder>
+
+<img src="http://www.diffusion-mri.com/sites/default/files/styles/medium/public/pictures/picture-2-1455646448.jpg?itok=ppO8NJs6" align="right"
+     title="NYU MRI Biophysics Group: Els Fieremans" height="163">
+
+     Els Fieremans, PhD
+
+     Assistant Professor
+     NYU MRI Biophysics Group
+     NYU School of Medicine
+     New York University
+
+<img src="http://www.diffusion-mri.com/sites/default/files/styles/medium/public/pictures/picture-45-1455813153.jpg?itok=jnWxCQol" align="left"
+  title="NYU MRI Biophysics Group: Jelle Veraart" height="163">
+
+    Jelle Veraart, PhD
+
+    Postdoctoral Researcher
+    NYU MRI Biophysics Group
+    NYU School of Medicine
+    New York University
+
+<img src="https://media.licdn.com/dms/image/C4D03AQHepgjpxgV2Uw/profile-displayphoto-shrink_800_800/0?e=1577318400&v=beta&t=k9IEREGye7VLB2FkNFzOVBFl1RJW1Rydt5JKh1V4oFk" align="right"
+  title="MUSC: Vitria Adisetiyo" height="163">
+
+    Vitria Adisetiyo, PhD
+
+    Senior Scientist
+    MUSC Advance Image Analysis
+    Department of Neuroscience
+    Medical University of South Carolina
