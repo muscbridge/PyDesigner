@@ -334,7 +334,7 @@ PyDesigner is a joint collarobation and as such consists of several developers.
     Siddhartha Dhiman, MSc
 
     Research Specialist
-    MUSC Advance Image Analysis
+    MUSC Advanced Image Analysis
     Department of Neuroscience
     Medical University of South Carolina<
 
@@ -344,7 +344,7 @@ PyDesigner is a joint collarobation and as such consists of several developers.
      Joshua Teves, BSc
 
      Systems Programmer
-     MUSC Advance Image Analysis
+     MUSC Advanced Image Analysis
      Department of Neuroscience
      Medical University of South Carolina
 
@@ -354,7 +354,7 @@ PyDesigner is a joint collarobation and as such consists of several developers.
      Kayti Keith, BSc
 
      Research Specialist
-     MUSC Advance Image Analysis
+     MUSC Advanced Image Analysis
      Department of Neuroscience
      Medical University of South Carolina
 
@@ -375,7 +375,7 @@ PyDesigner is a joint collarobation and as such consists of several developers.
      Jens Jensen, PhD
 
      Professor
-     MUSC Advance Image Analysis
+     MUSC Advanced Image Analysis
      Department of Neuroscience
      Medical University of South Carolina
 
@@ -405,6 +405,6 @@ PyDesigner is a joint collarobation and as such consists of several developers.
     Vitria Adisetiyo, PhD
 
     Senior Scientist
-    MUSC Advance Image Analysis
+    MUSC Advanced Image Analysis
     Department of Neuroscience
     Medical University of South Carolina
