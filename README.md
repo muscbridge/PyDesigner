@@ -281,7 +281,7 @@ Flags are to be preceeded by `--`. For example, to parse a _denoise_ flag, one w
   |`adv`      |disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**|
 
 ## Information for Developers
-This sections covers information on the various files provided in this package. Users contributing to the project should refer to this section to under the order of operation.
+This sections covers information on the various files provided in this package. Users contributing to the project should refer to this section to understand the order of operations.
 
 ### General Pipeline Flow
 The pipeline is designed to process NifTi acquisitions as a starting point, and end with DTI/DKI maps. This pipeline can be broken down into two important segments:
