@@ -42,6 +42,44 @@ def fix_bval(bvalfile):
     with open(bvalfile, 'w') as f:
         f.write(data)
 
+def make_simple_mif(filetable):
+    """Makes a single .mif from the HEAD dwi file
+
+    Parameters
+    ----------
+    filetable :dict:
+        The filetable that pydesigner.py uses to track files
+
+    Returns
+    -------
+    None, writes file
+    """
+    if not op.exists(filetable['dwi'].getJSON()):
+        raise Exception('DWI does not have a .json file to use for eddy')
+
+    #coerce bval into mrtrix3-friendly format
+    fix_bval(op.join(filetable['dwi'].getPath(),
+             filetable['dwi'].getName() + '.bval'))
+    finalpath = filetable['outpath']
+    finalmif = op.join(finalpath, 'HEADmif.mif')
+
+    dwi_convert_args = ['mrconvert',
+                        '-json_import',
+                        filetable['dwi'].getJSON(),
+                        '-fslgrad',
+                        filetable['dwi'].getBVEC(),
+                        filetable['dwi'].getBVAL(),
+                        filetable['dwi'].getFull(),
+                        '-quiet',
+                        finalmif]
+
+    completion = subprocess.run(dwi_convert_args)
+
+    if completion.returncode != 0:
+        raise Exception('topup conversion failed, please see above')
+
+    filetable['dwimif'] = finalmif
+
 def make_se_epi(filetable):
     """Makes a single spin-echo epi from the topup and the dwi
 

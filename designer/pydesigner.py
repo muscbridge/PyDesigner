@@ -278,14 +278,16 @@ if not args.denoise:
         warningmsg+=stdmsg+'--rician given; overriding with --denoise\n'
         args.denoise = True
 
+# Incompatible eddy args
+if not args.topup and not args.rpe_none:
+    errmsg+='Cannot undistort without rpe selection'
+elif args.rpe_pair:
+    errmsg+='We are sorry but this feature is unsupported for now.'
+
 # Check to make sure CSF mask exists if given
 if args.csfmask:
     if not op.exists(args.csfmask):
         errmsg+='--csfmask file '+args.csfmask+' not found\n'
-
-# Check that topup is given if --undistort is
-if args.undistort and not args.topup:
-    errmsg+='--undistort given but not topup\n'
 
 # Check output directory exists if given
 if args.output:
@@ -460,7 +462,10 @@ if args.undistort:
     # check to see if this already exists
     if not (args.resume and op.exists(undistorted_full)):
         # prepare; makes se-epi.mif
-        preparation.make_se_epi(filetable)
+        if args.topup:
+            preparation.make_se_epi(filetable)
+        else:
+            preparation.make_simple_mif(filetable)
 
         # system call
         dwipreproc_args = ['dwipreproc']
@@ -488,11 +493,14 @@ if args.undistort:
             # half
             repol_string += '--slm=linear'
         dwipreproc_args.append(repol_string)
-        dwipreproc_args.append('-se_epi')
-        dwipreproc_args.append(filetable['se-epi'])
+        if args.topup:
+            dwipreproc_args.append('-se_epi')
+            dwipreproc_args.append(filetable['se-epi'])
         # Note: we skip align_seepi because it's handled in make_se_epi
         dwipreproc_args.append(filetable['dwimif'])
         dwipreproc_args.append(undistorted_full)
+        if args.verbose:
+            print(*dwipreproc_args)
         completion = subprocess.run(dwipreproc_args)
         if completion.returncode != 0:
             raise Exception('dwipreproc failed, please look above for '
