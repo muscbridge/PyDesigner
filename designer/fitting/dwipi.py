@@ -1918,17 +1918,15 @@ class medianFilter(object):
             pdiff = np.absolute((self.Img[cartIdx[0, i],
                                           cartIdx[1, i],
                                           cartIdx[2, i]]) - \
-                                np.mean(patchImg)) / self.Img[cartIdx[0,i],
-                                                              cartIdx[1,i],
-                                                              cartIdx[2,i]]
+                                np.mean(patchImg)) / \
+                    self.Img[cartIdx[0,i], cartIdx[1,i], cartIdx[2,i]]
             if pdiff > self.Threshold:
                 # Mark outlier mask voxel as true
                 self.OutlierMask[cartIdx[0, i],
                                  cartIdx[1, i],
                                  cartIdx[2, i]] = True
-
-        # Create (3 x nvox) cartesian coordinate representation of image
-        # within a brainmask
+        # Create (3 x nvox) cartesian coordinate representation of
+        # image within a brainmask
         self.CartIdx = np.array(np.where(self.OutlierMask > 0))
         nvox = self.CartIdx.shape[1]
         self.PatchIdx = np.zeros(nvox)
@@ -2060,6 +2058,7 @@ class medianFilter(object):
                       unit='vox',
                       ncols=tqdmWidth)
         for i in inputs:
+            print(i)
             if self.PatchIdx[i] > 0:
                 # Index beginning and ending of patch
                 Ib = self.CartIdx[0, i] - d2move
@@ -2074,9 +2073,6 @@ class medianFilter(object):
                                                   Jb:Je+1,
                                                   Kb:Ke+1]), 13)
                 elif self.Connectivity == 'face':
-                    print([Ib, Ie])
-                    print(self.CartIdx[1, i])
-                    print(self.CartIdx[2, i])
                     patchImg = img[[Ib, Ie],
                                    self.CartIdx[1, i],
                                    self.CartIdx[2, i]]
