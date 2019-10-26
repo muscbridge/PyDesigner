@@ -1890,7 +1890,7 @@ class medianFilter(object):
                       desc='Filter: Outlier Mask    ',
                       unit='vox',
                       ncols=tqdmWidth)
-        self.OutlierMask = np.zeros(self.Img.shape, dtype=bool)
+        self.OutlierMask = np.zeros(self.BrainMask.shape, dtype=bool)
         for i in inputs:
             # Index beginning and ending of patch
             Ib = cartIdx[0, i] - d2move
@@ -2065,7 +2065,6 @@ class medianFilter(object):
                       unit='vox',
                       ncols=tqdmWidth)
         for i in inputs:
-            print(i)
             if self.PatchIdx[i] > 0:
                 # Index beginning and ending of patch
                 Ib = self.CartIdx[0, i] - d2move
@@ -2103,10 +2102,10 @@ class medianFilter(object):
                         self.CartIdx[1, i],
                         self.CartIdx[2, i]] = patchImg[
                         self.PatchIdx[i]]
-            # Unpad image
-            img = np.delete(img, [0, img.shape[0] - 1], axis = 0)
-            img = np.delete(img, [0, img.shape[1] - 1], axis = 1)
-            img = np.delete(img, [0, img.shape[2] - 1], axis = 2)
+        # Unpad image
+        img = np.delete(img, [0, img.shape[0] - 1], axis = 0)
+        img = np.delete(img, [0, img.shape[1] - 1], axis = 1)
+        img = np.delete(img, [0, img.shape[2] - 1], axis = 2)
         return img
 
 
