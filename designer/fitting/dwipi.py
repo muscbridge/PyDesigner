@@ -1839,14 +1839,22 @@ class medianFilter(object):
                 input reference image used to compute an outlier mask
     brainmask:  3D boolean numpy array
                 brain mask to speed up calculation
-    multiplier: double with minimum at 0 | default: 1.5
-                sensitivity to detecting outliers; lower value increases
-                sensitivity.
+    tissueth:   double | default: None
+                threshold at which to segment tissue
+    th:         double | default = 0.5
+                percentage difference of a voxel value compared to
+                surrounding voxels at which it is marked as an
+                outlier. Lowering this number increases sensitivity.
     sz:         integer | default: 3
                 size of 3D searching matrix; sz=3 corresponds to a 3x3x3
                 searching matrix
     conn:       string| default: 'face'
                 connectivity to use in computing median
+    bias:       'left', 'right', or 'rand'
+               If the number of voxels in patch is even (for median 
+               calculation), 'left' will pick a median to the left
+               of mean and 'right' will pick a median to the right of
+               mean. 'rand' will randomny pick a bias.
     """
     def __init__(self, img, brainmask=None, tissueth=None,
                  th=0.5, sz=3, conn='face', bias='rand'):
@@ -1855,6 +1863,8 @@ class medianFilter(object):
         self.Size = sz
         self.Connectivity = conn
         self.Img = np.array(img)
+        if self.TissueThreshold < 0:
+            raise Exception('Tissue threshold cannot be set below 0')
         if self.Threshold > 1 or self.Threshold < 0:
             raise Exception('Threshold cannot be less than 0 or greater '
                             'than 1. Please specifty a between the range '
