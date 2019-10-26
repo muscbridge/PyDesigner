@@ -1848,21 +1848,28 @@ class medianFilter(object):
     conn:       string| default: 'face'
                 connectivity to use in computing median
     """
-    def __init__(self, img, brainmask=None, th=0.5, sz=3,
-                 conn='face', bias='rand'):
+    def __init__(self, img, brainmask=None, tissueth=None,
+                 th=0.5, sz=3, conn='face', bias='rand'):
         self.Threshold = th
+        self.TissueThreshold = tissueth
         self.Size = sz
         self.Connectivity = conn
         self.Img = np.array(img)
+        if self.Threshold > 1 or self.Threshold < 0:
+            raise Exception('Threshold cannot be less than 0 or greater '
+                            'than 1. Please specifty a between the range '
+                            '[0 1].')
         if brainmask is None:
             self.BrainMask = np.ones((self.Img.shape[0], self.Img.shape[
                 1], self.Img.shape[2]), dtype=bool, order='F')
         else:
             self.BrainMask = np.array(brainmask).astype(bool)
-        if self.Threshold > 1 or self.Threshold < 0:
-            raise Exception('Threshold cannot be less than 0 or greater '
-                            'than 1. Please specifty a between the range '
-                            '[0 1].')
+        if tissueth is not None:
+            self.TissueMask = self.Img > self.TissueThreshold
+            self.BrainMask = np.logical_and(
+                self.BrainMask, self.TissueMask)
+        else:
+            self.TissueMask = self.BrainMask
         # Get box filter properties
         centralIdx = np.median(range(self.Size)).astype(int)
         # Add 1 to central idx because first index starts with zero
