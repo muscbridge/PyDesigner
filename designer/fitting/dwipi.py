@@ -6,7 +6,7 @@ import os
 import random as rnd
 import warnings
 import cvxpy as cvx
- 
+import nibabel as nib
 import numpy as np
 from joblib import Parallel, delayed
 from scipy.special import expit as sigmoid
