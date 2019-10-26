@@ -1929,8 +1929,8 @@ class medianFilter(object):
 
         # Create (3 x nvox) cartesian coordinate representation of image
         # within a brainmask
-        cartIdx = np.array(np.where(self.OutlierMask > 0))
-        nvox = cartIdx.shape[1]
+        self.CartIdx = np.array(np.where(self.OutlierMask > 0))
+        nvox = self.CartIdx.shape[1]
         self.PatchIdx = np.zeros(nvox)
         inputs = tqdm(range(nvox),
                       desc='Filter: Find Replacement',
@@ -1939,12 +1939,12 @@ class medianFilter(object):
         cntSkip = 0
         for i in inputs:
             # Index beginning and ending of patch
-            Ib = cartIdx[0, i] - d2move
-            Ie = cartIdx[0, i] + d2move
-            Jb = cartIdx[1, i] - d2move
-            Je = cartIdx[1, i] + d2move
-            Kb = cartIdx[2, i] - d2move
-            Ke = cartIdx[2, i] + d2move
+            Ib = self.CartIdx[0, i] - d2move
+            Ie = self.CartIdx[0, i] + d2move
+            Jb = self.CartIdx[1, i] - d2move
+            Je = self.CartIdx[1, i] + d2move
+            Kb = self.CartIdx[2, i] - d2move
+            Ke = self.CartIdx[2, i] + d2move
             if self.Connectivity == 'all':
                 # Remove 14th (centroid) element
                 patchViol = np.delete(np.ravel(
@@ -1955,22 +1955,22 @@ class medianFilter(object):
                 connLimit = 26
             elif self.Connectivity == 'face':
                 patchViol = self.OutlierMask[[Ib, Ie],
-                                             cartIdx[1, i],
-                                             cartIdx[2, i]]
+                                             self.CartIdx[1, i],
+                                             self.CartIdx[2, i]]
                 patchViol = np.hstack((patchViol,
-                                       self.OutlierMask[cartIdx[0, i],
+                                       self.OutlierMask[self.CartIdx[0, i],
                                                         [Jb, Je],
-                                                        cartIdx[2, i]]))
+                                                        self.CartIdx[2, i]]))
                 patchViol = np.hstack((patchViol,
-                                       self.OutlierMask[cartIdx[0, i],
-                                                        cartIdx[1, i],
+                                       self.OutlierMask[self.CartIdx[0, i],
+                                                        self.CartIdx[1, i],
                                                         [Kb, Ke]]))
-                patchImg = self.Img[[Ib, Ie], cartIdx[1, i], cartIdx[2, i]]
+                patchImg = self.Img[[Ib, Ie], self.CartIdx[1, i], self.CartIdx[2, i]]
                 patchImg = np.hstack((patchImg,
-                                      self.Img[cartIdx[0, i], [Jb, Je],
-                                               cartIdx[2, i]]))
-                patchImg = np.hstack((patchImg, self.Img[cartIdx[0, i],
-                                                         cartIdx[1, i],
+                                      self.Img[self.CartIdx[0, i], [Jb, Je],
+                                               self.CartIdx[2, i]]))
+                patchImg = np.hstack((patchImg, self.Img[self.CartIdx[0, i],
+                                                         self.CartIdx[1, i],
                                                          [Kb, Ke]]))
                 nVoil = np.sum(patchViol)
                 # Here a check is performed to compute the number of
@@ -2054,53 +2054,52 @@ class medianFilter(object):
         d2move = np.int(np.abs(self.Size - (centralIdx + 1)))
         # Pad image and Outlier again
         img = np.pad(img, d2move, 'constant', constant_values=np.nan)
-        self.OutlierMask = np.pad(self.OutlierMask, d2move, 'constant',
-                                  constant_values=np.nan)
-        # Create (3 x nvox) cartesian coordinate representation of image
-        # the outlier mask
-        cartIdx = np.array(np.where(self.OutlierMask))
-        nvox = cartIdx.shape[1]
+        nvox = self.CartIdx.shape[1]
         inputs = tqdm(range(nvox),
                       desc='Filter: Substitution    ',
                       unit='vox',
                       ncols=tqdmWidth)
         for i in inputs:
-            # Index beginning and ending of patch
-            Ib = cartIdx[0, i] - d2move
-            Ie = cartIdx[0, i] + d2move
-            Jb = cartIdx[1, i] - d2move
-            Je = cartIdx[1, i] + d2move
-            Kb = cartIdx[2, i] - d2move
-            Ke = cartIdx[2, i] + d2move
-            if self.Connectivity == 'all':
-                # Remove 14th (centroid) element
-                patchImg = np.delete(np.ravel(img[Ib:Ie+1, Jb:Je+1,
-                                              Kb:Ke+1]), 13)
-            elif self.Connectivity == 'face':
-                print(cartIdx[:,i])
-                patchImg = img[[Ib, Ie], cartIdx[1, i], cartIdx[2, i]]
-                patchImg = np.hstack((patchImg, img[cartIdx[0, i],
-                                                    [Jb, Je],
-                                                    cartIdx[2, i]]))
-                patchImg = np.hstack((patchImg, img[cartIdx[0, i],
-                                                    cartIdx[1, i],
-                                                    [Kb, Ke]]))
-            pdiff = np.absolute((self.Img[cartIdx[0, i],
-                                          cartIdx[1, i],
-                                          cartIdx[2, i]]) - \
-                                np.mean(patchImg)) / self.Img[
-                        cartIdx[0, i],
-                        cartIdx[1, i],
-                        cartIdx[2, i]]
-            if pdiff > self.Threshold:
-                # Mark outlier mask voxel as true
-                self.OutlierMask[cartIdx[0, i],
-                                 cartIdx[1, i],
-                                 cartIdx[2, i]] = True
             if self.PatchIdx[i] > 0:
-                img[cartIdx[0, i],
-                    cartIdx[1, i],
-                    cartIdx[2, i]] = patchImg[self.PatchIdx[i]]
+                # Index beginning and ending of patch
+                Ib = self.CartIdx[0, i] - d2move
+                Ie = self.CartIdx[0, i] + d2move
+                Jb = self.CartIdx[1, i] - d2move
+                Je = self.CartIdx[1, i] + d2move
+                Kb = self.CartIdx[2, i] - d2move
+                Ke = self.CartIdx[2, i] + d2move
+                if self.Connectivity == 'all':
+                    # Remove 14th (centroid) element
+                    patchImg = np.delete(np.ravel(img[Ib:Ie+1,
+                                                  Jb:Je+1,
+                                                  Kb:Ke+1]), 13)
+                elif self.Connectivity == 'face':
+                    print([Ib, Ie])
+                    print(self.CartIdx[1, i])
+                    print(self.CartIdx[2, i])
+                    patchImg = img[[Ib, Ie],
+                                   self.CartIdx[1, i],
+                                   self.CartIdx[2, i]]
+                    patchImg = np.hstack((patchImg,
+                                          img[self.CartIdx[0, i],
+                                              [Jb,Je],
+                                              self.CartIdx[2, i]]))
+                    patchImg = np.hstack(
+                        (patchImg, img[self.CartIdx[0, i],
+                                       self.CartIdx[1, i],
+                                       [Kb, Ke]]))
+                pdiff = np.absolute((img[self.CartIdx[0, i],
+                                              self.CartIdx[1, i],
+                                              self.CartIdx[2, i]]) - \
+                                    np.mean(patchImg)) / img[
+                            self.CartIdx[0, i],
+                            self.CartIdx[1, i],
+                            self.CartIdx[2, i]]
+                if pdiff > weight * self.Threshold:
+                    img[self.CartIdx[0, i],
+                        self.CartIdx[1, i],
+                        self.CartIdx[2, i]] = patchImg[
+                        self.PatchIdx[i]]
             # Unpad image
             img = np.delete(img, [0, img.shape[0] - 1], axis = 0)
             img = np.delete(img, [0, img.shape[1] - 1], axis = 1)
