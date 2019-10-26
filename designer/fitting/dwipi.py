@@ -6,7 +6,7 @@ import os
 import random as rnd
 import warnings
 import cvxpy as cvx
-import nibabel as nib
+ 
 import numpy as np
 from joblib import Parallel, delayed
 from scipy.special import expit as sigmoid
@@ -1725,7 +1725,7 @@ class medianFilter(object):
             np.multiply(self.Img, self.BrainMask) > 0))
         nvox = cartIdx.shape[1]
         inputs = tqdm(range(nvox),
-                      desc='Filter: Outlier Mask    ',
+                      desc='Median Outlier Mask     ',
                       unit='vox',
                       ncols=tqdmWidth)
         self.OutlierMask = np.zeros(self.BrainMask.shape, dtype=bool)
@@ -1776,7 +1776,7 @@ class medianFilter(object):
         nvox = self.CartIdx.shape[1]
         self.PatchIdx = np.zeros(nvox)
         inputs = tqdm(range(nvox),
-                      desc='Filter: Find Replacement',
+                      desc='Locating Replacements   ',
                       unit='vox',
                       ncols=tqdmWidth)
         cntSkip = 0
@@ -1856,7 +1856,7 @@ class medianFilter(object):
                     medianIdxP = np.where(patchImg == patchVals[np.int(medianIdx)])[0][0]
                     self.PatchIdx[i] = medianIdxP
             self.PatchIdx = np.array(self.PatchIdx, dtype='int')
-        print('%d voxels out of %d were completely surrounded by '
+        tqdm.write('%d voxels out of %d were completely surrounded by '
               'violations and were ignored' \
               % (cntSkip, self.PatchIdx.shape[0]))
         # Unpad mask for saving
@@ -1899,7 +1899,7 @@ class medianFilter(object):
         img = np.pad(img, d2move, 'constant', constant_values=np.nan)
         nvox = self.CartIdx.shape[1]
         inputs = tqdm(range(nvox),
-                      desc='Filter: Substitution    ',
+                      desc='Substituting Voxels     ',
                       unit='vox',
                       ncols=tqdmWidth)
         for i in inputs:
