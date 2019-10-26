@@ -169,6 +169,10 @@ parser.add_argument('--maskthr', metavar='< fractional intensity '
 parser.add_argument('--fit_constraints', default='0,1,0',
                     help='Constrain the WLLS fit. '
                     'Default: 0,1,0.')
+parser.add_argument('--median', action='store_true', default=False,
+                    help='Apply median filtering to DTI/DKI '
+                    'parameters to mitigate poor tensor fitting in '
+                    'hard regions like the corpus callosum.')
 parser.add_argument('--rpe_none', action='store_true', default=False,
                     help='No reverse phase encode is available; FSL eddy '
                     'will perform eddy current and motion correction '
@@ -711,7 +715,35 @@ if not args.nofit:
                 akc_out = img.akcoutliers()
                 img.akccorrect(akc_out)
             mk, rk, ak, kfa, mkt, trace = img.extractDKI()
+            if args.median:
+                if args.mask:
+                    brainmaskPath = op.join(outpath, 'brain_mask.nii')
+                    import nibabel as nib
+                    maskHDR = nib.load(brainmaskPath)
+                    mask = np.array(maskHDR.dataobj)
+                else:
+                    mask = None
+                filt = dp.medianFilter(img=mk,
+                                       brainmask=mask,
+                                       tissueth=0.6,
+                                       th=0.5,
+                                       sz=3,
+                                       conn='face',
+                                       bias='rand')
+                mk = filt.apply(mk, weight=1)
+                rk = filt.apply(rk, weight=1)
+                ak = filt.apply(ak, weight=1)
+                kfa = filt.apply(kfa, weight=1)
+                mkt = filt.apply(mkt, weight=1)
+                md = filt.apply(md, weight=0.5)
+                rd = filt.apply(rd, weight=0.5)
+                ad = filt.apply(ad, weight=0.5)
+                fa = filt.apply(fa, weight=0.5)
             # naive implementation of writing these variables
+            dp.writeNii(md, img.hdr, op.join(metricpath, 'md'))
+            dp.writeNii(rd, img.hdr, op.join(metricpath, 'rd'))
+            dp.writeNii(ad, img.hdr, op.join(metricpath, 'ad'))
+            dp.writeNii(fa, img.hdr, op.join(metricpath, 'fa'))
             dp.writeNii(mk, img.hdr, op.join(metricpath, 'mk'))
             dp.writeNii(rk, img.hdr, op.join(metricpath, 'rk'))
             dp.writeNii(ak, img.hdr, op.join(metricpath, 'ak'))
