@@ -2037,9 +2037,12 @@ class medianFilter(object):
                 image to apply the filter on
         weight: integer | default = 1
                 specify the weightage in logic
-                substitute voxel if weightage * threshold > threshold
-                this is to provide a lower weightage to diffusions map as
-                they are less likely to require median filtering
+                ```
+                    if weightage * img_threshold > ref_threshold:
+                        substitute voxel
+                ```
+                this is to provide a lower weightage to diffusion maps
+                as they are less likely to require median filtering
         """
         # Get box filter properties
         if weight < 0 or weight > 1:
