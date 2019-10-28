@@ -39,6 +39,7 @@ class DWI(object):
             bvalPath = os.path.join(path, fName + '.bval')
             # Add .bvec to NIFTI filename
             bvecPath = os.path.join(path, fName + '.bvec')
+            bvecPath = os.path.join(path, fName + '.bvec')
             if os.path.exists(bvalPath) and os.path.exists(bvecPath):
                 # Load bvecs
                 bvecs = np.loadtxt(bvecPath)
@@ -1114,13 +1115,13 @@ class DWI(object):
                         'enter either "all" or "face".'.format(
                             connectivity))
 
-                nVoil = np.sum(patchViol)
+                nViol = np.sum(patchViol)
 
                 # Here a check is performed to compute the number of
                 # violations in a patch. If all voxels are violations,
                 # do nothing. Otherwise, exclude violation voxels from
                 # the median calculation
-                if nVoil == connLimit:
+                if nViol == connLimit:
                     continue
                 else:
                    dt[violIdx[0, j], violIdx[1, j], violIdx[2, j],
@@ -1655,175 +1656,294 @@ class DWI(object):
         writeNii(KT, self.hdr, ktPath)
 
 class medianFilter(object):
-    def __init__(self, img, violmask, th=15, sz=3, conn='face'):
-        assert th > 0, 'Threshold cannot be less than zero, disable median filtering instead'
-        assert violmask.shape == img.shape, 'Image dimensions not the same as violation mask dimensions'
+    """
+    Create a median filter class object that holds vital information on
+    filtering properties. Class initializes by computing a violation map
+    based in input image
+
+    Parameters
+    ----------
+    img:        3D numpy array
+                input reference image used to compute an outlier mask
+    brainmask:  3D boolean numpy array
+                brain mask to speed up calculation
+    tissueth:   double | default: None
+                threshold at which to segment tissue
+    th:         double | default: 0.5
+                percentage difference of a voxel value compared to
+                surrounding voxels at which it is marked as an
+                outlier. Lowering this number increases sensitivity.
+    sz:         integer | default: 3
+                size of 3D searching matrix; sz=3 corresponds to a 3x3x3
+                searching matrix
+    conn:       string| default: 'face'
+                connectivity to use in computing median
+    bias:       'left', 'right', or 'rand' | Default: 'rand'
+                If the number of voxels in patch is even (for median
+                calculation), 'left' will pick a median to the left
+                of mean and 'right' will pick a median to the right of
+                mean. 'rand' will randomly pick a bias.
+    """
+    def __init__(self, img, brainmask=None, tissueth=None,
+                 th=0.5, sz=3, conn='face', bias='rand'):
         self.Threshold = th
+        self.TissueThreshold = tissueth
         self.Size = sz
         self.Connectivity = conn
-        self.Mask = np.logical_and(violmask < th, violmask > 0)
-        self.Img = img
-
+        self.Img = np.array(img)
+        if self.TissueThreshold < 0:
+            raise Exception('Tissue threshold cannot be set below 0')
+        if self.Threshold > 1 or self.Threshold < 0:
+            raise Exception('Threshold cannot be less than 0 or greater '
+                            'than 1. Please specifty a between the range '
+                            '[0 1].')
+        if brainmask is None:
+            self.BrainMask = np.ones((self.Img.shape[0], self.Img.shape[
+                1], self.Img.shape[2]), dtype=bool, order='F')
+        else:
+            self.BrainMask = np.array(brainmask).astype(bool)
+        if tissueth is not None:
+            self.TissueMask = self.Img > self.TissueThreshold
+            self.BrainMask = np.logical_and(
+                self.BrainMask, self.TissueMask)
+        else:
+            self.TissueMask = self.BrainMask
         # Get box filter properties
-        centralIdx = np.median(range(sz))
-        d2move = np.int(np.abs(sz - (centralIdx + 1))) # Add 1 to central idx because first index starts with zero
-
-        # Apply a nan padding to all 3 dimensions of the input image and a nan padding to mask. Padding widths is same
-        # distance between centroid of patch to edge. This enables median filtering of edges.
-        self.Img = np.pad(self.Img, d2move, 'constant', constant_values=np.nan)
-        self.Mask = np.pad(self.Mask, d2move, 'constant', constant_values=False)
-
-        (Ix, Iy, Iz) = img.shape
-        (Mx, My, Mz) = self.Mask.shape
-
-    def findReplacement(self, bias='rand'):
-        """
-        Returns information on replacements for violating voxels
-
-        Usage
-        -----
-        m = med.findReplacement(bias='rand')
-
-        Parameters
-        ----------
-        bias: 'left', 'right', or 'rand'
-               In the even the number of voxels in patch is even (for
-               median calculation), 'left' will pick a median to the left
-               of mean and 'right' will pick a median to the right of
-               mean. 'rand' will randomny pick a bias.
-
-        Returns
-        -------
-        m: Vector containing index of replacement voxel in patch. In
-        conn = 'face' max is 5 and conn =
-        """
-        # Get box filter properties
-        centralIdx = np.median(range(self.Size))
-        d2move = np.int(np.abs(self.Size - (centralIdx + 1)))  # Add 1 to central idx because first index starts with zero
-
-        violIdx = np.array(np.where(self.Mask))   # Locate coordinates of violations
-        nvox = violIdx.shape[1]
-        self.PatchIdx = np.zeros(violIdx.shape[1])
-
-        inputs = tqdm(range(nvox))
+        centralIdx = np.median(range(self.Size)).astype(int)
+        # Add 1 to central idx because first index starts with zero
+        d2move = np.int(np.abs(self.Size - (centralIdx + 1)))
+        # Apply a nan padding to all 3 dimensions of the input image and a
+        # nan padding to mask. Padding widths is same distance between
+        # centroid of patch to edge. This enables median filtering of edges
+        self.Img = np.pad(self.Img, d2move, 'constant',
+                          constant_values=np.nan)
+        self.BrainMask = np.pad(self.BrainMask, d2move, 'constant',
+                                constant_values=np.nan)
+        # Create (3 x nvox) cartesian coordinate representation of image
+        # within a brainmask
+        cartIdx = np.array(np.where(
+            np.multiply(self.Img, self.BrainMask) > 0))
+        nvox = cartIdx.shape[1]
+        inputs = tqdm(range(nvox),
+                      desc='Median Outlier Mask     ',
+                      unit='vox',
+                      ncols=tqdmWidth)
+        self.OutlierMask = np.zeros(self.BrainMask.shape, dtype=bool)
+        for i in inputs:
+            # Index beginning and ending of patch
+            Ib = cartIdx[0, i] - d2move
+            Ie = cartIdx[0, i] + d2move
+            Jb = cartIdx[1, i] - d2move
+            Je = cartIdx[1, i] + d2move
+            Kb = cartIdx[2, i] - d2move
+            Ke = cartIdx[2, i] + d2move
+            if self.Connectivity == 'all':
+                # Remove 14th (centroid) element
+                patchImg = np.delete(np.ravel(self.Img[
+                                              Ib:Ie+1, Jb:Je+1, Kb:Ke+1]),
+                                     13)
+                connLimit = 26
+            elif self.Connectivity == 'face':
+                patchImg = self.Img[[Ib, Ie], cartIdx[1, i], cartIdx[2, i]]
+                patchImg = np.hstack((patchImg,
+                                      self.Img[cartIdx[0, i], [Jb, Je],
+                                               cartIdx[2, i]]))
+                patchImg = np.hstack((patchImg, self.Img[cartIdx[0, i],
+                                                         cartIdx[1, i],
+                                                         [Kb, Ke]]))
+                connLimit = 6
+            # Now compare voxel value to IQR. If more than 1.5 * IQR,
+            # voxel is an outlier
+            # IQR = np.subtract(*np.percentile(patchImg, [75, 25]))
+            # if self.Img[cartIdx[0, i], cartIdx[1, i], cartIdx[2, i]] > \
+            #         multiplier * IQR:
+            #     self.OutlierMask[cartIdx[0, i],
+            #                      cartIdx[1, i],
+            #                      cartIdx[2, i]] = True
+            pdiff = np.absolute((self.Img[cartIdx[0, i],
+                                          cartIdx[1, i],
+                                          cartIdx[2, i]]) - \
+                                np.mean(patchImg)) / \
+                    self.Img[cartIdx[0,i], cartIdx[1,i], cartIdx[2,i]]
+            if pdiff > self.Threshold:
+                # Mark outlier mask voxel as true
+                self.OutlierMask[cartIdx[0, i],
+                                 cartIdx[1, i],
+                                 cartIdx[2, i]] = True
+        # Create (3 x nvox) cartesian coordinate representation of
+        # image within a brainmask
+        self.CartIdx = np.array(np.where(self.OutlierMask > 0))
+        nvox = self.CartIdx.shape[1]
+        self.PatchIdx = np.zeros(nvox)
+        inputs = tqdm(range(nvox),
+                      desc='Locating Replacements   ',
+                      unit='vox',
+                      ncols=tqdmWidth)
         cntSkip = 0
         for i in inputs:
             # Index beginning and ending of patch
-            Ib = violIdx[0, i] - d2move
-            Ie = violIdx[0, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
-            Jb = violIdx[1, i] - d2move
-            Je = violIdx[1, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
-            Kb = violIdx[2, i] - d2move
-            Ke = violIdx[2, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
-
+            Ib = self.CartIdx[0, i] - d2move
+            Ie = self.CartIdx[0, i] + d2move
+            Jb = self.CartIdx[1, i] - d2move
+            Je = self.CartIdx[1, i] + d2move
+            Kb = self.CartIdx[2, i] - d2move
+            Ke = self.CartIdx[2, i] + d2move
             if self.Connectivity == 'all':
-                patchViol = np.delete(np.ravel(self.Mask[Ib:Ie, Jb:Je, Kb:Ke]), 13)     # Remove 14th (centroid) element
-                patchImg = np.delete(np.ravel(self.Img[Ib:Ie, Jb:Je, Kb:Ke]), 13)            # Remove 14th (centroid) element
+                # Remove 14th (centroid) element
+                patchViol = np.delete(np.ravel(
+                    self.OutlierMask[Ib:Ie+1, Jb:Je+1, Kb:Ke+1]), 13)
+                patchImg = np.delete(np.ravel(
+                    self.Img[Ib:Ie + 1, Jb:Je + 1,Kb:Ke + 1]),
+                                     13)
                 connLimit = 26
             elif self.Connectivity == 'face':
-                patchViol = self.Mask[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
-                patchViol = np.hstack((patchViol, self.Mask[violIdx[0,i], [Jb, Je], violIdx[2, i]]))
-                patchViol = np.hstack((patchViol, self.Mask[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
-                patchImg = self.Img[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
-                patchImg = np.hstack((patchImg, self.Img[violIdx[0, i], [Jb, Je], violIdx[2, i]]))
-                patchImg = np.hstack((patchImg, self.Img[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
-                connLimit = 6
-            else:
-                raise Exception('Connectivity choice "{}" is invalid. Please enter either "all" or "face".'.format(self.Connectivity))
+                patchViol = self.OutlierMask[[Ib, Ie],
+                                             self.CartIdx[1, i],
+                                             self.CartIdx[2, i]]
+                patchViol = np.hstack((patchViol,
+                                       self.OutlierMask[self.CartIdx[0, i],
+                                                        [Jb, Je],
+                                                        self.CartIdx[2, i]]))
+                patchViol = np.hstack((patchViol,
+                                       self.OutlierMask[self.CartIdx[0, i],
+                                                        self.CartIdx[1, i],
+                                                        [Kb, Ke]]))
+                patchImg = self.Img[[Ib, Ie], self.CartIdx[1, i], self.CartIdx[2, i]]
+                patchImg = np.hstack((patchImg,
+                                      self.Img[self.CartIdx[0, i], [Jb, Je],
+                                               self.CartIdx[2, i]]))
+                patchImg = np.hstack((patchImg, self.Img[self.CartIdx[0, i],
+                                                         self.CartIdx[1, i],
+                                                         [Kb, Ke]]))
+                nViol = np.sum(patchViol)
+                # Here a check is performed to compute the number of
+                # violations in a patch. If all voxels are violations,do
+                # nothing. Otherwise, exclude violation voxels from the
+                # median calculation
+                # Assign a value of -1 to voxel that need to be skipped
+                # because nan cannot be assigned to a vector of integers
+                if nViol == connLimit:
+                    self.PatchIdx[i] = -1
+                    cntSkip = cntSkip + 1
+                    continue
+                else:
+                    # Sort all patch values in ascending order and remove NaNs
+                    patchVals = np.array(np.sort(
+                        patchImg[~np.isnan(patchImg)],
+                        kind='quicksort'))
+                    nVals = patchVals.size
+                    # Median algorithm dependent on whether number of valid
+                    # voxels (nVals) is even or odd
+                    # If even:
+                    if np.mod(nVals, 2) == 0:
+                        medianIdxTmp = np.array([nVals/2 - 1, nVals/2],
+                                                dtype=int)
+                        if bias == 'left':
+                            medianIdx = medianIdxTmp[0]
+                        elif bias == 'right':
+                            medianIdx = medianIdxTmp[1]
+                        elif bias == 'rand':
+                            medianIdx = medianIdxTmp[rnd.randint(0,1)]
+                    # if odd:
+                    else:
+                        medianIdx = (nVals-1)/2
+                    # Now that a the index of a median voxel is located,
+                    # determine it's value in sorted list and find the
+                    # location of that voxel in patch. The median index
+                    # needs to be relative to patch, not sorted list. In
+                    # the event that there are more than one indices of the
+                    # same value, use the first one.
+                    medianIdxP = np.where(patchImg == patchVals[np.int(medianIdx)])[0][0]
+                    self.PatchIdx[i] = medianIdxP
+            self.PatchIdx = np.array(self.PatchIdx, dtype='int')
+        tqdm.write('%d voxels out of %d were completely surrounded by '
+              'violations and were ignored' \
+              % (cntSkip, self.PatchIdx.shape[0]))
+        # Unpad mask for saving
+        self.OutlierMask = np.delete(self.OutlierMask,
+                                     [0, self.OutlierMask.shape[0] - 1],
+                                     axis=0)
+        self.OutlierMask = np.delete(self.OutlierMask,
+                                     [0, self.OutlierMask.shape[1] - 1],
+                                     axis=1)
+        self.OutlierMask = np.delete(self.OutlierMask,
+                                     [0, self.OutlierMask.shape[2] - 1],
+                                     axis=2)
 
-            nVoil = np.sum(patchViol)
-
-            # Here a check is performed to compute the number of violations in a patch. If all voxels are violations,
-            # do nothing. Otherwise, exclude violation voxels from the median calculation
-            if nVoil == connLimit:
-                self.PatchIdx[i] = np.nan
-                cntSkip = cntSkip + 1
-                continue
-            else:
-                # Sort all patch values in ascending order and remove NaNs
-                patchVals = np.array(np.sort(patchImg[~np.isnan(patchImg)],kind='quicksort'))
-                nVals = patchVals.size
-
-                # Median algorithm dependent on whether number of valid voxels (nVals) is even or odd
-                if np.mod(nVals, 2) == 0:                                       # If even
-                    medianIdxTmp = np.array([nVals/2 - 1, nVals/2],dtype=int)   # Convert to Py index (-1)
-                    if bias == 'left':
-                        medianIdx = medianIdxTmp[0]
-                    elif bias == 'right':
-                        medianIdx = medianIdxTmp[1]
-                    elif bias == 'rand':
-                        medianIdx = medianIdxTmp[rnd.randint(0,1)]
-                else:                                                           # If odd
-                    medianIdx = (nVals-1)/2                                     # Convert to Py index (-1)
-
-                # Now that a the index of a median voxel is located, determine it's value in sorted list and find the
-                # location of that voxel in patch. The median index needs to be relative to patch, not sorted list. In
-                # the event that there are more than one indexes of the same value, use the first one.
-                medianIdxP = np.where(patchImg == patchVals[np.int(medianIdx)])[0][0]
-                self.PatchIdx[i] = medianIdxP
-        self.PatchIdx = np.array(self.PatchIdx, dtype='int')  # Convert to integer
-        print('%d voxels out of %d were completely surrounded by violations and were ignored' %(cntSkip, violIdx.shape[1]))
-        return self.PatchIdx
-
-    def applyReplacement(self, img):
+    def apply(self, img, weight=1):
         """
-        Applies median filter onto input images.
-
-        Usage
-        -----
-        filteredImage = med.applyReplacement(image)
+        Applies the median filter object to an input image
 
         Parameters
         ----------
-        image:          input image to apply the median voxel replacement on
-
-        Returns
-        -------
-        filteredImage:  median filtered image
+        img:    3D numpy array
+                image to apply the filter on
+        weight: integer | default = 1
+                specify the weightage in logic
+                ```
+                    if weightage * img_threshold > ref_threshold:
+                        substitute voxel
+                ```
+                this is to provide a lower weighting to diffusion maps
+                as they are less likely to require median filtering
         """
         # Get box filter properties
-        centralIdx = np.median(range(self.Size))
-        d2move = np.int(
-            np.abs(self.Size - (centralIdx + 1)))  # Add 1 to central idx because first index starts with zero
-
-        # Pad image with zeros
-        img = np.pad(img, d2move, 'constant', constant_values=0)
-
-        violIdx = np.array(np.where(self.Mask))  # Locate coordinates of violations
-        # self.PatchIdx = np.array(np.zeros(violIdx.shape[1]),dtype='int')
-
-        inputs = tqdm(range(self.PatchIdx.size))
+        if weight < 0 or weight > 1:
+             raise Exception('Threshold cannot be less than 0 or greater '
+                            'than 1. Please specifty a between the range '
+                            '[0 1].')
+        centralIdx = np.median(range(self.Size)).astype(int)
+        # Add 1 to central idx because first index starts with zero
+        d2move = np.int(np.abs(self.Size - (centralIdx + 1)))
+        # Pad image and Outlier again
+        img = np.pad(img, d2move, 'constant', constant_values=np.nan)
+        nvox = self.CartIdx.shape[1]
+        inputs = tqdm(range(nvox),
+                      desc='Substituting Voxels     ',
+                      unit='vox',
+                      ncols=tqdmWidth)
         for i in inputs:
-            # Index beginning and ending of patch
-            Ib = violIdx[0, i] - d2move
-            Ie = violIdx[0, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
-            Jb = violIdx[1, i] - d2move
-            Je = violIdx[1, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
-            Kb = violIdx[2, i] - d2move
-            Ke = violIdx[2, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
-
-            if self.Connectivity == 'all':
-                patchViol = np.delete(np.ravel(self.Mask[Ib:Ie, Jb:Je, Kb:Ke]), 13)     # Remove 14th (centroid) element
-                patchImg = np.delete(np.ravel(self.Img[Ib:Ie, Jb:Je, Kb:Ke]), 13)            # Remove 14th (centroid) element
-            elif self.Connectivity == 'face':
-                patchViol = self.Mask[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
-                patchViol = np.hstack((patchViol, self.Mask[violIdx[0,i], [Jb, Je], violIdx[2, i]]))
-                patchViol = np.hstack((patchViol, self.Mask[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
-                patchImg = img[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
-                patchImg = np.hstack((patchImg, img[violIdx[0, i], [Jb,
-                                                                  Je], violIdx[2, i]]))
-                patchImg = np.hstack((patchImg, img[violIdx[0, i],
-                                                  violIdx[1, i], [Kb, Ke]]))
-
-            if np.isnan(self.PatchIdx[i]) == True:
-                continue
-            else:
-                img[violIdx[0, i], violIdx[1, i], violIdx[2, i]] = patchImg[self.PatchIdx[i]]
-
-        # Unpad image by removing first and last slices along each axis
-        img = np.delete(img, [0, img.shape[0] - 1], axis=0)
-        img = np.delete(img, [0, img.shape[1] - 1], axis=1)
-        img = np.delete(img, [0, img.shape[2] - 1], axis=2)
+            if self.PatchIdx[i] > 0:
+                # Index beginning and ending of patch
+                Ib = self.CartIdx[0, i] - d2move
+                Ie = self.CartIdx[0, i] + d2move
+                Jb = self.CartIdx[1, i] - d2move
+                Je = self.CartIdx[1, i] + d2move
+                Kb = self.CartIdx[2, i] - d2move
+                Ke = self.CartIdx[2, i] + d2move
+                if self.Connectivity == 'all':
+                    # Remove 14th (centroid) element
+                    patchImg = np.delete(np.ravel(img[Ib:Ie+1,
+                                                  Jb:Je+1,
+                                                  Kb:Ke+1]), 13)
+                elif self.Connectivity == 'face':
+                    patchImg = img[[Ib, Ie],
+                                   self.CartIdx[1, i],
+                                   self.CartIdx[2, i]]
+                    patchImg = np.hstack((patchImg,
+                                          img[self.CartIdx[0, i],
+                                              [Jb,Je],
+                                              self.CartIdx[2, i]]))
+                    patchImg = np.hstack(
+                        (patchImg, img[self.CartIdx[0, i],
+                                       self.CartIdx[1, i],
+                                       [Kb, Ke]]))
+                pdiff = np.absolute((img[self.CartIdx[0, i],
+                                              self.CartIdx[1, i],
+                                              self.CartIdx[2, i]]) - \
+                                    np.mean(patchImg)) / img[
+                            self.CartIdx[0, i],
+                            self.CartIdx[1, i],
+                            self.CartIdx[2, i]]
+                if pdiff > weight * self.Threshold:
+                    img[self.CartIdx[0, i],
+                        self.CartIdx[1, i],
+                        self.CartIdx[2, i]] = patchImg[
+                        self.PatchIdx[i]]
+        # Unpad image
+        img = np.delete(img, [0, img.shape[0] - 1], axis = 0)
+        img = np.delete(img, [0, img.shape[1] - 1], axis = 1)
+        img = np.delete(img, [0, img.shape[2] - 1], axis = 2)
         return img
 
 def vectorize(img, mask):
