@@ -1024,11 +1024,12 @@ class DWI(object):
                       ncols=tqdmWidth)
         for i in inputs:
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
-            akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
+            akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10),
+                                    axis=0))] = True
             akc_out.astype('bool')
         return vectorize(akc_out, self.mask)
 
-    def akccorrect(self, akc_out, window=5, connectivity='all'):
+    def akccorrect(self, akc_out, window=3, connectivity='face'):
         """Applies AKC outlier map to DT to replace outliers with a
         moving median.
         Run this only after tensor fitting and akc outlier detection
@@ -1053,7 +1054,6 @@ class DWI(object):
         centralIdx = np.median(range(window))
         d2move = np.int(np.abs(window - (centralIdx + 1)))  # Add 1 to
         # central idx because first index starts with zero
-
         # Vectorize and Pad
         dt = np.pad(vectorize(self.dt, self.mask),
                      ((d2move, d2move), (d2move, d2move),
@@ -1061,11 +1061,9 @@ class DWI(object):
                      'constant', constant_values=np.nan)
         akc_out = np.pad(akc_out, d2move, 'constant',
                          constant_values=False)
-
         violIdx = np.array(
             np.where(akc_out))  # Locate coordinates of violations
         nvox = violIdx.shape[1]
-
         for i in tqdm(range(dt.shape[-1]),
                       desc='AKC Correction          ',
                       unit='tensor',
@@ -1090,18 +1088,20 @@ class DWI(object):
                     # centroid element
                     connLimit = np.power(window,3) -1
                 elif connectivity == 'face':
-                    patchViol = akc_out[
-                        [Ib, Ie], violIdx[1, j], violIdx[2, j]]
-                    patchViol = np.hstack((patchViol, akc_out[
-                        violIdx[0, j], [Jb, Je], violIdx[2, j]]))
-                    patchViol = np.hstack((patchViol, akc_out[
-                        violIdx[0, j], violIdx[1, j], [Kb, Ke]]))
-                    patchImg = dt[
-                        [Ib, Ie], violIdx[1, j], violIdx[2, j], i]
-                    patchImg = np.hstack((patchImg, dt[
-                        violIdx[0, j], [Jb, Je], violIdx[2, j], i]))
-                    patchImg = np.hstack((patchImg, dt[
-                        violIdx[0, j], violIdx[1, j], [Kb, Ke], i]))
+                    patchViol = np.delete(akc_out[
+                        Ib:Ie, violIdx[1, j], violIdx[2, j]], d2move)
+                    patchViol = np.hstack((patchViol, np.delete(akc_out[
+                        violIdx[0, j], Jb:Je, violIdx[2, j]], d2move)))
+                    patchViol = np.hstack((patchViol, np.delete(akc_out[
+                        violIdx[0, j], violIdx[1, j], Kb:Ke], d2move)))
+                    patchImg = np.delete(dt[
+                        Ib:Ie, violIdx[1, j], violIdx[2, j], i], d2move)
+                    patchImg = np.hstack((patchImg, np.delete(dt[
+                        violIdx[0, j], Jb:Je, violIdx[2, j], i],
+                                                              d2move)))
+                    patchImg = np.hstack((patchImg, np.delete(dt[
+                        violIdx[0, j], violIdx[1, j], Kb:Ke, i],
+                                                              d2move)))
                     if window == 3:
                         connLimit = 6
                     elif window == 5:
@@ -1115,9 +1115,7 @@ class DWI(object):
                         'Connectivity choice "{}" is invalid. Please '
                         'enter either "all" or "face".'.format(
                             connectivity))
-
                 nViol = np.sum(patchViol)
-
                 # Here a check is performed to compute the number of
                 # violations in a patch. If all voxels are violations,
                 # do nothing. Otherwise, exclude violation voxels from
@@ -1127,7 +1125,6 @@ class DWI(object):
                 else:
                    dt[violIdx[0, j], violIdx[1, j], violIdx[2, j],
                       i] = np.nanmedian(patchImg)
-
         # Remove padding
         dt = dt[d2move:-d2move, d2move:-d2move,
              d2move:-d2move, :]
