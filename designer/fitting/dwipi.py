@@ -1023,11 +1023,12 @@ class DWI(object):
                       ncols=tqdmWidth)
         for i in inputs:
             akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
-            akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
+            akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10),
+                                    axis=0))] = True
             akc_out.astype('bool')
         return vectorize(akc_out, self.mask)
 
-    def akccorrect(self, akc_out, window=5, connectivity='all'):
+    def akccorrect(self, akc_out, window=3, connectivity='face'):
         """Applies AKC outlier map to DT to replace outliers with a
         moving median.
         Run this only after tensor fitting and akc outlier detection
