@@ -1053,7 +1053,6 @@ class DWI(object):
         centralIdx = np.median(range(window))
         d2move = np.int(np.abs(window - (centralIdx + 1)))  # Add 1 to
         # central idx because first index starts with zero
-
         # Vectorize and Pad
         dt = np.pad(vectorize(self.dt, self.mask),
                      ((d2move, d2move), (d2move, d2move),
@@ -1061,11 +1060,9 @@ class DWI(object):
                      'constant', constant_values=np.nan)
         akc_out = np.pad(akc_out, d2move, 'constant',
                          constant_values=False)
-
         violIdx = np.array(
             np.where(akc_out))  # Locate coordinates of violations
         nvox = violIdx.shape[1]
-
         for i in tqdm(range(dt.shape[-1]),
                       desc='AKC Correction          ',
                       unit='tensor',
@@ -1117,9 +1114,7 @@ class DWI(object):
                         'Connectivity choice "{}" is invalid. Please '
                         'enter either "all" or "face".'.format(
                             connectivity))
-
                 nViol = np.sum(patchViol)
-
                 # Here a check is performed to compute the number of
                 # violations in a patch. If all voxels are violations,
                 # do nothing. Otherwise, exclude violation voxels from
@@ -1129,7 +1124,6 @@ class DWI(object):
                 else:
                    dt[violIdx[0, j], violIdx[1, j], violIdx[2, j],
                       i] = np.nanmedian(patchImg)
-
         # Remove padding
         dt = dt[d2move:-d2move, d2move:-d2move,
              d2move:-d2move, :]
