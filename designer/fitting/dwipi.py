@@ -1090,18 +1090,20 @@ class DWI(object):
                     # centroid element
                     connLimit = np.power(window,3) -1
                 elif connectivity == 'face':
-                    patchViol = akc_out[
-                        [Ib, Ie], violIdx[1, j], violIdx[2, j]]
-                    patchViol = np.hstack((patchViol, akc_out[
-                        violIdx[0, j], [Jb, Je], violIdx[2, j]]))
-                    patchViol = np.hstack((patchViol, akc_out[
-                        violIdx[0, j], violIdx[1, j], [Kb, Ke]]))
-                    patchImg = dt[
-                        [Ib, Ie], violIdx[1, j], violIdx[2, j], i]
-                    patchImg = np.hstack((patchImg, dt[
-                        violIdx[0, j], [Jb, Je], violIdx[2, j], i]))
-                    patchImg = np.hstack((patchImg, dt[
-                        violIdx[0, j], violIdx[1, j], [Kb, Ke], i]))
+                    patchViol = np.delete(akc_out[
+                        Ib:Ie, violIdx[1, j], violIdx[2, j]], d2move)
+                    patchViol = np.hstack((patchViol, np.delete(akc_out[
+                        violIdx[0, j], Jb:Je, violIdx[2, j]], d2move)))
+                    patchViol = np.hstack((patchViol, np.delete(akc_out[
+                        violIdx[0, j], violIdx[1, j], Kb:Ke], d2move)))
+                    patchImg = np.delete(dt[
+                        Ib:Ie, violIdx[1, j], violIdx[2, j], i], d2move)
+                    patchImg = np.hstack((patchImg, np.delete(dt[
+                        violIdx[0, j], Jb:Je, violIdx[2, j], i],
+                                                              d2move)))
+                    patchImg = np.hstack((patchImg, np.delete(dt[
+                        violIdx[0, j], violIdx[1, j], Kb:Ke, i],
+                                                              d2move)))
                     if window == 3:
                         connLimit = 6
                     elif window == 5:
