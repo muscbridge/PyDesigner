@@ -1115,13 +1115,13 @@ class DWI(object):
                         'enter either "all" or "face".'.format(
                             connectivity))
 
-                nVoil = np.sum(patchViol)
+                nViol = np.sum(patchViol)
 
                 # Here a check is performed to compute the number of
                 # violations in a patch. If all voxels are violations,
                 # do nothing. Otherwise, exclude violation voxels from
                 # the median calculation
-                if nVoil == connLimit:
+                if nViol == connLimit:
                     continue
                 else:
                    dt[violIdx[0, j], violIdx[1, j], violIdx[2, j],
@@ -1669,7 +1669,7 @@ class medianFilter(object):
                 brain mask to speed up calculation
     tissueth:   double | default: None
                 threshold at which to segment tissue
-    th:         double | default = 0.5
+    th:         double | default: 0.5
                 percentage difference of a voxel value compared to
                 surrounding voxels at which it is marked as an
                 outlier. Lowering this number increases sensitivity.
@@ -1678,11 +1678,11 @@ class medianFilter(object):
                 searching matrix
     conn:       string| default: 'face'
                 connectivity to use in computing median
-    bias:       'left', 'right', or 'rand'
-               If the number of voxels in patch is even (for median 
-               calculation), 'left' will pick a median to the left
-               of mean and 'right' will pick a median to the right of
-               mean. 'rand' will randomny pick a bias.
+    bias:       'left', 'right', or 'rand' | Default: 'rand'
+                If the number of voxels in patch is even (for median
+                calculation), 'left' will pick a median to the left
+                of mean and 'right' will pick a median to the right of
+                mean. 'rand' will randomly pick a bias.
     """
     def __init__(self, img, brainmask=None, tissueth=None,
                  th=0.5, sz=3, conn='face', bias='rand'):
@@ -1815,14 +1815,14 @@ class medianFilter(object):
                 patchImg = np.hstack((patchImg, self.Img[self.CartIdx[0, i],
                                                          self.CartIdx[1, i],
                                                          [Kb, Ke]]))
-                nVoil = np.sum(patchViol)
+                nViol = np.sum(patchViol)
                 # Here a check is performed to compute the number of
                 # violations in a patch. If all voxels are violations,do
                 # nothing. Otherwise, exclude violation voxels from the
                 # median calculation
                 # Assign a value of -1 to voxel that need to be skipped
                 # because nan cannot be assigned to a vector of integers
-                if nVoil == connLimit:
+                if nViol == connLimit:
                     self.PatchIdx[i] = -1
                     cntSkip = cntSkip + 1
                     continue
@@ -1884,7 +1884,7 @@ class medianFilter(object):
                     if weightage * img_threshold > ref_threshold:
                         substitute voxel
                 ```
-                this is to provide a lower weightage to diffusion maps
+                this is to provide a lower weighting to diffusion maps
                 as they are less likely to require median filtering
         """
         # Get box filter properties
