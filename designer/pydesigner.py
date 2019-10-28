@@ -13,6 +13,7 @@ import gzip # handles fsl's .gz suffix
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy as np # array, ndarray
+import nibabel as nib
 from preprocessing import util, smoothing, rician, preparation
 from fitting import dwipi as dp
 DWIFile = util.DWIFile
@@ -162,7 +163,7 @@ parser.add_argument('--mask', action='store_true', default=False,
                     help='Compute a brain mask prior to tensor fitting '
                     'to strip skull and improve efficiency. Use '
                      '--maskthr to specify a threshold manually.')
-parser.add_argument('--maskthr', metavar='< fractional intensity '
+parser.add_argument('--maskthr', metavar='<fractional intensity '
                                              ' threshold>',
                     help='FSL bet threshold used for brain masking. '
                     'Default: 0.25')
@@ -172,7 +173,7 @@ parser.add_argument('--fit_constraints', default='0,1,0',
 parser.add_argument('--median', action='store_true', default=False,
                     help='Apply median filtering to DTI/DKI '
                     'parameters to mitigate poor tensor fitting in '
-                    'hard regions like the corpus callosum.')
+                    'hard to fit regions such as the corpus callosum.')
 parser.add_argument('--rpe_none', action='store_true', default=False,
                     help='No reverse phase encode is available; FSL eddy '
                     'will perform eddy current and motion correction '
@@ -716,9 +717,10 @@ if not args.nofit:
                 img.akccorrect(akc_out)
             mk, rk, ak, kfa, mkt, trace = img.extractDKI()
             if args.median:
+                DKI_WEIGHT = 1    # Performs full correction on DKI maps
+                DTI_WEIGHT = 0.5  # Performs partial correction on DTI maps
                 if args.mask:
                     brainmaskPath = op.join(outpath, 'brain_mask.nii')
-                    import nibabel as nib
                     maskHDR = nib.load(brainmaskPath)
                     mask = np.array(maskHDR.dataobj)
                 else:
@@ -730,15 +732,15 @@ if not args.nofit:
                                        sz=3,
                                        conn='face',
                                        bias='rand')
-                mk = filt.apply(mk, weight=1)
-                rk = filt.apply(rk, weight=1)
-                ak = filt.apply(ak, weight=1)
-                kfa = filt.apply(kfa, weight=1)
-                mkt = filt.apply(mkt, weight=1)
-                md = filt.apply(md, weight=0.5)
-                rd = filt.apply(rd, weight=0.5)
-                ad = filt.apply(ad, weight=0.5)
-                fa = filt.apply(fa, weight=0.5)
+                mk = filt.apply(mk, weight=DKI_WEIGHT)
+                rk = filt.apply(rk, weight=DKI_WEIGHT)
+                ak = filt.apply(ak, weight=DKI_WEIGHT)
+                kfa = filt.apply(kfa, weight=DKI_WEIGHT)
+                mkt = filt.apply(mkt, weight=DKI_WEIGHT)
+                md = filt.apply(md, weight=DTI_WEIGHT)
+                rd = filt.apply(rd, weight=DTI_WEIGHT)
+                ad = filt.apply(ad, weight=DTI_WEIGHT)
+                fa = filt.apply(fa, weight=DTI_WEIGHT)
             # naive implementation of writing these variables
             dp.writeNii(md, img.hdr, op.join(metricpath, 'md'))
             dp.writeNii(rd, img.hdr, op.join(metricpath, 'rd'))
