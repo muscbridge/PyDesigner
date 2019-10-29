@@ -5,13 +5,16 @@ import multiprocessing
 import os
 import random as rnd
 import warnings
+
 import cvxpy as cvx
 import nibabel as nib
 import numpy as np
 from joblib import Parallel, delayed
 from scipy.special import expit as sigmoid
 from tqdm import tqdm
+
 from . import dwidirs
+
 warnings.filterwarnings("ignore")
 
 # Define the lowest number possible before it is considered a zero
@@ -766,6 +769,67 @@ class DWI(object):
         kfa = vectorize(kfa, self.mask)
         mkt = vectorize(mkt, self.mask)
         return mk, rk, ak, kfa, mkt, trace
+
+    def extractWMTI(self):
+        """Returns white matter tract integrity (WMTI) parameters. Warning:
+        this can only be run after fitting and DWI.extractDTI().
+
+        Parameters
+        ----------
+        (none)
+
+        Returns
+        -------
+        awf:    axonal water fraction
+        eas:    extra-axonal diffusivities
+        ias:    intra-axonal diffusivities
+        """
+        def wmtihelper():
+            adc = self.diffusionCoeff(self.dt[:6], dir)
+            akc = self.kurtosisCoeff(self.dt, dir)
+            akc[akc < 0] = minZero #avoiding complext output. However,
+            # negative AKC might be taken care of by applying constraints
+            De = np.multiply(
+                adc,
+                1 + np.sqrt(
+                    (np.multiply(akc, awf) / (3 * (1 - awf)))))
+            Di = np.multiply(
+                adc,
+                1 - np.sqrt(
+                    (np.multiply(akc, (1 - awf)) / (3 * awf))))
+
+
+        var_exists = 'self.DTIvectors' in locals() or \
+                     'self.DTIvectors' in globals()
+        if not var_exists:
+            md, rd, ad, fa, fe, trace = self.extractDTI()
+        dir = dwidirs.dirs10000
+        nvox = self.dt.shape[1]
+        akc_out = np.zeros(nvox, dtype=bool)
+        N = dir.shape[0]
+        nblocks = 10
+        akc = np.zeros((nvox, nblocks))
+        inputs = tqdm(range(nblocks),
+                      desc='Extracting AWF          ',
+                      unit='blk',
+                      ncols=tqdmWidth)
+        for i in inputs:
+            akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
+        print(akc.shape)
+        maxk = np.nanmean(akc, axis=0)
+        awf = np.divide(maxk, (maxk + 3))
+        awf[np.isnan(awf)] = 0
+        print(awf.shape)
+        awf = vectorize(awf, self.mask)
+        dirs = dwidirs.dirs30
+        (dcnt, dind) = self.createTensorOrder(2)
+        adc2dt = np.
+        adc2dt = np.matmul(np.linalg.pinv(np.matmul(w, b)),
+                       np.matmul(w, np.log(dwi)))
+
+
+        return awf
+
 
     def findViols(self, c=[0, 1, 0]):
         """
