@@ -688,7 +688,7 @@ if not args.nofit:
         if not args.nooutliers:
             outliers, dt_est = img.irlls()
             # write outliers to qc folder
-            outlier_full = op.join(fitqcpath, 'Outliers_IRLLS.nii')
+            outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
             dp.writeNii(outliers, img.hdr, outlier_full)
             # fit while rejecting outliers
             img.fit(fit_constraints, reject=outliers, dt_hat=dt_est)
