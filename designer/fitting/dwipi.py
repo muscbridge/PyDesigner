@@ -790,8 +790,6 @@ class DWI(object):
         ias_tort:   intra-axonal tortuosity
         """
         def wmtihelper(dt, dir, adc, akc, awf, adc2dt):
-            # adc = self.diffusionCoeff(dt[:6], dir)
-            # akc = self.kurtosisCoeff(dt, dir)
             akc[akc < minZero] = minZero # Avoid complex output. However,
             # negative AKC might be taken care of by applying constraints
             try:
@@ -831,20 +829,14 @@ class DWI(object):
                 ias_rd = 0
                 ias_tort = 0
             return eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
-
-        var_exists = 'self.DTIvectors' in locals() or \
-                     'self.DTIvectors' in globals()
-        if not var_exists:
-            md, rd, ad, fa, fe, trace = self.extractDTI()
         dir = dwidirs.dirs10000
         nvox = self.dt.shape[1]
-        akc_out = np.zeros(nvox, dtype=bool)
         N = dir.shape[0]
         nblocks = 10
         akc = np.zeros((nvox, nblocks))
         inputs = tqdm(range(nblocks),
                       desc='Extracting AWF          ',
-                      unit='blk',
+                      unit='iter',
                       ncols=tqdmWidth)
         for i in inputs:
             akc = self.kurtosisCoeff(
@@ -867,14 +859,22 @@ class DWI(object):
         ias_rd = np.zeros(nvox)
         ias_tort = np.zeros(nvox)
         inputs = tqdm(range(nvox),
-                      desc='Extracting AWF          ',
+                      desc='Extracting EAS and IAS  ',
                       unit='vox',
                       ncols=tqdmWidth)
-        for i in inputs:
-            eas_ad[i], eas_rd[i], eas_tort[i], ias_ad[i], ias_rd[i], \
-            ias_tort[i] = \
-            wmtihelper(self.dt[:, i], dirs, adc[:, i], akc[:,i], awf[i],
-                       adc2dt)
+        eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort = zip(*Parallel(
+            n_jobs=self.workers, prefer='processes')(
+            delayed(wmtihelper)(self.dt[:, i],
+                                dirs,
+                                adc[:, i],
+                                akc[:,i],
+                                awf[i],
+                                adc2dt) for i in inputs))
+            # for i in inputs:
+            # eas_ad[i], eas_rd[i], eas_tort[i], ias_ad[i], ias_rd[i], \
+            # ias_tort[i] = \
+            # wmtihelper(self.dt[:, i], dirs, adc[:, i], akc[:,i], awf[i],
+            #            adc2dt)
         awf = vectorize(awf, self.mask)
         eas_ad = vectorize(np.array(eas_ad), self.mask)
         eas_rd = vectorize(np.array(eas_rd), self.mask)
