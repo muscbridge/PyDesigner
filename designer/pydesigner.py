@@ -710,6 +710,8 @@ if not args.nofit:
                 # do akc
                 akc_out = img.akcoutliers()
                 img.akccorrect(akc_out)
+                dp.writeNii(akcout, img.hdr,
+                            op.join(metricpath, 'outliers_akc'))
             mk, rk, ak, kfa, mkt, trace = img.extractDKI()
             # naive implementation of writing these variables
             dp.writeNii(mk, img.hdr, op.join(metricpath, 'mk'))
