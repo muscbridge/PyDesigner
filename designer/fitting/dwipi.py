@@ -782,12 +782,12 @@ class DWI(object):
         Returns
         -------
         awf:        axonal water fraction
-        eas_ad:     extra-axonal axial diffusivity
-        eas_rd:     extra-axonal radial diffusivity
-        eas_tort:   extra-axonal tortuosity
-        ias_ad:     intra-axonal axial diffusivity
-        ias_rd:     intra-axonal radial diffusivity
-        ias_tort:   intra-axonal tortuosity
+        eas_ad:     extra-axonal space axial diffusivity
+        eas_rd:     extra-axonal space radial diffusivity
+        eas_tort:   extra-axonal space tortuosity
+        ias_ad:     intra-axonal space axial diffusivity
+        ias_rd:     intra-axonal space radial diffusivity
+        ias_tort:   intra-axonal space tortuosity
         """
         def wmtihelper(dt, dir, adc, akc, awf, adc2dt):
             akc[akc < minZero] = minZero # Avoid complex output. However,
