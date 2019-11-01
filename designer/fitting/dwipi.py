@@ -833,15 +833,15 @@ class DWI(object):
         nvox = self.dt.shape[1]
         N = dir.shape[0]
         nblocks = 10
-        akc = np.zeros((nvox, nblocks))
+        maxk = np.zeros((nvox, nblocks))
         inputs = tqdm(range(nblocks),
                       desc='Extracting AWF          ',
                       unit='iter',
                       ncols=tqdmWidth)
         for i in inputs:
-            akc = self.kurtosisCoeff(
-                self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
-        maxk = np.nanmean(akc, axis=0)
+            maxk = np.stack(self.kurtosisCoeff(
+                self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))]))
+            maxk = np.nanmean(maxk, axis=0)
         awf = np.divide(maxk, (maxk + 3))
         awf[np.isnan(awf)] = 0
         dirs = dwidirs.dirs30
