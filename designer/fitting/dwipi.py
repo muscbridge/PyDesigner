@@ -870,11 +870,6 @@ class DWI(object):
                                 akc[:,i],
                                 awf[i],
                                 adc2dt) for i in inputs))
-            # for i in inputs:
-            # eas_ad[i], eas_rd[i], eas_tort[i], ias_ad[i], ias_rd[i], \
-            # ias_tort[i] = \
-            # wmtihelper(self.dt[:, i], dirs, adc[:, i], akc[:,i], awf[i],
-            #            adc2dt)
         awf = vectorize(awf, self.mask)
         eas_ad = vectorize(np.array(eas_ad), self.mask)
         eas_rd = vectorize(np.array(eas_rd), self.mask)
