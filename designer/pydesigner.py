@@ -152,7 +152,7 @@ parser.add_argument('--noakc', action='store_true', default=False,
 parser.add_argument('--nooutliers', action='store_true', default=False,
                     help='Do not perform outlier correction on kurtosis '
                     'fitting metrics.')
-parser.add_argument('-w', '--WMTI', action='store_true', default=False,
+parser.add_argument('-w', '--wmti', action='store_true', default=False,
                     help='Include DKI WMTI parameters (forces DKI): '
                     'AWF, IAS_params, EAS_params. ')
 parser.add_argument('--kcumulants', action='store_true', default=False,
@@ -718,6 +718,23 @@ if not args.nofit:
             dp.writeNii(kfa, img.hdr, op.join(metricpath, 'kfa'))
             dp.writeNii(mkt, img.hdr, op.join(metricpath, 'mkt'))
             dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
+            if args.wmti:
+                awf, eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort = \
+                    img.extractWMTI()
+                dp.writeNii(awf, img.hdr,
+                            op.join(metricpath, 'wmti_awf'))
+                dp.writeNii(eas_ad, img.hdr,
+                            op.join(metricpath, 'wmti_eas_ad'))
+                dp.writeNii(eas_rd, img.hdr,
+                            op.join(metricpath, 'wmti_eas_rd'))
+                dp.writeNii(eas_tort, img.hdr,
+                            op.join(metricpath, 'wmti_eas_tort'))
+                dp.writeNii(ias_ad, img.hdr,
+                            op.join(metricpath, 'wmti_ias_ad'))
+                dp.writeNii(ias_rd, img.hdr,
+                            op.join(metricpath, 'wmti_ias_rd'))
+                dp.writeNii(ias_tort, img.hdr,
+                            op.join(metricpath, 'wmti_ias_tort'))
             # reorder tensor for mrtrix3
             DT, KT = img.tensorReorder(img.tensorType())
             dp.writeNii(DT, img.hdr, op.join(metricpath, 'DT'))
