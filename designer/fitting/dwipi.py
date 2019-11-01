@@ -11,6 +11,7 @@ import nibabel as nib
 import numpy as np
 from joblib import Parallel, delayed
 from scipy.special import expit as sigmoid
+import scipy.linalg as sla
 from tqdm import tqdm
 
 from . import dwidirs
@@ -780,24 +781,56 @@ class DWI(object):
 
         Returns
         -------
-        awf:    axonal water fraction
-        eas:    extra-axonal diffusivities
-        ias:    intra-axonal diffusivities
+        awf:        axonal water fraction
+        eas_ad:     extra-axonal axial diffusivity
+        eas_rd:     extra-axonal radial diffusivity
+        eas_tort:   extra-axonal tortuosity
+        ias_ad:     intra-axonal axial diffusivity
+        ias_rd:     intra-axonal radial diffusivity
+        ias_tort:   intra-axonal tortuosity
         """
-        def wmtihelper():
-            adc = self.diffusionCoeff(self.dt[:6], dir)
-            akc = self.kurtosisCoeff(self.dt, dir)
-            akc[akc < 0] = minZero #avoiding complext output. However,
+        def wmtihelper(dt, dir, adc, akc, awf, adc2dt):
+            # adc = self.diffusionCoeff(dt[:6], dir)
+            # akc = self.kurtosisCoeff(dt, dir)
+            akc[akc < minZero] = minZero # Avoid complex output. However,
             # negative AKC might be taken care of by applying constraints
-            De = np.multiply(
-                adc,
-                1 + np.sqrt(
-                    (np.multiply(akc, awf) / (3 * (1 - awf)))))
-            Di = np.multiply(
-                adc,
-                1 - np.sqrt(
-                    (np.multiply(akc, (1 - awf)) / (3 * awf))))
-
+            try:
+                # Eigenvalue decomposition of De
+                De = np.multiply(
+                    adc,
+                    1 + np.sqrt(
+                        (np.multiply(akc, awf) / (3 * (1 - awf)))))
+                dt_e = np.matmul(adc2dt, De)
+                DTe = dt_e[[0, 1, 2, 1, 3, 4, 2, 4, 5]]
+                DTe = np.reshape(DTe, (3, 3), order='F')
+                eigval = sla.eigh(DTe, eigvals_only=True)
+                eigval = np.sort(eigval)[::-1]
+                eas_ad = eigval[0]
+                eas_rd = 0.5 * (eigval[1] + eigval[2])
+                eas_tort = eas_ad/eas_rd
+            except:
+                eas_ad = 0
+                eas_rd = 0
+                eas_tort = 0
+            try:
+                # Eigenvalue decomposition of Da
+                Di = np.multiply(
+                    adc,
+                    1 - np.sqrt(
+                        (np.multiply(akc, (1 - awf)) / (3 * awf))))
+                dt_i = np.matmul(adc2dt, Di)
+                DTi = dt_i[[0, 1, 2, 1, 3, 4, 2, 4, 5]]
+                DTi = np.reshape(DTi, (3, 3), order='F')
+                eigval = sla.eigh(DTi, eigvals_only=True)
+                eigval = np.sort(eigval)[::-1]
+                ias_ad = eigval[0]
+                ias_rd = 0.5 * (eigval[1] + eigval[2])
+                ias_tort = eas_ad / eas_rd
+            except:
+                ias_ad = 0
+                ias_rd = 0
+                ias_tort = 0
+            return eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
 
         var_exists = 'self.DTIvectors' in locals() or \
                      'self.DTIvectors' in globals()
@@ -814,21 +847,42 @@ class DWI(object):
                       unit='blk',
                       ncols=tqdmWidth)
         for i in inputs:
-            akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
-        print(akc.shape)
+            akc = self.kurtosisCoeff(
+                self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
         maxk = np.nanmean(akc, axis=0)
         awf = np.divide(maxk, (maxk + 3))
         awf[np.isnan(awf)] = 0
-        print(awf.shape)
-        awf = vectorize(awf, self.mask)
         dirs = dwidirs.dirs30
+        adc = self.diffusionCoeff(self.dt[:6], dirs)
+        akc = self.kurtosisCoeff(self.dt, dirs)
         (dcnt, dind) = self.createTensorOrder(2)
-        adc2dt = np.
-        adc2dt = np.matmul(np.linalg.pinv(np.matmul(w, b)),
-                       np.matmul(w, np.log(dwi)))
-
-
-        return awf
+        adc2dt = np.linalg.pinv(np.matmul(
+                                (dirs[:, dind[:, 0]] * \
+                                 dirs[:, dind[:, 1]]),
+                                 np.diag(dcnt)))
+        eas_ad = np.zeros(nvox)
+        eas_rd = np.zeros(nvox)
+        eas_tort = np.zeros(nvox)
+        ias_ad = np.zeros(nvox)
+        ias_rd = np.zeros(nvox)
+        ias_tort = np.zeros(nvox)
+        inputs = tqdm(range(nvox),
+                      desc='Extracting AWF          ',
+                      unit='vox',
+                      ncols=tqdmWidth)
+        for i in inputs:
+            eas_ad[i], eas_rd[i], eas_tort[i], ias_ad[i], ias_rd[i], \
+            ias_tort[i] = \
+            wmtihelper(self.dt[:, i], dirs, adc[:, i], akc[:,i], awf[i],
+                       adc2dt)
+        awf = vectorize(awf, self.mask)
+        eas_ad = vectorize(np.array(eas_ad), self.mask)
+        eas_rd = vectorize(np.array(eas_rd), self.mask)
+        eas_tort = vectorize(np.array(eas_tort), self.mask)
+        ias_ad = vectorize(np.array(ias_ad), self.mask)
+        ias_rd = vectorize(np.array(ias_rd), self.mask)
+        ias_tort = vectorize(np.array(ias_tort), self.mask)
+        return awf, eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
 
 
     def findViols(self, c=[0, 1, 0]):
