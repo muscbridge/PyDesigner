@@ -807,9 +807,9 @@ class DWI(object):
                 eas_rd = 0.5 * (eigval[1] + eigval[2])
                 eas_tort = eas_ad/eas_rd
             except:
-                eas_ad = 0
-                eas_rd = 0
-                eas_tort = 0
+                eas_ad = minZero
+                eas_rd = minZero
+                eas_tort = minZero
             try:
                 # Eigenvalue decomposition of Da
                 Di = np.multiply(
@@ -825,9 +825,9 @@ class DWI(object):
                 ias_rd = 0.5 * (eigval[1] + eigval[2])
                 ias_tort = ias_ad / ias_rd
             except:
-                ias_ad = 0
-                ias_rd = 0
-                ias_tort = 0
+                ias_ad = minZero
+                ias_rd = minZero
+                ias_tort = minZero
             return eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
         dir = dwidirs.dirs10000
         nvox = self.dt.shape[1]
@@ -843,7 +843,7 @@ class DWI(object):
                 self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))]))
             maxk = np.nanmean(maxk, axis=0)
         awf = np.divide(maxk, (maxk + 3))
-        awf[np.isnan(awf)] = 0
+        awf[np.isnan(awf)] = minZero
         dirs = dwidirs.dirs30
         adc = self.diffusionCoeff(self.dt[:6], dirs)
         akc = self.kurtosisCoeff(self.dt, dirs)
