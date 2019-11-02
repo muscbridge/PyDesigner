@@ -805,7 +805,11 @@ class DWI(object):
                 eigval = np.sort(eigval)[::-1]
                 eas_ad = eigval[0]
                 eas_rd = 0.5 * (eigval[1] + eigval[2])
-                eas_tort = eas_ad / eas_rd
+                np.seterr(invalid='raise')
+                try:
+                    eas_tort = eas_ad / eas_rd
+                except:
+                    eas_tort = minZero
             except:
                 eas_ad = minZero
                 eas_rd = minZero
@@ -823,7 +827,11 @@ class DWI(object):
                 eigval = np.sort(eigval)[::-1]
                 ias_ad = eigval[0]
                 ias_rd = 0.5 * (eigval[1] + eigval[2])
-                ias_tort = ias_ad / ias_rd
+                np.seterr(invalid='raise')
+                try:
+                    ias_tort = ias_ad / ias_rd
+                except:
+                    ias_tort = minZero
             except:
                 ias_ad = minZero
                 ias_rd = minZero
