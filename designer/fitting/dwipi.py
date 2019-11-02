@@ -805,7 +805,7 @@ class DWI(object):
                 eigval = np.sort(eigval)[::-1]
                 eas_ad = eigval[0]
                 eas_rd = 0.5 * (eigval[1] + eigval[2])
-                eas_tort = eas_ad/eas_rd
+                eas_tort = eas_ad / eas_rd
             except:
                 eas_ad = minZero
                 eas_rd = minZero
@@ -843,7 +843,10 @@ class DWI(object):
                 self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))]))
             maxk = np.nanmean(maxk, axis=0)
         awf = np.divide(maxk, (maxk + 3))
-        awf[np.isnan(awf)] = minZero
+        # Changes voxels less than minZero, nans and infs to minZero
+        awf[np.logical_or(
+            np.logical_or(np.isnan(awf), np.isinf(awf)),
+            awf < minZero)] = minZero
         dirs = dwidirs.dirs30
         adc = self.diffusionCoeff(self.dt[:6], dirs)
         akc = self.kurtosisCoeff(self.dt, dirs)
