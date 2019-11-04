@@ -449,7 +449,7 @@ if args.undistort:
     # Add to HEAD name
     undistorted_name = 'u' + filetable['HEAD'].getName() + '.nii'
     undistorted_full = op.join(outpath, undistorted_name)
-    eddyqc = op.join(outpath, 'metric_qc', 'EDDYQC')
+    eddyqc = op.join(outpath, 'metric_qc', 'eddyqc')
     if op.exists(eddyqc):
         if args.force:
             shutil.rmtree(eddyqc)
