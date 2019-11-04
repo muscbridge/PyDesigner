@@ -14,7 +14,7 @@ import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy as np # array, ndarray
 from preprocessing import util, smoothing, rician, preparation
-from fitting import dwipi as dp
+from fitting import dwipy as dp
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
 

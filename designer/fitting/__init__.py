@@ -1,1 +1,1 @@
-from . import dwipi
+from . import dwipy
