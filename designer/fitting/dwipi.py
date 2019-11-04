@@ -1117,7 +1117,18 @@ class DWI(object):
         return map
 
     def multiplyMask(self, img):
-        # Returns an image multiplied by the brain mask to remove all values outside the brain
+        '''Multiplies a 3D image by the brain mask
+
+        Parameters
+        ----------
+        img:    3D image to be multiplied
+
+        Returns
+        -------
+        multiplied image
+        '''
+        # Returns an image multiplied by the brain mask to remove all
+        # values outside the brain
         return np.multiply(self.mask.astype(bool), img)
 
     def akcoutliers(self, iter=10):
