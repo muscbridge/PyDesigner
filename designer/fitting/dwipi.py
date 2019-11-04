@@ -5,13 +5,17 @@ import multiprocessing
 import os
 import random as rnd
 import warnings
+
 import cvxpy as cvx
 import nibabel as nib
 import numpy as np
 from joblib import Parallel, delayed
 from scipy.special import expit as sigmoid
+import scipy.linalg as sla
 from tqdm import tqdm
+
 from . import dwidirs
+
 warnings.filterwarnings("ignore")
 
 # Define the lowest number possible before it is considered a zero
@@ -347,7 +351,7 @@ class DWI(object):
         wcnt, wind = self.createTensorOrder(4)
         ndir = dir.shape[0]
         adc = self.diffusionCoeff(dt[:6], dir)
-        adc[adc == 0] = minZero
+        adc[adc < minZero] = minZero
         md = np.sum(dt[np.array([0,3,5])], 0)/3
         bW = np.tile(wcnt,(ndir, 1)) * dir[:,wind[:, 0]] * \
              dir[:,wind[:,1]] * dir[:,wind[:, 2]] * dir[:,wind[:, 3]]
@@ -766,6 +770,126 @@ class DWI(object):
         kfa = vectorize(kfa, self.mask)
         mkt = vectorize(mkt, self.mask)
         return mk, rk, ak, kfa, mkt, trace
+
+    def extractWMTI(self):
+        """Returns white matter tract integrity (WMTI) parameters. Warning:
+        this can only be run after fitting and DWI.extractDTI().
+
+        Parameters
+        ----------
+        (none)
+
+        Returns
+        -------
+        awf:        axonal water fraction
+        eas_ad:     extra-axonal space axial diffusivity
+        eas_rd:     extra-axonal space radial diffusivity
+        eas_tort:   extra-axonal space tortuosity
+        ias_ad:     intra-axonal space axial diffusivity
+        ias_rd:     intra-axonal space radial diffusivity
+        ias_tort:   intra-axonal space tortuosity
+        """
+        def wmtihelper(dt, dir, adc, akc, awf, adc2dt):
+            akc[akc < minZero] = minZero # Avoid complex output. However,
+            # negative AKC might be taken care of by applying constraints
+            try:
+                # Eigenvalue decomposition of De
+                De = np.multiply(
+                    adc,
+                    1 + np.sqrt(
+                        (np.multiply(akc, awf) / (3 * (1 - awf)))))
+                dt_e = np.matmul(adc2dt, De)
+                DTe = dt_e[[0, 1, 2, 1, 3, 4, 2, 4, 5]]
+                DTe = np.reshape(DTe, (3, 3), order='F')
+                eigval = sla.eigh(DTe, eigvals_only=True)
+                eigval = np.sort(eigval)[::-1]
+                eas_ad = eigval[0]
+                eas_rd = 0.5 * (eigval[1] + eigval[2])
+                np.seterr(invalid='raise')
+                try:
+                    eas_tort = eas_ad / eas_rd
+                except:
+                    eas_tort = minZero
+            except:
+                eas_ad = minZero
+                eas_rd = minZero
+                eas_tort = minZero
+            try:
+                # Eigenvalue decomposition of Da
+                Di = np.multiply(
+                    adc,
+                    1 - np.sqrt(
+                        (np.multiply(akc, (1 - awf)) / (3 * awf))))
+                dt_i = np.matmul(adc2dt, Di)
+                DTi = dt_i[[0, 1, 2, 1, 3, 4, 2, 4, 5]]
+                DTi = np.reshape(DTi, (3, 3), order='F')
+                eigval = sla.eigh(DTi, eigvals_only=True)
+                eigval = np.sort(eigval)[::-1]
+                ias_ad = eigval[0]
+                ias_rd = 0.5 * (eigval[1] + eigval[2])
+                np.seterr(invalid='raise')
+                try:
+                    ias_tort = ias_ad / ias_rd
+                except:
+                    ias_tort = minZero
+            except:
+                ias_ad = minZero
+                ias_rd = minZero
+                ias_tort = minZero
+            return eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
+        dir = dwidirs.dirs10000
+        nvox = self.dt.shape[1]
+        N = dir.shape[0]
+        nblocks = 10
+        maxk = np.zeros((nvox, nblocks))
+        inputs = tqdm(range(nblocks),
+                      desc='Extracting AWF          ',
+                      unit='iter',
+                      ncols=tqdmWidth)
+        for i in inputs:
+            maxk = np.stack(self.kurtosisCoeff(
+                self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))]))
+            maxk = np.nanmean(maxk, axis=0)
+        awf = np.divide(maxk, (maxk + 3))
+        # Changes voxels less than minZero, nans and infs to minZero
+        awf[np.logical_or(
+            np.logical_or(np.isnan(awf), np.isinf(awf)),
+            awf < minZero)] = minZero
+        dirs = dwidirs.dirs30
+        adc = self.diffusionCoeff(self.dt[:6], dirs)
+        akc = self.kurtosisCoeff(self.dt, dirs)
+        (dcnt, dind) = self.createTensorOrder(2)
+        adc2dt = np.linalg.pinv(np.matmul(
+                                (dirs[:, dind[:, 0]] * \
+                                 dirs[:, dind[:, 1]]),
+                                 np.diag(dcnt)))
+        eas_ad = np.zeros(nvox)
+        eas_rd = np.zeros(nvox)
+        eas_tort = np.zeros(nvox)
+        ias_ad = np.zeros(nvox)
+        ias_rd = np.zeros(nvox)
+        ias_tort = np.zeros(nvox)
+        inputs = tqdm(range(nvox),
+                      desc='Extracting EAS and IAS  ',
+                      unit='vox',
+                      ncols=tqdmWidth)
+        eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort = zip(*Parallel(
+            n_jobs=self.workers, prefer='processes')(
+            delayed(wmtihelper)(self.dt[:, i],
+                                dirs,
+                                adc[:, i],
+                                akc[:,i],
+                                awf[i],
+                                adc2dt) for i in inputs))
+        awf = vectorize(awf, self.mask)
+        eas_ad = vectorize(np.array(eas_ad), self.mask)
+        eas_rd = vectorize(np.array(eas_rd), self.mask)
+        eas_tort = vectorize(np.array(eas_tort), self.mask)
+        ias_ad = vectorize(np.array(ias_ad), self.mask)
+        ias_rd = vectorize(np.array(ias_rd), self.mask)
+        ias_tort = vectorize(np.array(ias_tort), self.mask)
+        return awf, eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
+
 
     def findViols(self, c=[0, 1, 0]):
         """
