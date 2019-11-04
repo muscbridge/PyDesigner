@@ -1149,7 +1149,8 @@ class DWI(object):
                       unit='blk',
                       ncols=tqdmWidth)
         for i in inputs:
-            akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
+            akc = self.kurtosisCoeff(
+                self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
             akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10),
                                     axis=0))] = True
             akc_out.astype('bool')
