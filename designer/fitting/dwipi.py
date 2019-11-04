@@ -1673,15 +1673,24 @@ def vectorize(img, mask):
     volumes
     """
     if mask is None:
-        mask = np.ones((img.shape[0], img.shape[1], img.shape[2]), order='F')
+        mask = np.ones((img.shape[0],
+                        img.shape[1],
+                        img.shape[2]),
+                       order='F')
     mask = mask.astype(bool)
     if img.ndim == 1:
         n = img.shape[0]
-        s = np.zeros((mask.shape[0], mask.shape[1], mask.shape[2]), order='F')
+        s = np.zeros((mask.shape[0],
+                      mask.shape[1],
+                      mask.shape[2]),
+                     order='F')
         s[mask] = img
     if img.ndim == 2:
         n = img.shape[0]
-        s = np.zeros((mask.shape[0], mask.shape[1], mask.shape[2], n), order='F')
+        s = np.zeros((mask.shape[0],
+                      mask.shape[1],
+                      mask.shape[2], n),
+                     order='F')
         for i in range(0, n):
             s[mask, i] = img[i,:]
     if img.ndim == 3:
