@@ -4,7 +4,6 @@
 import multiprocessing
 import os
 import random
-import warnings
 import cvxpy as cvx
 import nibabel as nib
 import numpy as np
