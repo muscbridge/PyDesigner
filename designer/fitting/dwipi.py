@@ -23,6 +23,10 @@ dirSample = 256
 # Progress bar Properties
 tqdmWidth = 70  # Number of columns of progress bar
 
+# Set default numpy errorstates
+np.seterr(all = 'ignore')
+defaultErrorState = np.geterr()
+
 class DWI(object):
     def __init__(self, imPath, nthreads=-1):
         if os.path.exists(imPath):
