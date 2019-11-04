@@ -653,11 +653,23 @@ class DWI(object):
             ndirs = cDirs.shape[0]
             C = np.empty((0, 22))
             if constraints[0] > 0:  # Dapp > 0
-                C = np.append(C, np.hstack((np.zeros((ndirs, 1)),np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]] * cDirs[:, dind[:, 1]],np.zeros((ndirs, 15)))), axis=0)
+                C = np.append(C, np.hstack(
+                    (np.zeros((ndirs, 1)),
+                     np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]] * \
+                     cDirs[:, dind[:, 1]],np.zeros((ndirs, 15)))), axis=0)
             if constraints[1] > 0:  # Kapp > 0
-                C = np.append(C, np.hstack((np.zeros((ndirs, 7)), np.tile(wcnt, [ndirs, 1]) * cDirs[:, wind[:, 0]] * cDirs[:, wind[:, 1]] * cDirs[:,wind[:,2]] * cDirs[:,wind[:,3]])),axis=0)
+                C = np.append(C, np.hstack(
+                    (np.zeros((ndirs, 7)),
+                     np.tile(wcnt, [ndirs, 1]) * cDirs[:, wind[:, 0]] * \
+                     cDirs[:, wind[:, 1]] * cDirs[:,wind[:,2]] * \
+                     cDirs[:,wind[:,3]])),axis=0)
             if constraints[2] > 0:  # K < 3/(b*Dapp)
-                C = np.append(C, np.hstack((np.zeros((ndirs, 1)), 3 / self.maxBval() * np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]],np.tile(-wcnt, [ndirs, 1]) * cDirs[:, wind[:, 1]] * cDirs[:,wind[:, 2]] * cDirs[:,wind[:, 3]])),axis=0)
+                C = np.append(C, np.hstack(
+                    (np.zeros((ndirs, 1)),
+                     3 / self.maxBval() * \
+                     np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]],
+                     np.tile(-wcnt, [ndirs, 1]) * cDirs[:, wind[:, 1]] * \
+                     cDirs[:,wind[:, 2]] * cDirs[:,wind[:, 3]])),axis=0)
         else:
             print('Invalid constraints. Please use format "[0, 0, 0]"')
         return C
