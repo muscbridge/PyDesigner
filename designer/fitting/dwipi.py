@@ -733,12 +733,12 @@ class DWI(object):
         md = (l1 + l2 + l3) / 3
         rd = (l2 + l3) / 2
         ad = l1
-            fa = np.sqrt(1 / 2) * np.sqrt(
-                (l1 - l2) ** 2 + (l2 - l3) ** 2 + (
-                            l3 - l1) ** 2) / np.sqrt(
-                l1 ** 2 + l2 ** 2 + l3 ** 2)
-            fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1],
-                                  fa * v1[:, :, :, 2]), axis=3))
+        fa = np.sqrt(1 / 2) * np.sqrt(
+            (l1 - l2) ** 2 + (l2 - l3) ** 2 + (
+                        l3 - l1) ** 2) / np.sqrt(
+            l1 ** 2 + l2 ** 2 + l3 ** 2)
+        fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1],
+                              fa * v1[:, :, :, 2]), axis=3))
         trace = vectorize(trace.T, self.mask)
         return md, rd, ad, fa, fe, trace
 
