@@ -656,7 +656,7 @@ filetable['HEAD'] = filetable['preprocessed']
 if not args.nofit:
     # make metric map directory
     metricpath = op.join(outpath, 'metrics')
-    fitqcpath = op.join(outpath, 'metrics_qc')
+    fitqcpath = op.join(outpath, 'metrics_qc', 'fitting')
     if op.exists(metricpath):
         if args.force:
             shutil.rmtree(metricpath)
