@@ -3,9 +3,7 @@
 
 import multiprocessing
 import os
-import random as rnd
-import warnings
-
+import random
 import cvxpy as cvx
 import nibabel as nib
 import numpy as np
@@ -13,19 +11,17 @@ from joblib import Parallel, delayed
 from scipy.special import expit as sigmoid
 import scipy.linalg as sla
 from tqdm import tqdm
-
 from . import dwidirs
-
-warnings.filterwarnings("ignore")
 
 # Define the lowest number possible before it is considered a zero
 minZero = 1e-8
-
 # Define number of directions to resample after computing all tensors
 dirSample = 256
-
 # Progress bar Properties
 tqdmWidth = 70  # Number of columns of progress bar
+# Set default numpy errorstates
+np.seterr(all = 'ignore')
+defaultErrorState = np.geterr()
 
 class DWI(object):
     def __init__(self, imPath, nthreads=-1):
@@ -224,21 +220,33 @@ class DWI(object):
         if order is None:
             if imType == 'dti':
                 cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
-                ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3])) - 1
+                ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3],
+                                [3, 3])) - 1
             elif imType == 'dki':
-                cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4, 1], dtype=int)
-                ind = np.array(([1, 1, 1, 1], [1, 1, 1, 2], [1, 1, 1, 3], [1, 1, 2, 2], [1, 1, 2, 3], [1, 1, 3, 3], \
-                                [1, 2, 2, 2], [1, 2, 2, 3], [1, 2, 3, 3], [1, 3, 3, 3], [2, 2, 2, 2], [2, 2, 2, 3],
-                                [2, 2, 3, 3], [2, 3, 3, 3], [3, 3, 3, 3])) - 1
+                cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6,
+                                4, 1],
+                               dtype=int)
+                ind = np.array(([1, 1, 1, 1], [1, 1, 1, 2], [1, 1, 1, 3],
+                                [1, 1, 2, 2], [1, 1, 2, 3], [1, 1, 3, 3],
+                                [1, 2, 2, 2], [1, 2, 2, 3], [1, 2, 3, 3],
+                                [1, 3, 3, 3], [2, 2, 2, 2], [2, 2, 2, 3],
+                                [2, 2, 3, 3], [2, 3, 3, 3], [3, 3, 3, 3]))\
+                      - 1
         elif order == 2:
             cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
-            ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3])) - 1
+            ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3],
+                            [3, 3])) - 1
         elif order == 4:
-            cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4, 1], dtype=int)
-            ind = np.array(([1,1,1,1],[1,1,1,2],[1,1,1,3],[1,1,2,2],[1,1,2,3],[1,1,3,3],\
-                [1,2,2,2],[1,2,2,3],[1,2,3,3],[1,3,3,3],[2,2,2,2],[2,2,2,3],[2,2,3,3],[2,3,3,3],[3,3,3,3])) - 1
+            cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4,
+                            1],
+                           dtype=int)
+            ind = np.array(([1,1,1,1],[1,1,1,2],[1,1,1,3],[1,1,2,2],
+                            [1,1,2,3],[1,1,3,3],[1,2,2,2],[1,2,2,3],
+                            [1,2,3,3],[1,3,3,3],[2,2,2,2],[2,2,2,3],
+                            [2,2,3,3],[2,3,3,3],[3,3,3,3])) - 1
         else:
-            raise ValueError('createTensorOrder: Please enter valid order values (2 or 4).')
+            raise ValueError('createTensorOrder: Please enter valid '
+                             'order values (2 or 4).')
         return cnt, ind
 
     def fibonacciSphere(self, samples=1, randomize=True):
@@ -262,7 +270,6 @@ class DWI(object):
         points:     [3 x samples] array containing evenly spaced points
         from a sphere
         """
-        import random
         rnd = 1
         if randomize:
             rnd = random.random() * samples
@@ -502,7 +509,6 @@ class DWI(object):
         if cons is None:
             dt = np.matmul(np.linalg.pinv(np.matmul(w, b)),
                            np.matmul(w, np.log(dwi)))
-
         # Constrained fitting
         else:
             C = np.matmul(w, b).astype('double')
@@ -587,19 +593,22 @@ class DWI(object):
                                     self.b[~reject_[:, i]]) \
                  for i in inputs)
         else:
-            C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
+            # C is linear inequality constraint matrix A_ub
+            C = self.createConstraints(constraints)
             inputs = tqdm(range(0, dwi_.shape[1]),
                           desc='Constrained Tensor Fit  ',
                           unit='vox',
                           ncols=tqdmWidth)
             if dt_hat is None:
-                self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
+                self.dt = Parallel(n_jobs=self.workers,
+                                   prefer='processes') \
                     (delayed(self.wlls)(shat[~reject_[:, i], i],
                                              dwi_[~reject_[:, i], i],
                                              self.b[~reject_[:, i]],
                                              cons=C) for i in inputs)
             else:
-                self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
+                self.dt = Parallel(n_jobs=self.workers,
+                                   prefer='processes') \
                     (delayed(self.wlls)(shat[~reject_[:, i], i],
                                         dwi_[~reject_[:, i], i],
                                         self.b[~reject_[:, i]],
@@ -643,11 +652,23 @@ class DWI(object):
             ndirs = cDirs.shape[0]
             C = np.empty((0, 22))
             if constraints[0] > 0:  # Dapp > 0
-                C = np.append(C, np.hstack((np.zeros((ndirs, 1)),np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]] * cDirs[:, dind[:, 1]],np.zeros((ndirs, 15)))), axis=0)
+                C = np.append(C, np.hstack(
+                    (np.zeros((ndirs, 1)),
+                     np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]] * \
+                     cDirs[:, dind[:, 1]],np.zeros((ndirs, 15)))), axis=0)
             if constraints[1] > 0:  # Kapp > 0
-                C = np.append(C, np.hstack((np.zeros((ndirs, 7)), np.tile(wcnt, [ndirs, 1]) * cDirs[:, wind[:, 0]] * cDirs[:, wind[:, 1]] * cDirs[:,wind[:,2]] * cDirs[:,wind[:,3]])),axis=0)
+                C = np.append(C, np.hstack(
+                    (np.zeros((ndirs, 7)),
+                     np.tile(wcnt, [ndirs, 1]) * cDirs[:, wind[:, 0]] * \
+                     cDirs[:, wind[:, 1]] * cDirs[:,wind[:,2]] * \
+                     cDirs[:,wind[:,3]])),axis=0)
             if constraints[2] > 0:  # K < 3/(b*Dapp)
-                C = np.append(C, np.hstack((np.zeros((ndirs, 1)), 3 / self.maxBval() * np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]],np.tile(-wcnt, [ndirs, 1]) * cDirs[:, wind[:, 1]] * cDirs[:,wind[:, 2]] * cDirs[:,wind[:, 3]])),axis=0)
+                C = np.append(C, np.hstack(
+                    (np.zeros((ndirs, 1)),
+                     3 / self.maxBval() * \
+                     np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]],
+                     np.tile(-wcnt, [ndirs, 1]) * cDirs[:, wind[:, 1]] * \
+                     cDirs[:,wind[:, 2]] * cDirs[:,wind[:, 3]])),axis=0)
         else:
             print('Invalid constraints. Please use format "[0, 0, 0]"')
         return C
@@ -675,13 +696,11 @@ class DWI(object):
         trace:  sum of first eigenvalues
         """
         # extract all tensor parameters from dt
-
         DT = np.reshape(
             np.concatenate((self.dt[0, :], self.dt[1, :], self.dt[2, :],
                             self.dt[1, :], self.dt[3, :], self.dt[4, :],
                             self.dt[2, :], self.dt[4, :], self.dt[5, :])),
             (3, 3, self.dt.shape[1]))
-
         # get the trace
         rdwi = sigmoid(np.matmul(self.b[:, 1:], self.dt))
         B = np.round(-(self.b[:, 0] + self.b[:, 3] + self.b[:, 5]) * 1000)
@@ -709,9 +728,11 @@ class DWI(object):
         md = (l1 + l2 + l3) / 3
         rd = (l2 + l3) / 2
         ad = l1
-        fa = np.sqrt(1 / 2) * np.sqrt(
-            (l1 - l2) ** 2 + (l2 - l3) ** 2 + (l3 - l1) ** 2) / np.sqrt(
-            l1 ** 2 + l2 ** 2 + l3 ** 2)
+        fa = np.sqrt(1 / 2) * \
+             np.sqrt((l1 - l2) ** 2 + \
+                     (l2 - l3) ** 2 + \
+                     (l3 - l1) ** 2) / \
+             np.sqrt(l1 ** 2 + l2 ** 2 + l3 ** 2)
         fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1],
                               fa * v1[:, :, :, 2]), axis=3))
         trace = vectorize(trace.T, self.mask)
@@ -805,7 +826,6 @@ class DWI(object):
                 eigval = np.sort(eigval)[::-1]
                 eas_ad = eigval[0]
                 eas_rd = 0.5 * (eigval[1] + eigval[2])
-                np.seterr(invalid='raise')
                 try:
                     eas_tort = eas_ad / eas_rd
                 except:
@@ -837,6 +857,7 @@ class DWI(object):
                 ias_rd = minZero
                 ias_tort = minZero
             return eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
+        np.seterr(invalid='raise', divide='raise')
         dir = dwidirs.dirs10000
         nvox = self.dt.shape[1]
         N = dir.shape[0]
@@ -888,8 +909,8 @@ class DWI(object):
         ias_ad = vectorize(np.array(ias_ad), self.mask)
         ias_rd = vectorize(np.array(ias_rd), self.mask)
         ias_tort = vectorize(np.array(ias_tort), self.mask)
+        np.seterr(**defaultErrorState)
         return awf, eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
-
 
     def findViols(self, c=[0, 1, 0]):
         """
@@ -917,7 +938,6 @@ class DWI(object):
         """
         if c == None:
             c = [0, 0, 0]
-
         nvox = self.dt.shape[1]
         sumViols = np.zeros(nvox)
         maxB = self.maxBval()
@@ -931,25 +951,22 @@ class DWI(object):
             # C[1]: K < 0
             tmp[1] = np.size(np.nonzero(akc[:, i] < minZero))
             #c[2]:
-            tmp[2] = np.size(np.nonzero(akc[:, i] > (3/(maxB * adc[:, i]))))
+            tmp[2] = np.size(np.nonzero(akc[:, i] > \
+                                        (3/(maxB * adc[:, i]))))
             sumViols[i] = np.sum(tmp)
-
         map = np.zeros((sumViols.shape))
         if c[0] == 0 and c[1] == 0 and c[2] == 0:
             # [0 0 0]
             print('0 0 0')
             map = pViols
-
         elif c[0] == 1 and c[1] == 0 and c[2] == 0:
             # [1 0 0]
             print('1 0 0')
             map = sumViols/dirSample
-
         elif c[0] == 0 and c[1] == 1 and c[2] == 0:
             # [0 1 0]
             print('0 1 0')
             map = sumViols/dirSample
-
         elif c[0] == 0 and c[1] == 0 and c[2] == 1:
             # [0 0 1]
             print('0 0 1')
@@ -959,22 +976,18 @@ class DWI(object):
             # [1 1 0]
             print('1 1 0')
             map = sumVioms/(2 * dirSample)
-
         elif c[0] == 1 and c[1] == 0 and c[2] == 1:
             # [1 0 1]
             print('1 0 1')
             map = sumViols/(2 * dirSample)
-
         elif c[0] == 0 and c[1] == 1 and c[2] == 1:
             # [0 1 1]
             print('0 1 1')
             map = sumViols / (2 * dirSample)
-
         elif c[0] == 1 and c[1] == 1 and c[2] == 1:
             # [1 1 1]
             print('1 1 1')
             map = sumViols / (3 * dirSample)
-
         map = np.reshape(map, nvox)
         map = vectorize(map, self.mask)
         return map
@@ -1026,7 +1039,7 @@ class DWI(object):
 
     def findVoxelViol(self, adcVox, akcVox, maxB, c):
         """
-        Returns the proportions of vioaltions occuring at a voxel.
+        Returns the proportions of violations occurring at a voxel.
         Classification: Method
 
         Usage
@@ -1059,31 +1072,24 @@ class DWI(object):
         if c[0] == 0 and c[1] == 0 and c[2] == 0:
             # [0 0 0]
             n = 0
-
         elif c[0] == 1 and c[1] == 0 and c[2] == 0:
             # [1 0 0]
             n = sumViols/dirSample
-
         elif c[0] == 0 and c[1] == 1 and c[2] == 0:
             # [0 1 0]
             n = sumViols/dirSample
-
         elif c[0] == 0 and c[1] == 0 and c[2] == 1:
             # [0 0 1]
             n = sumViols/dirSample
-
         elif c[0] == 1 and c[1] == 1 and c[2] == 0:
             # [1 1 0]
             n = sumVioms/(2 * dirSample)
-
         elif c[0] == 1 and c[1] == 0 and c[2] == 1:
             # [1 0 1]
             n = sumViols/(2 * dirSample)
-
         elif c[0] == 0 and c[1] == 1 and c[2] == 1:
             # [0 1 1]
             n = sumViols/(2 * dirSample)
-
         elif c[0] == 1 and c[1] == 1 and c[2] == 1:
             # [1 1 1]
             n = sumViols/(3 * dirSample)
@@ -1100,13 +1106,26 @@ class DWI(object):
         akc = self.kurtosisCoeff(self.dt, self.dirs)
         inputs = tqdm(range(0, nvox))
         map = Parallel(n_jobs=self.workers, prefer='processes') \
-            (delayed(self.findVoxelViol)(adc[:,i], akc[:,i], maxB, [0, 1, 0]) for i in inputs)
+            (delayed(self.findVoxelViol)(adc[:,i],
+                                         akc[:,i], maxB, [0, 1, 0]) for\
+                i in inputs)
         map = np.reshape(pViols2, nvox)
         map = self.multiplyMask(vectorize(map,self.mask))
         return map
 
     def multiplyMask(self, img):
-        # Returns an image multiplied by the brain mask to remove all values outside the brain
+        '''Multiplies a 3D image by the brain mask
+
+        Parameters
+        ----------
+        img:    3D image to be multiplied
+
+        Returns
+        -------
+        multiplied image
+        '''
+        # Returns an image multiplied by the brain mask to remove all
+        # values outside the brain
         return np.multiply(self.mask.astype(bool), img)
 
     def akcoutliers(self, iter=10):
@@ -1146,7 +1165,8 @@ class DWI(object):
                       unit='blk',
                       ncols=tqdmWidth)
         for i in inputs:
-            akc = self.kurtosisCoeff(self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
+            akc = self.kurtosisCoeff(
+                self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
             akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10),
                                     axis=0))] = True
             akc_out.astype('bool')
@@ -1254,7 +1274,8 @@ class DWI(object):
              d2move:-d2move, :]
         self.dt = vectorize(dt, self.mask)
 
-    def irlls(self, excludeb0=True, maxiter=25, convcrit=1e-3, mode='DKI', leverage=0.85, bounds=3):
+    def irlls(self, excludeb0=True, maxiter=25, convcrit=1e-3, mode='DKI',
+              leverage=0.85, bounds=3):
         """This functions performs outlier detection and robust parameter
         estimation for diffusion MRI using the iterative reweigthed
         linear least squares (IRLLS) approach.
@@ -1273,8 +1294,8 @@ class DWI(object):
                     reweighting loop
         convcrit:   Real positive double; default: 1e-3
                     Fraction of L2-norm of estimated diffusion parameter
-                    vector that the L2-norm of different vector should
-                    get under un order to reach convergence in the iterative
+                    vector that the L2-norm of different vector should get
+                    under un order to reach convergence in the iterative
                     reweighted loop
         mode:       'DTI' or 'DKI' (string); default: 'DKI'
                     Specifies whether to use DTi or DKI model
@@ -1299,28 +1320,22 @@ class DWI(object):
         if maxiter < 1 or  maxiter > 200:
             assert('option: Maxiter should be set to a value between 1 '
                    'and 200')
-
         if convcrit < 0 or convcrit > 1:
             assert('option: Maxiter should be set to a value between 1 '
                    'and 200')
-
         if not (mode == 'DKI' or mode == 'DTI'):
             assert('Mode should be set to DKI or DTI')
-
         if leverage < 0 or leverage > 1:
             assert('option: Leverage should be set to a value between 0 '
                    'and 1')
-
         if bounds < 1:
             assert('option: Bounds should be set to a value >= 1')
-
         # Vectorize DWI
         dwi = vectorize(self.img, self.mask)
         (ndwi, nvox) = dwi.shape
         b = np.array(self.grad[:, 3])
         b = np.reshape(b, (len(b), 1))
         g = self.grad[:, 0:3]
-
         # Apply Scaling
         scaling = False
         if np.sum(dwi < 1)/np.size(dwi) < 0.001:
@@ -1334,20 +1349,25 @@ class DWI(object):
             sc = np.median(tmp)
             dwi[dwi < sc/1000] = sc/1000
             dwi = dwi * 1000 / sc
-
         # Create B-matrix
         (dcnt, dind) = self.createTensorOrder(2)
         if mode == 'DTI':
-            bmat = np.hstack((np.ones((ndwi, 1)), np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * g[:,dind[:,1]]), np.diag(dcnt))))
+            bmat = np.hstack(
+                (np.ones((ndwi, 1)),
+                 np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * \
+                            g[:,dind[:,1]]), np.diag(dcnt))))
         else:
             (wcnt, wind) = self.createTensorOrder(4)
-            bmat = np.hstack((np.ones((ndwi,1)),
-                              np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * g[:,dind[:,1]]), np.diag(dcnt)),
-                              (1/6)*np.matmul((np.square(np.tile(b, (1, 15))) * g[:,wind[:,0]] * g[:,wind[:,1]] * g[:,wind[:,2]] * g[:,wind[:,3]]),
+            bmat = np.hstack(
+                (np.ones((ndwi,1)),
+                 np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * \
+                            g[:,dind[:,1]]), np.diag(dcnt)),
+                 (1/6)*np.matmul((np.square(np.tile(b, (1, 15))) * \
+                                  g[:,wind[:,0]] * g[:,wind[:,1]] * \
+                                  g[:,wind[:,2]] * g[:,wind[:,3]]),
                                               np.diag(wcnt))))
         nparam = bmat.shape[1]
         ndof = ndwi - nparam
-
         # Initialization
         b0_pos = np.zeros(b.shape,dtype=bool, order='F')
         if excludeb0:
@@ -1355,13 +1375,9 @@ class DWI(object):
                 b0_pos = b < 0.01
             else:
                 b0_pos = b < 10
-
         reject = np.zeros(dwi.shape, dtype=bool, order='F')
         conv = np.zeros((nvox, 1))
         dt = np.zeros((nparam, nvox))
-        # fa = np.zeros((nvox, 1))
-        # md = np.zeros((nvox, 1))
-
         # Attempt basic noise estimation
         try:
             sigma
@@ -1375,7 +1391,8 @@ class DWI(object):
                 except:
                     dt_ = minZero
                 w = np.exp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
-                # dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))), (np.log(dwi) * w), rcond=None)[0]
+                # dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))),
+                #                       (np.log(dwi) * w), rcond=None)[0]
                 try:
                     dt_ = np.linalg.solve(
                         np.dot((bmat * np.tile(w, (1, nparam))).T,
@@ -1402,8 +1419,8 @@ class DWI(object):
             sigma = np.tile(sigma,(nvox,1))
         if scaling:
             sigma = sigma*1000/sc
-
-        def outlierHelper(dwi, bmat, sigma, b, b0_pos, maxiter=25, convcrit=1e-3, leverage=3, bounds=3):
+        def outlierHelper(dwi, bmat, sigma, b, b0_pos, maxiter=25,
+                          convcrit=1e-3, leverage=3, bounds=3):
             # Preliminary rough outlier check
             dwi_i = dwi.reshape((len(dwi), 1))
             dwi0 = np.median(dwi_i[b.reshape(-1) < 0.01])
@@ -1419,62 +1436,81 @@ class DWI(object):
             # WLLS estimation
             # dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
             try:
-                dt_i = np.linalg.solve(np.dot(bmat_i.T, bmat_i), np.dot(bmat_i.T, np.log(dwi_i)))
+                dt_i = np.linalg.solve(np.dot(bmat_i.T, bmat_i),
+                                       np.dot(bmat_i.T, np.log(dwi_i)))
             except:
                 dt_i = minZero
             w = np.exp(np.matmul(bmat_i, dt_i))
-            # dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
+            # dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))),
+            #                        (np.log(dwi_i).reshape(
+            #                            (dwi_i.shape[0], 1)) * w),
             #                        rcond=None)[0]
             try:
-                dt_i = np.linalg.solve(np.dot((bmat_i * np.tile(w, (1, nparam))).T, (bmat_i * np.tile(w, (1, nparam)))), \
-                                    np.dot((bmat_i * np.tile(w, (1, nparam))).T, (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w)))
+                dt_i = np.linalg.solve(
+                    np.dot((bmat_i * np.tile(w, (1, nparam))).T,
+                           (bmat_i * np.tile(w, (1, nparam)))),
+                    np.dot((bmat_i * np.tile(w, (1, nparam))).T,
+                           (np.log(dwi_i).reshape(
+                               (dwi_i.shape[0], 1)) * w)))
             except:
                 dwi_hat = minZero
             dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
 
             # Goodness-of-fit
-            residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
+            residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - \
+                     np.log(dwi_hat)
             residu_ = dwi_i.reshape((dwi_i.shape[0],1)) - dwi_hat
             try:
-                chi2 = np.sum((residu_ * residu_) / np.square(sigma)) / (ndof_i) -1
+                chi2 = np.sum((residu_ * residu_) /\
+                              np.square(sigma)) / (ndof_i) -1
             except:
                 chi2 = minZero
             try:
                 gof = np.abs(chi2) < 3 * np.sqrt(2/ndof_i)
             except:
-                gof = True  # If ndof_i = 0, right inequality becomes inf and makes the logic True
+                gof = True  # If ndof_i = 0, right inequality becomes inf
+                # and makes the logic True
             gof2 = gof
-
             # Iterative reweighning procedure
             iter = 0
             while (not gof) and (iter < maxiter):
                 try:
-                    C = np.sqrt(n_i/(n_i-nparam)) * 1.4826 * np.median(np.abs(residu_ - np.median(residu_))) / dwi_hat
+                    C = np.sqrt(n_i/(n_i-nparam)) * \
+                        1.4826 * \
+                        np.median(np.abs(residu_ - \
+                                         np.median(residu_))) / dwi_hat
                 except:
                     C = minZero
                 try:
-                    GMM = np.square(C) / np.square(np.square(residu) + np.square(C))
+                    GMM = np.square(C) / np.square(np.square(residu) + \
+                                                   np.square(C))
                 except:
                     GMM = minZero
                 w = np.sqrt(GMM) * dwi_hat
                 dt_imin1 = dt_i
-                # dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
+                # dt_i = np.linalg.lstsq(
+                #     (bmat_i * np.tile(w, (1, nparam))),
+                #     (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
                 #                        rcond=None)[0]
                 try:
-                    dt_i = np.linalg.solve(np.dot((bmat_i * np.tile(w, (1, nparam))).T, (bmat_i * np.tile(w, (1, nparam)))), \
-                                        np.dot((bmat_i * np.tile(w, (1, nparam))).T,  (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w)))
+                    dt_i = np.linalg.solve(
+                        np.dot((bmat_i * np.tile(w, (1, nparam))).T,
+                               (bmat_i * np.tile(w, (1, nparam)))),
+                        np.dot((bmat_i * np.tile(w, (1, nparam))).T,
+                               (np.log(dwi_i).reshape(
+                                   (dwi_i.shape[0], 1)) * w)))
                 except:
                     dt_i = minZero
                 dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
                 dwi_hat[dwi_hat < 1] = 1
-                residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
+                residu = np.log(
+                    dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
                 residu_ = dwi_i.reshape((dwi_i.shape[0], 1)) - dwi_hat
-
                 # Convergence check
                 iter = iter + 1
-                gof = np.linalg.norm(dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
+                gof = np.linalg.norm(
+                    dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
                 conv = iter
-
             # Outlier detection
             if ~gof2:
                 # lev = np.diag(np.matmul(bmat_i, np.linalg.lstsq(np.matmul(np.transpose(bmat_i),
@@ -1492,11 +1528,13 @@ class DWI(object):
                     lev = minZero
                 lev = lev.reshape((lev.shape[0], 1))
                 try:
-                    lowerbound_linear = -bounds * np.lib.scimath.sqrt(1 -lev) * sigma / dwi_hat
+                    lowerbound_linear = -bounds * \
+                                        np.lib.scimath.sqrt(1-lev) * \
+                                        sigma / dwi_hat
                 except:
                     lowerbound_linear = minZero
-                upperbound_nonlinear = bounds * np.lib.scimath.sqrt(1 - lev) * sigma
-
+                upperbound_nonlinear = bounds * \
+                                       np.lib.scimath.sqrt(1 -lev) * sigma
                 tmp = np.zeros(residu.shape, dtype=bool, order='F')
                 tmp[residu < lowerbound_linear] = True
                 tmp[residu > upperbound_nonlinear] = True
@@ -1509,7 +1547,6 @@ class DWI(object):
                 tmp2 = np.zeros(b.shape, dtype=bool, order='F')
                 tmp2[out.reshape(-1)] = True
                 reject = tmp2
-
             # Robust parameter estimation
             keep = ~reject.reshape(-1)
             bmat_i = bmat[keep,:]
@@ -1540,7 +1577,6 @@ class DWI(object):
             #      np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
             # md = np.sum(eigv)/3
             return reject.reshape(-1), dt.reshape(-1)#, fa, md
-
         inputs = tqdm(range(nvox),
                           desc='IRLLS: Outlier Detection',
                           unit='vox',
@@ -1556,11 +1592,7 @@ class DWI(object):
             dt[1, :] = dt[1, :] + np.log(sc/1000)
         #Unvectorizing
         reject = vectorize(np.array(reject).T, self.mask)
-        # dt = np.array(dt)
-        # fa = vectorize(np.array(fa), self.mask)
-        # md = vectorize(np.array(md), self.mask)
-
-        return reject, dt.T #, fa, md
+        return reject, dt.T
 
     def tensorReorder(self, dwiType):
         """Reorders tensors in DT to those of MRTRIX in accordance to
@@ -1648,7 +1680,6 @@ class DWI(object):
             dt[5, :] =  self.dt[4, :]       # D5
             DT = vectorize(dt[0:6, :], self.mask)
             return DT
-
         if dwiType == 'dki':
             dt = np.zeros(self.dt.shape)
             dt[0, :] =  self.dt[0, :]       # D0
@@ -1703,252 +1734,6 @@ class DWI(object):
         propViol = vectorize(propViol, self.mask)
         return propViol
 
-    def optimPipeline(self, savePath=os.getcwd()):
-        """Runs the recommended tensor fitting pipeline
-
-        Usage
-        -----
-        DWI.optimPipeline()
-
-        Parameters
-        ----------
-        savePath:   directory where to save maps
-
-        Returns
-        -------
-        MD, AD, RD, FA, trace, fe, MK, AK, RK
-        """
-        if savePath == os.getcwd():
-            savePath = os.path.join(savePath, 'Output')
-            qcPath = os.path.join(savePath, 'QC')
-            os.mkdir(savePath)
-            os.mkdir(qcPath)
-        else:
-            qcPath = os.path.join(savePath, 'QC')
-            os.mkdir(qcPath)
-        outliers, dt_hat = self.irlls()
-        outlierPath = os.path.join(qcPath, 'Outliers_IRLLS.nii')
-        writeNii(outliers, self.hdr, outlierPath)
-        self.fit(constraints=[0, 1, 0], reject=outliers)
-        if not self.isdki():
-            tqdm.write('Detected DTI')
-            md, rd, ad, fa, fe, trace = self.extractDTI()
-            mdPath = os.path.join(savePath, 'MD.nii')
-            rdPath = os.path.join(savePath, 'RD.nii')
-            adPath = os.path.join(savePath, 'AD.nii')
-            faPath = os.path.join(savePath, 'FA.nii')
-            fePath = os.path.join(savePath, 'FE.nii')
-            tracePath = os.path.join(savePath, 'Trace.nii')
-            writeNii(md, self.hdr, mdPath)
-            writeNii(rd, self.hdr, rdPath)
-            writeNii(ad, self.hdr, adPath)
-            writeNii(fa, self.hdr, faPath)
-            writeNii(fe, self.hdr, fePath)
-            writeNii(trace, self.hdr, tracePath)
-        else:
-            tqdm.write('Detected DKI')
-            md, rd, ad, fa, fe, trace = self.extractDTI()
-            akc_out = self.akcoutliers()
-            self.akccorrect(akc_out=akc_out)
-            mk, rk, ak, trace = self.extractDKI()
-            mdPath = os.path.join(savePath, 'MD.nii')
-            rdPath = os.path.join(savePath, 'RD.nii')
-            adPath = os.path.join(savePath, 'AD.nii')
-            faPath = os.path.join(savePath, 'FA.nii')
-            fePath = os.path.join(savePath, 'FE.nii')
-            tracePath = os.path.join(savePath, 'Trace.nii')
-            mkPath = os.path.join(savePath, 'MK.nii')
-            rkPath = os.path.join(savePath, 'RK.nii')
-            akPath = os.path.join(savePath, 'AK.nii')
-            akcPath = os.path.join(qcPath, 'Outliers_AKC.nii')
-            writeNii(md, self.hdr, mdPath)
-            writeNii(rd, self.hdr, rdPath)
-            writeNii(ad, self.hdr, adPath)
-            writeNii(fa, self.hdr, faPath)
-            writeNii(fe, self.hdr, fePath)
-            writeNii(trace, self.hdr, tracePath)
-            writeNii(mk, self.hdr, mkPath)
-            writeNii(rk, self.hdr, rkPath)
-            writeNii(ak, self.hdr, akPath)
-            writeNii(akc_out, self.hdr, akcPath)
-        DT, KT = self.tensorReorder(self.tensorType())
-        dtPath = os.path.join(savePath, 'DT.nii')
-        ktPath = os.path.join(savePath, 'KT.nii')
-        writeNii(DT, self.hdr, dtPath)
-        writeNii(KT, self.hdr, ktPath)
-
-class medianFilter(object):
-    def __init__(self, img, violmask, th=15, sz=3, conn='face'):
-        assert th > 0, 'Threshold cannot be less than zero, disable median filtering instead'
-        assert violmask.shape == img.shape, 'Image dimensions not the same as violation mask dimensions'
-        self.Threshold = th
-        self.Size = sz
-        self.Connectivity = conn
-        self.Mask = np.logical_and(violmask < th, violmask > 0)
-        self.Img = img
-
-        # Get box filter properties
-        centralIdx = np.median(range(sz))
-        d2move = np.int(np.abs(sz - (centralIdx + 1))) # Add 1 to central idx because first index starts with zero
-
-        # Apply a nan padding to all 3 dimensions of the input image and a nan padding to mask. Padding widths is same
-        # distance between centroid of patch to edge. This enables median filtering of edges.
-        self.Img = np.pad(self.Img, d2move, 'constant', constant_values=np.nan)
-        self.Mask = np.pad(self.Mask, d2move, 'constant', constant_values=False)
-
-        (Ix, Iy, Iz) = img.shape
-        (Mx, My, Mz) = self.Mask.shape
-
-    def findReplacement(self, bias='rand'):
-        """
-        Returns information on replacements for violating voxels
-
-        Usage
-        -----
-        m = med.findReplacement(bias='rand')
-
-        Parameters
-        ----------
-        bias: 'left', 'right', or 'rand'
-               In the even the number of voxels in patch is even (for
-               median calculation), 'left' will pick a median to the left
-               of mean and 'right' will pick a median to the right of
-               mean. 'rand' will randomny pick a bias.
-
-        Returns
-        -------
-        m: Vector containing index of replacement voxel in patch. In
-        conn = 'face' max is 5 and conn =
-        """
-        # Get box filter properties
-        centralIdx = np.median(range(self.Size))
-        d2move = np.int(np.abs(self.Size - (centralIdx + 1)))  # Add 1 to central idx because first index starts with zero
-
-        violIdx = np.array(np.where(self.Mask))   # Locate coordinates of violations
-        nvox = violIdx.shape[1]
-        self.PatchIdx = np.zeros(violIdx.shape[1])
-
-        inputs = tqdm(range(nvox))
-        cntSkip = 0
-        for i in inputs:
-            # Index beginning and ending of patch
-            Ib = violIdx[0, i] - d2move
-            Ie = violIdx[0, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
-            Jb = violIdx[1, i] - d2move
-            Je = violIdx[1, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
-            Kb = violIdx[2, i] - d2move
-            Ke = violIdx[2, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
-
-            if self.Connectivity == 'all':
-                patchViol = np.delete(np.ravel(self.Mask[Ib:Ie, Jb:Je, Kb:Ke]), 13)     # Remove 14th (centroid) element
-                patchImg = np.delete(np.ravel(self.Img[Ib:Ie, Jb:Je, Kb:Ke]), 13)            # Remove 14th (centroid) element
-                connLimit = 26
-            elif self.Connectivity == 'face':
-                patchViol = self.Mask[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
-                patchViol = np.hstack((patchViol, self.Mask[violIdx[0,i], [Jb, Je], violIdx[2, i]]))
-                patchViol = np.hstack((patchViol, self.Mask[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
-                patchImg = self.Img[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
-                patchImg = np.hstack((patchImg, self.Img[violIdx[0, i], [Jb, Je], violIdx[2, i]]))
-                patchImg = np.hstack((patchImg, self.Img[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
-                connLimit = 6
-            else:
-                raise Exception('Connectivity choice "{}" is invalid. Please enter either "all" or "face".'.format(self.Connectivity))
-
-            nVoil = np.sum(patchViol)
-
-            # Here a check is performed to compute the number of violations in a patch. If all voxels are violations,
-            # do nothing. Otherwise, exclude violation voxels from the median calculation
-            if nVoil == connLimit:
-                self.PatchIdx[i] = np.nan
-                cntSkip = cntSkip + 1
-                continue
-            else:
-                # Sort all patch values in ascending order and remove NaNs
-                patchVals = np.array(np.sort(patchImg[~np.isnan(patchImg)],kind='quicksort'))
-                nVals = patchVals.size
-
-                # Median algorithm dependent on whether number of valid voxels (nVals) is even or odd
-                if np.mod(nVals, 2) == 0:                                       # If even
-                    medianIdxTmp = np.array([nVals/2 - 1, nVals/2],dtype=int)   # Convert to Py index (-1)
-                    if bias == 'left':
-                        medianIdx = medianIdxTmp[0]
-                    elif bias == 'right':
-                        medianIdx = medianIdxTmp[1]
-                    elif bias == 'rand':
-                        medianIdx = medianIdxTmp[rnd.randint(0,1)]
-                else:                                                           # If odd
-                    medianIdx = (nVals-1)/2                                     # Convert to Py index (-1)
-
-                # Now that a the index of a median voxel is located, determine it's value in sorted list and find the
-                # location of that voxel in patch. The median index needs to be relative to patch, not sorted list. In
-                # the event that there are more than one indexes of the same value, use the first one.
-                medianIdxP = np.where(patchImg == patchVals[np.int(medianIdx)])[0][0]
-                self.PatchIdx[i] = medianIdxP
-        self.PatchIdx = np.array(self.PatchIdx, dtype='int')  # Convert to integer
-        print('%d voxels out of %d were completely surrounded by violations and were ignored' %(cntSkip, violIdx.shape[1]))
-        return self.PatchIdx
-
-    def applyReplacement(self, img):
-        """
-        Applies median filter onto input images.
-
-        Usage
-        -----
-        filteredImage = med.applyReplacement(image)
-
-        Parameters
-        ----------
-        image:          input image to apply the median voxel replacement on
-
-        Returns
-        -------
-        filteredImage:  median filtered image
-        """
-        # Get box filter properties
-        centralIdx = np.median(range(self.Size))
-        d2move = np.int(
-            np.abs(self.Size - (centralIdx + 1)))  # Add 1 to central idx because first index starts with zero
-
-        # Pad image with zeros
-        img = np.pad(img, d2move, 'constant', constant_values=0)
-
-        violIdx = np.array(np.where(self.Mask))  # Locate coordinates of violations
-        # self.PatchIdx = np.array(np.zeros(violIdx.shape[1]),dtype='int')
-
-        inputs = tqdm(range(self.PatchIdx.size))
-        for i in inputs:
-            # Index beginning and ending of patch
-            Ib = violIdx[0, i] - d2move
-            Ie = violIdx[0, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
-            Jb = violIdx[1, i] - d2move
-            Je = violIdx[1, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
-            Kb = violIdx[2, i] - d2move
-            Ke = violIdx[2, i] + d2move + 1     # Mitigate Python's [X,Y) indexing
-
-            if self.Connectivity == 'all':
-                patchViol = np.delete(np.ravel(self.Mask[Ib:Ie, Jb:Je, Kb:Ke]), 13)     # Remove 14th (centroid) element
-                patchImg = np.delete(np.ravel(self.Img[Ib:Ie, Jb:Je, Kb:Ke]), 13)            # Remove 14th (centroid) element
-            elif self.Connectivity == 'face':
-                patchViol = self.Mask[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
-                patchViol = np.hstack((patchViol, self.Mask[violIdx[0,i], [Jb, Je], violIdx[2, i]]))
-                patchViol = np.hstack((patchViol, self.Mask[violIdx[0, i], violIdx[1, i], [Kb, Ke]]))
-                patchImg = img[[Ib, Ie], violIdx[1, i], violIdx[2, i]]
-                patchImg = np.hstack((patchImg, img[violIdx[0, i], [Jb,
-                                                                  Je], violIdx[2, i]]))
-                patchImg = np.hstack((patchImg, img[violIdx[0, i],
-                                                  violIdx[1, i], [Kb, Ke]]))
-
-            if np.isnan(self.PatchIdx[i]) == True:
-                continue
-            else:
-                img[violIdx[0, i], violIdx[1, i], violIdx[2, i]] = patchImg[self.PatchIdx[i]]
-
-        # Unpad image by removing first and last slices along each axis
-        img = np.delete(img, [0, img.shape[0] - 1], axis=0)
-        img = np.delete(img, [0, img.shape[1] - 1], axis=1)
-        img = np.delete(img, [0, img.shape[2] - 1], axis=2)
-        return img
-
 def vectorize(img, mask):
     """ Returns vectorized image based on brain mask, requires no input
     parameters
@@ -1967,15 +1752,24 @@ def vectorize(img, mask):
     volumes
     """
     if mask is None:
-        mask = np.ones((img.shape[0], img.shape[1], img.shape[2]), order='F')
+        mask = np.ones((img.shape[0],
+                        img.shape[1],
+                        img.shape[2]),
+                       order='F')
     mask = mask.astype(bool)
     if img.ndim == 1:
         n = img.shape[0]
-        s = np.zeros((mask.shape[0], mask.shape[1], mask.shape[2]), order='F')
+        s = np.zeros((mask.shape[0],
+                      mask.shape[1],
+                      mask.shape[2]),
+                     order='F')
         s[mask] = img
     if img.ndim == 2:
         n = img.shape[0]
-        s = np.zeros((mask.shape[0], mask.shape[1], mask.shape[2], n), order='F')
+        s = np.zeros((mask.shape[0],
+                      mask.shape[1],
+                      mask.shape[2], n),
+                     order='F')
         for i in range(0, n):
             s[mask, i] = img[i,:]
     if img.ndim == 3:
