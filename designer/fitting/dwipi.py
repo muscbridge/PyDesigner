@@ -1110,7 +1110,8 @@ class DWI(object):
         akc = self.kurtosisCoeff(self.dt, self.dirs)
         inputs = tqdm(range(0, nvox))
         map = Parallel(n_jobs=self.workers, prefer='processes') \
-            (delayed(self.findVoxelViol)(adc[:,i], akc[:,i], maxB, [0, 1, 0]) for i in inputs)
+            (delayed(self.findVoxelViol)(adc[:,i]
+        akc[:,i], maxB, [0, 1, 0]) for i in inputs)
         map = np.reshape(pViols2, nvox)
         map = self.multiplyMask(vectorize(map,self.mask))
         return map
