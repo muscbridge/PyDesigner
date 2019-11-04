@@ -1297,8 +1297,8 @@ class DWI(object):
                     reweighting loop
         convcrit:   Real positive double; default: 1e-3
                     Fraction of L2-norm of estimated diffusion parameter
-                    vector that the L2-norm of different vector should
-                    get under un order to reach convergence in the iterative
+                    vector that the L2-norm of different vector should get
+                    under un order to reach convergence in the iterative
                     reweighted loop
         mode:       'DTI' or 'DKI' (string); default: 'DKI'
                     Specifies whether to use DTi or DKI model
