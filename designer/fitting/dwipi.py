@@ -1258,7 +1258,8 @@ class DWI(object):
              d2move:-d2move, :]
         self.dt = vectorize(dt, self.mask)
 
-    def irlls(self, excludeb0=True, maxiter=25, convcrit=1e-3, mode='DKI', leverage=0.85, bounds=3):
+    def irlls(self, excludeb0=True, maxiter=25, convcrit=1e-3, mode='DKI',
+              leverage=0.85, bounds=3):
         """This functions performs outlier detection and robust parameter
         estimation for diffusion MRI using the iterative reweigthed
         linear least squares (IRLLS) approach.
@@ -1335,12 +1336,19 @@ class DWI(object):
         # Create B-matrix
         (dcnt, dind) = self.createTensorOrder(2)
         if mode == 'DTI':
-            bmat = np.hstack((np.ones((ndwi, 1)), np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * g[:,dind[:,1]]), np.diag(dcnt))))
+            bmat = np.hstack(
+                (np.ones((ndwi, 1)),
+                 np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * \
+                            g[:,dind[:,1]]), np.diag(dcnt))))
         else:
             (wcnt, wind) = self.createTensorOrder(4)
-            bmat = np.hstack((np.ones((ndwi,1)),
-                              np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * g[:,dind[:,1]]), np.diag(dcnt)),
-                              (1/6)*np.matmul((np.square(np.tile(b, (1, 15))) * g[:,wind[:,0]] * g[:,wind[:,1]] * g[:,wind[:,2]] * g[:,wind[:,3]]),
+            bmat = np.hstack(
+                (np.ones((ndwi,1)),
+                 np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * \
+                            g[:,dind[:,1]]), np.diag(dcnt)),
+                 (1/6)*np.matmul((np.square(np.tile(b, (1, 15))) * \
+                                  g[:,wind[:,0]] * g[:,wind[:,1]] * \
+                                  g[:,wind[:,2]] * g[:,wind[:,3]]),
                                               np.diag(wcnt))))
         nparam = bmat.shape[1]
         ndof = ndwi - nparam
@@ -1367,7 +1375,8 @@ class DWI(object):
                 except:
                     dt_ = minZero
                 w = np.exp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
-                # dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))), (np.log(dwi) * w), rcond=None)[0]
+                # dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))),
+                #                       (np.log(dwi) * w), rcond=None)[0]
                 try:
                     dt_ = np.linalg.solve(
                         np.dot((bmat * np.tile(w, (1, nparam))).T,
@@ -1394,7 +1403,8 @@ class DWI(object):
             sigma = np.tile(sigma,(nvox,1))
         if scaling:
             sigma = sigma*1000/sc
-        def outlierHelper(dwi, bmat, sigma, b, b0_pos, maxiter=25, convcrit=1e-3, leverage=3, bounds=3):
+        def outlierHelper(dwi, bmat, sigma, b, b0_pos, maxiter=25,
+                          convcrit=1e-3, leverage=3, bounds=3):
             # Preliminary rough outlier check
             dwi_i = dwi.reshape((len(dwi), 1))
             dwi0 = np.median(dwi_i[b.reshape(-1) < 0.01])
@@ -1410,58 +1420,80 @@ class DWI(object):
             # WLLS estimation
             # dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
             try:
-                dt_i = np.linalg.solve(np.dot(bmat_i.T, bmat_i), np.dot(bmat_i.T, np.log(dwi_i)))
+                dt_i = np.linalg.solve(np.dot(bmat_i.T, bmat_i),
+                                       np.dot(bmat_i.T, np.log(dwi_i)))
             except:
                 dt_i = minZero
             w = np.exp(np.matmul(bmat_i, dt_i))
-            # dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
+            # dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))),
+            #                        (np.log(dwi_i).reshape(
+            #                            (dwi_i.shape[0], 1)) * w),
             #                        rcond=None)[0]
             try:
-                dt_i = np.linalg.solve(np.dot((bmat_i * np.tile(w, (1, nparam))).T, (bmat_i * np.tile(w, (1, nparam)))), \
-                                    np.dot((bmat_i * np.tile(w, (1, nparam))).T, (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w)))
+                dt_i = np.linalg.solve(
+                    np.dot((bmat_i * np.tile(w, (1, nparam))).T,
+                           (bmat_i * np.tile(w, (1, nparam)))),
+                    np.dot((bmat_i * np.tile(w, (1, nparam))).T,
+                           (np.log(dwi_i).reshape(
+                               (dwi_i.shape[0], 1)) * w)))
             except:
                 dwi_hat = minZero
             dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
 
             # Goodness-of-fit
-            residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
+            residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - \
+                     np.log(dwi_hat)
             residu_ = dwi_i.reshape((dwi_i.shape[0],1)) - dwi_hat
             try:
-                chi2 = np.sum((residu_ * residu_) / np.square(sigma)) / (ndof_i) -1
+                chi2 = np.sum((residu_ * residu_) /\
+                              np.square(sigma)) / (ndof_i) -1
             except:
                 chi2 = minZero
             try:
                 gof = np.abs(chi2) < 3 * np.sqrt(2/ndof_i)
             except:
-                gof = True  # If ndof_i = 0, right inequality becomes inf and makes the logic True
+                gof = True  # If ndof_i = 0, right inequality becomes inf
+                # and makes the logic True
             gof2 = gof
             # Iterative reweighning procedure
             iter = 0
             while (not gof) and (iter < maxiter):
                 try:
-                    C = np.sqrt(n_i/(n_i-nparam)) * 1.4826 * np.median(np.abs(residu_ - np.median(residu_))) / dwi_hat
+                    C = np.sqrt(n_i/(n_i-nparam)) * \
+                        1.4826 * \
+                        np.median(np.abs(residu_ - \
+                                         np.median(residu_))) / dwi_hat
                 except:
                     C = minZero
                 try:
-                    GMM = np.square(C) / np.square(np.square(residu) + np.square(C))
+                    GMM = np.square(C) / np.square(np.square(residu) + \
+                                                   np.square(C))
                 except:
                     GMM = minZero
                 w = np.sqrt(GMM) * dwi_hat
                 dt_imin1 = dt_i
-                # dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
+                # dt_i = np.linalg.lstsq(
+                #     (bmat_i * np.tile(w, (1, nparam))),
+                #     (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
                 #                        rcond=None)[0]
                 try:
-                    dt_i = np.linalg.solve(np.dot((bmat_i * np.tile(w, (1, nparam))).T, (bmat_i * np.tile(w, (1, nparam)))), \
-                                        np.dot((bmat_i * np.tile(w, (1, nparam))).T,  (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w)))
+                    dt_i = np.linalg.solve(
+                        np.dot((bmat_i * np.tile(w, (1, nparam))).T,
+                               (bmat_i * np.tile(w, (1, nparam)))),
+                        np.dot((bmat_i * np.tile(w, (1, nparam))).T,
+                               (np.log(dwi_i).reshape(
+                                   (dwi_i.shape[0], 1)) * w)))
                 except:
                     dt_i = minZero
                 dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
                 dwi_hat[dwi_hat < 1] = 1
-                residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
+                residu = np.log(
+                    dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
                 residu_ = dwi_i.reshape((dwi_i.shape[0], 1)) - dwi_hat
                 # Convergence check
                 iter = iter + 1
-                gof = np.linalg.norm(dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
+                gof = np.linalg.norm(
+                    dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
                 conv = iter
             # Outlier detection
             if ~gof2:
@@ -1480,10 +1512,13 @@ class DWI(object):
                     lev = minZero
                 lev = lev.reshape((lev.shape[0], 1))
                 try:
-                    lowerbound_linear = -bounds * np.lib.scimath.sqrt(1 -lev) * sigma / dwi_hat
+                    lowerbound_linear = -bounds * \
+                                        np.lib.scimath.sqrt(1-lev) * \
+                                        sigma / dwi_hat
                 except:
                     lowerbound_linear = minZero
-                upperbound_nonlinear = bounds * np.lib.scimath.sqrt(1 - lev) * sigma
+                upperbound_nonlinear = bounds * \
+                                       np.lib.scimath.sqrt(1 -lev) * sigma
                 tmp = np.zeros(residu.shape, dtype=bool, order='F')
                 tmp[residu < lowerbound_linear] = True
                 tmp[residu > upperbound_nonlinear] = True
