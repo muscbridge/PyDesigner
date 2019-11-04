@@ -955,7 +955,8 @@ class DWI(object):
             # C[1]: K < 0
             tmp[1] = np.size(np.nonzero(akc[:, i] < minZero))
             #c[2]:
-            tmp[2] = np.size(np.nonzero(akc[:, i] > (3/(maxB * adc[:, i]))))
+            tmp[2] = np.size(
+                np.nonzero(akc[:, i] > (3/(maxB * adc[:, i]))))
             sumViols[i] = np.sum(tmp)
         map = np.zeros((sumViols.shape))
         if c[0] == 0 and c[1] == 0 and c[2] == 0:
