@@ -16,13 +16,10 @@ from . import dwidirs
 
 # Define the lowest number possible before it is considered a zero
 minZero = 1e-8
-
 # Define number of directions to resample after computing all tensors
 dirSample = 256
-
 # Progress bar Properties
 tqdmWidth = 70  # Number of columns of progress bar
-
 # Set default numpy errorstates
 np.seterr(all = 'ignore')
 defaultErrorState = np.geterr()
