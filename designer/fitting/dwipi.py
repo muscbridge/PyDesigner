@@ -5,7 +5,6 @@ import multiprocessing
 import os
 import random as rnd
 import warnings
-
 import cvxpy as cvx
 import nibabel as nib
 import numpy as np
@@ -13,10 +12,7 @@ from joblib import Parallel, delayed
 from scipy.special import expit as sigmoid
 import scipy.linalg as sla
 from tqdm import tqdm
-
 from . import dwidirs
-
-warnings.filterwarnings("ignore")
 
 # Define the lowest number possible before it is considered a zero
 minZero = 1e-8
@@ -502,7 +498,6 @@ class DWI(object):
         if cons is None:
             dt = np.matmul(np.linalg.pinv(np.matmul(w, b)),
                            np.matmul(w, np.log(dwi)))
-
         # Constrained fitting
         else:
             C = np.matmul(w, b).astype('double')
@@ -675,13 +670,11 @@ class DWI(object):
         trace:  sum of first eigenvalues
         """
         # extract all tensor parameters from dt
-
         DT = np.reshape(
             np.concatenate((self.dt[0, :], self.dt[1, :], self.dt[2, :],
                             self.dt[1, :], self.dt[3, :], self.dt[4, :],
                             self.dt[2, :], self.dt[4, :], self.dt[5, :])),
             (3, 3, self.dt.shape[1]))
-
         # get the trace
         rdwi = sigmoid(np.matmul(self.b[:, 1:], self.dt))
         B = np.round(-(self.b[:, 0] + self.b[:, 3] + self.b[:, 5]) * 1000)
@@ -890,7 +883,6 @@ class DWI(object):
         ias_tort = vectorize(np.array(ias_tort), self.mask)
         return awf, eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
 
-
     def findViols(self, c=[0, 1, 0]):
         """
         Returns a 3D violation map of voxels that violate constraints.
@@ -917,7 +909,6 @@ class DWI(object):
         """
         if c == None:
             c = [0, 0, 0]
-
         nvox = self.dt.shape[1]
         sumViols = np.zeros(nvox)
         maxB = self.maxBval()
@@ -933,23 +924,19 @@ class DWI(object):
             #c[2]:
             tmp[2] = np.size(np.nonzero(akc[:, i] > (3/(maxB * adc[:, i]))))
             sumViols[i] = np.sum(tmp)
-
         map = np.zeros((sumViols.shape))
         if c[0] == 0 and c[1] == 0 and c[2] == 0:
             # [0 0 0]
             print('0 0 0')
             map = pViols
-
         elif c[0] == 1 and c[1] == 0 and c[2] == 0:
             # [1 0 0]
             print('1 0 0')
             map = sumViols/dirSample
-
         elif c[0] == 0 and c[1] == 1 and c[2] == 0:
             # [0 1 0]
             print('0 1 0')
             map = sumViols/dirSample
-
         elif c[0] == 0 and c[1] == 0 and c[2] == 1:
             # [0 0 1]
             print('0 0 1')
@@ -959,22 +946,18 @@ class DWI(object):
             # [1 1 0]
             print('1 1 0')
             map = sumVioms/(2 * dirSample)
-
         elif c[0] == 1 and c[1] == 0 and c[2] == 1:
             # [1 0 1]
             print('1 0 1')
             map = sumViols/(2 * dirSample)
-
         elif c[0] == 0 and c[1] == 1 and c[2] == 1:
             # [0 1 1]
             print('0 1 1')
             map = sumViols / (2 * dirSample)
-
         elif c[0] == 1 and c[1] == 1 and c[2] == 1:
             # [1 1 1]
             print('1 1 1')
             map = sumViols / (3 * dirSample)
-
         map = np.reshape(map, nvox)
         map = vectorize(map, self.mask)
         return map
@@ -1059,31 +1042,24 @@ class DWI(object):
         if c[0] == 0 and c[1] == 0 and c[2] == 0:
             # [0 0 0]
             n = 0
-
         elif c[0] == 1 and c[1] == 0 and c[2] == 0:
             # [1 0 0]
             n = sumViols/dirSample
-
         elif c[0] == 0 and c[1] == 1 and c[2] == 0:
             # [0 1 0]
             n = sumViols/dirSample
-
         elif c[0] == 0 and c[1] == 0 and c[2] == 1:
             # [0 0 1]
             n = sumViols/dirSample
-
         elif c[0] == 1 and c[1] == 1 and c[2] == 0:
             # [1 1 0]
             n = sumVioms/(2 * dirSample)
-
         elif c[0] == 1 and c[1] == 0 and c[2] == 1:
             # [1 0 1]
             n = sumViols/(2 * dirSample)
-
         elif c[0] == 0 and c[1] == 1 and c[2] == 1:
             # [0 1 1]
             n = sumViols/(2 * dirSample)
-
         elif c[0] == 1 and c[1] == 1 and c[2] == 1:
             # [1 1 1]
             n = sumViols/(3 * dirSample)
@@ -1299,28 +1275,22 @@ class DWI(object):
         if maxiter < 1 or  maxiter > 200:
             assert('option: Maxiter should be set to a value between 1 '
                    'and 200')
-
         if convcrit < 0 or convcrit > 1:
             assert('option: Maxiter should be set to a value between 1 '
                    'and 200')
-
         if not (mode == 'DKI' or mode == 'DTI'):
             assert('Mode should be set to DKI or DTI')
-
         if leverage < 0 or leverage > 1:
             assert('option: Leverage should be set to a value between 0 '
                    'and 1')
-
         if bounds < 1:
             assert('option: Bounds should be set to a value >= 1')
-
         # Vectorize DWI
         dwi = vectorize(self.img, self.mask)
         (ndwi, nvox) = dwi.shape
         b = np.array(self.grad[:, 3])
         b = np.reshape(b, (len(b), 1))
         g = self.grad[:, 0:3]
-
         # Apply Scaling
         scaling = False
         if np.sum(dwi < 1)/np.size(dwi) < 0.001:
@@ -1334,7 +1304,6 @@ class DWI(object):
             sc = np.median(tmp)
             dwi[dwi < sc/1000] = sc/1000
             dwi = dwi * 1000 / sc
-
         # Create B-matrix
         (dcnt, dind) = self.createTensorOrder(2)
         if mode == 'DTI':
@@ -1347,7 +1316,6 @@ class DWI(object):
                                               np.diag(wcnt))))
         nparam = bmat.shape[1]
         ndof = ndwi - nparam
-
         # Initialization
         b0_pos = np.zeros(b.shape,dtype=bool, order='F')
         if excludeb0:
@@ -1355,13 +1323,9 @@ class DWI(object):
                 b0_pos = b < 0.01
             else:
                 b0_pos = b < 10
-
         reject = np.zeros(dwi.shape, dtype=bool, order='F')
         conv = np.zeros((nvox, 1))
         dt = np.zeros((nparam, nvox))
-        # fa = np.zeros((nvox, 1))
-        # md = np.zeros((nvox, 1))
-
         # Attempt basic noise estimation
         try:
             sigma
@@ -1402,7 +1366,6 @@ class DWI(object):
             sigma = np.tile(sigma,(nvox,1))
         if scaling:
             sigma = sigma*1000/sc
-
         def outlierHelper(dwi, bmat, sigma, b, b0_pos, maxiter=25, convcrit=1e-3, leverage=3, bounds=3):
             # Preliminary rough outlier check
             dwi_i = dwi.reshape((len(dwi), 1))
@@ -1444,7 +1407,6 @@ class DWI(object):
             except:
                 gof = True  # If ndof_i = 0, right inequality becomes inf and makes the logic True
             gof2 = gof
-
             # Iterative reweighning procedure
             iter = 0
             while (not gof) and (iter < maxiter):
@@ -1469,12 +1431,10 @@ class DWI(object):
                 dwi_hat[dwi_hat < 1] = 1
                 residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
                 residu_ = dwi_i.reshape((dwi_i.shape[0], 1)) - dwi_hat
-
                 # Convergence check
                 iter = iter + 1
                 gof = np.linalg.norm(dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
                 conv = iter
-
             # Outlier detection
             if ~gof2:
                 # lev = np.diag(np.matmul(bmat_i, np.linalg.lstsq(np.matmul(np.transpose(bmat_i),
@@ -1496,7 +1456,6 @@ class DWI(object):
                 except:
                     lowerbound_linear = minZero
                 upperbound_nonlinear = bounds * np.lib.scimath.sqrt(1 - lev) * sigma
-
                 tmp = np.zeros(residu.shape, dtype=bool, order='F')
                 tmp[residu < lowerbound_linear] = True
                 tmp[residu > upperbound_nonlinear] = True
@@ -1509,7 +1468,6 @@ class DWI(object):
                 tmp2 = np.zeros(b.shape, dtype=bool, order='F')
                 tmp2[out.reshape(-1)] = True
                 reject = tmp2
-
             # Robust parameter estimation
             keep = ~reject.reshape(-1)
             bmat_i = bmat[keep,:]
@@ -1540,7 +1498,6 @@ class DWI(object):
             #      np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
             # md = np.sum(eigv)/3
             return reject.reshape(-1), dt.reshape(-1)#, fa, md
-
         inputs = tqdm(range(nvox),
                           desc='IRLLS: Outlier Detection',
                           unit='vox',
@@ -1556,11 +1513,7 @@ class DWI(object):
             dt[1, :] = dt[1, :] + np.log(sc/1000)
         #Unvectorizing
         reject = vectorize(np.array(reject).T, self.mask)
-        # dt = np.array(dt)
-        # fa = vectorize(np.array(fa), self.mask)
-        # md = vectorize(np.array(md), self.mask)
-
-        return reject, dt.T #, fa, md
+        return reject, dt.T
 
     def tensorReorder(self, dwiType):
         """Reorders tensors in DT to those of MRTRIX in accordance to
@@ -1648,7 +1601,6 @@ class DWI(object):
             dt[5, :] =  self.dt[4, :]       # D5
             DT = vectorize(dt[0:6, :], self.mask)
             return DT
-
         if dwiType == 'dki':
             dt = np.zeros(self.dt.shape)
             dt[0, :] =  self.dt[0, :]       # D0
