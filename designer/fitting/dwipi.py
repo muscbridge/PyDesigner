@@ -1036,7 +1036,7 @@ class DWI(object):
 
     def findVoxelViol(self, adcVox, akcVox, maxB, c):
         """
-        Returns the proportions of vioaltions occuring at a voxel.
+        Returns the proportions of violations occurring at a voxel.
         Classification: Method
 
         Usage
