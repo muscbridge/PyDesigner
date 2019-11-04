@@ -830,7 +830,6 @@ class DWI(object):
                 eigval = np.sort(eigval)[::-1]
                 eas_ad = eigval[0]
                 eas_rd = 0.5 * (eigval[1] + eigval[2])
-                np.seterr(invalid='raise')
                 try:
                     eas_tort = eas_ad / eas_rd
                 except:
@@ -862,6 +861,7 @@ class DWI(object):
                 ias_rd = minZero
                 ias_tort = minZero
             return eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
+        np.seterr(invalid='raise', divide='raise')
         dir = dwidirs.dirs10000
         nvox = self.dt.shape[1]
         N = dir.shape[0]
@@ -913,6 +913,7 @@ class DWI(object):
         ias_ad = vectorize(np.array(ias_ad), self.mask)
         ias_rd = vectorize(np.array(ias_rd), self.mask)
         ias_tort = vectorize(np.array(ias_tort), self.mask)
+        np.seterr(**defaultErrorState)
         return awf, eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
 
     def findViols(self, c=[0, 1, 0]):
