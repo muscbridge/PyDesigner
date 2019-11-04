@@ -594,19 +594,22 @@ class DWI(object):
                                     self.b[~reject_[:, i]]) \
                  for i in inputs)
         else:
-            C = self.createConstraints(constraints)  # Linear inequality constraint matrix A_ub
+            # C is linear inequality constraint matrix A_ub
+            C = self.createConstraints(constraints)
             inputs = tqdm(range(0, dwi_.shape[1]),
                           desc='Constrained Tensor Fit  ',
                           unit='vox',
                           ncols=tqdmWidth)
             if dt_hat is None:
-                self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
+                self.dt = Parallel(n_jobs=self.workers,
+                                   prefer='processes') \
                     (delayed(self.wlls)(shat[~reject_[:, i], i],
                                              dwi_[~reject_[:, i], i],
                                              self.b[~reject_[:, i]],
                                              cons=C) for i in inputs)
             else:
-                self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
+                self.dt = Parallel(n_jobs=self.workers,
+                                   prefer='processes') \
                     (delayed(self.wlls)(shat[~reject_[:, i], i],
                                         dwi_[~reject_[:, i], i],
                                         self.b[~reject_[:, i]],
