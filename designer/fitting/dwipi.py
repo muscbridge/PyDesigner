@@ -3,7 +3,7 @@
 
 import multiprocessing
 import os
-import random as rnd
+import random
 import warnings
 import cvxpy as cvx
 import nibabel as nib
@@ -274,7 +274,6 @@ class DWI(object):
         points:     [3 x samples] array containing evenly spaced points
         from a sphere
         """
-        import random
         rnd = 1
         if randomize:
             rnd = random.random() * samples
