@@ -449,7 +449,7 @@ if args.undistort:
     # Add to HEAD name
     undistorted_name = 'u' + filetable['HEAD'].getName() + '.nii'
     undistorted_full = op.join(outpath, undistorted_name)
-    eddyqc = op.join(outpath, 'EDDYQC')
+    eddyqc = op.join(outpath, 'metrics_qc', 'eddyqc')
     if op.exists(eddyqc):
         if args.force:
             shutil.rmtree(eddyqc)
@@ -656,7 +656,7 @@ filetable['HEAD'] = filetable['preprocessed']
 if not args.nofit:
     # make metric map directory
     metricpath = op.join(outpath, 'metrics')
-    fitqcpath = op.join(outpath, 'metric_qc')
+    fitqcpath = op.join(outpath, 'metrics_qc', 'fitting')
     if op.exists(metricpath):
         if args.force:
             shutil.rmtree(metricpath)
