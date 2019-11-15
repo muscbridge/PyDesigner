@@ -675,11 +675,15 @@ if not args.nofit:
                             'files, use --force, use --resume, or '
                             'change output destination.')
 
-    if not args.resume and (not
-    (op.exists(metricpath) and op.exists(fitqcpath))):
-        os.mkdir(metricpath)
+    if not args.undistort and \
+            (not args.resume and not op.exists(fitqcpath)):
         os.mkdir(qcpath)
         os.mkdir(fitqcpath)
+    elif args.undistort:
+        os.mkdir(fitqcpath)
+
+    if not args.resume and not op.exists(metricpath):
+        os.mkdir(metricpath)
 
         # create dwi fitting object
         if not args.nthreads:
