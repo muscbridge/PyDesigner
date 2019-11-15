@@ -656,7 +656,8 @@ filetable['HEAD'] = filetable['preprocessed']
 if not args.nofit:
     # make metric map directory
     metricpath = op.join(outpath, 'metrics')
-    fitqcpath = op.join(outpath, 'metrics_qc', 'fitting')
+    qcpath = op.join(outpath, 'metrics_qc')
+    fitqcpath = op.join(qcpath, 'fitting')
     if op.exists(metricpath):
         if args.force:
             shutil.rmtree(metricpath)
@@ -677,6 +678,7 @@ if not args.nofit:
     if not args.resume and (not
     (op.exists(metricpath) and op.exists(fitqcpath))):
         os.mkdir(metricpath)
+        os.mkdir(qcpath)
         os.mkdir(fitqcpath)
 
         # create dwi fitting object
