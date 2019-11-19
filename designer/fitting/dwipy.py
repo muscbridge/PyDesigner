@@ -1579,6 +1579,7 @@ class DWI(object):
             #      np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
             # md = np.sum(eigv)/3
             return reject.reshape(-1), dt.reshape(-1)#, fa, md
+        np.seterr(invalid='raise', divide='raise')
         inputs = tqdm(range(nvox),
                           desc='IRLLS: Outlier Detection',
                           unit='vox',
@@ -1587,6 +1588,7 @@ class DWI(object):
             (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
         # for i in inputs:
         #     reject[:,i], dt[:,i] = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
+        np.seterr(**defaultErrorState)
         dt = np.array(dt)
         # self.dt = dt
         #Unscaling
