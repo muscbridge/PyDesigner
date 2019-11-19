@@ -547,7 +547,7 @@ class DWI(object):
         -------
         self.dt:    return diffusion tensor within DWI class
         """
-        # Create constraints
+        # Handle rejected voxels from IRLLS
         if reject is None:
             reject = np.zeros(self.img.shape)
         grad = self.grad
