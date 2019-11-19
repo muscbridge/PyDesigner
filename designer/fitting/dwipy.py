@@ -528,7 +528,7 @@ class DWI(object):
                 dt = np.full_like(x.value, minZero)
         return dt
 
-    def fit(self, constraints=None, reject=None, dt_hat=None):
+    def fit(self, constraints=None, reject=None):
         """
         Returns fitted diffusion or kurtosis tensor
 
@@ -543,9 +543,6 @@ class DWI(object):
                     Specifies which constraints to use
         reject:     4D matrix containing information on voxels to exclude
                     from DT estimation
-        dt_hat:     [22 x nvox] matrix with estimated dt to speedup
-                    minimization (optional)
-
         Returns
         -------
         self.dt:    return diffusion tensor within DWI class
@@ -599,22 +596,12 @@ class DWI(object):
                           desc='Constrained Tensor Fit  ',
                           unit='vox',
                           ncols=tqdmWidth)
-            if dt_hat is None:
-                self.dt = Parallel(n_jobs=self.workers,
-                                   prefer='processes') \
-                    (delayed(self.wlls)(shat[~reject_[:, i], i],
-                                             dwi_[~reject_[:, i], i],
-                                             self.b[~reject_[:, i]],
-                                             cons=C) for i in inputs)
-            else:
-                self.dt = Parallel(n_jobs=self.workers,
-                                   prefer='processes') \
-                    (delayed(self.wlls)(shat[~reject_[:, i], i],
-                                        dwi_[~reject_[:, i], i],
-                                        self.b[~reject_[:, i]],
-                                        cons=C,
-                                        warmup=dt_hat[:, i]) \
-                     for i in inputs)
+            self.dt = Parallel(n_jobs=self.workers,
+                               prefer='processes') \
+                (delayed(self.wlls)(shat[~reject_[:, i], i],
+                                         dwi_[~reject_[:, i], i],
+                                         self.b[~reject_[:, i]],
+                                         cons=C) for i in inputs)
         self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
         self.s0 = np.exp(self.dt[0,:])
         self.dt = self.dt[1:,:]
