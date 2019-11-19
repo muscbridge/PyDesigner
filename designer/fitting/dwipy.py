@@ -1313,7 +1313,6 @@ class DWI(object):
                     that are outliers
         dt:         IRLLS method of DT estimation
         """
-
         # if not excludeb0.dtype:
         #     assert('option: Excludeb0 should be set to True or False')
 
@@ -1432,7 +1431,6 @@ class DWI(object):
             dwi_i = dwi_i[~out.reshape(-1)]
             n_i = dwi_i.size
             ndof_i = n_i - bmat_i.shape[1]
-
             # WLLS estimation
             # dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
             try:
