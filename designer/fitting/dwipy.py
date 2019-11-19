@@ -1528,7 +1528,7 @@ class DWI(object):
                     upperbound_nonlinear = np.full(lev.shape, minZero)
                 tmp = np.zeros(residu.shape, dtype=bool, order='F')
                 tmp[residu < lowerbound_linear] = True
-                tmp[residu > lowerbound_linear] = True
+                tmp[residu > upperbound_nonlinear] = True
                 tmp[lev > leverage] = False
                 tmp2 = np.ones(b.shape, dtype=bool, order='F')
                 tmp2[~out.reshape(-1)] = tmp
