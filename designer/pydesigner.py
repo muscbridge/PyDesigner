@@ -688,7 +688,10 @@ if not args.nofit:
             img = dp.DWI(filetable['HEAD'].getFull(), args.nthreads)
         # detect outliers
         if not args.nooutliers:
-            outliers, dt_est = img.irlls()
+            if not img.isdki():
+                outliers, dt_est = img.irlls(mode='DTI')
+            else:
+                outliers, dt_est = img.irlls(mode='DKI')
             # write outliers to qc folder
             outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
             dp.writeNii(outliers, img.hdr, outlier_full)
