@@ -1483,6 +1483,9 @@ class DWI(object):
                     GMM = np.square(C) / np.square(np.square(residu) + \
                                                    np.square(C))
                 except:
+                    # The following line produces a lot of Intel MKL
+                    # warnings that should be ignored. This is a known
+                    # Intel and Numpy bug that has not yet been resolved.
                     GMM = np.full(C.shape, minZero)
                 w = np.sqrt(GMM) * dwi_hat
                 dt_imin1 = dt_i
