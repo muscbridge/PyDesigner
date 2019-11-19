@@ -1371,9 +1371,9 @@ class DWI(object):
             def estSigma(dwi, bmat):
                 dwi = np.reshape(dwi, (len(dwi), 1))
                 try:
-                    dt_ = np.linalg.lstsq(bmat, np.log(dwi), rcond=None)[0]
-                    # dt_ = np.linalg.solve(np.dot(bmat.T, bmat), np.dot(
-                    #     bmat.T, np.log(dwi)))
+                    # dt_ = np.linalg.lstsq(bmat, np.log(dwi), rcond=None)[0]
+                    dt_ = np.linalg.solve(np.dot(bmat.T, bmat), np.dot(
+                        bmat.T, np.log(dwi)))
                 except:
                     dt_ = np.full((bmat.shape[1], 1), minZero)
                 w = np.exp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
@@ -1419,24 +1419,25 @@ class DWI(object):
             n_i = dwi_i.size
             ndof_i = n_i - bmat_i.shape[1]
             # WLLS estimation
-            # dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
+
             try:
-                dt_i = np.linalg.solve(np.dot(bmat_i.T, bmat_i),
-                                       np.dot(bmat_i.T, np.log(dwi_i)))
+                dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
+                # dt_i = np.linalg.solve(np.dot(bmat_i.T, bmat_i),
+                #                        np.dot(bmat_i.T, np.log(dwi_i)))
             except:
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
             w = np.exp(np.matmul(bmat_i, dt_i))
-            # dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))),
-            #                        (np.log(dwi_i).reshape(
-            #                            (dwi_i.shape[0], 1)) * w),
-            #                        rcond=None)[0]
             try:
-                dt_i = np.linalg.solve(
-                    np.dot((bmat_i * np.tile(w, (1, nparam))).T,
-                           (bmat_i * np.tile(w, (1, nparam)))),
-                    np.dot((bmat_i * np.tile(w, (1, nparam))).T,
-                           (np.log(dwi_i).reshape(
-                               (dwi_i.shape[0], 1)) * w)))
+                dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))),
+                                       (np.log(dwi_i).reshape(
+                                           (dwi_i.shape[0], 1)) * w),
+                                       rcond=None)[0]
+                # dt_i = np.linalg.solve(
+                #     np.dot((bmat_i * np.tile(w, (1, nparam))).T,
+                #            (bmat_i * np.tile(w, (1, nparam)))),
+                #     np.dot((bmat_i * np.tile(w, (1, nparam))).T,
+                #            (np.log(dwi_i).reshape(
+                #                (dwi_i.shape[0], 1)) * w)))
             except:
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
             dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
