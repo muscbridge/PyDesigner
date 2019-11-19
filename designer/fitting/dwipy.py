@@ -1389,7 +1389,7 @@ class DWI(object):
                     dt_ = np.linalg.solve(np.dot(bmat.T, bmat), np.dot(
                         bmat.T, np.log(dwi)))
                 except:
-                    dt_ = minZero
+                    dt_ = np.full((bmat.shape[1], 1), minZero)
                 w = np.exp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
                 # dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))),
                 #                       (np.log(dwi) * w), rcond=None)[0]
@@ -1400,7 +1400,7 @@ class DWI(object):
                         np.dot((bmat * np.tile(w, (1, nparam))).T, (np.log(
                             dwi) * w)))
                 except:
-                    dt_ = minZero
+                    dt_ = np.full((bmat.shape[1], 1), minZero)
                 e = np.log(dwi) - np.matmul(bmat, dt_)
                 m = np.median(np.abs((e * w) - np.median(e * w)))
                 try:
@@ -1439,7 +1439,7 @@ class DWI(object):
                 dt_i = np.linalg.solve(np.dot(bmat_i.T, bmat_i),
                                        np.dot(bmat_i.T, np.log(dwi_i)))
             except:
-                dt_i = minZero
+                dt_i = np.full((bmat_i.shape[1], 1), minZero)
             w = np.exp(np.matmul(bmat_i, dt_i))
             # dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))),
             #                        (np.log(dwi_i).reshape(
@@ -1453,7 +1453,7 @@ class DWI(object):
                            (np.log(dwi_i).reshape(
                                (dwi_i.shape[0], 1)) * w)))
             except:
-                dwi_hat = minZero
+                dt_i = np.full((bmat_i.shape[1], 1), minZero)
             dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
 
             # Goodness-of-fit
@@ -1480,12 +1480,12 @@ class DWI(object):
                         np.median(np.abs(residu_ - \
                                          np.median(residu_))) / dwi_hat
                 except:
-                    C = minZero
+                    C = np.full(dwi_hat.shape, minZero)
                 try:
                     GMM = np.square(C) / np.square(np.square(residu) + \
                                                    np.square(C))
                 except:
-                    GMM = minZero
+                    GMM = np.full(C.shape, minZero)
                 w = np.sqrt(GMM) * dwi_hat
                 dt_imin1 = dt_i
                 # dt_i = np.linalg.lstsq(
@@ -1500,7 +1500,7 @@ class DWI(object):
                                (np.log(dwi_i).reshape(
                                    (dwi_i.shape[0], 1)) * w)))
                 except:
-                    dt_i = minZero
+                    dt_i = np.full((bmat_i.shape[1], 1), minZero)
                 dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
                 dwi_hat[dwi_hat < 1] = 1
                 residu = np.log(
@@ -1513,31 +1513,33 @@ class DWI(object):
                 conv = iter
             # Outlier detection
             if ~gof2:
-                # lev = np.diag(np.matmul(bmat_i, np.linalg.lstsq(np.matmul(np.transpose(bmat_i),
-                #                                         np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i)),
-                #                       np.matmul(np.transpose(bmat_i), np.diag(np.square(w.reshape(-1)))), rcond=None)[0]))
                 try:
-                    lev = np.diag(\
-                        np.matmul(bmat_i, \
-                                np.linalg.solve(\
-                                    np.dot((np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i))).T, \
-                                            (np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i)))), \
-                                    np.dot((np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i))).T, \
-                                            np.matmul(np.transpose(bmat_i), np.diag(np.square(w.reshape(-1))))))))
+                    lev = np.diag(np.matmul(bmat_i, np.linalg.lstsq(np.matmul(np.transpose(bmat_i),
+                                                            np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i)),
+                                          np.matmul(np.transpose(bmat_i), np.diag(np.square(w.reshape(-1)))), rcond=None)[0]))
+                    # lev_helper = np.linalg.solve(\
+                    #                 np.dot((np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i))).T, \
+                    #                         (np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i)))), \
+                    #                 np.dot((np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i))).T, \
+                    #                         np.matmul(np.transpose(bmat_i), np.diag(np.square(w.reshape(-1))))))
+                    # lev = np.diag(np.matmul(bmat_i, lev_helper))
                 except:
-                    lev = minZero
+                    lev = np.full(residu.shape, minZero)
                 lev = lev.reshape((lev.shape[0], 1))
                 try:
                     lowerbound_linear = -bounds * \
                                         np.lib.scimath.sqrt(1-lev) * \
                                         sigma / dwi_hat
                 except:
-                    lowerbound_linear = minZero
-                upperbound_nonlinear = bounds * \
-                                       np.lib.scimath.sqrt(1 -lev) * sigma
+                    lowerbound_linear = np.full(lev.shape, minZero)
+                try:
+                    upperbound_nonlinear = bounds * \
+                                           np.lib.scimath.sqrt(1 -lev) * sigma
+                except:
+                    upperbound_nonlinear = np.full(lev.shape, minZero)
                 tmp = np.zeros(residu.shape, dtype=bool, order='F')
                 tmp[residu < lowerbound_linear] = True
-                tmp[residu > upperbound_nonlinear] = True
+                tmp[residu > lowerbound_linear] = True
                 tmp[lev > leverage] = False
                 tmp2 = np.ones(b.shape, dtype=bool, order='F')
                 tmp2[~out.reshape(-1)] = tmp
@@ -1556,7 +1558,7 @@ class DWI(object):
                 dt_ = np.linalg.solve(np.dot(bmat_i.T, bmat_i), \
                                     np.dot(bmat_i.T, np.log(dwi_i)))
             except:
-                dt_ = minZero
+                dt_ = np.full((bmat_i.shape[1], 1), minZero)
             w = np.exp(np.matmul(bmat_i, dt_))
             # dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
             #                            rcond=None)[0]
@@ -1566,7 +1568,7 @@ class DWI(object):
                     np.dot((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))).T, \
                         (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1)))))
             except:
-                dt = minZero
+                dt = np.full((bmat_i.shape[1], 1), minZero)
             # dt_tmp = dt.reshape(-1)
             # dt2 = np.array([[dt_tmp[1], dt_tmp[2]/2, dt_tmp[3]],
             #        [dt_tmp[2]/2, dt_tmp[4], dt_tmp[5]/2],
