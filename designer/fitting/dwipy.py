@@ -44,7 +44,7 @@ class DWI(object):
                 # Load bvecs
                 bvecs = np.loadtxt(bvecPath)
                 # Load bvals
-                bvals = np.rint(np.loadtxt(bvalPath)) / 1000
+                bvals = np.rint(np.loadtxt(bvalPath) / 1000)
                 # Combine bvecs and bvals into [n x 4] array where n is
                 # number of DWI volumes. [Gx Gy Gz Bval]
                 self.grad = np.c_[np.transpose(bvecs), bvals]
