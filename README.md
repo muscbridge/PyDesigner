@@ -14,9 +14,6 @@ all potential users to wait for an official release. In all seriousness, do NOT 
 any data analysis, speculation, or writing papers: 1) not all citations have been incorporated, 
 and 2) this is a developmental cycle with no papers to cite back on.
 ```
-<p align="center">
-  <img src="https://avatars1.githubusercontent.com/u/47674287?s=400&u=9ca45aeafe30730e26fb70865c14e736f3a4dabf&v=4" alt="MAMA Logo" width="384">
-</p>
 
 PyDesigner is a complete Python port of NYU's DESIGNER pipeline for preprocessing diffusion MRI images (dMRI). This work was motivated by:
 
