@@ -1,0 +1,11 @@
+name: Dispatch Repository
+description: 'Dispatches a payload when a commit is made to repository for automation'
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Send dispatch to m-ama/NeuroDock
+      run: curl -XPOST -u "${{ secrets.GH_USERNAME}}:${{secrets.PA_TOKEN}}" -H "Accept: application/vnd.github.everest-preview+json"  -H "Content-Type: application/json" https://api.github.com/repos/m-ama/NeuroDock/dispatches --data '{"event_type": "PyDesigner_Commit"}'
