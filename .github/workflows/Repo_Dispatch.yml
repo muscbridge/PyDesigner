@@ -1,5 +1,4 @@
 name: Dispatch
-description: 'Dispatches a payload when a commit is made to repository for automation'
 
 on: [push]
 
