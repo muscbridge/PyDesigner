@@ -299,12 +299,21 @@ class DWIFile:
             if not self.getJSON():
                 raise Exception('No access to Partial Fourier information.')
             else:
-                encoding = self.json['PartialFourier']
-                encodingnumber = float(encoding)
-                if encodingnumber != 1:
-                    return True
-                else:
-                    return False
+                if 'PartialFourier' in self.json:
+                    encoding = self.json['PartialFourier']
+                    encodingnumber = float(encoding)
+                    if encodingnumber != 1:
+                        return True
+                    else:
+                        return False
+                elif ('PhaseEncodingSteps' in self.json) and \
+                        ('AcquisitionMatrixPE' in self.json):
+                    steps = int(self.json['PhaseEncodingSteps'])
+                    acqmat = int(self.json['AcquisitionMatrixPE'])
+                    if steps != acqmat:
+                        return False
+                    else:
+                        return True
 
     def print(self, json=False):
         print('Path: ' + self.path)
