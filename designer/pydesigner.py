@@ -257,8 +257,8 @@ if args.standard:
 # Can't do WMTI if no fit
 if args.nofit:
     stdmsg='--nofit given but '
-    if args.WMTI:
-        warningmsg+=msgstart+stdmsg+'--WMTI'+override+'tensor fitting.\n'
+    if args.wmti:
+        warningmsg+=msgstart+stdmsg+'--wmti'+override+'tensor fitting.\n'
         args.nofit = False
     if args.noakc:
         warningmsg+=msgstart+stdmsg+'--noakc'+override+'tensor fitting.\n'
