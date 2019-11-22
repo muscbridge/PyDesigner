@@ -2,7 +2,7 @@
 **Project is currently under developmental cycle and is undergoing stability testing and debugging. Users are recommended to wait for a stable public release instead.**
 
 <p align="center">
-  <img src="https://i.imgur.com/b9y6sRz.png" alt="MAMA Logo" width="768">
+  <img src="https://i.imgur.com/gSSNMkX.png" width="768">
 </p>
 
 **_Disclaimer:_**
