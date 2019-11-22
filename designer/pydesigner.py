@@ -675,9 +675,13 @@ if not args.nofit:
                             'files, use --force, use --resume, or '
                             'change output destination.')
 
-    if not args.undistort and \
-            (not args.resume and not op.exists(fitqcpath)):
+    if not args. resume and (not args.undistort and not args.nooutlier):
         os.mkdir(qcpath)
+
+    if not args.resume and (not
+    (op.exists(metricpath) and op.exists(fitqcpath))):
+        os.mkdir(metricpath)
+
         os.mkdir(fitqcpath)
     elif args.undistort:
         os.mkdir(fitqcpath)
@@ -692,12 +696,15 @@ if not args.nofit:
             img = dp.DWI(filetable['HEAD'].getFull(), args.nthreads)
         # detect outliers
         if not args.nooutliers:
-            outliers, dt_est = img.irlls()
+            if not img.isdki():
+                outliers, dt_est = img.irlls(mode='DTI')
+            else:
+                outliers, dt_est = img.irlls(mode='DKI')
             # write outliers to qc folder
             outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
             dp.writeNii(outliers, img.hdr, outlier_full)
             # fit while rejecting outliers
-            img.fit(fit_constraints, reject=outliers, dt_hat=dt_est)
+            img.fit(fit_constraints, reject=outliers)
         else:
             # fit without rejecting outliers
             img.fit(fit_constraints)
