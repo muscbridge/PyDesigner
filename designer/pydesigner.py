@@ -675,7 +675,7 @@ if not args.nofit:
                             'files, use --force, use --resume, or '
                             'change output destination.')
 
-    if not args. resume and (not args.undistort and not args.nooutlier):
+    if not args. resume and (not args.undistort and not args.nooutliers):
         os.mkdir(qcpath)
 
     if not args.resume and (not
