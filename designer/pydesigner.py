@@ -139,7 +139,7 @@ parser.add_argument('--smooth', action='store_true', default=False,
                     help='Perform smoothing on the DWI data. '
                     'Recommended to also supply --csfmask in order to '
                     'avoid contaminating the voxels which border CSF.')
-parser.add_argument('--fwhm', type=restricted_float,
+parser.add_argument('--fwhm', type=float,
                     help='The FWHM to use as a multiple of voxel size. '
                     'Default 1.25')
 parser.add_argument('--csfmask', default=None,
@@ -688,7 +688,7 @@ if not args.nofit:
                             'files, use --force, use --resume, or '
                             'change output destination.')
 
-    if not args. resume and (not args.undistort and not args.nooutlier):
+    if not args. resume and (not args.undistort and not args.nooutliers):
         os.mkdir(qcpath)
 
     if not args.resume and (not
