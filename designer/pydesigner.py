@@ -139,6 +139,9 @@ parser.add_argument('--smooth', action='store_true', default=False,
                     help='Perform smoothing on the DWI data. '
                     'Recommended to also supply --csfmask in order to '
                     'avoid contaminating the voxels which border CSF.')
+parser.add_argument('--fwhm', type=float,
+                    help='The FWHM to use as a multiple of voxel size. '
+                    'Default 1.25')
 parser.add_argument('--csfmask', default=None,
                     help='CSF mask for exclusion during smoothing. '
                     'Must be in the DWI space and resolution. ')
@@ -283,6 +286,12 @@ if not args.topup and not args.rpe_none and args.undistort:
     errmsg+='Cannot undistort without rpe selection'
 elif args.rpe_pair:
     errmsg+='We are sorry but this feature is unsupported for now.'
+
+# FWHM given but not smoothing
+if not args.smooth and args.fwhm:
+    warningmsg+='No --smooth given but --fwhm given; '
+    warningmsg+=' overriding with --smooth\n'
+    args.smooth = True
 
 # Check to make sure CSF mask exists if given
 if args.csfmask:
@@ -608,10 +617,14 @@ if args.smooth:
                             '--force, use --resume, or change output '
                             'destination.')
     if not args.resume:
+        if args.fwhm:
+            fwhm = args.fwhm
+        else:
+            fwhm = 1.25
         smoothing.smooth_image(filetable['HEAD'].getFull(),
                                csfname=args.csfmask,
                                outname=smoothing_full,
-                               width=1.2)
+                               width=fwhm)
     filetable['smoothed'] = DWIFile(smoothing_full)
     filetable['HEAD'] = filetable['smoothed']
 

@@ -1,6 +1,6 @@
-name: Dispatch
+name: Release Dispatch
 
-on: [push]
+on: [release]
 
 jobs:
   dispatch:
@@ -11,4 +11,5 @@ jobs:
         with:
           token: ${{ secrets.PA_TOKEN }}
           repository: m-ama/NeuroDock
-          event-type: my-event
+          event-type: pydesigner-release
+          client-payload: '{"github": ${{ toJson(github) }}}'
