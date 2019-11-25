@@ -620,7 +620,7 @@ if args.smooth:
         if args.fwhm:
             fwhm = args.fwhm
         else:
-            fwhm = 1.2
+            fwhm = 1.25
         smoothing.smooth_image(filetable['HEAD'].getFull(),
                                csfname=args.csfmask,
                                outname=smoothing_full,
