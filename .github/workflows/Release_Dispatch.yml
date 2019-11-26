@@ -1,7 +1,7 @@
 name: Release Dispatch
-
-on: [release]
-
+on:
+  release:
+    types: [published]
 jobs:
   dispatch:
     runs-on: ubuntu-latest
