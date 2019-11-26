@@ -139,6 +139,9 @@ parser.add_argument('--smooth', action='store_true', default=False,
                     help='Perform smoothing on the DWI data. '
                     'Recommended to also supply --csfmask in order to '
                     'avoid contaminating the voxels which border CSF.')
+parser.add_argument('--fwhm', type=float,
+                    help='The FWHM to use as a multiple of voxel size. '
+                    'Default 1.25')
 parser.add_argument('--csfmask', default=None,
                     help='CSF mask for exclusion during smoothing. '
                     'Must be in the DWI space and resolution. ')
@@ -257,8 +260,8 @@ if args.standard:
 # Can't do WMTI if no fit
 if args.nofit:
     stdmsg='--nofit given but '
-    if args.WMTI:
-        warningmsg+=msgstart+stdmsg+'--WMTI'+override+'tensor fitting.\n'
+    if args.wmti:
+        warningmsg+=msgstart+stdmsg+'--wmti'+override+'tensor fitting.\n'
         args.nofit = False
     if args.noakc:
         warningmsg+=msgstart+stdmsg+'--noakc'+override+'tensor fitting.\n'
@@ -283,6 +286,12 @@ if not args.topup and not args.rpe_none and args.undistort:
     errmsg+='Cannot undistort without rpe selection'
 elif args.rpe_pair:
     errmsg+='We are sorry but this feature is unsupported for now.'
+
+# FWHM given but not smoothing
+if not args.smooth and args.fwhm:
+    warningmsg+='No --smooth given but --fwhm given; '
+    warningmsg+=' overriding with --smooth\n'
+    args.smooth = True
 
 # Check to make sure CSF mask exists if given
 if args.csfmask:
@@ -608,10 +617,14 @@ if args.smooth:
                             '--force, use --resume, or change output '
                             'destination.')
     if not args.resume:
+        if args.fwhm:
+            fwhm = args.fwhm
+        else:
+            fwhm = 1.25
         smoothing.smooth_image(filetable['HEAD'].getFull(),
                                csfname=args.csfmask,
                                outname=smoothing_full,
-                               width=1.2)
+                               width=fwhm)
     filetable['smoothed'] = DWIFile(smoothing_full)
     filetable['HEAD'] = filetable['smoothed']
 
@@ -675,7 +688,7 @@ if not args.nofit:
                             'files, use --force, use --resume, or '
                             'change output destination.')
 
-    if not args. resume and (not args.undistort and not args.nooutlier):
+    if not args. resume and (not args.undistort and not args.nooutliers):
         os.mkdir(qcpath)
 
     if not args.resume and (not
@@ -689,68 +702,68 @@ if not args.nofit:
     if not args.resume and not op.exists(metricpath):
         os.mkdir(metricpath)
 
-        # create dwi fitting object
-        if not args.nthreads:
-            img = dp.DWI(filetable['HEAD'].getFull())
-        else:
-            img = dp.DWI(filetable['HEAD'].getFull(), args.nthreads)
-        # detect outliers
-        if not args.nooutliers:
-            if not img.isdki():
-                outliers, dt_est = img.irlls(mode='DTI')
-            else:
-                outliers, dt_est = img.irlls(mode='DKI')
-            # write outliers to qc folder
-            outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
-            dp.writeNii(outliers, img.hdr, outlier_full)
-            # fit while rejecting outliers
-            img.fit(fit_constraints, reject=outliers)
-        else:
-            # fit without rejecting outliers
-            img.fit(fit_constraints)
-
-        md, rd, ad, fa, fe, trace = img.extractDTI()
-        dp.writeNii(md, img.hdr, op.join(metricpath, 'md'))
-        dp.writeNii(rd, img.hdr, op.join(metricpath, 'rd'))
-        dp.writeNii(ad, img.hdr, op.join(metricpath, 'ad'))
-        dp.writeNii(fa, img.hdr, op.join(metricpath, 'fa'))
-        dp.writeNii(fe, img.hdr, op.join(metricpath, 'fe'))
+    # create dwi fitting object
+    if not args.nthreads:
+        img = dp.DWI(filetable['HEAD'].getFull())
+    else:
+        img = dp.DWI(filetable['HEAD'].getFull(), args.nthreads)
+    # detect outliers
+    if not args.nooutliers:
         if not img.isdki():
-            dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
+            outliers, dt_est = img.irlls(mode='DTI')
         else:
-            # do akc, DKI fitting
-            if not args.noakc:
-                # do akc
-                akc_out = img.akcoutliers()
-                img.akccorrect(akc_out)
-                dp.writeNii(akc_out, img.hdr,
-                            op.join(fitqcpath, 'outliers_akc'))
-            mk, rk, ak, kfa, mkt, trace = img.extractDKI()
-            # naive implementation of writing these variables
-            dp.writeNii(mk, img.hdr, op.join(metricpath, 'mk'))
-            dp.writeNii(rk, img.hdr, op.join(metricpath, 'rk'))
-            dp.writeNii(ak, img.hdr, op.join(metricpath, 'ak'))
-            dp.writeNii(kfa, img.hdr, op.join(metricpath, 'kfa'))
-            dp.writeNii(mkt, img.hdr, op.join(metricpath, 'mkt'))
-            dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
-            if args.wmti:
-                awf, eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort = \
-                    img.extractWMTI()
-                dp.writeNii(awf, img.hdr,
-                            op.join(metricpath, 'wmti_awf'))
-                dp.writeNii(eas_ad, img.hdr,
-                            op.join(metricpath, 'wmti_eas_ad'))
-                dp.writeNii(eas_rd, img.hdr,
-                            op.join(metricpath, 'wmti_eas_rd'))
-                dp.writeNii(eas_tort, img.hdr,
-                            op.join(metricpath, 'wmti_eas_tort'))
-                dp.writeNii(ias_ad, img.hdr,
-                            op.join(metricpath, 'wmti_ias_ad'))
-                dp.writeNii(ias_rd, img.hdr,
-                            op.join(metricpath, 'wmti_ias_rd'))
-                dp.writeNii(ias_tort, img.hdr,
-                            op.join(metricpath, 'wmti_ias_tort'))
-            # reorder tensor for mrtrix3
-            DT, KT = img.tensorReorder(img.tensorType())
-            dp.writeNii(DT, img.hdr, op.join(metricpath, 'DT'))
-            dp.writeNii(KT, img.hdr, op.join(metricpath, 'KT'))
+            outliers, dt_est = img.irlls(mode='DKI')
+        # write outliers to qc folder
+        outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
+        dp.writeNii(outliers, img.hdr, outlier_full)
+        # fit while rejecting outliers
+        img.fit(fit_constraints, reject=outliers)
+    else:
+        # fit without rejecting outliers
+        img.fit(fit_constraints)
+
+    md, rd, ad, fa, fe, trace = img.extractDTI()
+    dp.writeNii(md, img.hdr, op.join(metricpath, 'md'))
+    dp.writeNii(rd, img.hdr, op.join(metricpath, 'rd'))
+    dp.writeNii(ad, img.hdr, op.join(metricpath, 'ad'))
+    dp.writeNii(fa, img.hdr, op.join(metricpath, 'fa'))
+    dp.writeNii(fe, img.hdr, op.join(metricpath, 'fe'))
+    if not img.isdki():
+        dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
+    else:
+        # do akc, DKI fitting
+        if not args.noakc:
+            # do akc
+            akc_out = img.akcoutliers()
+            img.akccorrect(akc_out)
+            dp.writeNii(akc_out, img.hdr,
+                        op.join(fitqcpath, 'outliers_akc'))
+        mk, rk, ak, kfa, mkt, trace = img.extractDKI()
+        # naive implementation of writing these variables
+        dp.writeNii(mk, img.hdr, op.join(metricpath, 'mk'))
+        dp.writeNii(rk, img.hdr, op.join(metricpath, 'rk'))
+        dp.writeNii(ak, img.hdr, op.join(metricpath, 'ak'))
+        dp.writeNii(kfa, img.hdr, op.join(metricpath, 'kfa'))
+        dp.writeNii(mkt, img.hdr, op.join(metricpath, 'mkt'))
+        dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
+        if args.wmti:
+            awf, eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort = \
+                img.extractWMTI()
+            dp.writeNii(awf, img.hdr,
+                        op.join(metricpath, 'wmti_awf'))
+            dp.writeNii(eas_ad, img.hdr,
+                        op.join(metricpath, 'wmti_eas_ad'))
+            dp.writeNii(eas_rd, img.hdr,
+                        op.join(metricpath, 'wmti_eas_rd'))
+            dp.writeNii(eas_tort, img.hdr,
+                        op.join(metricpath, 'wmti_eas_tort'))
+            dp.writeNii(ias_ad, img.hdr,
+                        op.join(metricpath, 'wmti_ias_ad'))
+            dp.writeNii(ias_rd, img.hdr,
+                        op.join(metricpath, 'wmti_ias_rd'))
+            dp.writeNii(ias_tort, img.hdr,
+                        op.join(metricpath, 'wmti_ias_tort'))
+        # reorder tensor for mrtrix3
+        DT, KT = img.tensorReorder(img.tensorType())
+        dp.writeNii(DT, img.hdr, op.join(metricpath, 'DT'))
+        dp.writeNii(KT, img.hdr, op.join(metricpath, 'KT'))
