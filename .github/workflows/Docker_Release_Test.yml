@@ -1,4 +1,4 @@
-name: Docker Build (Latest)
+name: Docker Build (Release)
 on:
   release:
     types: [published]
