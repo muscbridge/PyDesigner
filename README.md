@@ -62,6 +62,16 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 [|__ _Before Running PyDesigner_](#before-running-pydesigner)<br>
 [|__ _To Run PyDesigner_](#to-run-pydesigner)<br>
 [|__ _Basic PyDesigner Flags_](#basic-pydesigner-flags)<br>
+**[Docker Setup](#docker-setup)**<br>
+[|__ Docker Installation](#docker-installation)<br>
+[|__ Configure Docker](#configure-docker)<br>
+**[Compiling Instructions](#compiling-instructions)**<br>
+[|__ Via DockerHub](#via-dockerhub)<br>
+[|__ Via GitHub](#via-github)<br>
+**[Running NeuroDock](#running-neurodock)**<br>
+[|__ SSH Mode](#ssh-mode)<br>
+[|__ Command-basis mode](#command-basis-mode)<br>
+[|__ Alias](#alias)<br>
 **[Information for Developers](#information-for-developers)**<br>
 [|__ _General Pipeline Flow_](#general-pipeline-flow)<br>
 [|__ _List of Files_](#list-of-files)<br>
@@ -283,6 +293,143 @@ Flags are to be preceeded by `--`. For example, to parse a _denoise_ flag, one w
   |`verbose`  |prints out all output: recommended for debugging|
   |`adv`      |disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**|
 
+## Docker Setup
+
+<p align="center">
+  <a href="https://github.com/m-ama/PyDesigner">
+    <img src="https://i.imgur.com/ktvRd1Y.png" alt="MUSC DKI Page" width="256">
+   </a>
+</p>
+
+**Before proceeding, please ensure that your hardware is capable of virtualization. Most modern Intel and AMD processors are compatible. 16 GB minimum RAM is recommended.**
+
+### Docker Installation
+The first step is actually installing Docker. One can easily download and install this from the [Docker Desktop](https://www.docker.com/products/docker-desktop) page by following instructions for respective platforms.
+
+**Windows Users**: Please ensure that Hyper-V is enabled on your machine by following the guide [here](https://docs.microsoft.com/en-us/virtualization/hyper-v-on-windows/quick-start/enable-hyper-v).
+
+### Configure Docker
+Run docker after installation, then head over to docker preferences by opening the **Docker menu > Preferences...**, via the Docker icon in your taskbar.
+
+<p align="center">
+    <img src="https://docs.docker.com/docker-for-mac/images/menu/prefs.png"
+         alt="Docker preferences button" width="256">
+  </a>
+</p>
+
+Head over to the advanced tab and select the maximum number of CPU to make available to Docker. For dMRI processing, upward of 4 is recommended. Then allocate 16.0 GiB or more memory with 1.0 GiB of Swap.
+
+<p align="center">
+    <img src="https://docs.docker.com/docker-for-mac/images/menu/prefs-advanced.png"
+         alt="Docker advanced preferences" width="640">
+  </a>
+</p>
+
+Users are encouraged not to allocate all their physical CPUs to Docker. As a guideline, it is okay to allcate up to 75% of all physical cores.
+
+### Compiling Instructions
+There are two ways to build a the NeuroDock docker image, through the [GitHub repository](https://github.com/m-ama/PyDesigner) or via [DockerHub](https://hub.docker.com/r/dmri/neurodock), where the latter is highly recommended.
+
+#### Via DockerHub
+DockerHub is a repository of Docker images and containers for every occassion.
+The greatest advantage to using DockerHub is the ease and speed of building a container, where a simple commands can fetch a precompiled image. One can easily build NeuroDocker with the [`docker pull`](https://docs.docker.com/engine/reference/commandline/pull/) command:
+
+```
+docker pull dmri/neurodock
+```
+
+Total estimated download for `dmri/neurodock:latest` is approximately 6.0 GB.
+
+#### Via GitHub
+To build a docker image via the GitHub repo, begin by cloning the repository to your local machine and take note of its path.
+
+Then, in your command line, type:
+
+**To build latest from master:**
+```
+docker build -t <image_name> -f <path_to_repo>/docker/Dockerfile_latest <path_to_repo>/docker
+```
+Builds from master may not be stable, so we highly recommend building from latest release.
+
+
+**To build from latest release:**
+```
+docker build -t <image_name> -f <path_to_repo>/docker/Dockerfile_release <path_to_repo>/docker
+```
+
+
+Where `<image_name>` is the name given to the container, and `<path_to_repo>` is the absolute path where the NeuroDock repository is located. For additional building information, please see the [`docker build`](https://docs.docker.com/engine/reference/commandline/build/) documentation.
+
+As a real example, here is the command parsed on one of the lab's computers to build this Docker image:
+```
+docker build -t neurodock -f /Users/sid/Repos/PyDesigner/docker/Dockerfile_release /Users/sid/Repos/PyDesigner/docker
+```
+
+Total buildtime on an 8-core/16-thread machine is approximately 45 minutes.
+
+### Running NeuroDock
+Congratulations on building NeuroDock! Let's proceed to container usage, it's fairly simple!
+
+There are two ways to run NeuroDock, either in SSH mode or on a command-basis. SSH mode is akin to having a command-line window entirely to NeuroDock via an SSH. The latter allows NeuroDock to behave like an installed package which allows FSL, MRtrix3 and PyDesigner commands to be called from command line.
+
+Both methods are initiated by the [`docker run`](https://docs.docker.com/engine/reference/run/) command.
+
+#### SSH Mode
+Simply execute the command below to run NeuroDock in SSH mode:
+```
+docker run -it --rm -v <source>:<destination> dmri/neurodock
+```
+ It is higly recommended to run NeuroDock with the cleanup flag `--rm`, which cleans up and removes the filesystem from Docker when it exits to prevent storage waste.
+
+ The `-v ` allows one to [bind mount](https://docs.docker.com/storage/bind-mounts/) a local folder/drive to make it visible to the container. This folder is mounted at the `<destination>`.
+
+ A real-world usage command to demonstrate this is given below. This command mounts the local folder `/Users/sid/Documents/Projects` to `/Data` within the container.
+
+ ```
+ docker run -it --rm -v /Users/sid/Documents/Projects:/Data dmri/neurodock
+ ```
+
+ Once in SSH mode, the terminal window will only accept commands from the NeuroDock container - these are FSL, MRtrix3 and PyDesigner commands. To leave exit the container and leave SSH mode, simply type `exit` to leave the container.
+
+ #### Command-basis mode
+ This mode of running a NeuroDock allows one to run FSL, MRtrix3, or PyDesigner commands easily without executing the entire container in SSH mode. The container will exit as soon as the command given terminates. The syntax is the same as running in SSH mode, with the addition of the command. For example, to call FSL's bet, one would run:
+
+```
+docker run -it --rm -v <source>:<destination> dmri/neurodock bet -m -t 0.25 <destnation/path_to_input> <destination/path_to_output>
+```
+
+Similarly, one can run PyDesigner with:
+```
+docker run -it --rm -v <source>:<destination> dmri/neurodock python3 pydesigner.py [options] inputs
+```
+
+Here's a real example:
+```
+docker run -it --rm \
+-v /Users/sid/Documents/Projects/IAM/Dataset/NifTi/IAM_1122:/Proc \
+python3 pydesigner.py  \
+--denoise \
+--rician \
+--degibbs \
+--smooth \
+--undistort --rpe_none \
+--mask \
+--verbose \
+-o /Proc/pyd \
+/Proc/dwi/IAM_1122_15_DKI_BIPOLAR_2_5mm_64dir_50slices.nii
+```
+
+#### Alias
+It is cumbersome to add long commands such those above each time. An alias acts as a shortcut to a command, thus allowing us to shorten a command drastically. To call PyDesigner in a docker environment, an alias can be set up like this:
+
+```
+alias pydesigner="docker run -it --rm -v <source>:<destination> dmri/neurodock python3 pydesigner.py"
+```
+
+Now, simply parsing the command `pydesigner` into your CLI will execute PyDesigner in a container. Running `pydesigner -h` will open up the PyDesigner help text.
+
+Take note that the alias is assigned to a specific mounted volume defined by the flag `-v <source>:<destination>`. To process several subjects, it is advisable to mount an entire drive to the alias.
+
 ## Information for Developers
 This sections covers information on the various files provided in this package. Users contributing to the project should refer to this section to understand the order of operations.
 
@@ -321,7 +468,7 @@ There are several files in this package that allow the two segemnts to flow smoo
 PyDesigner is still in early stages of development. Release of a stable build will allow us to explore extending the pipeline even further with the inclusion of (in no particular order of preference):
 
 1. Publishing PyDesigner on [PyPi](https://pypi.org/) and [Conda](https://docs.conda.io/en/latest/)
-2. Docker container with FSL, MRTRIX3 and Python dependencies for deployment on HPC clusters and cross-platform compute capabilites across Linux, Mac OS and Microsoft Windows
+2. ~~Docker container with FSL, MRTRIX3 and Python dependencies for deployment on HPC clusters and cross-platform compute capabilites across Linux, Mac OS and Microsoft Windows~~
 3. Fiber ball imaging (FBI) for microstructural parameters. See [Fiber ball imaging](https://www.ncbi.nlm.nih.gov/pubmed/26432187), and [modeling white matter microstructure with fiber ball imaging](https://www.ncbi.nlm.nih.gov/pubmed/29660512) for more information
 4. Deterministic and probabilistic tractography
 
