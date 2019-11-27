@@ -1,0 +1,14 @@
+name: Docker Build (Latest)
+on:
+  release:
+    types: [published]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+      with:
+        ref: master
+    - name: Build
+      run: docker build -f $GITHUB_WORKSPACE/docker/Dockerfile_release $GITHUB_WORKSPACE/docker
