@@ -50,18 +50,18 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 **[General Information](#general-information)**<br>
 **[Introduction](#introduction)**<br>
 [|__ The PyDesigner Pipeline](#the-pydesigner-pipeline)<br>
-[|__ _Image Acquisition_](#image-acquisition)<br>
-[|__ _Preprocessing_](#preprocessing)<br>
-[|__ _Tensor Estimation_](#tensor-estimation)<br>
+[|__ Image Acquisition](#image-acquisition)<br>
+[|__ Preprocessing](#preprocessing)<br>
+[|__ Tensor Estimation](#tensor-estimation)<br>
 **[Installation](#installation)**<br>
-[|__ _FSL_](#fsl)<br>
-[|__ _MRTRIX3_](#mrtrix3)<br>
-[|__ _Python_](#python)<br>
-[|__ _PyDesigner_](#pydesigner)<br>
+[|__ FSL](#fsl)<br>
+[|__ MRTRIX3](#mrtrix3)<br>
+[|__ Python](#python)<br>
+[|__ PyDesigner](#pydesigner)<br>
 **[Running PyDesigner](#running-pydesigner)**<br>
-[|__ _Before Running PyDesigner_](#before-running-pydesigner)<br>
-[|__ _To Run PyDesigner_](#to-run-pydesigner)<br>
-[|__ _Basic PyDesigner Flags_](#basic-pydesigner-flags)<br>
+[|__ Before Running PyDesigner](#before-running-pydesigner)<br>
+[|__ To Run PyDesigner](#to-run-pydesigner)<br>
+[|__ Basic PyDesigner Flags](#basic-pydesigner-flags)<br>
 **[Docker Setup](#docker-setup)**<br>
 [|__ Docker Installation](#docker-installation)<br>
 [|__ Configure Docker](#configure-docker)<br>
@@ -73,8 +73,8 @@ This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI p
 [|__ Command-basis mode](#command-basis-mode)<br>
 [|__ Alias](#alias)<br>
 **[Information for Developers](#information-for-developers)**<br>
-[|__ _General Pipeline Flow_](#general-pipeline-flow)<br>
-[|__ _List of Files_](#list-of-files)<br>
+[|__ General Pipeline Flow](#general-pipeline-flow)<br>
+[|__ List of Files](#list-of-files)<br>
 **[Future Plans](#future-plans)**<br>
 **[Questions and Issues](#questions-and-issues)**<br>
 **[Meet the Team](#meet-the-team)**<br>
