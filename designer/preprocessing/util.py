@@ -378,13 +378,6 @@ class DWIParser:
     def __init__(self, path):
         UserCpath = path.rsplit(',')
         self.DWIlist = [op.realpath(i) for i in UserCpath]
-        # acq = np.zeros((len(self.DWIlist)),dtype=bool)
-        # for i,fname in enumerate(self.DWIlist):
-        #     acq[i] = DWIFile(fname).isAcquisition
-        # if not np.any(acq):
-        #     raise Exception('One of the input sequences in not a '
-        #     'valid DWI acquisition. Ensure that the NifTi file is '
-        #     'present with its BVEC/BVAL pair.')
         ftype = np.zeros_like(self.DWIlist, dtype=bool)
         for idx, i in enumerate(self.DWIlist):
             ftype[idx] = imagetype(i)
