@@ -119,6 +119,36 @@ def find_valid_ext(pathname):
     
     return exts
 
+def imagetype(path):
+    """
+    Checks input file type
+
+    Parameters
+    ----------
+    path:   string
+        Directory or file path to inquire
+
+    Returns
+    -------
+    String containing filetype
+    """
+    cmd = ['mrinfo', '-quiet']
+    cmd.append(path)
+    completion = subprocess.run(cmd, stdout=subprocess.PIPE)
+    if completion.returncode != 0:
+        raise IOError('Input {} is not currently supported by '
+                                 'PyDesigner.'.format(path))
+    console = str(completion.stdout).split('\\n')
+    matched_indexes = []
+    i = 0
+    while i < len(console):
+        if 'Format' in console[i]:
+            matched_indexes.append(i)
+        i += 1
+    fstring = console[matched_indexes[0]].split()[1]
+    ftype = ''.join(filter(str.isalpha, fstring)).lower()
+    return ftype
+
 class DWIFile:
     """
     Diffusion data file object, used for handling paths and extensions.
