@@ -419,38 +419,38 @@ class DWIParser:
         force:      bool
             Forces file overwrite if they already exist
         """
-        if self.nDWI <= 1:
-            raise Exception('Nothing to concatenate when there is '
-        'only one input series.')
-        else:
-            miflist = []
-            # The following loop first converts NifTis to a .mif file
-            for (idx, i) in enumerate(self.DWIlist):
-                if 'nifti' in self.InputType:
-                    self.json2fslgrad(i)
-                convert_args = ['mrconvert -stride 1,2,3,4']
-                if verbose is False:
-                    convert_args.append('-quiet')
-                if force is True:
-                    convert_args.append('-force')
-                if op.exists(self.BVEClist[idx]) or \
-                        op.exists(self.BVALlist[idx]):
-                    convert_args.append('-fslgrad')
-                    convert_args.append(self.BVEClist[idx])
-                    convert_args.append(self.BVALlist[idx])
-                if op.exists(self.JSONlist[idx]):
-                    convert_args.append('-json_import')
-                    convert_args.append(self.JSONlist[idx])
-                convert_args.append(i)
-                convert_args.append(
-                    op.join(path, ('dwi' + str(idx) + '.mif')))
-                miflist.append(op.join(path, ('dwi' + str(idx) + '.mif')))
-                cmd = ' '.join(str(e) for e in convert_args)
-                completion = subprocess.run(cmd, shell=True)
-                if completion.returncode != 0:
-                    raise Exception('Conversion to .mif failed.')
-            # The following command concatenates all DWI(i) in a single
-            # .mif file
+        # if self.nDWI <= 1:
+        #     raise Exception('Nothing to concatenate when there is '
+        # 'only one input series.')
+        miflist = []
+        # The following loop first converts NifTis to a .mif file
+        for (idx, i) in enumerate(self.DWIlist):
+            if 'nifti' in self.InputType:
+                self.json2fslgrad(i)
+            convert_args = ['mrconvert -stride 1,2,3,4']
+            if verbose is False:
+                convert_args.append('-quiet')
+            if force is True:
+                convert_args.append('-force')
+            if op.exists(self.BVEClist[idx]) or \
+                    op.exists(self.BVALlist[idx]):
+                convert_args.append('-fslgrad')
+                convert_args.append(self.BVEClist[idx])
+                convert_args.append(self.BVALlist[idx])
+            if op.exists(self.JSONlist[idx]):
+                convert_args.append('-json_import')
+                convert_args.append(self.JSONlist[idx])
+            convert_args.append(i)
+            convert_args.append(
+                op.join(path, ('dwi' + str(idx) + '.mif')))
+            miflist.append(op.join(path, ('dwi' + str(idx) + '.mif')))
+            cmd = ' '.join(str(e) for e in convert_args)
+            completion = subprocess.run(cmd, shell=True)
+            if completion.returncode != 0:
+                raise Exception('Conversion to .mif failed.')
+        # The following command concatenates all DWI(i) in a single
+        # .mif file if nDWI > 1
+        if self.nDWI > 1:
             cat_arg = ['mrcat -axis 3']
             if verbose is False:
                 cat_arg.append('-quiet')
@@ -465,37 +465,53 @@ class DWIParser:
             if completion.returncode != 0:
                 raise Exception('Failed to concatenate multiple '
             'series.')
-            miflist.append(op.join(path, 'raw_dwi' + '.mif'))
-            # Output concatenated .mif into other formats
             if '.mif' not in ext:
-                convert_args = ['mrconvert -stride 1,2,3,4']
-                if verbose is False:
-                    convert_args.append('-quiet')
-                if force is True:
-                    convert_args.append('-force')
-                convert_args.append('-export_grad_fsl')
-                convert_args.append(op.join(path, 'raw_dwi.bvec'))
-                convert_args.append(op.join(path, 'raw_dwi.bval'))
-                convert_args.append('-json_export')
-                convert_args.append(op.join(path, 'raw_dwi.json'))
-                convert_args.append(op.join(path, 'raw_dwi.mif'))
-                convert_args.append(op.join(path, 'raw_dwi' + ext))
-                cmd = ' '.join(str(e) for e in convert_args)
-                completion = subprocess.run(cmd, shell=True)
-                if completion.returncode != 0:
-                    for i, fname in enumerate(miflist):
-                        os.remove(fname)
-                    os.remove(op.join(path, 'raw_dwi' + ext))
-                    raise Exception('Concatenation to ' + str(ext) + ' '
-                                    'failed. Please ensure that your input '
-                                    'NifTi files have the same phase '
-                                    'encoding directions, and are '
-                                    'accompanied by valid .bval, .bvec, '
-                                    'and .json. If this is not possible, '
-                                    'please provide manually concatenated '
-                                    'DWIs or run with single series input.')
-            for i, fname in enumerate(miflist):
-                os.remove(fname)
+                miflist.append(op.join(path, 'raw_dwi' + '.mif'))
+        else:
+            cat_arg = ['mrconvert']
+            if verbose is False:
+                cat_arg.append('-quiet')
+            if force is True:
+                cat_arg.append('-force')
+            cat_arg.append(op.join(path, 'dwi0.mif'))
+            cat_arg.append(op.join(path, 'raw_dwi.mif'))
+            cmd = ' '.join(str(e) for e in cat_arg)
+            print(cmd)
+            completion = subprocess.run(cmd, shell=True)
+            if completion.returncode != 0:
+                raise Exception('Failed to convert single series')
+
+        # Output concatenated .mif into other formats
+        if '.mif' not in ext:
+            convert_args = ['mrconvert -stride 1,2,3,4']
+            if verbose is False:
+                convert_args.append('-quiet')
+            if force is True:
+                convert_args.append('-force')
+            convert_args.append('-export_grad_fsl')
+            convert_args.append(op.join(path, 'raw_dwi.bvec'))
+            convert_args.append(op.join(path, 'raw_dwi.bval'))
+            convert_args.append('-json_export')
+            convert_args.append(op.join(path, 'raw_dwi.json'))
+            convert_args.append(op.join(path, 'raw_dwi.mif'))
+            convert_args.append(op.join(path, 'raw_dwi' + ext))
+            cmd = ' '.join(str(e) for e in convert_args)
+            completion = subprocess.run(cmd, shell=True)
+            if completion.returncode != 0:
+                for i, fname in enumerate(miflist):
+                    os.remove(fname)
+                os.remove(op.join(path, 'raw_dwi' + ext))
+                raise Exception('Concatenation to ' + str(ext) + ' '
+                                'failed. Please ensure that your input '
+                                'NifTi files have the same phase '
+                                'encoding directions, and are '
+                                'accompanied by valid .bval, .bvec, '
+                                'and .json. If this is not possible, '
+                                'please provide manually concatenated '
+                                'DWIs or run with single series input.')
+        for i, fname in enumerate(miflist):
+            os.remove(fname)
+
     def getPath(self):
         """Returns directory where first file in DWI list is stored
         """
