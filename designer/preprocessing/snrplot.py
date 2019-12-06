@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import util
 import nibabel as nib
 import os.path as op
 import numpy as np
@@ -91,8 +90,12 @@ class makesnr:
         # Load noise into a vector
         self.noise = np.array(nib.load(noisepath).dataobj)
         # Load BVAL
-        BVALpath = util.DWIFile(dwilist[0]).getBVAL()
-        self.bval = np.rint(np.loadtxt(BVALpath) / 1000).reshape(-1)
+        fName = op.splitext(dwilist[0])[0]
+        bvalPath = op.join(fName + '.bval')
+        if op.exists(bvalPath):
+            self.bval = np.rint(np.loadtxt(bvalPath) / 1000)
+        else:
+            raise IOError('BVAL file {} not found'.format(bvalPath))
         if maskPath is not None and op.exists(maskPath):
             self.mask = np.array(nib.load(maskPath).dataobj).astype(bool)
             self.maskStatus = True
@@ -116,10 +119,11 @@ class makesnr:
                     raise ValueError('all input DWIs must have the same '
                                      'shape.')
                 try:
+                    fName = op.splitext(dwilist[i])[0]
+                    bvalPath = op.join(fName + '.bval')
                     self.bval = np.stack((self.bval,
                         np.rint(
-                            np.loadtxt(
-                                util.DWIFile(dwilist[i]).getBVAL()) / 1000)))
+                            np.loadtxt(bvalPath) / 1000)))
                 except:
                     raise IOError('Unable to locate BVAL file for image: {'
                                   '}'.format(dwilist[i]))
