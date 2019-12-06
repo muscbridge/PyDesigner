@@ -223,15 +223,19 @@ args = parser.parse_args()
 # Parse Input Image
 #----------------------------------------------------------------------
 image = DWIParser(args.dwi)
-if image.nDWI > 1:
-    if not args.output:
-        outpath = image.getPath()
-    else:
-        outpath = args.output
-    image.cat(path=outpath,
-              verbose=args.verbose,
-              force=args.force)
-    args.dwi = op.join(outpath, 'raw_dwi.nii')
+# Variable fType indicates the extension to raw_dwi.X, where X take the
+# place of known dMRI file extensions (.mif, .nii, .nii.gz). This allows
+# easy switching based on any scenario for testing.
+fType = '.nii'
+if not args.output:
+    outpath = image.getPath()
+else:
+    outpath = args.output
+image.cat(path=outpath,
+          ext=fType,
+          verbose=args.verbose,
+          force=args.force)
+args.dwi = op.join(outpath, 'raw_dwi' + fType)
 
 #---------------------------------------------------------------------
 # Validate Arguments
