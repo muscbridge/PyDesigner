@@ -387,6 +387,10 @@ class DWIParser:
                             'Please input either input types exclusively.')
 
         DWIflist = [op.splitext(i) for i in self.DWIlist]
+        if '.gz' in np.unique(np.array(DWIflist)[:,-1])[0]:
+            for idx, i in enumerate(DWIflist):
+                DWIflist[idx] = (op.splitext(i[0])[0], '.nii.gz')
+
         self.DWInlist = [i[0] for i in DWIflist]
         self.BVALlist = [i + '.bval' for i in self.DWInlist]
         self.BVEClist = [i + '.bvec' for i in self.DWInlist]
