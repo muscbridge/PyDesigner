@@ -41,9 +41,7 @@ fslpath = op.dirname(fsl_location)
 
 # Configure system for Intel MKL
 if sys.isAMD():
-    print('AMD detected')
     sys.setenv([('MKL_DEBUG_CPU_TYPE','5')])
-    print(os.environ['MKL_DEBUG_CPU_TYPE'])
 
 #----------------------------------------------------------------------
 # Parse Arguments
