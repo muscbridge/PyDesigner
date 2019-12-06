@@ -15,6 +15,7 @@ import textwrap # dedent
 import numpy as np # array, ndarray
 from preprocessing import util, smoothing, rician, preparation
 from fitting import dwipy as dp
+from system import systemtools as sys
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
 
@@ -38,7 +39,13 @@ if fsl_location == None:
 # Extract FSL path from fsl_location
 fslpath = op.dirname(fsl_location)
 
-#---------------------------------------------------------------------- 
+# Configure system for Intel MKL
+if sys.isAMD():
+    print('AMD detected')
+    sys.setenv([('MKL_DEBUG_CPU_TYPE','5')])
+    print(os.environ['MKL_DEBUG_CPU_TYPE'])
+
+#----------------------------------------------------------------------
 # Parse Arguments
 #---------------------------------------------------------------------- 
 # Initialize ArgumentParser
