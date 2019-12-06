@@ -63,4 +63,11 @@ def setenv(envlist):
     environ = dict(os.environ)
     i = 0
     while i < len(envlist):
-        os.environ[envlist[i][]0] = envlist[i][1]
+        # If env variable does not exist
+        if envlist[i][0] not in environ:
+            os.environ[envlist[i][0]] = envlist[i][1]
+        # if env variable exists but has a different value
+        elif (envlist[i][0] in environ) and \
+                (envlist[i][1] not in environ[envlist[i][0]]):
+            os.environ[envlist[i]] = envlist[i][1]
+        i += 1
