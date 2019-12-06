@@ -10,6 +10,7 @@ import json # decode
 import pprint #pprint
 import numpy as np
 import math
+import warnings
 
 def bvec_is_fullsphere(bvec):
     """Determines if .bvec file is full or half-sphere
@@ -382,14 +383,19 @@ class DWIParser:
     def __init__(self, path):
         UserCpath = path.rsplit(',')
         self.DWIlist = [op.realpath(i) for i in UserCpath]
-        ftype = np.zeros_like(self.DWIlist, dtype=bool)
-        for idx, i in enumerate(self.DWIlist):
-            ftype[idx] = imagetype(i)
+        # This loop determines the types of inputs parsed into the function
+        ftype = []
+        i = 0
+        while i < len(self.DWIlist):
+            ftype.append(imagetype(self.DWIlist[i]))
+            i += 1
         self.InputType = np.unique(ftype)
         if self.InputType.size > 1:
-            raise Exception('DICOM and NifTi inputs cannot be mixed. '
-                            'Please input either input types exclusively.')
-
+            raise IOError('It appears that multiple types of files '
+                            'have been parsed as input. Please input '
+                            'a specific type of input exclusively. '
+                            'Detected inputs were: {}'.format(
+                self.InputType))
         DWIflist = [op.splitext(i) for i in self.DWIlist]
         # Compressed nifti (.nii.gz) have double extensions, and so
         # require double ext-splitting. The following loop takes care of
@@ -399,11 +405,43 @@ class DWIParser:
                 DWIflist[idx] = (op.splitext(i[0])[0], '.nii.gz')
 
         self.DWInlist = [i[0] for i in DWIflist]
-        self.BVALlist = [i + '.bval' for i in self.DWInlist]
-        self.BVEClist = [i + '.bvec' for i in self.DWInlist]
-        self.JSONlist = [i + '.json' for i in self.DWInlist]
+        if 'nifti' in self.InputType:
+            self.BVALlist = [i + '.bval' for i in self.DWInlist]
+            self.BVEClist = [i + '.bvec' for i in self.DWInlist]
+            self.JSONlist = [i + '.json' for i in self.DWInlist]
         self.DWIext = [i[1] for i in DWIflist]
         self.nDWI = len(self.DWIlist)
+
+    # def makeext(self, dwipath):
+    #     """
+    #     Makes FSL grad and JSON extensions for files that don't posses
+    #     header information
+    #
+    #     Parameters
+    #     ----------
+    #     dwipath:    string
+    #                 path to dwi without extension
+    #
+    #     Returns
+    #     -------
+    #     BVALpath:   string
+    #                 path to BVAL
+    #     BVECpath:   string
+    #                 path to BVEC
+    #     JSONpath:   string
+    #                 path to JSON
+    #     """
+    #     # First, check whether an extension to input path exists
+    #     splitpath = op.splitext(dwipath)
+    #     # If an extension does not exist, entered path is valid
+    #     if not splitpath[1]:
+    #         BVALpath = dwipath + '.bval'
+    #         BVECpath = dwipath + '.bvec'
+    #         JSONpath = dwipath + '.json'
+    #     else:
+    #         raise Exception('Ensure that the path to DWI is entered '
+    #                         'without an extension')
+    #     return BVALpath, BVECpath, JSONpath
 
     def cat(self, path, ext='.nii' ,verbose=False, force=False):
         """Concatenates all input series when nDWI > 1 into a 4D NifTi
@@ -426,21 +464,38 @@ class DWIParser:
         miflist = []
         # The following loop converts input file into .mif
         for (idx, i) in enumerate(self.DWIlist):
-            if 'nifti' in self.InputType:
-                self.json2fslgrad(i)
+            if 'nifti' in self.InputType and \
+                    not op.exists(self.JSONlist[idx]):
+                try:
+                    self.json2fslgrad(i)
+                except:
+                    raise IOError('Please supply a valid JSON file '
+                                  'accompanying {}'.format(i))
             convert_args = ['mrconvert -stride 1,2,3,4']
             if verbose is False:
                 convert_args.append('-quiet')
             if force is True:
                 convert_args.append('-force')
-            if op.exists(self.BVEClist[idx]) or \
-                    op.exists(self.BVALlist[idx]):
-                convert_args.append('-fslgrad')
-                convert_args.append(self.BVEClist[idx])
-                convert_args.append(self.BVALlist[idx])
-            if op.exists(self.JSONlist[idx]):
-                convert_args.append('-json_import')
-                convert_args.append(self.JSONlist[idx])
+            if hasattr(self, 'BVEClist') or hasattr(self, 'BVALlist'):
+                if op.exists(self.BVEClist[idx]) or \
+                        op.exists(self.BVALlist[idx]):
+                    convert_args.append('-fslgrad')
+                    convert_args.append(self.BVEClist[idx])
+                    convert_args.append(self.BVALlist[idx])
+                else:
+                    raise FileNotFoundError('BVEC and BVAL pairs for the '
+                                            'input paths do not exist. '
+                                            'Ensure that they exist or '
+                                            'have the same name as DWI.')
+            if hasattr(self, 'JSONlist'):
+                if op.exists(self.JSONlist[idx]):
+                    convert_args.append('-json_import')
+                    convert_args.append(self.JSONlist[idx])
+                else:
+                    warnings.warn('JSON file(s) {} not found. '
+                                  'Attempting to process without. '
+                                  'If processing fails, please use the '
+                                  '"--adv" flag'.format(JSONlist))
             convert_args.append(i)
             convert_args.append(
                 op.join(path, ('dwi' + str(idx) + '.mif')))
@@ -448,7 +503,9 @@ class DWIParser:
             cmd = ' '.join(str(e) for e in convert_args)
             completion = subprocess.run(cmd, shell=True)
             if completion.returncode != 0:
-                raise Exception('Conversion to .mif failed.')
+                raise Exception('Please use the "--force" flag to '
+                                'overwrite existing outputs, or clear '
+                                'the output directory')
         # The following command concatenates all DWI(i) into a single
         # .mif file if nDWI > 1
         if self.nDWI > 1:
