@@ -462,8 +462,6 @@ class DWIParser:
             if completion.returncode != 0:
                 raise Exception('Failed to concatenate multiple '
             'series.')
-            if '.mif' not in ext:
-                miflist.append(op.join(path, 'raw_dwi' + '.mif'))
         else:
             cat_arg = ['mrconvert']
             if verbose is False:
@@ -477,6 +475,8 @@ class DWIParser:
             completion = subprocess.run(cmd, shell=True)
             if completion.returncode != 0:
                 raise Exception('Failed to convert single series')
+        if '.mif' not in ext:
+            miflist.append(op.join(path, 'raw_dwi' + '.mif'))
 
         # Output concatenated .mif into other formats
         if '.mif' not in ext:
