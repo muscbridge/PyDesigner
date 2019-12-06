@@ -140,11 +140,15 @@ def imagetype(path):
                                  'PyDesigner.'.format(path))
     console = str(completion.stdout).split('\\n')
     matched_indexes = []
+    # This loop iterates across the console output to find the line
+    # containing the string 'Format'.
     i = 0
     while i < len(console):
         if 'Format' in console[i]:
             matched_indexes.append(i)
         i += 1
+    # Indexed line is split and alphabets from the second element are
+    # extracted, which determines the input type.
     fstring = console[matched_indexes[0]].split()[1]
     ftype = ''.join(filter(str.isalpha, fstring)).lower()
     return ftype
@@ -416,11 +420,8 @@ class DWIParser:
         force:      bool
             Forces file overwrite if they already exist
         """
-        # if self.nDWI <= 1:
-        #     raise Exception('Nothing to concatenate when there is '
-        # 'only one input series.')
         miflist = []
-        # The following loop first converts NifTis to a .mif file
+        # The following loop converts input file into .mif
         for (idx, i) in enumerate(self.DWIlist):
             if 'nifti' in self.InputType:
                 self.json2fslgrad(i)
@@ -445,7 +446,7 @@ class DWIParser:
             completion = subprocess.run(cmd, shell=True)
             if completion.returncode != 0:
                 raise Exception('Conversion to .mif failed.')
-        # The following command concatenates all DWI(i) in a single
+        # The following command concatenates all DWI(i) into a single
         # .mif file if nDWI > 1
         if self.nDWI > 1:
             cat_arg = ['mrcat -axis 3']
