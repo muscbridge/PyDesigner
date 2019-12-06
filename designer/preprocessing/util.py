@@ -391,6 +391,9 @@ class DWIParser:
                             'Please input either input types exclusively.')
 
         DWIflist = [op.splitext(i) for i in self.DWIlist]
+        # Compressed nifti (.nii.gz) have double extensions, and so
+        # require double ext-splitting. The following loop takes care of
+        # that.
         if '.gz' in np.unique(np.array(DWIflist)[:,-1])[0]:
             for idx, i in enumerate(DWIflist):
                 DWIflist[idx] = (op.splitext(i[0])[0], '.nii.gz')
