@@ -368,6 +368,4 @@ class makesnr:
                          loc='upper left',
                          frameon = False,
                          bbox_to_anchor=(0.25, -0.19))
-        # plt.xlabel('SNR')
-        plt.savefig(outpath)
-
+        plt.savefig(outpath, dpit=300)
