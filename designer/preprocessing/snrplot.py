@@ -77,6 +77,7 @@ class makesnr:
                             '"dwidenoise"')
 
         self.nDWI = len(dwilist)     # Number of input DWIs
+        self.DWInames = [op.split(i)[-1] for i in dwilist]
         # Open the first image in list
         self.hdr = nib.load(dwilist[0])
         sDWI = self.hdr.shape        # Shape of input DWIs
