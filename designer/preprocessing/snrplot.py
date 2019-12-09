@@ -297,28 +297,35 @@ class makesnr:
     #                 plt.xlim(0, 100)
     #     plt.show()
 
-    def makeplot(self, smooth=True, path):
+    def makeplot(self, path, smooth=True, smoothfactor=5):
         """
         Creates and saves SNR plot to a path as SNR.png
 
         Parameters
         ----------
-        path:   string
-                directory to save the plot in
+        path:           string
+                        directory to save the plot in
+        smooth:         bool
+                        Specify whether to interpolate and smooth
+        smoothfactor:   int
+                        smoothing factor to apply
 
         Returns
         -------
         (none): saves plotted image into directory as SNR.png
         """
+        if not isinstance(smoothfactor, int):
+            raise ValueError('Please specify an integer for smooth '
+                             'factor.')
         if not op.isdir(path):
             pathlib.Path(path).mkdir(
                 parents=True, exist_ok=True)
         outpath = op.join(path, 'SNR.png')
-        smoothFactor = 1000     # Number of points to add between
-        # histogram counts for smoothing
         (count, binval, unibvals) = self.histcount()
         count = count * 100
         if smooth:
+            smoothFactor = smoothfactor *  count.shape[0] # Number of
+            # points to add between histogram counts for smoothing
             binval_interp = np.linspace(binval.min(), binval.max(),
                                    smoothFactor)
             (R, C, D) = count.shape
