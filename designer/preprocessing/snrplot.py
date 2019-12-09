@@ -69,8 +69,20 @@ class makesnr:
     ----------
     dwilist:    string list
                 list of 4D DWI (nifti-format) paths to evaluate and plot
-    outpath:    string
-                path to save SNR plot
+    noisepath:  string
+                path to noise map from "dwidenoise"
+    maskpath:   string (optional)
+                path to brain mask
+
+    Attributes
+    ----------
+    __init__:       constructs makesnr class
+    getuniquebval:  creates a list of unique B-values for the purpose of
+                    SNR computation
+    computesnr:     performs SNR computation
+    histcount:      bins SNR values
+    makeplot:       creates and saves SNR plot from bin counts
+
     """
     def __init__(self, dwilist, noisepath=None, maskpath=None):
         """
