@@ -5,6 +5,9 @@ import nibabel as nib
 import os.path as op
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.interpolate import make_interp_spline, BSpline
+
+minZero = 1e-8
 
 def vectorize(img, mask):
     """ Returns vectorized image based on brain mask, requires no input
@@ -128,6 +131,9 @@ class makesnr:
                 except:
                     raise IOError('Unable to locate BVAL file for image: {'
                                   '}'.format(dwilist[i]))
+        truncateIdx = np.logical_or(np.isnan(self.img),
+                                     (self.img < minZero))
+        self.img[truncateIdx] = minZero
 
     def getuniquebval(self):
         """
@@ -160,7 +166,7 @@ class makesnr:
                 # Index where entirety of bvals, given by variable
                 # bvals, is equal to a single unique bval
                 idx_bval = np.where(np.isin(bvals, bval))[-1]
-                if bval == 0:
+                if bval != 0:
                     bval_list.append(str(bval))
                 else:
                     # Appends '0' to bval_list n countb0 number of times
@@ -182,7 +188,7 @@ class makesnr:
         snr_dwi:    Numpy array of SNR across all DWI.
         """
         bval_list = self.getuniquebval()
-        snr_dwi = np.empty((self.nvox, bval_list.shape[1], self.nDWI))
+        snr_dwi = np.zeros((self.nvox, bval_list.shape[1], self.nDWI))
         for i in range(self.nDWI):
             bvals = self.bval[i, :]
             unibvals = np.array(np.unique(bvals),dtype=int)
@@ -195,15 +201,165 @@ class makesnr:
                 idx_bval = np.where(np.isin(bvals, bval))[-1]
                 idx_list = np.where(np.isin(bval_list[i, :], bval))[-1]
                 img = self.img[idx_bval, :, i]
-                if bval == 0:
-                    img = np.mean(img, axis=0)
-                    snr_dwi[:, idx_list, i] = (img /
-                                               self.noise).reshape((
-                        self.nvox, idx_list.size))
+                if bval != 0:
+                    snr_dwi[:, idx_list, i] = np.mean((img /self.noise),
+                                                      axis=0).reshape((
+                        self.nvox, 1))
                 else:
                     # Appends '0' to bval_list n countb0 number of times
                     for countb in range(img.shape[0]):
                         snr_dwi[:, idx_list, i] = \
                             np.divide(img, self.noise).reshape((
                         self.nvox, idx_list.size))
+        truncateIdx = np.logical_or(np.isnan(snr_dwi),
+                                     (snr_dwi < minZero))
+        snr_dwi[truncateIdx] = minZero
         return snr_dwi
+
+    def histcount(self, nbins=100):
+        """
+        Bins SNR into nbins and returns various counting properties
+
+        Parameters
+        ----------
+        nbins:  int
+        :return:
+        """
+        if not isinstance(nbins, int):
+            raise ValueError('Number of bins (nbins) entered is not an '
+                             'integer. Please specify and integer.')
+        bval_list = self.getuniquebval()
+        snr = self.computesnr()
+        # Get min and max values of SNR
+        minVal = np.min(snr.reshape(-1))
+        maxVal = np.max(snr.reshape(-1))
+        unibvals = np.array(np.unique(bval_list), dtype=int)
+        count = np.zeros((nbins, unibvals.size, self.nDWI))
+        edges = np.zeros((nbins+1, unibvals.size, self.nDWI))
+        for j in range(self.nDWI):
+            for i in range(unibvals.size):
+                bval = unibvals[i]
+                idx_list = np.where(np.isin(bval_list[j, :], bval))[-1]
+                vals = snr[:, idx_list, j]
+                (count[:, i, j], edges[:, i, j]) = \
+                np.histogram(vals,
+                             bins=nbins,
+                             range=(minVal, maxVal),
+                             density=True)
+        edges = np.unique(edges)
+        if edges.size != nbins + 1:
+            raise Exception('Number of binning edges across B-values and '
+                            'DWIs is not consistent. Aborting SNR '
+                            'binning.')
+        binval = np.zeros((nbins))
+        for i in range(binval.size):
+            binval[i] = np.median([edges[i], edges[i + 1]])
+        return count, binval, unibvals
+
+    # def makeplot(self):
+    #     """
+    #     Creates and saves SNR plot to a path as SNR.png
+    #
+    #     Parameters
+    #     ----------
+    #     path:   string
+    #             directory to save the plot in
+    #
+    #     Returns
+    #     -------
+    #     (none): saves plotted image into directory as SNR.png
+    #     """
+    #     (count, binval, unibvals) = self.histcount()
+    #     count = count * 100
+    #     nplots = unibvals.size
+    #     titles = ['B' + str(i * 1000) for i in unibvals]
+    #     fig, axes = plt.subplots(nrows=nplots, ncols=1)
+    #     fig.subplots_adjust(hspace=0.5)
+    #     fig.suptitle('SNR of Acquisitions')
+    #     for i in range(self.nDWI):
+    #         for ax, title, bval, y in zip(axes.flat,
+    #                                       titles,
+    #                                       unibvals,
+    #                                       count[:,:,i].T):
+    #             print(bval)
+    #             ax.plot(binval, y)
+    #             ax.set_title(title)
+    #             ax.grid(True)
+    #             ax.set_xlabel('SNR')
+    #             ax.set_ylabel('% of Voxels')
+    #             if bval == 0:
+    #                 plt.xlim(0, 500)
+    #             elif bval == 1:
+    #                 plt.xlim(0, 80)
+    #             elif bval == 2:
+    #                 plt.xlim (0, 40)
+    #             else:
+    #                 plt.xlim(0, 100)
+    #     plt.show()
+
+    def makeplot(self, smooth=True, path):
+        """
+        Creates and saves SNR plot to a path as SNR.png
+
+        Parameters
+        ----------
+        path:   string
+                directory to save the plot in
+
+        Returns
+        -------
+        (none): saves plotted image into directory as SNR.png
+        """
+        if not op.isdir(path):
+            pathlib.Path(path).mkdir(
+                parents=True, exist_ok=True)
+        outpath = op.join(path, 'SNR.png')
+        smoothFactor = 1000     # Number of points to add between
+        # histogram counts for smoothing
+        (count, binval, unibvals) = self.histcount()
+        count = count * 100
+        if smooth:
+            binval_interp = np.linspace(binval.min(), binval.max(),
+                                   smoothFactor)
+            (R, C, D) = count.shape
+            count_interp = np.zeros((smoothFactor, C, D))
+            for y in range(C):
+                for z in range(D):
+                    spl = make_interp_spline(binval, count[:, y, z], k=3)
+                    count_interp[: , y, z] = spl(binval_interp)
+            count = count_interp
+            binval = binval_interp
+        plt.style.use('ggplot')
+        nplots = unibvals.size
+        titles = ['B' + str(i * 1000) for i in unibvals]
+        fig = plt.figure(figsize=(8, 10))
+        fig.subplots_adjust(hspace=0.4, wspace=0.1)
+        fig.suptitle('SNR of Acquisitions', fontsize=20)
+        for i in range(nplots):
+            ax = fig.add_subplot(nplots, 1, i + 1)
+            ax.plot(binval, count[:, i , :])
+            # Subplot Properties
+            ax.grid(True)
+            ax.set_title(titles[i],
+                         loc='right')
+            bval = unibvals[i]
+            ax.set_xlabel('SNR')
+            ax.set_ylabel('% of voxels')
+            ax.set_ylim(count.min(), count.max())
+            if bval == 0:
+                ax.set_xlim(0, 80)
+            elif bval == 1:
+                ax.set_xlim(0, 40)
+            elif bval == 2:
+                ax.set_xlim(0, 20)
+            else:
+                ax.set_xlim(0, 10)
+        # Plot Properties
+        plt.legend(self.DWInames,
+                         ncol=nplots,
+                         loc='upper left',
+                         frameon = False,
+                         bbox_to_anchor=(0.25, -0.19))
+        # plt.xlabel('SNR')
+        plt.savefig(outpath)
+
