@@ -80,7 +80,6 @@ class makesnr:
         # Open the first image in list
         self.hdr = nib.load(dwilist[0])
         sDWI = self.hdr.shape        # Shape of input DWIs
-        self.nvox = sDWI[0] * sDWI[1] * sDWI[2]
         if self.hdr.ndim != 4:
             raise IOError('Input DWIs need are not 4D. Please ensure you '
                           'use 4D NifTi files only.')
@@ -105,6 +104,7 @@ class makesnr:
             self.maskStatus = False
         # Vectorize images
         self.img = vectorize(self.img, self.mask)
+        self.nvox = self.img.shape[1]
         print(self.img.shape)
         self.noise = vectorize(self.noise, self.mask)
         if self.nDWI > 1:
@@ -128,8 +128,72 @@ class makesnr:
                     raise IOError('Unable to locate BVAL file for image: {'
                                   '}'.format(dwilist[i]))
 
+    def getuniquebval(self):
+        """
+        Creates a list of unique B-values for the purpose of SNR
+        computation. In the calculation of SNR, B0 signal can be averaged
+        becase they are not associated to any direction. This is not true
+        for non-B0 values however, because every 3D volume represents a
+        different direction. To compute SNR appropriately, differences in
+        gradients have to be accounted. This function creates a list of
+        B-values in the order they need to appear for the calculation of
+        SNR.
+
+        Parameters
+        ----------
+        (none)
+
+        Returns
+        -------
+        b_list: Numpy vector containing list of B-vals to be used in
+                SNR calculation
+        """
+
+        b_list = []
+        for i in range(self.nDWI):
+            bvals = self.bval[i, :]
+            unibvals = np.array(np.unique(bvals),dtype=int)
+            bval_list = []
+            for j in range(unibvals.size):
+                bval = unibvals[j]
+                # Index where entirety of bvals, given by variable
+                # bvals, is equal to a single unique bval
+                idx_bval = np.where(np.isin(bvals, bval))[-1]
+                if bval == 0:
+                    bval_list.append(str(bval))
+                else:
+                    # Appends '0' to bval_list n countb0 number of times
+                    for countb in range(len(idx_bval)):
+                        bval_list.append(str(bval))
+            b_list.append(bval_list)
+        return np.asarray(b_list, dtype=int)
+
     def computesnr(self):
         """
         Computes SNR of all DWIs in class object
         :return:
         """
+        bval_list = self.getuniquebval()
+        snr_dwi = np.empty((self.nvox, bval_list.shape[1], self.nDWI))
+        for i in range(self.nDWI):
+            bvals = self.bval[i, :]
+            unibvals = np.array(np.unique(bvals),dtype=int)
+            for j in range(unibvals.size):
+                bval = unibvals[j]
+                # Index where entirety of bvals, given by variable
+                # bvals, is equal to a single unique bval
+                idx_bval = np.where(np.isin(bvals, bval))[-1]
+                idx_list = np.where(np.isin(bval_list[i, :], bval))[-1]
+                img = self.img[idx_bval, :, i]
+                if bval == 0:
+                    img = np.mean(img, axis=0)
+                    snr_dwi[:, idx_list, i] = (img /
+                                               self.noise).reshape((
+                        self.nvox, idx_list.size))
+                else:
+                    # Appends '0' to bval_list n countb0 number of times
+                    for countb in range(img.shape[0]):
+                        snr_dwi[:, idx_list, i] = \
+                            np.divide(img, self.noise).reshape((
+                        self.nvox, idx_list.size))
+        return snr_dwi
