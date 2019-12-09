@@ -171,15 +171,24 @@ class makesnr:
     def computesnr(self):
         """
         Computes SNR of all DWIs in class object
-        :return:
+
+        Parameters
+        ----------
+        (none)
+
+        Returns
+        -------
+        snr_dwi:    Numpy array of SNR across all DWI.
         """
         bval_list = self.getuniquebval()
         snr_dwi = np.empty((self.nvox, bval_list.shape[1], self.nDWI))
         for i in range(self.nDWI):
             bvals = self.bval[i, :]
             unibvals = np.array(np.unique(bvals),dtype=int)
+            print('Computing SNR: ' + self.DWInames[i])
             for j in range(unibvals.size):
                 bval = unibvals[j]
+                print('   * B' + str(bval * 1000) + '...')
                 # Index where entirety of bvals, given by variable
                 # bvals, is equal to a single unique bval
                 idx_bval = np.where(np.isin(bvals, bval))[-1]
