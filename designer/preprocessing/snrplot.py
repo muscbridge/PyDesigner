@@ -257,47 +257,6 @@ class makesnr:
             binval[i] = np.median([edges[i], edges[i + 1]])
         return count, binval, unibvals
 
-    # def makeplot(self):
-    #     """
-    #     Creates and saves SNR plot to a path as SNR.png
-    #
-    #     Parameters
-    #     ----------
-    #     path:   string
-    #             directory to save the plot in
-    #
-    #     Returns
-    #     -------
-    #     (none): saves plotted image into directory as SNR.png
-    #     """
-    #     (count, binval, unibvals) = self.histcount()
-    #     count = count * 100
-    #     nplots = unibvals.size
-    #     titles = ['B' + str(i * 1000) for i in unibvals]
-    #     fig, axes = plt.subplots(nrows=nplots, ncols=1)
-    #     fig.subplots_adjust(hspace=0.5)
-    #     fig.suptitle('SNR of Acquisitions')
-    #     for i in range(self.nDWI):
-    #         for ax, title, bval, y in zip(axes.flat,
-    #                                       titles,
-    #                                       unibvals,
-    #                                       count[:,:,i].T):
-    #             print(bval)
-    #             ax.plot(binval, y)
-    #             ax.set_title(title)
-    #             ax.grid(True)
-    #             ax.set_xlabel('SNR')
-    #             ax.set_ylabel('% of Voxels')
-    #             if bval == 0:
-    #                 plt.xlim(0, 500)
-    #             elif bval == 1:
-    #                 plt.xlim(0, 80)
-    #             elif bval == 2:
-    #                 plt.xlim (0, 40)
-    #             else:
-    #                 plt.xlim(0, 100)
-    #     plt.show()
-
     def makeplot(self, path, smooth=True, smoothfactor=5):
         """
         Creates and saves SNR plot to a path as SNR.png
