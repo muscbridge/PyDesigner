@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline, BSpline
 
 minZero = 1e-8
+np.seterr(all='ignore')
 
 def vectorize(img, mask):
     """ Returns vectorized image based on brain mask, requires no input
