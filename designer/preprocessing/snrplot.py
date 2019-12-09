@@ -68,7 +68,7 @@ class makesnr:
     outpath:    string
                 path to save SNR plot
     """
-    def __init__(self, dwilist, noisepath=None, maskPath=None):
+    def __init__(self, dwilist, noisepath=None, maskpath=None):
         """
         Constructor for makesnr class
         """
@@ -95,8 +95,8 @@ class makesnr:
             self.bval = np.rint(np.loadtxt(bvalPath) / 1000)
         else:
             raise IOError('BVAL file {} not found'.format(bvalPath))
-        if maskPath is not None and op.exists(maskPath):
-            self.mask = np.array(nib.load(maskPath).dataobj).astype(bool)
+        if maskpath is not None and op.exists(maskpath):
+            self.mask = np.array(nib.load(maskpath).dataobj).astype(bool)
             self.maskStatus = True
         else:
             self.mask = np.ones((self.img.shape[0], self.img.shape[
