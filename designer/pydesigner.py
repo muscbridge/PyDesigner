@@ -314,7 +314,7 @@ if args.csfmask:
 if args.output:
     if not op.exists(args.output):
         try:
-            os.mkdir(args.output)
+            os.makedirs(args.output, exist_ok=True)
         except:
             errmsg+='Cannot find or create output directory'
 
@@ -333,7 +333,7 @@ if args.resume and args.force:
 if args.output:
     if not op.isdir(args.output):
         try:
-            os.mkdir(args.output)
+            os.makedirs(args.output, exist_ok=True)
         except:
             errmsg+=('Output directory does not exist and cannot '
                      'be made.')
@@ -379,29 +379,29 @@ if not args.nofit:
     if op.exists(metricpath):
         if args.force:
             shutil.rmtree(metricpath)
-        else:
+        elif not args.resume:
             raise Exception(
                 'Running fitting would cause an overwrite. '
                 'In order to run this please delete the '
                 'files, use --force, use --resume, or '
                 'change output destination.')
     else:
-        os.mkdir(metricpath)
+        os.makedirs(metricpath, exist_ok=True)
 if not args.noqc:
     if op.exists(qcpath):
         if args.force:
             shutil.rmtree(qcpath)
-        else:
+        elif not args.resume:
             raise Exception('Running QCing would cause an overwrite. '
                             'In order to run this please delete the '
                             'files, use --force, use --resume, or '
                             'change output destination.')
     else:
-        os.mkdir(qcpath)
+        os.makedirs(qcpath, exist_ok=True)
     if op.exists(eddyqcpath) and args.undistort:
         if args.force:
             shutil.rmtree(eddyqcpath)
-        else:
+        elif not args.resume:
             raise Exception('Running dwidenoise would cause an '
                             'overwrite. '
                             'In order to run this please delete the '
@@ -410,16 +410,16 @@ if not args.noqc:
     if op.exists(fitqcpath) and not args.nofit:
         if args.force:
             shutil.rmtree(fitqcpath)
-        else:
+        elif not args.resume:
             raise Exception('Running fitting would cause an '
                             'overwrite. '
                             'In order to run this please delete the '
                             'files, use --force, or change output '
                             'destination.')
     if args.undistort:
-        os.mkdir(eddyqcpath)
+        os.makedirs(eddyqcpath, exist_ok=True)
     if not args.nofit:
-        os.mkdir(fitqcpath)
+        os.makedirs(fitqcpath, exist_ok=True)
 
 # TODO: add non-json RPE support, additional RPE type support
 
