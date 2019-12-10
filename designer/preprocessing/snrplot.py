@@ -122,7 +122,6 @@ class makesnr:
         # Vectorize images
         self.img = vectorize(self.img, self.mask)
         self.nvox = self.img.shape[1]
-        print(self.img.shape)
         self.noise = vectorize(self.noise, self.mask)
         if self.nDWI > 1:
             # From second image to last image
