@@ -13,7 +13,7 @@ import gzip # handles fsl's .gz suffix
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy as np # array, ndarray
-from preprocessing import util, smoothing, rician, preparation
+from preprocessing import util, smoothing, rician, preparation, snrplot
 from fitting import dwipy as dp
 from system import systemtools as sys
 DWIFile = util.DWIFile
@@ -170,7 +170,7 @@ parser.add_argument('--mask', action='store_true', default=False,
                     help='Compute a brain mask prior to tensor fitting '
                     'to strip skull and improve efficiency. Use '
                      '--maskthr to specify a threshold manually.')
-parser.add_argument('--maskthr', metavar='< fractional intensity '
+parser.add_argument('--maskthr', metavar='<fractional intensity '
                                              ' threshold>',
                     help='FSL bet threshold used for brain masking. '
                     'Default: 0.25')
@@ -199,6 +199,8 @@ parser.add_argument('--pe_dir', metavar='<phase encoding direction>',
                     'in dwipreproc. Can be signed axis number, (-0,1,+2) '
                     'axis designator (RL, PA, IS), or '
                     'NIfTI axis codes (i-,j,k)')
+parser.add_argument('--noqc', action='store_true', default=False,
+                    help='Disable QC saving of QC metrics')
 parser.add_argument('--nthreads', type=int,
                     help='Number of threads to use for computation. '
                     'Note that using too many threads will cause a slow-'
@@ -365,6 +367,55 @@ if args.rpe_all:
 if args.topup:
     filetable['topup'] = DWIFile(args.topup)
 
+#----------------------------------------------------------------------
+# Path Handling
+#----------------------------------------------------------------------
+qcpath = op.join(outpath, 'metrics_qc')
+eddyqcpath = op.join(qcpath, 'eddy')
+fitqcpath = op.join(qcpath, 'fitting')
+metricpath = op.join(outpath, 'metrics')
+if not args.nofit:
+    if op.exists(metricpath):
+        if args.force:
+            shutil.rmtree(metricpath)
+        else:
+            raise Exception(
+                'Running fitting would cause an overwrite. '
+                'In order to run this please delete the '
+                'files, use --force, use --resume, or '
+                'change output destination.')
+    os.mkdir(metricpath)
+if not args.noqc:
+    if op.exists(qcpath):
+        if args.force:
+            shutil.rmtree(qcpath)
+        else:
+            raise Exception('Running QCing would cause an overwrite. '
+                            'In order to run this please delete the '
+                            'files, use --force, use --resume, or '
+                            'change output destination.')
+        os.mkdir(qcpath)
+    if op.exists(eddyqcpath) and args.undistort:
+        if args.force:
+            shutil.rmtree(eddyqcpath)
+        else:
+            raise Exception('Running dwidenoise would cause an '
+                            'overwrite. '
+                            'In order to run this please delete the '
+                            'files, use --force, or change output '
+                            'destination.')
+        os.mkdir(eddyqcpath)
+    if op.exists(fitqcpath) and not args.nofit:
+        if args.force:
+            shutil.rmtree(fitqcpath)
+        else:
+            raise Exception('Running fitting would cause an '
+                            'overwrite. '
+                            'In order to run this please delete the '
+                            'files, use --force, or change output '
+                            'destination.')
+        os.mkdir(fitqcpath)
+
 # TODO: add non-json RPE support, additional RPE type support
 
 # Get naming and location information
@@ -467,15 +518,6 @@ if args.undistort:
     # Add to HEAD name
     undistorted_name = 'u' + filetable['HEAD'].getName() + '.nii'
     undistorted_full = op.join(outpath, undistorted_name)
-    eddyqc = op.join(outpath, 'metrics_qc', 'eddyqc')
-    if op.exists(eddyqc):
-        if args.force:
-            shutil.rmtree(eddyqc)
-        else:
-            raise Exception('Running undistortion would cause an '
-                            'overwrite. In order to run this please delete '
-                            'files, use --force, use --resume, or '
-                            'change output destination')
 
     # check to see if this already exists
     if not (args.resume and op.exists(undistorted_full)):
@@ -498,8 +540,9 @@ if args.undistort:
                                 'change output destination')
         if not args.verbose:
             dwipreproc_args.append('-quiet')
-        dwipreproc_args.append('-eddyqc_all')
-        dwipreproc_args.append(eddyqc)
+        if not args.noqc:
+            dwipreproc_args.append('-eddyqc_all')
+            dwipreproc_args.append(eddyqcpath)
         dwipreproc_args.append('-rpe_header')
         # full vs half sphere
         dwipreproc_args.append('-eddy_options')
@@ -673,44 +716,21 @@ filetable['preprocessed'] = DWIFile(preprocessed)
 filetable['HEAD'] = filetable['preprocessed']
 
 #----------------------------------------------------------------------
+# Compute SNR
+#----------------------------------------------------------------------
+if args.denoise and not args.noqc:
+    files = []
+    files.append(op.join(outpath, 'raw_dwi.nii'))
+    files.append(filetable['HEAD'].getFull())
+    snrplot = snrplot.makesnr(dwilist=files,
+                              noisepath=filetable['noisemap'].getFull(),
+                              maskpath=filetable['mask'].getFull())
+    snrplot.makeplot(path=qcpath, smooth=True, smoothfactor=3)
+
+#----------------------------------------------------------------------
 # Tensor Fitting
 #----------------------------------------------------------------------
 if not args.nofit:
-    # make metric map directory
-    metricpath = op.join(outpath, 'metrics')
-    qcpath = op.join(outpath, 'metrics_qc')
-    fitqcpath = op.join(qcpath, 'fitting')
-    if op.exists(metricpath):
-        if args.force:
-            shutil.rmtree(metricpath)
-        else:
-            raise Exception('Running fitting would cause an overwrite. '
-                            'In order to run this please delete the '
-                            'files, use --force, use --resume, or '
-                            'change output destination.')
-    if op.exists(fitqcpath):
-        if args.force:
-            shutil.rmtree(fitqcpath)
-        else:
-            raise Exception('Running fitting would cause an overwrite. '
-                            'In order to run this please delete the '
-                            'files, use --force, use --resume, or '
-                            'change output destination.')
-
-    if not args. resume and (not args.undistort and not args.nooutliers):
-        os.mkdir(qcpath)
-
-    if not args.resume and (not
-    (op.exists(metricpath) and op.exists(fitqcpath))):
-        os.mkdir(metricpath)
-
-        os.mkdir(fitqcpath)
-    elif args.undistort:
-        os.mkdir(fitqcpath)
-
-    if not args.resume and not op.exists(metricpath):
-        os.mkdir(metricpath)
-
     # create dwi fitting object
     if not args.nthreads:
         img = dp.DWI(filetable['HEAD'].getFull())
@@ -723,8 +743,9 @@ if not args.nofit:
         else:
             outliers, dt_est = img.irlls(mode='DKI')
         # write outliers to qc folder
-        outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
-        dp.writeNii(outliers, img.hdr, outlier_full)
+        if not args.noqc:
+            outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
+            dp.writeNii(outliers, img.hdr, outlier_full)
         # fit while rejecting outliers
         img.fit(fit_constraints, reject=outliers)
     else:
@@ -745,8 +766,9 @@ if not args.nofit:
             # do akc
             akc_out = img.akcoutliers()
             img.akccorrect(akc_out)
-            dp.writeNii(akc_out, img.hdr,
-                        op.join(fitqcpath, 'outliers_akc'))
+            if not args.noqc:
+                dp.writeNii(akc_out, img.hdr,
+                            op.join(fitqcpath, 'outliers_akc'))
         mk, rk, ak, kfa, mkt, trace = img.extractDKI()
         # naive implementation of writing these variables
         dp.writeNii(mk, img.hdr, op.join(metricpath, 'mk'))
