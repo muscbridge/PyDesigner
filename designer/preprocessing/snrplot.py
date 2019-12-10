@@ -324,13 +324,13 @@ class makesnr:
             ax.set_ylabel('% of voxels')
             ax.set_ylim(count.min(), count.max())
             if bval == 0:
-                ax.set_xlim(0, 80)
+                ax.set_xlim(0, 300)
             elif bval == 1:
-                ax.set_xlim(0, 40)
+                ax.set_xlim(0, 200)
             elif bval == 2:
-                ax.set_xlim(0, 20)
+                ax.set_xlim(0, 150)
             else:
-                ax.set_xlim(0, 10)
+                ax.set_xlim(0, 80)
         # Plot Properties
         plt.legend(self.DWInames,
                          ncol=nplots,
