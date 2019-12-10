@@ -335,4 +335,4 @@ class makesnr:
                          loc='upper left',
                          frameon = False,
                          bbox_to_anchor=(0.25, -0.19))
-        plt.savefig(outpath, dpit=300)
+        plt.savefig(outpath, dpi=300)
