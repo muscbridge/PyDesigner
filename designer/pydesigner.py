@@ -394,7 +394,7 @@ if not args.noqc:
                             'In order to run this please delete the '
                             'files, use --force, use --resume, or '
                             'change output destination.')
-        os.mkdir(qcpath)
+    os.mkdir(qcpath)
     if op.exists(eddyqcpath) and args.undistort:
         if args.force:
             shutil.rmtree(eddyqcpath)
@@ -404,7 +404,7 @@ if not args.noqc:
                             'In order to run this please delete the '
                             'files, use --force, or change output '
                             'destination.')
-        os.mkdir(eddyqcpath)
+    os.mkdir(eddyqcpath)
     if op.exists(fitqcpath) and not args.nofit:
         if args.force:
             shutil.rmtree(fitqcpath)
@@ -414,7 +414,7 @@ if not args.noqc:
                             'In order to run this please delete the '
                             'files, use --force, or change output '
                             'destination.')
-        os.mkdir(fitqcpath)
+    os.mkdir(fitqcpath)
 
 # TODO: add non-json RPE support, additional RPE type support
 
