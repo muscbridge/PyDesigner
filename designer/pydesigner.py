@@ -241,7 +241,8 @@ else:
 image.cat(path=outpath,
           ext=fType,
           verbose=args.verbose,
-          force=args.force)
+          force=args.force,
+          resume=args.resume)
 args.dwi = op.join(outpath, 'raw_dwi' + fType)
 
 #---------------------------------------------------------------------
