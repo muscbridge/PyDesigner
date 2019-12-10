@@ -289,8 +289,7 @@ class makesnr:
             raise ValueError('Please specify an integer for smooth '
                              'factor.')
         if not op.isdir(path):
-            pathlib.Path(path).mkdir(
-                parents=True, exist_ok=True)
+            raise IOError('Output path defined does not exist.')
         outpath = op.join(path, 'SNR.png')
         (count, binval, unibvals) = self.histcount()
         count = count * 100
