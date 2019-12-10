@@ -415,7 +415,6 @@ if not args.noqc:
                             'In order to run this please delete the '
                             'files, use --force, or change output '
                             'destination.')
-        
     if args.undistort:
         os.mkdir(eddyqcpath)
     if not args.nofit:
