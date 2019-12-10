@@ -100,7 +100,6 @@ class makesnr:
         if self.hdr.ndim != 4:
             raise IOError('Input DWIs need are not 4D. Please ensure you '
                           'use 4D NifTi files only.')
-            print('No brain mask supplied')
         # Load image into 2D array
         self.img = np.array(self.hdr.dataobj)
         # Load noise into a vector
@@ -129,7 +128,6 @@ class makesnr:
                 try:
                     tmp = vectorize(np.array(nib.load(dwilist[i]).dataobj),
                                     self.mask)
-                    print(tmp.shape)
                     self.img = np.dstack((self.img, tmp))
                 except:
                     raise ValueError('all input DWIs must have the same '
