@@ -78,7 +78,9 @@ RUN pip3 install --upgrade setuptools && \
                         multiprocess \
                         tqdm \
                         nibabel \
-                        cvxpy
+                        cvxpy \
+                        matplotlib \
+                        py-cpuinfo
 
 # Install FSL
 RUN curl https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py -o /tmp/fslinstaller.py
