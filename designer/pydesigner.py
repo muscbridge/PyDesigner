@@ -757,6 +757,12 @@ if not args.nofit:
         # fit without rejecting outliers
         img.fit(fit_constraints)
 
+    if img.isdki() and not args.noakc:
+        akc_out = img.akcoutliers()
+        img.akccorrect(akc_out)
+        dp.writeNii(akc_out,
+                    img.hdr,
+                    op.join(fitqcpath, 'outliers_akc'))
     md, rd, ad, fa, fe, trace = img.extractDTI()
     dp.writeNii(md, img.hdr, op.join(metricpath, 'md'))
     dp.writeNii(rd, img.hdr, op.join(metricpath, 'rd'))
@@ -766,14 +772,6 @@ if not args.nofit:
     if not img.isdki():
         dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
     else:
-        # do akc, DKI fitting
-        if not args.noakc:
-            # do akc
-            akc_out = img.akcoutliers()
-            img.akccorrect(akc_out)
-            if not args.noqc:
-                dp.writeNii(akc_out, img.hdr,
-                            op.join(fitqcpath, 'outliers_akc'))
         mk, rk, ak, kfa, mkt, trace = img.extractDKI()
         # naive implementation of writing these variables
         dp.writeNii(mk, img.hdr, op.join(metricpath, 'mk'))
