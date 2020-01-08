@@ -586,7 +586,7 @@ if args.undistort:
         dwipreproc_args.append(undistorted_full)
         if args.verbose:
             print(*dwipreproc_args)
-        completion = subprocess.run(dwipreproc_args)
+        completion = subprocess.run(dwipreproc_args, cwd=outpath)
         if completion.returncode != 0:
             raise Exception('dwipreproc failed, please look above for '
                             'error sources.')
