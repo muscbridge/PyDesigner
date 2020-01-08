@@ -680,7 +680,14 @@ if args.mask or args.user_mask:
         filetable['mask'] = DWIFile(brainmask_out)
     elif args.user_mask:
         brainmask_out = op.join(outpath, 'brain_mask.nii')
-        shutil.copyfile(args.user_mask, brainmask_out)
+        if outpath is args.dwi:
+            shutil.copy(args.user_mask, brainmask_out)
+        else:
+            print('WARNING: Brain mask {} already exists in your output '
+                  'directory. Your output directory is the same as input '
+                  'if you ran without the "-o" flag. Proceeding without '
+                  'overwriting the already existent file.'.format(
+                brainmask_out))
         filetable['mask'] = DWIFile(brainmask_out)
     else:
         filetable['mask'] = None
