@@ -170,10 +170,10 @@ parser.add_argument('--mask', action='store_true', default=False,
                     help='Compute a brain mask prior to tensor fitting '
                     'to strip skull and improve efficiency. Optionally, '
                     'use --maskthr to specify a threshold manually.')
-parser.add_argument('--maskthr', metavar='FA Threshold',
+parser.add_argument('--maskthr', metavar='<FA threshold>',
                     help='FSL bet threshold used for brain masking. '
                     'Default: 0.25')
-parser.add_argument('--user_mask',
+parser.add_argument('--user_mask', metavar='<brain mask path>',
                     help='Path to user-supplied brain mask.',
                     type=str)
 parser.add_argument('--fit_constraints', default='0,1,0',
