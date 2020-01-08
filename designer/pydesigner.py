@@ -174,6 +174,9 @@ parser.add_argument('--maskthr', metavar='<fractional intensity '
                                              ' threshold>',
                     help='FSL bet threshold used for brain masking. '
                     'Default: 0.25')
+parser.add_argument('--user_mask',
+                    help='Path to user-supplied brain mask.',
+                    type=str)
 parser.add_argument('--fit_constraints', default='0,1,0',
                     help='Constrain the WLLS fit. '
                     'Default: 0,1,0.')
@@ -309,6 +312,20 @@ if not args.smooth and args.fwhm:
 if args.csfmask:
     if not op.exists(args.csfmask):
         errmsg+='--csfmask file '+args.csfmask+' not found\n'
+
+# Cannot run --user_mask and --mask at the same time
+if args.user_mask and args.mask:
+    errmsg+='Cannot run with both --mask and --user_mask; '
+    errmsg+='--mask if you do not have a custom brain mask and ' \
+            '--user_mask if you want to supply a mask.'
+
+# Check to make sure brain mask exists if given
+if args.user_mask:
+    if not op.exists(args.user_mask):
+        errmsg+='--user_mask file '+args.user_mask+' not found\n'
+    # Then check if it's a nifti file
+    if not '.nii' in op.splitext(args.user_mask)[-1]:
+        errmsg+='User supplied mask if not in NifTi(.nii) format.'
 
 # Check output directory exists if given
 if args.output:
@@ -589,12 +606,7 @@ if args.mask:
     B0_full = op.join(outpath, B0_name)
     B0_mean_full = op.join(outpath, B0_mean)
     # check to see if this already exists
-    if (op.exists(brainmask_out) and not args.resume) and not args.force:
-            raise Exception('Running mask would cause an overwrite. '
-                            'In order to run please delete the files, use '
-                            '--force, use --resume, or change output '
-                            'destination.')
-    if not (args.resume and op.exists(brainmask_out)):
+    if not op.exists(brainmask_out):
         if args.maskthr is None:
             maskthr = 0.25
         else:
@@ -655,9 +667,19 @@ if args.mask:
         # Remove all other files
         if op.exists(B0_mean_full):
             os.remove(B0_mean_full)
-        # Update filetable
-        filetable['mask'] = DWIFile(brainmask_out)
-        filetable['b0'] = DWIFile(B0_full)
+    # Update filetable
+    filetable['mask'] = DWIFile(brainmask_out)
+    filetable['b0'] = DWIFile(B0_full)
+    print(filetable['mask'])
+else:
+    filetable['mask'] = None
+
+if args.user_mask:
+    brainmask_out = op.join(outpath, 'brain_mask.nii')
+    shutil.copyfileobj(args.user_mask, brainmask_out)
+    filetable['mask'] = DWIFile(brainmask_out)
+else:
+    filetable['mask'] = None
 
 #----------------------------------------------------------------------
 # Smooth
@@ -727,9 +749,14 @@ if args.denoise and not args.noqc:
     files = []
     files.append(op.join(outpath, 'raw_dwi.nii'))
     files.append(filetable['HEAD'].getFull())
-    snrplot = snrplot.makesnr(dwilist=files,
-                              noisepath=filetable['noisemap'].getFull(),
-                              maskpath=filetable['mask'].getFull())
+    if not filetable['mask'] is None:
+        snrplot = snrplot.makesnr(dwilist=files,
+                                  noisepath=filetable['noisemap'].getFull(),
+                                  maskpath=filetable['mask'].getFull())
+    else:
+        snrplot = snrplot.makesnr(dwilist=files,
+                                  noisepath=filetable['noisemap'].getFull(),
+                                  maskpath=None)
     snrplot.makeplot(path=qcpath, smooth=True, smoothfactor=3)
 
 #----------------------------------------------------------------------
