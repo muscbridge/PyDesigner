@@ -375,8 +375,10 @@ if args.degibbs and args.adv:
     args.degibbs = True
 else:
     if args.degibbs and filetable['dwi'].isPartialFourier():
-        print('Given DWI is partial fourier, overriding --degibbs; '
-              'no unringing correction will be done to avoid artifacts.')
+        print('[WARNING] Given DWI is partial fourier, overriding '
+              '--degibbs; no unringing correction will be done to '
+              'avoid artifacts.Use the "--adv" flag to run forced '
+              'corrections.')
         args.degibbs = False
 
 if args.rpe_pair:
@@ -683,11 +685,11 @@ if args.mask or args.user_mask:
         if outpath is args.dwi:
             shutil.copy(args.user_mask, brainmask_out)
         else:
-            print('WARNING: Brain mask {} already exists in your output '
-                  'directory. Your output directory is the same as input '
-                  'if you ran without the "-o" flag. Proceeding without '
-                  'overwriting the already existent file.'.format(
-                brainmask_out))
+            print('[WARNING] Brain mask {} already exists in your '
+                  'output directory. Your output directory is the '
+                  'same as input if you ran without the "-o" flag. '
+                  'Proceeding without overwriting the existing '
+                  'file.'.format(brainmask_out))
         filetable['mask'] = DWIFile(brainmask_out)
     else:
         filetable['mask'] = None
