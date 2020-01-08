@@ -268,8 +268,11 @@ if args.standard:
     # Coerce all of the above to be true
     args.denoise = True
     args.undistort = True
-    args.b1correct = True
     args.smooth = True
+    #--extra options--
+    args.mask = True
+    args.rpe_none = True
+    args.degibbs = True
 
 # Can't do WMTI if no fit
 if args.nofit:
