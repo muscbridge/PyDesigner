@@ -638,9 +638,10 @@ if args.mask or args.user_mask:
                         'and saving it in working directory '
                         'as brain_mask.nii. Then use the --resume '
                         'option to continue from here.')
-    with gzip.open(B0_full + fsl_suffix, 'r') as f_in, \
-            open(B0_full, 'wb') as f_out:
-        shutil.copyfileobj(f_in, f_out)
+    if op.exists(B0_full + fsl_suffix):
+        with gzip.open(B0_full + fsl_suffix, 'r') as f_in, \
+                open(B0_full, 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
     # Remove all other files
     if op.exists(B0_mean_full):
         os.remove(B0_mean_full)
