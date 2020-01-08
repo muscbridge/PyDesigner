@@ -678,6 +678,8 @@ if args.mask or args.user_mask:
         filetable['mask'] = DWIFile(brainmask_out)
     else:
         filetable['mask'] = None
+else:
+    filetable['mask'] = None
 
 #----------------------------------------------------------------------
 # Smooth
