@@ -2,7 +2,7 @@
 Runs the PyDesigner pipeline
 """
 
-#---------------------------------------------------------------------- 
+#----------------------------------------------------------------------
 # Package Management
 #----------------------------------------------------------------------
 import subprocess #subprocess
@@ -45,7 +45,7 @@ if sys.isAMD():
 
 #----------------------------------------------------------------------
 # Parse Arguments
-#---------------------------------------------------------------------- 
+#----------------------------------------------------------------------
 # Initialize ArgumentParser
 parser = argparse.ArgumentParser(
         prog='pydesigner',
@@ -168,10 +168,9 @@ parser.add_argument('--kcumulants', action='store_true', default=False,
                     'rather than K. ')
 parser.add_argument('--mask', action='store_true', default=False,
                     help='Compute a brain mask prior to tensor fitting '
-                    'to strip skull and improve efficiency. Use '
-                     '--maskthr to specify a threshold manually.')
-parser.add_argument('--maskthr', metavar='<fractional intensity '
-                                             ' threshold>',
+                    'to strip skull and improve efficiency. Optionally, '
+                    'use --maskthr to specify a threshold manually.')
+parser.add_argument('--maskthr', metavar='FA Threshold',
                     help='FSL bet threshold used for brain masking. '
                     'Default: 0.25')
 parser.add_argument('--user_mask',
@@ -325,7 +324,7 @@ if args.user_mask:
         errmsg+='--user_mask file '+args.user_mask+' not found\n'
     # Then check if it's a nifti file
     if not '.nii' in op.splitext(args.user_mask)[-1]:
-        errmsg+='User supplied mask if not in NifTi(.nii) format.'
+        errmsg+='User supplied mask if not in NifTi (.nii) format.'
 
 # Check output directory exists if given
 if args.output:
@@ -591,7 +590,7 @@ if args.undistort:
         filetable['undistorted'] = DWIFile(undistorted_full)
         filetable['HEAD'] = filetable['undistorted']
 
-#---------------------------------------------------------------------- 
+#----------------------------------------------------------------------
 # Create Brain Mask
 #----------------------------------------------------------------------
 if args.mask:
@@ -732,7 +731,7 @@ if args.rician:
     filetable['rician_corrected'] = DWIFile(rician_full)
     filetable['HEAD'] = filetable['rician_corrected']
 
-#---------------------------------------------------------------------- 
+#----------------------------------------------------------------------
 # Make preprocessed file
 #----------------------------------------------------------------------
 preprocessed = op.join(outpath, 'preprocessed_dwi')
