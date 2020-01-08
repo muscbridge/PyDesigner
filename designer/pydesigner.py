@@ -638,6 +638,7 @@ if args.mask or args.user_mask:
                         'and saving it in working directory '
                         'as brain_mask.nii. Then use the --resume '
                         'option to continue from here.')
+    print(B0_full + fsl_suffix)
     if op.exists(B0_full + fsl_suffix):
         with gzip.open(B0_full + fsl_suffix, 'r') as f_in, \
                 open(B0_full, 'wb') as f_out:
@@ -665,9 +666,10 @@ if args.mask or args.user_mask:
                             '--resume flag to continue preprocessing from '
                             'here.')
         # Decompress fsl's gunzip format
-        with gzip.open(brainmask_fsl_out, 'r') as f_in, \
-                open(brainmask_out,'wb') as f_out:
-            shutil.copyfileobj(f_in, f_out)
+        if op.exists(brainmask_fsl_out):
+            with gzip.open(brainmask_fsl_out, 'r') as f_in, \
+                    open(brainmask_out,'wb') as f_out:
+                shutil.copyfileobj(f_in, f_out)
         # Remove .gz file
         if op.exists(brainmask_fsl_out):
             os.remove(brainmask_fsl_out)
