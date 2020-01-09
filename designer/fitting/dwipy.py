@@ -521,11 +521,17 @@ class DWI(object):
             constraints = [cons * x >= np.zeros((len(cons)))]
             prob = cvx.Problem(objective, constraints)
             try:
-                prob.solve(warm_start=True,
-                           max_iter=20000)
+                prob.solve(solver=cvx.OSQP,
+                           warm_start=True,
+                           max_iter=20000,
+                           polish=True,
+                           linsys_solver='mkl pardiso',
+                           verbose=True)
                 dt = x.value
+                if prob.status != 'optimal':
+                    dt = np.full(n, minZero)
             except:
-                dt = np.full_like(x.value, minZero)
+                dt = np.full(n, minZero)
         return dt
 
     def fit(self, constraints=None, reject=None):
