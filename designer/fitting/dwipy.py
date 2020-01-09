@@ -525,8 +525,7 @@ class DWI(object):
                            warm_start=True,
                            max_iter=20000,
                            polish=True,
-                           linsys_solver='mkl pardiso',
-                           verbose=True)
+                           linsys_solver='qdldl')
                 dt = x.value
                 if prob.status != 'optimal':
                     dt = np.full(n, minZero)
