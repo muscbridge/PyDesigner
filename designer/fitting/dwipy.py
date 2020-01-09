@@ -29,7 +29,7 @@ class DWI(object):
             assert isinstance(imPath, object)
             self.hdr = nib.load(imPath)
             self.img = np.array(self.hdr.dataobj)
-            truncateIdx = np.logical_and(np.isnan(self.img),
+            truncateIdx = np.logical_or(np.isnan(self.img),
                                     (self.img < minZero))
             self.img[truncateIdx] = minZero
             # Get just NIFTI filename + extensio
@@ -521,11 +521,16 @@ class DWI(object):
             constraints = [cons * x >= np.zeros((len(cons)))]
             prob = cvx.Problem(objective, constraints)
             try:
-                prob.solve(warm_start=True,
-                           max_iter=20000)
+                prob.solve(solver=cvx.OSQP,
+                           warm_start=True,
+                           max_iter=20000,
+                           polish=True,
+                           linsys_solver='qdldl')
                 dt = x.value
+                if prob.status != 'optimal':
+                    dt = np.full(n, minZero)
             except:
-                dt = np.full_like(x.value, minZero)
+                dt = np.full(n, minZero)
         return dt
 
     def fit(self, constraints=None, reject=None):
@@ -576,7 +581,6 @@ class DWI(object):
         reject_ = vectorize(reject, self.mask).astype(bool)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
-        self.dt = np.zeros(init.shape)
         if constraints is None or (constraints[0] == 0 and
                                    constraints[1] == 0 and
                                    constraints[2] == 0):
