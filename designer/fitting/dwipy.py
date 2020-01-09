@@ -582,7 +582,6 @@ class DWI(object):
         reject_ = vectorize(reject, self.mask).astype(bool)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = np.exp(np.matmul(self.b, init))
-        self.dt = np.zeros(init.shape)
         if constraints is None or (constraints[0] == 0 and
                                    constraints[1] == 0 and
                                    constraints[2] == 0):
