@@ -106,5 +106,5 @@ ENV PATH=$PATH:/usr/lib/mrtrix3/bin
 RUN apt-get autoremove && apt-get clean
 RUN rm /tmp/fslinstaller.py
 
-# Set image props
-WORKDIR /usr/local/PyDesigner/designer
+# Create PyDesigner executable
+RUN printf '#!/bin/bash\npython3 /usr/local/PyDesigner/designer/pydesigner.py "$@"' > /usr/bin/pydesigner && chmod +x /usr/bin/pydesigner
