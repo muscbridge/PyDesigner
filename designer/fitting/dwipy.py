@@ -1380,7 +1380,7 @@ class DWI(object):
                     #     bmat.T, np.log(dwi)))
                 except:
                     dt_ = np.full((bmat.shape[1], 1), minZero)
-                w = np.exp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
+                w = sigmoid(np.matmul(bmat, dt_)).reshape((ndwi, 1))
                 try:
                     dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))),
                                           (np.log(dwi) * w), rcond=None)[0]
@@ -1423,14 +1423,16 @@ class DWI(object):
             n_i = dwi_i.size
             ndof_i = n_i - bmat_i.shape[1]
             # WLLS estimation
-
             try:
                 dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
                 # dt_i = np.linalg.solve(np.dot(bmat_i.T, bmat_i),
                 #                        np.dot(bmat_i.T, np.log(dwi_i)))
             except:
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
-            w = np.exp(np.matmul(bmat_i, dt_i))
+            try:
+                w = sigmoid(np.matmul(bmat_i, dt_i))
+            except:
+                w = np.full((bmat_i.shape[1], 1), minZero)
             try:
                 dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))),
                                        (np.log(dwi_i).reshape(
@@ -1444,12 +1446,13 @@ class DWI(object):
                 #                (dwi_i.shape[0], 1)) * w)))
             except:
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
-            dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
+            dwi_hat = sigmoid(np.matmul(bmat_i, dt_i))
 
             # Goodness-of-fit
             residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - \
                      np.log(dwi_hat)
             residu_ = dwi_i.reshape((dwi_i.shape[0],1)) - dwi_hat
+            
             try:
                 chi2 = np.sum((residu_ * residu_) /\
                               np.square(sigma)) / (ndof_i) -1
@@ -1494,7 +1497,7 @@ class DWI(object):
                     #                (dwi_i.shape[0], 1)) * w)))
                 except:
                     dt_i = np.full((bmat_i.shape[1], 1), minZero)
-                dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
+                dwi_hat = sigmoid(np.matmul(bmat_i, dt_i))
                 dwi_hat[dwi_hat < 1] = 1
                 residu = np.log(
                     dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
@@ -1552,7 +1555,7 @@ class DWI(object):
                 #                     np.dot(bmat_i.T, np.log(dwi_i)))
             except:
                 dt_ = np.full((bmat_i.shape[1], 1), minZero)
-            w = np.exp(np.matmul(bmat_i, dt_))
+            w = sigmoid(np.matmul(bmat_i, dt_))
             try:
                 dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
                                            rcond=None)[0]
