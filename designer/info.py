@@ -1,3 +1,7 @@
+import inspect, os
+
+__execdir__ = os.path.basename(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
+
 __packagename__ = 'PyDesigner'
 __version__='0.2'
 __author__ = 'PyDesigner developers'
@@ -18,10 +22,16 @@ __url__ = 'https://github.com/m-ama/PyDesigner'
 __license__='MPL 2.0'
 __description__ = ('Python Port of NYU\'s Designer pipeline for DMRI '
                 'processing')
-
-DOWNLOAD_URL = (
-    'https://github.com/ME-ICA/{name}/archive/{ver}.tar.gz'.format(
-        name=__packagename__, ver=__version__))
+# Gets folder name where this file resides
+__execdir__ = os.path.basename(
+    os.path.dirname(
+        os.path.abspath(
+            inspect.getfile(
+                inspect.currentframe()
+                )
+            )
+        )
+    )
 
 # PyPi package requirements
 REQUIRES = [
