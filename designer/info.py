@@ -5,7 +5,7 @@ __execdir__ = os.path.basename(os.path.dirname(os.path.abspath(inspect.getfile(i
 __packagename__ = 'PyDesigner'
 __version__='0.2'
 __author__ = 'PyDesigner developers'
-__copyright__ = 'Copyright 2018, PyDesigner developers, MUSC Advanced Image Analysis (MAMA)'
+__copyright__ = 'Copyright 2020, PyDesigner developers, MUSC Advanced Image Analysis (MAMA)'
 __credits__ = [
     'Siddhartha Dhiman',
     'Joshua Teves',
