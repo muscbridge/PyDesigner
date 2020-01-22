@@ -178,6 +178,9 @@ conda activate dmri
 ```
 **Note**: Environment activation (`conda activate dmri`) needs to be done each time a new terminal window is opened. If this behavior is undesired, you may set this environment as default python environment. Refer to advanced conda user guides or Google search how to do this.
 
+#### Pepare Python for PyDesigner
+**Note: Skip to [automated install](#automated-install) to configure pydesigner automatically**
+
 Once the base environment is created and activated, proceed with the installation of all packages.
 
 1. [NumPy](https://numpy.org/)
@@ -187,11 +190,13 @@ Once the base environment is created and activated, proceed with the installatio
 5. [Multiprocessing](https://docs.python.org/3.4/library/multiprocessing.html?highlight=process)
 6. [Joblib](https://joblib.readthedocs.io/en/latest/)
 7. [TQDM](https://tqdm.github.io/)
+8. [py-cpuinfo](https://github.com/workhorsy/py-cpuinfo)
+9. [matplotlib](https://matplotlib.org/)
 
 Install necessary packages with the commands:
 ```
 conda install -c anaconda numpy scipy joblib
-conda install -c conda-forge tqdm nibabel multiprocess
+conda install -c conda-forge tqdm nibabel multiprocess matplotlib py-cpuinfo 
 pip install --upgrade setuptools
 pip install cvxpy
 ```
@@ -204,9 +209,20 @@ pip install [package name]
 Completion of this step will ready your system for dMRI processing. Let's go!
 
 ### PyDesigner
-On the [main PyDesigner Github page](https://github.com/m-ama/PyDesigner), click the green "Clone or download" button to access the latest PyDesigner build. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip. 
+On the [main PyDesigner Github page](https://github.com/m-ama/PyDesigner), click the green "Clone or download" button to access the latest PyDesigner build. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip.
 
 PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
+
+#### Automated Install
+PyDesigner can be automatically installed with all dependencies by opening
+a CLI and changing directory to root PyDesigner directory, followed by
+```
+pip install .
+```
+This will execute the setup.py script in root directory to automatically
+configure your Python environment for PyDesigner. When running the
+automated methods, PyDesigner can simply be called with the commad
+`pydesigner` instead of specifying the `python pydesigner.py` prefix.
 
 **Note:** If you need a stable and tested build, download the most recent release from the [Release tab](https://github.com/m-ama/PyDesigner/releases). Click on `Source code (zip)` link and decompress (unzip) to any folder you desire.
 
@@ -272,26 +288,29 @@ Flags are to be preceeded by `--`. For example, to parse a _denoise_ flag, one w
 
   | Flag        | Description |
   | :---------- | :- |
-  |`standard` | runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal) |
-  |`denoise`  |performs denoising|
-  |`extent`   |Denoising extent formatted n,n,n; (forces denoising) is specified|
-  |`degibbs`  |performs gibbs unringing correction|
-  |`smooth`   |performs smoothing|
-  |`rician`   |performs rician bias correction|
-  |`mask`     |computes brain mask prior to tensor fitting; recommended|
-  |`maskthr`  |FSL bet threshold used for brain masking; specify only when using `--mask`|
-  |`undistort`|performs image undistortion via FSL eddy|
-  |`topup`    | performs EPI correction byincorporating topup B0 series; required for `--undistort`|
-  |`o`        |specifies output folder|
-  |`force`    |overwrites existing files in output folder|
-  |`resume`   |resumes processing from a previous state; only if same output folder|
-  |`resume`   |resumes processing from a previous state; only if same output folder|
-  |`nofit`    |preprocess only; does not perform tensor fitting and parameter extraction|
-  |`noakc`    |disables outlier correction on kurtosis fitting metrics|
-  |`nooutliers`|disables IRWLLS outlier detection (not recommended for DKI)|
-  |`fit_constraints`|specifies constraints for WLLS fitting; formatted n,n,n|
-  |`verbose`  |prints out all output: recommended for debugging|
-  |`adv`      |disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**|
+  |`-o, --output`|specifies output folder|
+  |`-s, --standard` | runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal) |
+  |`--denoise`  |performs denoising|
+  |`--extent`   |Denoising extent formatted n,n,n; (forces denoising) is specified|
+  |`--degibbs`  |performs gibbs unringing correction|
+  |`--smooth`   |performs smoothing|
+  |`--rician`   |performs rician bias correction|
+  |`--mask`     |computes brain mask prior to tensor fitting; recommended|
+  |`--maskthr`  |FSL bet threshold used for brain masking; specify only when using `--mask`|
+  |`--user_mask` |path to user-provided mask|
+  |`--undistort`|performs image undistortion via FSL eddy|
+  |`--topup`    | performs EPI correction byincorporating topup B0 series; required for `--undistort`|
+  |`--wmti`     |computes WMTI parameters|
+  |`--force`    |overwrites existing files in output folder|
+  |`--resume`   |resumes processing from a previous state; only if same output folder|
+  |`--nofit`    |preprocess only; does not perform tensor fitting and parameter extraction|
+  |`--noakc`    |disables outlier correction on kurtosis fitting metrics|
+  |`--nooutliers`|disables IRWLLS outlier detection (not recommended for DKI)|
+  |`--noqc`|disables computation of acqusition QC metrics|
+  |`--fit_constraints`|specifies constraints for WLLS fitsting; formatted n,n,n|
+  |`--verbose`  |prints out all output: recommended for debugging|
+  |`--adv`      |disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**|
+  |`--nthreads`  |specify number of CPU workers to use in processing|
 
 ## Docker Setup
 
