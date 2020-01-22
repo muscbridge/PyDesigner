@@ -5,6 +5,7 @@ Runs the PyDesigner pipeline
 #----------------------------------------------------------------------
 # Package Management
 #----------------------------------------------------------------------
+import sys as sys
 import subprocess #subprocess
 import os # mkdir
 import os.path as op # path
@@ -15,7 +16,7 @@ import textwrap # dedent
 import numpy as np # array, ndarray
 from preprocessing import util, smoothing, rician, preparation, snrplot
 from fitting import dwipy as dp
-from system import systemtools as sys
+from system import systemtools as systools
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
 
@@ -40,10 +41,10 @@ if fsl_location == None:
 fslpath = op.dirname(fsl_location)
 
 # Configure system for Intel MKL
-if sys.isAMD():
-    sys.setenv([('MKL_DEBUG_CPU_TYPE','5')])
+if systools.isAMD():
+    systools.setenv([('MKL_DEBUG_CPU_TYPE','5')])
 
-def main():
+def main(argv=sys.argv[1:]):
     #----------------------------------------------------------------------
     # Parse Arguments
     #----------------------------------------------------------------------
@@ -227,7 +228,7 @@ def main():
                             'RESULT IN IMPRECISE AND INACCURATE RESULTS.')
 
     # Use argument specification to actually get args
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     #---------------------------------------------------------------------
     # Parse Input Image
