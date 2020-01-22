@@ -228,7 +228,7 @@ def main():
 
     # Use argument specification to actually get args
     args = parser.parse_args()
-    print(args)
+
     #---------------------------------------------------------------------
     # Parse Input Image
     #----------------------------------------------------------------------
@@ -844,7 +844,6 @@ def main():
             DT, KT = img.tensorReorder(img.tensorType())
             dp.writeNii(DT, img.hdr, op.join(metricpath, 'DT'))
             dp.writeNii(KT, img.hdr, op.join(metricpath, 'KT'))
-
 
 if __name__ == "__main__":
     main()
