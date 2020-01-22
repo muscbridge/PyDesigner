@@ -845,3 +845,6 @@ def main(argv=sys.argv[1:]):
             DT, KT = img.tensorReorder(img.tensorType())
             dp.writeNii(DT, img.hdr, op.join(metricpath, 'DT'))
             dp.writeNii(KT, img.hdr, op.join(metricpath, 'KT'))
+
+if __name__ == '__main__':
+    main(sys.argv)
