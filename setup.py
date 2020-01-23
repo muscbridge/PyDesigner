@@ -11,6 +11,7 @@ from designer.info import (
     __url__,
     __license__,
     __description__,
+    __packages__,
     REQUIRES,
     PYTHON_REQUIRES,
     CLASSIFIERS
@@ -21,10 +22,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name=__packagename__,
-      packages=find_packages(where=__execdir__),
-    package_dir={
-        '': __execdir__,
-    },
+    packages=find_packages(),
     version=__version__,
     author=__author__,
     author_email=__email__,
