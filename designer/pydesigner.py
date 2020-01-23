@@ -14,9 +14,9 @@ import gzip # handles fsl's .gz suffix
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy as np # array, ndarray
-from preprocessing import util, smoothing, rician, preparation, snrplot
-from fitting import dwipy as dp
-from system import systemtools as systools
+from designer.preprocessing import util, smoothing, rician, preparation, snrplot
+from designer.fitting import dwipy as dp
+from designer.system import systemtools as systools
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
 
