@@ -1,1 +1,2 @@
 include designer/fitting/*.csv
+global-exclude *.py[cod] __pycache__ *.so
