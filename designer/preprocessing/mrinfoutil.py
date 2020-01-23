@@ -7,7 +7,6 @@ MRtrix3's mrinfo tool. All values are returned in basic Python data
 types.
 """
 
-import os
 import os.path as op
 import subprocess
 import re
