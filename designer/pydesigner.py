@@ -44,7 +44,7 @@ fslpath = op.dirname(fsl_location)
 if systools.isAMD():
     systools.setenv([('MKL_DEBUG_CPU_TYPE','5')])
 
-def main(argv=sys.argv[1:]):
+def main():
     #----------------------------------------------------------------------
     # Parse Arguments
     #----------------------------------------------------------------------
@@ -228,7 +228,7 @@ def main(argv=sys.argv[1:]):
                             'RESULT IN IMPRECISE AND INACCURATE RESULTS.')
 
     # Use argument specification to actually get args
-    args = parser.parse_args(argv)
+    args = parser.parse_args()
 
     #---------------------------------------------------------------------
     # Parse Input Image
@@ -847,4 +847,4 @@ def main(argv=sys.argv[1:]):
             dp.writeNii(KT, img.hdr, op.join(metricpath, 'KT'))
 
 if __name__ == '__main__':
-    main(sys.argv)
+    main()
