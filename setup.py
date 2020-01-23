@@ -11,7 +11,6 @@ from designer.info import (
     __url__,
     __license__,
     __description__,
-    __packages__,
     REQUIRES,
     PYTHON_REQUIRES,
     CLASSIFIERS

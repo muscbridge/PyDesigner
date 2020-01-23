@@ -1,7 +1,14 @@
 import inspect, os
 
-__execdir__ = os.path.basename(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
-
+__execdir__ = os.path.basename(
+    os.path.dirname(
+        os.path.abspath(
+            inspect.getfile(
+                inspect.currentframe()
+            )
+        )
+    )
+)
 __packagename__ = 'PyDesigner'
 __version__='0.2'
 __author__ = 'PyDesigner developers'
