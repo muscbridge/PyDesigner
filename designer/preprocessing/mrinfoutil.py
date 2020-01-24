@@ -200,3 +200,42 @@ def transform(path):
     num = [re.findall(r"[-+]?\d*\.\d+|\d+", s) for s in console]
     num = [s for s in num if s != []]
     return tuple(num)
+
+def commandhistory(path):
+    """
+   Returns a list of command history (manipulations or transformations)
+   performed on MRtrix file format .mif
+
+   Parameters
+   ----------
+   path:   string
+           path to input image or directory
+
+   Returns
+   -------
+   Tuple
+   """
+    if not op.exists(path):
+        raise OSError('Input path does not exist. Please ensure that the '
+                      'folder or file specified exists.')
+    arg = ['mrinfo', '-property', 'command_history']
+    arg.append(path)
+    completion = subprocess.run(arg, stdout=subprocess.PIPE)
+    if completion.returncode != 0:
+        raise IOError('Input {} is not currently supported by '
+                      'PyDesigner.'.format(path))
+    # Remove new line delimiter
+    console = str(completion.stdout).split('\\n')
+    # Remove 'b'
+    console = [s.split('b')[-1] for s in console]
+    # Remove quotes
+    console = [s.replace("'", "") for s in console]
+    # Condense empty strings
+    console = [s.replace('"', '') for s in console]
+    # Remove empty strings form list
+    console = list(filter(None, console))
+    # Remove MRtrix3 version
+    console = [re.sub(r'\([^)]*\)', '', s) for s in console]
+    # Remove whitespace to the right of string
+    console = [s.rstrip() for s in console]
+    return tuple(console)
