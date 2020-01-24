@@ -218,6 +218,11 @@ def commandhistory(path):
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
                       'folder or file specified exists.')
+    ftype = format(path)
+    if ftype != 'MRtrix':
+        raise IOError('This function only works with MRtrix (.mif) '
+                      'formatted filetypes. Please ensure that the input '
+                      'filetype meets this requirement')
     arg = ['mrinfo', '-property', 'command_history']
     arg.append(path)
     completion = subprocess.run(arg, stdout=subprocess.PIPE)
