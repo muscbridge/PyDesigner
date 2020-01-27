@@ -14,6 +14,7 @@ import gzip # handles fsl's .gz suffix
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy as np # array, ndarray
+from scipy.ndimage import median_filter, generate_binary_structure
 from designer.preprocessing import util, smoothing, rician, preparation, snrplot
 from designer.fitting import dwipy as dp
 from designer.system import systemtools as systools
@@ -205,6 +206,12 @@ def main():
                         'NIfTI axis codes (i-,j,k)')
     parser.add_argument('--noqc', action='store_true', default=False,
                         help='Disable QC saving of QC metrics')
+    parser.add_argument('--median', action='store_true', default=False,
+                        help='Performs postprocessing median filtering of '
+                             'final maps. WARNING: Use on a case-by-case '
+                             'basis for bad data only. Running median '
+                             'filtering as a finisher will muddy '
+                             'physical values.')
     parser.add_argument('--nthreads', type=int,
                         help='Number of threads to use for computation. '
                         'Note that using too many threads will cause a slow-'
@@ -808,6 +815,35 @@ def main():
                         img.hdr,
                         op.join(fitqcpath, 'outliers_akc'))
         md, rd, ad, fa, fe, trace = img.extractDTI()
+        if args.median:
+            conn = generate_binary_structure(rank=3, connectivity=1)
+            md = median_filter(md,
+                               footprint=conn,
+                               mode='constant', cval=float('nan')) \
+                 * img.mask
+            rd = median_filter(rd,
+                               footprint=conn,
+                               mode='constant', cval=float('nan')) \
+                 * img.mask
+            ad = median_filter(ad,
+                               footprint=conn,
+                               mode='constant', cval=float('nan')) \
+                 * img.mask
+            fa = median_filter(fa,
+                               footprint=conn,
+                               mode='constant', cval=float('nan')) \
+                 * img.mask
+            for i in range(fe.shape[-1]):
+                fe[:,:,:,i] = median_filter(fe[:,:,:,i],
+                               footprint=conn,
+                               mode='constant', cval=float('nan')) \
+                              * img.mask
+            for i in range(trace.shape[-1]):
+                trace[:,:,:,i] = median_filter(trace[:,:,:,i],
+                                               footprint=conn,
+                                               mode='constant',
+                                               cval=float('nan')) \
+                                 * img.mask
         dp.writeNii(md, img.hdr, op.join(metricpath, 'md'))
         dp.writeNii(rd, img.hdr, op.join(metricpath, 'rd'))
         dp.writeNii(ad, img.hdr, op.join(metricpath, 'ad'))
@@ -817,6 +853,33 @@ def main():
             dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
         else:
             mk, rk, ak, kfa, mkt, trace = img.extractDKI()
+        if args.median:
+            mk = median_filter(mk,
+                                footprint=conn,
+                                mode='constant', cval=float('nan')) \
+                    * img.mask
+            rk = median_filter(rk,
+                                footprint=conn,
+                                mode='constant', cval=float('nan')) \
+                    * img.mask
+            ak = median_filter(ak,
+                                footprint=conn,
+                                mode='constant', cval=float('nan')) \
+                    * img.mask
+            kfa = median_filter(kfa,
+                                footprint=conn,
+                                mode='constant', cval=float('nan')) \
+                    * img.mask
+            mkt = median_filter(mkt,
+                                footprint=conn,
+                                mode='constant', cval=float('nan')) \
+                    * img.mask
+            for i in range(trace.shape[-1]):
+                trace[:, :, :, i] = median_filter(trace[:, :, :, i],
+                                                    footprint=conn,
+                                                    mode='constant',
+                                                    cval=float('nan'))\
+                                    * img.mask
             # naive implementation of writing these variables
             dp.writeNii(mk, img.hdr, op.join(metricpath, 'mk'))
             dp.writeNii(rk, img.hdr, op.join(metricpath, 'rk'))
