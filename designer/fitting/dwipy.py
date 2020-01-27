@@ -1459,7 +1459,7 @@ class DWI(object):
             gof2 = gof
             # Iterative reweighning procedure
             iter = 0
-            
+            np.seterr(divide='raise', invalid='raise')
             while (not gof) and (iter < maxiter):
                 try:
                     C = np.sqrt(n_i/(n_i-nparam)) * \
@@ -1501,6 +1501,7 @@ class DWI(object):
                 gof = np.linalg.norm(
                     dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
                 conv = iter
+            np.seterr(**defaultErrorState)
             # Outlier detection
             if ~gof2:
                 try:
