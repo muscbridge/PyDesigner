@@ -248,7 +248,7 @@ def main():
     # Variable fType indicates the extension to raw_dwi.X, where X take the
     # place of known dMRI file extensions (.mif, .nii, .nii.gz). This allows
     # easy switching based on any scenario for testing.
-    fType = '.nii'
+    fType = '.mif'
     if not args.output:
         outpath = image.getPath()
     else:
@@ -258,7 +258,7 @@ def main():
             verbose=args.verbose,
             force=args.force,
             resume=args.resume)
-    args.dwi = op.join(outpath, 'raw_dwi' + fType)
+    args.dwi = op.join(outpath, 'working' + fType)
 
     #---------------------------------------------------------------------
     # Validate Arguments
