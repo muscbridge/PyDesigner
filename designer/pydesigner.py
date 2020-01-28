@@ -854,6 +854,7 @@ def main():
         else:
             mk, rk, ak, kfa, mkt, trace = img.extractDKI()
         if args.median:
+            conn = generate_binary_structure(rank=3, connectivity=1)
             mk = median_filter(mk,
                                 footprint=conn,
                                 mode='constant', cval=float('nan')) \
