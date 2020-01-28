@@ -11,6 +11,7 @@ import pprint #pprint
 import numpy as np
 import math
 import warnings
+from designer.preprocessing import mrinfoutil
 
 def bvec_is_fullsphere(bvec):
     """Determines if .bvec file is full or half-sphere
@@ -119,40 +120,6 @@ def find_valid_ext(pathname):
             exts.append(ext)
     
     return exts
-
-def imagetype(path):
-    """
-    Checks input file type
-
-    Parameters
-    ----------
-    path:   string
-        Directory or file path to inquire
-
-    Returns
-    -------
-    String containing filetype
-    """
-    cmd = ['mrinfo', '-quiet']
-    cmd.append(path)
-    completion = subprocess.run(cmd, stdout=subprocess.PIPE)
-    if completion.returncode != 0:
-        raise IOError('Input {} is not currently supported by '
-                                 'PyDesigner.'.format(path))
-    console = str(completion.stdout).split('\\n')
-    matched_indexes = []
-    # This loop iterates across the console output to find the line
-    # containing the string 'Format'.
-    i = 0
-    while i < len(console):
-        if 'Format' in console[i]:
-            matched_indexes.append(i)
-        i += 1
-    # Indexed line is split and alphabets from the second element are
-    # extracted, which determines the input type.
-    fstring = console[matched_indexes[0]].split()[1]
-    ftype = ''.join(filter(str.isalpha, fstring)).lower()
-    return ftype
 
 class DWIFile:
     """
@@ -387,7 +354,7 @@ class DWIParser:
         ftype = []
         i = 0
         while i < len(self.DWIlist):
-            ftype.append(imagetype(self.DWIlist[i]))
+            ftype.append(mrinfoutil.format(self.DWIlist[i]).lower())
             i += 1
         self.InputType = np.unique(ftype)
         if self.InputType.size > 1:
@@ -396,6 +363,7 @@ class DWIParser:
                             'a specific type of input exclusively. '
                             'Detected inputs were: {}'.format(
                 self.InputType))
+        self.InputType = self.InputType[0]
         DWIflist = [op.splitext(i) for i in self.DWIlist]
         # Compressed nifti (.nii.gz) have double extensions, and so
         # require double ext-splitting. The following loop takes care of
