@@ -17,6 +17,7 @@ import numpy as np # array, ndarray
 from designer.preprocessing import util, smoothing, rician, preparation, snrplot
 from designer.fitting import dwipy as dp
 from designer.system import systemtools as systools
+from designer.postprocessing import filters
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
 
@@ -205,6 +206,16 @@ def main():
                         'NIfTI axis codes (i-,j,k)')
     parser.add_argument('--noqc', action='store_true', default=False,
                         help='Disable QC saving of QC metrics')
+    parser.add_argument('--median', action='store_true', default=False,
+                        help='Performs postprocessing median filtering of '
+                        'final maps. WARNING: Use on a case-by-case '
+                        'basis for bad data only. When applied, the '
+                        'filter alters the values of most voxels, so '
+                        'it should be used with caution and avoided '
+                        'when data quality is otherwise adequate. '
+                        'While maps appear visually soother with '
+                        'this flag on, they may nonetheless be less '
+                        'accurate.')
     parser.add_argument('--nthreads', type=int,
                         help='Number of threads to use for computation. '
                         'Note that using too many threads will cause a slow-'
@@ -779,6 +790,7 @@ def main():
     #----------------------------------------------------------------------
     # Tensor Fitting
     #----------------------------------------------------------------------
+    # Define some paths
     if not args.nofit:
         # create dwi fitting object
         if not args.nthreads:
@@ -813,8 +825,33 @@ def main():
         dp.writeNii(ad, img.hdr, op.join(metricpath, 'ad'))
         dp.writeNii(fa, img.hdr, op.join(metricpath, 'fa'))
         dp.writeNii(fe, img.hdr, op.join(metricpath, 'fe'))
+        if args.median:
+            filters.median(
+                input=op.join(metricpath, 'md.nii'),
+                output=op.join(metricpath, 'md.nii'),
+                mask=filetable['mask'].getFull())
+            filters.median(
+                input=op.join(metricpath, 'rd.nii'),
+                output=op.join(metricpath, 'rd.nii'),
+                mask=filetable['mask'].getFull())
+            filters.median(
+                input=op.join(metricpath, 'ad.nii'),
+                output=op.join(metricpath, 'ad.nii'),
+                mask=filetable['mask'].getFull())
+            filters.median(
+                input=op.join(metricpath, 'fa.nii'),
+                output=op.join(metricpath, 'fa.nii'),
+                mask=filetable['mask'].getFull())
+            filters.median(
+                input=op.join(metricpath, 'fe.nii'),
+                output=op.join(metricpath, 'fe.nii'),
+                mask=filetable['mask'].getFull())
         if not img.isdki():
             dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
+            filters.median(
+                input=op.join(metricpath, 'trace.nii'),
+                output=op.join(metricpath, 'trace.nii'),
+                mask=filetable['mask'].getFull())
         else:
             mk, rk, ak, kfa, mkt, trace = img.extractDKI()
             # naive implementation of writing these variables
@@ -824,6 +861,31 @@ def main():
             dp.writeNii(kfa, img.hdr, op.join(metricpath, 'kfa'))
             dp.writeNii(mkt, img.hdr, op.join(metricpath, 'mkt'))
             dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
+            if args.median:
+                filters.median(
+                    input=op.join(metricpath, 'mk.nii'),
+                    output=op.join(metricpath, 'mk.nii'),
+                    mask=filetable['mask'].getFull())
+                filters.median(
+                    input=op.join(metricpath, 'rk.nii'),
+                    output=op.join(metricpath, 'rk.nii'),
+                    mask=filetable['mask'].getFull())
+                filters.median(
+                    input=op.join(metricpath, 'ak.nii'),
+                    output=op.join(metricpath, 'ak.nii'),
+                    mask=filetable['mask'].getFull())
+                filters.median(
+                    input=op.join(metricpath, 'kfa.nii'),
+                    output=op.join(metricpath, 'kfa.nii'),
+                    mask=filetable['mask'].getFull())
+                filters.median(
+                    input=op.join(metricpath, 'mkt.nii'),
+                    output=op.join(metricpath, 'mkt.nii'),
+                    mask=filetable['mask'].getFull())
+                filters.median(
+                    input=op.join(metricpath, 'trace.nii'),
+                    output=op.join(metricpath, 'trace.nii'),
+                    mask=filetable['mask'].getFull())
             if args.wmti:
                 awf, eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort = \
                     img.extractWMTI()
