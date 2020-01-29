@@ -265,7 +265,7 @@ def main():
     working_path = op.join(outpath, 'working' + fType)
 
     # Make an initial conversion to nifti
-    init_nii = op.join(outpath, 'raw_dwi.nii')
+    init_nii = op.join(outpath, 'dwi_raw.nii')
     mrpreproc.miftonii(input=working_path,
                        output=init_nii,
                        strides='1,2,3,4',
@@ -497,7 +497,7 @@ def main():
         denoised_name = 'd' + filetable['dwi'].getName() + '.nii'
         denoised = op.join(outpath, denoised_name)
         # output the noise map even without user permission, space is cheap
-        noisemap_name = 'n' + filetable['dwi'].getName() + '.nii'
+        noisemap_name = 'noisemap.nii'
         noisemap = op.join(outpath, noisemap_name)
         # check to see if this already exists
         if not (args.resume and op.exists(denoised) and op.exists(noisemap)):
@@ -511,7 +511,7 @@ def main():
                               verbose=args.verbose)
         if args.out_all:
             mrpreproc.miftonii(input=working_path,
-                               output=denoised_name,
+                               output=denoised,
                                strides='1,2,3,4',
                                nthreads=args.nthreads,
                                force=args.force,
@@ -520,8 +520,7 @@ def main():
             filetable['noisemap'] = DWIFile(noisemap)
             filetable['HEAD'] = filetable['denoised']
         cmdtable['denoise'] = mrinfoutil.commandhistory(working_path)[-1]
-        filetable['HEAD'] = filetable['denoise']
-        print(cmdtable)
+        cmdtable['HEAD'] = cmdtable['denoise']
 
     #----------------------------------------------------------------------
     # Run Gibbs Unringing
