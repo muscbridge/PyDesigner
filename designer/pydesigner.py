@@ -533,29 +533,22 @@ def main():
         # check to see if this already exists
         if not (args.resume and op.exists(degibbs)):
             # system call
-            degibbs_args = ['mrdegibbs']
-            if args.force:
-                degibbs_args.append('-force')
-            else:
-                if op.exists(degibbs) and not args.resume:
-                    raise Exception('Running mrdegibbs would cause an '
-                                    'overwrite. '
-                                    'In order to run this please delete the '
-                                    'files, use --force, use --resume, or '
-                                    'change output destination.')
-            if not args.verbose:
-                degibbs_args.append('-quiet')
-            if args.nthreads:
-                degibbs_args.append('-nthreads')
-                degibbs_args.append(str(args.nthreads))
-            degibbs_args.append(filetable['HEAD'].getFull())
-            degibbs_args.append(degibbs)
-            completion = subprocess.run(degibbs_args)
-            if completion.returncode != 0:
-                raise Exception('mrdegibbs failed, please look above for '
-                                'error sources')
-        filetable['unrung'] = DWIFile(degibbs)
-        filetable['HEAD'] = filetable['unrung']
+            mrpreproc.degibbs(input=working_path,
+                              output=working_path,
+                              nthreads=args.nthreads,
+                              force=True,
+                              verbose=args.verbose)
+        if args.out_all:
+            mrpreproc.miftonii(input=working_path,
+                               output=degibbs,
+                               strides='1,2,3,4',
+                               nthreads=args.nthreads,
+                               force=args.force,
+                               verbose=args.verbose)
+            filetable['unrung'] = DWIFile(degibbs)
+            filetable['HEAD'] = filetable['unrung']
+        cmdtable['degibbs'] = mrinfoutil.commandhistory(working_path)[-1]
+        cmdtable['HEAD'] = cmdtable['degibbs']
 
     #----------------------------------------------------------------------
     # Undistort
