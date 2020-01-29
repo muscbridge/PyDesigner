@@ -518,11 +518,14 @@ def main():
                                nthreads=args.nthreads,
                                force=args.force,
                                verbose=args.verbose)
+            # update nifti file tracking
             filetable['denoised'] = DWIFile(nii_denoised)
             filetable['noisemap'] = DWIFile(noisemap)
             filetable['HEAD'] = filetable['denoised']
+        # remove old working.mif and replace with new corrected .mif
         os.remove(working_path)
         os.rename(mif_denoised, working_path)
+        # update command history
         cmdtable['denoise'] = mrinfoutil.commandhistory(working_path)[-1]
         cmdtable['HEAD'] = cmdtable['denoise']
 
@@ -550,10 +553,13 @@ def main():
                                nthreads=args.nthreads,
                                force=args.force,
                                verbose=args.verbose)
+            # update nifti file tracking
             filetable['unrung'] = DWIFile(nii_degibbs)
             filetable['HEAD'] = filetable['unrung']
+        # remove old working.mif and replace with new corrected .mif
         os.remove(working_path)
         os.rename(mif_degibbs, working_path)
+        # update command history
         cmdtable['degibbs'] = mrinfoutil.commandhistory(working_path)[-1]
         cmdtable['HEAD'] = cmdtable['degibbs']
 
