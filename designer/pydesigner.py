@@ -503,7 +503,7 @@ def main():
         noisemap = op.join(outpath, noisemap_name)
         # check to see if this already exists
         if not (args.resume and op.exists(denoised) and op.exists(noisemap)):
-            # system call
+            # run denoise function
             mrpreproc.denoise(input=working_path,
                               output=mif_denoised,
                               noisemap=True,
@@ -540,7 +540,7 @@ def main():
         mif_degibbs = op.join(outpath, mif_degibbs_name)
         # check to see if this already exists
         if not (args.resume and op.exists(degibbs)):
-            # system call
+            # run degibbs function
             mrpreproc.degibbs(input=working_path,
                               output=mif_degibbs,
                               nthreads=args.nthreads,
