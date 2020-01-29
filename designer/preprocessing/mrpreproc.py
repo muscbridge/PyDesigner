@@ -21,15 +21,18 @@ def miftonii(input, output, strides='1,2,3,4', nthreads=None,
 
     Returns
     -------
-    (none)
+    system call:    (none)
     """
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
                       'the folder or file specified exists.')
-    if not op.isdir(op.dirname(output)):
+    if not op.exists(op.dirname(output)):
         raise OSError('Specifed directory for output file {} does not '
                       'exist. Please ensure that this is a valid '
-                      'directory.'.format(op.dirname(input)))
+                      'directory.'.format(op.dirname(output)))
+    if op.splitext(output)[-1] != '.nii':
+        raise OSError('Output specified does not possess the .nii '
+                      'extension.')
     if not isinstance(strides, str):
         raise Exception('Please specify strides as a string.')
     if not (nthreads is None):
@@ -80,15 +83,15 @@ def denoise(input, output, noisemap=True, extent='5,5,5', nthreads=None,
 
     Returns
     -------
-    none
+    system call:    (none)
     """
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
                       'the folder or file specified exists.')
-    if not op.isdir(op.dirname(output)):
+    if not op.exists(op.dirname(output)):
         raise OSError('Specifed directory for output file {} does not '
                       'exist. Please ensure that this is a valid '
-                      'directory.'.format(op.dirname(input)))
+                      'directory.'.format(op.dirname(output)))
     if not isinstance(noisemap, bool):
         raise Exception('Please specify whether noisemap generation '
                         'is True or False.')
