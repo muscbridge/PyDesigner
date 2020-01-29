@@ -14,7 +14,7 @@ import gzip # handles fsl's .gz suffix
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy as np # array, ndarray
-from designer.preprocessing import util, smoothing, rician, preparation, snrplot
+from designer.preprocessing import util, smoothing, rician, preparation, snrplot, mrinfoutil, mrpreproc
 from designer.fitting import dwipy as dp
 from designer.system import systemtools as systools
 from designer.postprocessing import filters
@@ -126,6 +126,10 @@ def main():
                         help='Standard preprocessing, bypasses most other '
                         'options. See Appendix:Standard pipeline steps '
                         'for more information. ')
+    parser.add_argument('--out_all', action='store_true',
+                        default=False,
+                        help='Output NifTi formatted files at the '
+                        'end of each preprocessing step.')
     parser.add_argument('--denoise', action='store_true', default=False,
                         help='Run thermal denoising with dwidenoise.')
     parser.add_argument('--extent', metavar='n,n,n', default='5,5,5',
@@ -258,7 +262,16 @@ def main():
             verbose=args.verbose,
             force=args.force,
             resume=args.resume)
-    args.dwi = op.join(outpath, 'working' + fType)
+    working_path = op.join(outpath, 'working' + fType)
+
+    # Make an initial conversion to nifti
+    init_nii = op.join(outpath, 'raw_dwi.nii')
+    mrpreproc.miftonii(input=working_path,
+                       output=init_nii,
+                       strides='1,2,3,4',
+                       nthreads=args.nthreads,
+                       force=args.force,
+                       verbose=args.verbose)
 
     #---------------------------------------------------------------------
     # Validate Arguments
@@ -378,10 +391,13 @@ def main():
     if errmsg is not '':
         raise Exception(errmsg)
 
-    # Begin importing important data files
-    filetable = {'dwi' : DWIFile(args.dwi)}
+    # Begin keeping track of nifti files
+    filetable = {'dwi' : DWIFile(init_nii)}
     if not filetable['dwi'].isAcquisition():
         raise Exception('Input dwi does not have .bval/.bvec pair')
+
+    # Begin composing command history
+    cmdtable = {'input': mrinfoutil.commandhistory(working_path)}
 
     # Check to make sure no partial fourier if --degibbs given
     if args.degibbs and args.adv:
@@ -486,35 +502,26 @@ def main():
         # check to see if this already exists
         if not (args.resume and op.exists(denoised) and op.exists(noisemap)):
             # system call
-            denoise_args = ['dwidenoise', '-noise', noisemap]
-            if args.force:
-                denoise_args.append('-force')
-            else:
-                if (op.exists(denoised) or op.exists(noisemap) and
-                    not args.resume):
-                    raise Exception('Running dwidenoise would cause an '
-                                    'overwrite. '
-                                    'In order to run this please delete the '
-                                    'files, use --force, or change output '
-                                    'destination.')
-            if not args.verbose:
-                denoise_args.append('-quiet')
-
-            if args.extent:
-                denoise_args.append('-extent')
-                denoise_args.append(args.extent)
-            if args.nthreads:
-                denoise_args.append('-nthreads')
-                denoise_args.append(str(args.nthreads))
-            denoise_args.append(filetable['dwi'].getFull())
-            denoise_args.append(denoised)
-            completion = subprocess.run(denoise_args)
-            if completion.returncode != 0:
-                raise Exception('dwidenoise failed, please look above for '
-                                ' error sources')
-        filetable['denoised'] = DWIFile(denoised)
-        filetable['noisemap'] = DWIFile(noisemap)
-        filetable['HEAD'] = filetable['denoised']
+            mrpreproc.denoise(input=working_path,
+                              output=working_path,
+                              noisemap=True,
+                              extent=args.extent,
+                              nthreads=args.nthreads,
+                              force=True,
+                              verbose=args.verbose)
+        if args.out_all:
+            mrpreproc.miftonii(input=working_path,
+                               output=denoised_name,
+                               strides='1,2,3,4',
+                               nthreads=args.nthreads,
+                               force=args.force,
+                               verbose=args.verbose)
+            filetable['denoised'] = DWIFile(denoised)
+            filetable['noisemap'] = DWIFile(noisemap)
+            filetable['HEAD'] = filetable['denoised']
+        cmdtable['denoise'] = mrinfoutil.commandhistory(working_path)[-1]
+        filetable['HEAD'] = filetable['denoise']
+        print(cmdtable)
 
     #----------------------------------------------------------------------
     # Run Gibbs Unringing
