@@ -125,6 +125,55 @@ def denoise(input, output, noisemap=True, extent='5,5,5', nthreads=None,
         raise Exception('dwidenoise failed, please look above for error '
                         'sources.')
 
+def degibbs(input, output, nthreads=None, force=False, verbose=False):
+    """
+    Runs MRtrix3's `mrdegibbs` command with optimal parameters for
+    PyDesigner.
+
+    Parameters
+    ----------
+    input (str):      path to input .mif file
+
+    output (str):     path to output .mif file
+    nthreads (int):   number of threads in multi-threaded applications
+    force (bool):     force overwrite of output files (default: False)
+    verbose (bool):   display information messages (default: False)
+
+    Returns
+    -------
+    system call:    (none)
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    arg = ['mrdegibbs']
+    if force:
+        arg.append('-force')
+    if not verbose:
+        arg.append('-quiet')
+    if not (nthreads is None):
+        arg.extend(['-nthreads', nthreads])
+    arg.extend([input, output])
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('mrdegibbs failed, please look above for error '
+                        'sources.')
+
+
+
 
 
 
