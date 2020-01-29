@@ -494,8 +494,10 @@ def main():
     if args.denoise:
         # hardcoding this to be the initial file per dwidenoise
         # recommmendation
-        denoised_name = 'd' + filetable['dwi'].getName() + '.nii'
-        denoised = op.join(outpath, denoised_name)
+        nii_denoised_name = 'd' + filetable['dwi'].getName() + '.nii'
+        nii_denoised = op.join(outpath, nii_denoised_name)
+        mif_denoised_name = 'dwidn.mif'
+        mif_denoised = op.join(outpath, mif_denoised_name)
         # output the noise map even without user permission, space is cheap
         noisemap_name = 'noisemap.nii'
         noisemap = op.join(outpath, noisemap_name)
@@ -503,11 +505,11 @@ def main():
         if not (args.resume and op.exists(denoised) and op.exists(noisemap)):
             # system call
             mrpreproc.denoise(input=working_path,
-                              output=working_path,
+                              output=mif_denoised,
                               noisemap=True,
                               extent=args.extent,
                               nthreads=args.nthreads,
-                              force=True,
+                              force=False,
                               verbose=args.verbose)
         if args.out_all:
             mrpreproc.miftonii(input=working_path,
@@ -516,9 +518,11 @@ def main():
                                nthreads=args.nthreads,
                                force=args.force,
                                verbose=args.verbose)
-            filetable['denoised'] = DWIFile(denoised)
+            filetable['denoised'] = DWIFile(nii_denoised)
             filetable['noisemap'] = DWIFile(noisemap)
             filetable['HEAD'] = filetable['denoised']
+        os.remove(working_path)
+        os.rename(mif_denoised, working_path)
         cmdtable['denoise'] = mrinfoutil.commandhistory(working_path)[-1]
         cmdtable['HEAD'] = cmdtable['denoise']
 
@@ -527,15 +531,17 @@ def main():
     #----------------------------------------------------------------------
     if args.degibbs:
         # add to HEAD name
-        degibbs_name = 'g' + filetable['HEAD'].getName() + '.nii'
-        degibbs = op.join(outpath, degibbs_name)
+        nii_degibbs_name = 'g' + filetable['HEAD'].getName() + '.nii'
+        nii_degibbs = op.join(outpath, nii_degibbs_name)
+        mif_degibbs_name = 'dwigc.mif'
+        mif_degibbs = op.join(outpath, mif_degibbs_name)
         # check to see if this already exists
         if not (args.resume and op.exists(degibbs)):
             # system call
             mrpreproc.degibbs(input=working_path,
-                              output=working_path,
+                              output=mif_degibbs,
                               nthreads=args.nthreads,
-                              force=True,
+                              force=False,
                               verbose=args.verbose)
         if args.out_all:
             mrpreproc.miftonii(input=working_path,
@@ -544,8 +550,10 @@ def main():
                                nthreads=args.nthreads,
                                force=args.force,
                                verbose=args.verbose)
-            filetable['unrung'] = DWIFile(degibbs)
+            filetable['unrung'] = DWIFile(nii_degibbs)
             filetable['HEAD'] = filetable['unrung']
+        os.remove(working_path)
+        os.rename(mif_degibbs, working_path)
         cmdtable['degibbs'] = mrinfoutil.commandhistory(working_path)[-1]
         cmdtable['HEAD'] = cmdtable['degibbs']
 
