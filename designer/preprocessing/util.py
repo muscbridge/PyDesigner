@@ -430,10 +430,10 @@ class DWIParser:
         force:      bool
             Forces file overwrite if they already exist
         """
-        # Check whether raw_dwi.(ext) exists
-        if op.exists(op.join(path, 'raw_dwi' + ext)):
+        # Check whether working.(ext) exists
+        if op.exists(op.join(path, 'working' + ext)):
             if force:
-                os.remove(op.join(path, 'raw_dwi' + ext))
+                os.remove(op.join(path, 'working' + ext))
                 for i in range(self.nDWI):
                     if op.exists(op.join(path, ('dwi' + str(i) + '.mif'))):
                         os.remove(op.join(path, ('dwi' + str(i) + '.mif')))
@@ -441,10 +441,10 @@ class DWIParser:
                 raise IOError(
                     'Concatenated series already exists. '
                     'In order to run this please delete the '
-                    'file raw_dwi, use --force, use --resume, or '
+                    'file working, use --force, use --resume, or '
                     'change output destination.')
 
-        if not (resume and op.exists(op.join(path, 'raw_dwi' + ext))):
+        if not (resume and op.exists(op.join(path, 'working' + ext))):
             miflist = []
             # The following loop converts input file into .mif
             for (idx, i) in enumerate(self.DWIlist):
@@ -501,7 +501,7 @@ class DWIParser:
                 for i,fname in enumerate(miflist):
                     cat_arg.append(fname)
                 cat_arg.append(
-                    op.join(path, ('raw_dwi' + '.mif')))
+                    op.join(path, ('working' + '.mif')))
                 cmd = ' '.join(str(e) for e in cat_arg)
                 completion = subprocess.run(cmd, shell=True)
                 if completion.returncode != 0:
@@ -514,14 +514,14 @@ class DWIParser:
                 if force is True:
                     cat_arg.append('-force')
                 cat_arg.append(op.join(path, 'dwi0.mif'))
-                cat_arg.append(op.join(path, 'raw_dwi.mif'))
+                cat_arg.append(op.join(path, 'working.mif'))
                 cmd = ' '.join(str(e) for e in cat_arg)
                 print(cmd)
                 completion = subprocess.run(cmd, shell=True)
                 if completion.returncode != 0:
                     raise Exception('Failed to convert single series')
             if '.mif' not in ext:
-                miflist.append(op.join(path, 'raw_dwi' + '.mif'))
+                miflist.append(op.join(path, 'working' + '.mif'))
 
             # Output concatenated .mif into other formats
             if '.mif' not in ext:
@@ -531,18 +531,18 @@ class DWIParser:
                 if force is True:
                     convert_args.append('-force')
                 convert_args.append('-export_grad_fsl')
-                convert_args.append(op.join(path, 'raw_dwi.bvec'))
-                convert_args.append(op.join(path, 'raw_dwi.bval'))
+                convert_args.append(op.join(path, 'working.bvec'))
+                convert_args.append(op.join(path, 'working.bval'))
                 convert_args.append('-json_export')
-                convert_args.append(op.join(path, 'raw_dwi.json'))
-                convert_args.append(op.join(path, 'raw_dwi.mif'))
-                convert_args.append(op.join(path, 'raw_dwi' + ext))
+                convert_args.append(op.join(path, 'working.json'))
+                convert_args.append(op.join(path, 'working.mif'))
+                convert_args.append(op.join(path, 'working' + ext))
                 cmd = ' '.join(str(e) for e in convert_args)
                 completion = subprocess.run(cmd, shell=True)
                 if completion.returncode != 0:
                     for i, fname in enumerate(miflist):
                         os.remove(fname)
-                    os.remove(op.join(path, 'raw_dwi' + ext))
+                    os.remove(op.join(path, 'working' + ext))
                     raise Exception('Concatenation to ' + str(ext) + ' '
                                     'failed. Please ensure that your input '
                                     'NifTi files have the same phase '
