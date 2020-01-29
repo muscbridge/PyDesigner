@@ -512,12 +512,12 @@ def main():
                               force=False,
                               verbose=args.verbose)
         if args.out_all:
-            mrpreproc.miftonii(input=working_path,
-                               output=denoised,
+            mrpreproc.miftonii(input=mif_denoised,
+                               output=nii_denoised,
                                strides='1,2,3,4',
                                nthreads=args.nthreads,
                                force=args.force,
-                               verbose=args.verbose)
+                               verbose=False)
             # update nifti file tracking
             filetable['denoised'] = DWIFile(nii_denoised)
             filetable['noisemap'] = DWIFile(noisemap)
@@ -547,12 +547,12 @@ def main():
                               force=False,
                               verbose=args.verbose)
         if args.out_all:
-            mrpreproc.miftonii(input=working_path,
-                               output=degibbs,
+            mrpreproc.miftonii(input=mif_degibbs,
+                               output=nii_degibbs,
                                strides='1,2,3,4',
                                nthreads=args.nthreads,
                                force=args.force,
-                               verbose=args.verbose)
+                               verbose=False)
             # update nifti file tracking
             filetable['unrung'] = DWIFile(nii_degibbs)
             filetable['HEAD'] = filetable['unrung']
@@ -568,58 +568,38 @@ def main():
     #----------------------------------------------------------------------
     if args.undistort:
         # Add to HEAD name
-        undistorted_name = 'u' + filetable['HEAD'].getName() + '.nii'
-        undistorted_full = op.join(outpath, undistorted_name)
+        nii_undistorted_name = 'u' + filetable['HEAD'].getName() + '.nii'
+        nii_undistorted = op.join(outpath, nii_undistorted_name)
+        mif_undistorted_name = 'dwiec.mif'
+        mif_undistorted = op.join(outpath, mif_undistorted_name)
 
         # check to see if this already exists
         if not (args.resume and op.exists(undistorted_full)):
-            # prepare; makes se-epi.mif
-            if args.topup:
-                preparation.make_se_epi(filetable)
-            else:
-                preparation.make_simple_mif(filetable)
-
-            # system call
-            dwipreproc_args = ['dwipreproc']
-            if args.force:
-                dwipreproc_args.append('-force')
-            else:
-                if op.exists(undistorted_full) and not args.resume:
-                    raise Exception('Running undistortion would cause an '
-                                    'overwrite. '
-                                    'In order to run this please delete the '
-                                    'files, use --force, use --resume, or '
-                                    'change output destination')
-            if not args.verbose:
-                dwipreproc_args.append('-quiet')
-            if not args.noqc:
-                dwipreproc_args.append('-eddyqc_all')
-                dwipreproc_args.append(eddyqcpath)
-            dwipreproc_args.append('-rpe_header')
-            # full vs half sphere
-            dwipreproc_args.append('-eddy_options')
-            repol_string = '--repol '
-            if util.bvec_is_fullsphere(filetable['dwi'].getBVEC()):
-                # is full, add appropriate dwipreproc option
-                repol_string += '--data_is_shelled'
-            else:
-                # half
-                repol_string += '--slm=linear'
-            dwipreproc_args.append(repol_string)
-            if args.topup:
-                dwipreproc_args.append('-se_epi')
-                dwipreproc_args.append(filetable['se-epi'])
-            # Note: we skip align_seepi because it's handled in make_se_epi
-            dwipreproc_args.append(filetable['dwimif'])
-            dwipreproc_args.append(undistorted_full)
-            if args.verbose:
-                print(*dwipreproc_args)
-            completion = subprocess.run(dwipreproc_args, cwd=outpath)
-            if completion.returncode != 0:
-                raise Exception('dwipreproc failed, please look above for '
-                                'error sources.')
-            filetable['undistorted'] = DWIFile(undistorted_full)
-            filetable['HEAD'] = filetable['undistorted']
+            # run undistort function
+            mrpreproc.undistort(input=working_path,
+                                output=mif_undistorted,
+                                rpe='rpe_header',
+                                qc=eddyqcpath,
+                                nthreads=args.nthreads,
+                                force=args.force,
+                                verbose=args.verbose)
+            if args.out_all:
+                mrpreproc.miftonii(input=mif_undistorted,
+                                output=nii_undistorted,
+                                strides='1,2,3,4',
+                                nthreads=args.nthreads,
+                                force=args.force,
+                                verbose=False)
+                # update nifti file tracking
+                filetable['undistorted'] = DWIFile(nii_undistorted)
+                filetable['HEAD'] = filetable['undistorted']
+        # remove old working.mif and replace with new corrected .mif
+        os.remove(working_path)
+        os.rename(mif_undistorted, working_path)
+        # update command history
+        cmdtable['undistort'] = mrinfoutil.commandhistory(working_path)[-1]
+        cmdtable['HEAD'] = cmdtable['undistort']
+        print(cmdtable)
 
     #----------------------------------------------------------------------
     # Create Brain Mask
@@ -788,11 +768,11 @@ def main():
     #----------------------------------------------------------------------
     if args.denoise and not args.noqc:
         files = []
-        files.append(op.join(outpath, 'raw_dwi.nii'))
+        files.append(init_nii)
         files.append(filetable['HEAD'].getFull())
         if not filetable['mask'] is None:
             snr = snrplot.makesnr(dwilist=files,
-                                    noisepath=filetable['noisemap'].getFull(),
+                                    noisepath=noisemap,
                                     maskpath=filetable['mask'].getFull())
         else:
             snr = snrplot.makesnr(dwilist=files,
