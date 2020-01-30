@@ -520,8 +520,8 @@ def main():
                                verbose=False)
             # update nifti file tracking
             filetable['denoised'] = DWIFile(nii_denoised)
-            filetable['noisemap'] = DWIFile(noisemap)
             filetable['HEAD'] = filetable['denoised']
+        filetable['noisemap'] = DWIFile(noisemap)
         # remove old working.mif and replace with new corrected .mif
         os.remove(working_path)
         os.rename(mif_denoised, working_path)
