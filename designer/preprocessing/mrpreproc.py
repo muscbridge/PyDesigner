@@ -185,6 +185,10 @@ def undistort(input, output, rpe='rpe_header', qc=None,
     input (str):      path to input .mif file
 
     output (str):     path to output .mif file
+    rpe (str):        reverse phase encoding of the dataset (default:
+                      rpe_header)
+    qc (bool):        specify whether to generate eddy QC metric (
+                      default: True)
     nthreads (int):   number of threads in multi-threaded applications
     force (bool):     force overwrite of output files (default: False)
     verbose (bool):   display information messages (default: False)
