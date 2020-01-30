@@ -213,7 +213,7 @@ def commandhistory(path):
 
    Returns
    -------
-   Tuple
+   List
    """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
@@ -232,7 +232,7 @@ def commandhistory(path):
     # Remove new line delimiter
     console = str(completion.stdout).split('\\n')
     # Remove 'b'
-    console = [s.split('b')[-1] for s in console]
+    console[0] = console[0][1:]
     # Remove quotes
     console = [s.replace("'", "") for s in console]
     # Condense empty strings
@@ -243,4 +243,4 @@ def commandhistory(path):
     console = [re.sub(r'\([^)]*\)', '', s) for s in console]
     # Remove whitespace to the right of string
     console = [s.rstrip() for s in console]
-    return tuple(console)
+    return list(console)
