@@ -604,103 +604,24 @@ def main():
     #----------------------------------------------------------------------
     # Create Brain Mask
     #----------------------------------------------------------------------
-    if args.mask or args.user_mask:
-        fsl_suffix = '.gz'
-        brainmask_fsl_name = 'brain'
-        brainmask_fsl_full = op.join(outpath, brainmask_fsl_name)
-        brainmask_fsl_out = op.join(outpath, brainmask_fsl_name + '_mask' +
-        '.nii' + fsl_suffix)
-        brainmask_out = op.join(outpath, brainmask_fsl_name + '_mask' + '.nii')
-        B0_name = 'B0.nii'
-        B0_mean = 'B0_mean.nii'
-        B0_full = op.join(outpath, B0_name)
-        B0_mean_full = op.join(outpath, B0_mean)
-        # Extract B0s
-        mask_arg = ['dwiextract', '-force', '-fslgrad',
-                    filetable['dwi'].getBVEC(), filetable['dwi'].getBVAL(),
-                    '-bzero']
-        if args.nthreads:
-            mask_arg.append('-nthreads')
-            mask_arg.append(str(args.nthreads))
-        if not args.verbose:
-            mask_arg.append('-quiet')
-        mask_arg.extend([filetable['HEAD'].getFull(), B0_full])
-        completion = subprocess.run(mask_arg)
-        # Compute mean B0s
-        mask_arg = ['mrmath', '-force']
-        if args.nthreads:
-            mask_arg.append('-nthreads')
-            mask_arg.append(str(args.nthreads))
-        if not args.verbose:
-            mask_arg.append('-quiet')
-        mask_arg.extend(['-axis', '3', B0_full, 'mean', B0_mean_full])
-        completion = subprocess.run(mask_arg)
-        if completion.returncode != 0:
-            raise Exception('B0 extraction failed: check your .bval file')
-        # Remove NaNs
-        mask_arg = ['fslmaths', B0_mean_full, '-nan', B0_full + fsl_suffix]
-        completion = subprocess.run(mask_arg)
-        if completion.returncode != 0:
-            raise Exception('Unable to remove NaNs from B0.nii. '
-                            'Try manually extracting a brain mask '
-                            'and saving it in working directory '
-                            'as brain_mask.nii. Then use the --resume '
-                            'option to continue from here.')
-        print(B0_full + fsl_suffix)
-        if op.exists(B0_full + fsl_suffix):
-            with gzip.open(B0_full + fsl_suffix, 'r') as f_in, \
-                    open(B0_full, 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
-        # Remove all other files
-        if op.exists(B0_mean_full):
-            os.remove(B0_mean_full)
-        if os.path.exists(B0_full + fsl_suffix):
-            os.remove(B0_full + fsl_suffix)
-        filetable['b0'] = DWIFile(B0_full)
-
-        # check to see if mask already exists if using --mask
-        if args.mask and not op.exists(brainmask_out):
-            if args.maskthr is None:
-                maskthr = 0.25
-            else:
-                maskthr = args.maskthr
-
-            mask_arg = ['bet', B0_full, brainmask_fsl_full, '-m', '-f',
-                        np.str(maskthr)]
-            completion = subprocess.run(mask_arg)
-            if completion.returncode != 0:
-                raise Exception('Brain extraction failed. Check your B0.nii file '
-                                'to verify correct extraction, then run with '
-                                '--resume flag to continue preprocessing from '
-                                'here.')
-            # Decompress fsl's gunzip format
-            if op.exists(brainmask_fsl_out):
-                with gzip.open(brainmask_fsl_out, 'r') as f_in, \
-                        open(brainmask_out,'wb') as f_out:
-                    shutil.copyfileobj(f_in, f_out)
-            # Remove .gz file
-            if op.exists(brainmask_fsl_out):
-                os.remove(brainmask_fsl_out)
-            if op.exists(brainmask_fsl_full + '.nii.gz'):
-                os.remove(brainmask_fsl_full + '.nii.gz')
-            filetable['mask'] = DWIFile(brainmask_out)
-        elif args.mask and op.exists(brainmask_out):
-            filetable['mask'] = DWIFile(brainmask_out)
-        elif args.user_mask:
-            brainmask_out = op.join(outpath, 'brain_mask.nii')
-            if outpath is args.dwi:
-                shutil.copy(args.user_mask, brainmask_out)
-            else:
-                print('[WARNING] Brain mask {} already exists in your '
-                    'output directory. Your output directory is the '
-                    'same as input if you ran without the "-o" flag. '
-                    'Proceeding without overwriting the existing '
-                    'file.'.format(brainmask_out))
-            filetable['mask'] = DWIFile(brainmask_out)
-        else:
-            filetable['mask'] = None
-    else:
-        filetable['mask'] = None
+    if (args.maskthr is None) or not (args.maskthr):
+        args.maskthr = 0.25
+    if args.mask:
+        brainmask_name = 'brain_mask.nii'
+        brainmask_out = op.join(outpath, brainmask_name)
+        mrpreproc.brainmask(input=working_path,
+                            output=brainmask_out,
+                            thresh=args.maskthr,
+                            nthreads=args.nthreads,
+                            force=args.force,
+                            verbose=args.verbose)
+        filetable['mask'] = DWIFile(brainmask_out)
+    
+    if args.user_mask:
+        brainmask_name = 'brain_mask.nii'
+        brainmask_out = op.join(outpath, 'brain_mask.nii')
+        shutil.copy(args.user_mask, brainmask_out)
+        filetable['mask'] = DWIFile(brainmask_out) 
 
     #----------------------------------------------------------------------
     # Smooth
