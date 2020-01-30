@@ -597,7 +597,7 @@ def main():
         os.remove(working_path)
         os.rename(mif_undistorted, working_path)
         # update command history
-        cmdtable['undistort'] = mrinfoutil.commandhistory(working_path)[-1]
+        cmdtable['undistort'] = mrinfoutil.commandhistory(working_path)
         cmdtable['HEAD'] = cmdtable['undistort']
         print(cmdtable)
 
