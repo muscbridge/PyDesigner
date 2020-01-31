@@ -7,7 +7,7 @@ Utilities for running various MRtrix3's DWI preprocessing tools
 import os
 import os.path as op
 import subprocess
-from designer.preprocessing import preparation, util
+from designer.preprocessing import preparation, util, smoothing
 
 def miftonii(input, output, strides='1,2,3,4', nthreads=None,
              force=True, verbose=False):
@@ -342,7 +342,6 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
     Parameters
     ----------
     input (str):      path to input .mif file
-
     output (str):     path to output .nii brainmask file
     thresh (flt):     BET threshold ranging from 0 to 1 (default: 0.25)
     nthreads (int):   number of threads in multi-threaded applications
@@ -421,3 +420,43 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
     os.remove(B0_all)
     os.remove(B0_mean)
     os.rename(op.join(outdir, mask + '_mask.nii'), output)
+
+def smooth(input, output, fwhm=1.25):
+    """
+    Performs Gaussian smoothing on input .mif image
+
+    Parameters
+    ----------
+    input (str):    path to input .mif file
+    output (str):   path to output .mif file
+    fwhm (float):   full-width half-maximum (FWHM) of smoothing to apply
+
+    Returns
+    -------
+    system call:    (none)
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if fwhm < 0:
+        raise Exception('FWHM cannot be less than zero.')
+    # Convert input .mif to .nii
+    outdir = op.dirname(output)
+    nii_path = op.join(outdir, 'dwism.nii')
+    miftonii(input=input, output=nii_path, strides='1,2,3,4')
+    # Perform smoothing
+    smoothing.smooth_image(nii_path,
+                           csfname=None,
+                           outname=nii_path,
+                           width=fwhm)
+    # Convert .nii to .mif
+    niitomif(input=nii_path, output=output, strides='1,2,3,4')
+    # Remove converted files
+    os.remove(nii_path)
+    os.remove(op.splitext(nii_path)[0] + '.bvec')
+    os.remove(op.splitext(nii_path)[0] + '.bval')
+    os.remove(op.splitext(nii_path)[0] + '.json')
