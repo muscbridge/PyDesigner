@@ -14,12 +14,13 @@ import gzip # handles fsl's .gz suffix
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import numpy as np # array, ndarray
-from designer.preprocessing import util, smoothing, rician, preparation, snrplot, mrinfoutil, mrpreproc
+from designer.preprocessing import util, preparation, snrplot, mrinfoutil, mrpreproc
 from designer.fitting import dwipy as dp
 from designer.system import systemtools as systools
 from designer.postprocessing import filters
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
+import csv
 
 # Locate mrtrix3 via which-ing dwidenoise
 dwidenoise_location = shutil.which('dwidenoise')
@@ -658,22 +659,24 @@ def main():
                                    verbose=False)
                 filetable['smoothed'] = DWIFile(nii_smoothing_full)
                 filetable['HEAD'] = filetable['smoothed']
-         # remove old working.mif and replace with new corrected .mif
-        os.remove(working_path)
-        os.rename(mif_smoothing, working_path)
-        # update command history
-        cmdtable['smooth'] = mrinfoutil.commandhistory(working_path)[-1]
-        cmdtable['HEAD'] = cmdtable['smooth']
+            # remove old working.mif and replace with new corrected .mif
+            os.remove(working_path)
+            os.rename(mif_smoothing, working_path)
+            # update command history
+            cmdtable['smooth'] = mrinfoutil.commandhistory(working_path)[-1]
+            cmdtable['HEAD'] = cmdtable['smooth']
 
     #----------------------------------------------------------------------
     # Rician Noise Correction
     #----------------------------------------------------------------------
     if args.rician:
         # add to HEAD name
-        rician_name = 'r' + filetable['HEAD'].getName() + '.nii'
-        rician_full = op.join(outpath, rician_name)
+        nii_rician_name = 'r' + filetable['HEAD'].getName() + '.nii'
+        nii_rician_full = op.join(outpath, nii_rician_name)
+        mif_rician_name = 'dwirc.mif'
+        mif_rician = op.join(outpath, mif_rician_name)
         # check to see if this already exists
-        if op.exists(rician_full):
+        if op.exists(nii_rician_full):
             # system call
             if not (args.resume or args.force):
                 raise Exception('Running rician correction would cause an '
@@ -683,13 +686,25 @@ def main():
                                 'change output destination.')
 
         if not args.resume:
-            rician.rician_img_correct(filetable['HEAD'].getFull(),
-                        filetable['noisemap'].getFull(),
-                        outpath=rician_full)
-
-        filetable['rician_corrected'] = DWIFile(rician_full)
-        filetable['HEAD'] = filetable['rician_corrected']
-
+            mrpreproc.riciancorrect(input=working_path,
+                                    output=mif_rician,
+                                    noise=filetable['noisemap'].getFull())
+            if args.out_all:
+                mrpreproc.miftonii(input=mif_rician,
+                                    output=nii_rician_full,
+                                    strides='1,2,3,4',
+                                    nthreads=args.nthreads,
+                                    force=args.force,
+                                    verbose=False)
+                filetable['rician_corrected'] = DWIFile(nii_rician_full)
+                filetable['HEAD'] = filetable['rician_corrected']
+            # remove old working.mif and replace with new corrected .mif
+            os.remove(working_path)
+            os.rename(mif_rician, working_path)
+            # update command history
+            cmdtable['rician'] = mrinfoutil.commandhistory(working_path)[-1]
+            cmdtable['HEAD'] = cmdtable['rician']
+                
     #----------------------------------------------------------------------
     # Make preprocessed file
     #----------------------------------------------------------------------
