@@ -734,6 +734,16 @@ def main():
                                     noisepath=filetable['noisemap'].getFull(),
                                     maskpath=None)
         snr.makeplot(path=qcpath, smooth=True, smoothfactor=3)
+    
+    #----------------------------------------------------------------------
+    # Write logs
+    #----------------------------------------------------------------------
+    csvwriter = csv.writer(open(op.join(outpath, 'cmd_log.csv'), 'w'))
+    for key, val in cmdtable.items():
+        csvwriter.writerow([key, val])
+    csvwriter = csv.writer(open(op.join(outpath, 'nii_log.csv'), 'w'))
+    for key, val in filetable.items():
+        csvwriter.writerow([key, val])
 
     #----------------------------------------------------------------------
     # Tensor Fitting
