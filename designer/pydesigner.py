@@ -154,6 +154,9 @@ def main():
     parser.add_argument('--fwhm', type=float,
                         help='The FWHM to use as a multiple of voxel size. '
                         'Default 1.25')
+    parser.add_argument('--kernel', metavar='n,n,n', default='3,3,3',
+                        help='Smoothing kernell formatted n,n,n.'
+                        'Default: 5,5,5.')
     parser.add_argument('--csfmask', default=None,
                         help='CSF mask for exclusion during smoothing. '
                         'Must be in the DWI space and resolution. ')
@@ -599,7 +602,6 @@ def main():
         # update command history
         cmdtable['undistort'] = mrinfoutil.commandhistory(working_path)
         cmdtable['HEAD'] = cmdtable['undistort']
-        print(cmdtable)
 
     #----------------------------------------------------------------------
     # Create Brain Mask
@@ -628,10 +630,12 @@ def main():
     #----------------------------------------------------------------------
     if args.smooth:
         # add to HEAD name
-        smoothing_name = 's' + filetable['HEAD'].getName() + '.nii'
-        smoothing_full = op.join(outpath, smoothing_name)
+        nii_smoothing_name = 's' + filetable['HEAD'].getName() + '.nii'
+        nii_smoothing_full = op.join(outpath, nii_smoothing_name)
+        mif_smoothing_name = 'dwism.mif'
+        mif_smoothing = op.join(outpath, mif_smoothing_name)
         # check to see if this already exists
-        if op.exists(smoothing_full):
+        if op.exists(nii_smoothing_full):
             if not (args.resume or args.force):
                 raise Exception('Running smoothing would cause an overwrite. '
                                 'In order to run please delete the files, use '
@@ -639,15 +643,27 @@ def main():
                                 'destination.')
         if not args.resume:
             if args.fwhm:
-                fwhm = args.fwhm
+                fwhm_i = args.fwhm
             else:
-                fwhm = 1.25
-            smoothing.smooth_image(filetable['HEAD'].getFull(),
-                                csfname=args.csfmask,
-                                outname=smoothing_full,
-                                width=fwhm)
-        filetable['smoothed'] = DWIFile(smoothing_full)
-        filetable['HEAD'] = filetable['smoothed']
+                fwhm_i = 1.25
+            mrpreproc.smooth(input=working_path,
+                             output=mif_smoothing,
+                             fwhm=fwhm_i)
+            if args.out_all:
+                mrpreproc.miftonii(input=mif_smoothing,
+                                   output=nii_smoothing_full,
+                                   strides='1,2,3,4',
+                                   nthreads=args.nthreads,
+                                   force=args.force,
+                                   verbose=False)
+                filetable['smoothed'] = DWIFile(nii_smoothing_full)
+                filetable['HEAD'] = filetable['smoothed']
+         # remove old working.mif and replace with new corrected .mif
+        os.remove(working_path)
+        os.rename(mif_smoothing, working_path)
+        # update command history
+        cmdtable['smooth'] = mrinfoutil.commandhistory(working_path)[-1]
+        cmdtable['HEAD'] = cmdtable['smooth']
 
     #----------------------------------------------------------------------
     # Rician Noise Correction
@@ -677,10 +693,13 @@ def main():
     #----------------------------------------------------------------------
     # Make preprocessed file
     #----------------------------------------------------------------------
-    preprocessed = op.join(outpath, 'preprocessed_dwi')
-    shutil.copyfile(filetable['HEAD'].getFull(), preprocessed + '.nii')
-    shutil.copyfile(filetable['dwi'].getBVAL(), preprocessed + '.bval')
-    shutil.copyfile(filetable['dwi'].getBVEC(), preprocessed + '.bvec')
+    preprocessed = op.join(outpath, 'preprocessed_dwi.nii')
+    mrpreproc.miftonii(input=working_path,
+                        output=preprocessed,
+                        strides='1,2,3,4',
+                        nthreads=args.nthreads,
+                        force=args.force,
+                        verbose=False)
     filetable['preprocessed'] = DWIFile(preprocessed)
     filetable['HEAD'] = filetable['preprocessed']
 
