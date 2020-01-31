@@ -64,6 +64,71 @@ def miftonii(input, output, strides='1,2,3,4', nthreads=None,
         raise Exception('Conversion from .mif to .nii failed; check '
                         'above for errors.')
 
+def niitomif(input, output, strides='1,2,3,4', nthreads=None,
+             force=True, verbose=False):
+    """
+   Converts input `.nii` images to output `.nif` images provided that
+   all BVEC, BVAL and JSON files are provided and named same as input .nii
+
+   Parameters
+   ----------
+   input (str):    path to input .mif file
+   output (str):   path to output .nii file
+   strides (str):  specify the strides of the output data in memory
+                   (default: '1,2,3,4')
+
+   Returns
+   -------
+   system call:    (none)
+   """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if op.splitext(output)[-1] != '.mif':
+        raise OSError('Output specified does not possess the .mif '
+                      'extension.')
+    if not op.exists(op.splitext(output)[0] + '.bvec'):
+        raise OSError('Unable to locate BVEC file" {}'.format(op.splitext(
+            output)[0] + '.bvec'))
+    if not op.exists(op.splitext(output)[0] + '.bval'):
+        raise OSError('Unable to locate BVAL file" {}'.format(op.splitext(
+            output)[0] + '.bval'))
+    if not op.exists(op.splitext(output)[0] + '.json'):
+        raise OSError('Unable to locate JSON file" {}'.format(op.splitext(
+            output)[0] + '.json'))
+    if not isinstance(strides, str):
+        raise Exception('Please specify strides as a string.')
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    arg = ['mrconvert']
+    if force:
+        arg.append('-force')
+    if not verbose:
+        arg.append('-quiet')
+    if not (nthreads is None):
+        arg.extend(['-nthreads', nthreads])
+    arg.extend(['-fslgrad',
+                op.splitext(output)[0] + '.bvec',
+                op.splitext(output)[0] + '.bval'])
+    arg.extend(['-json_import', op.splitext(output)[0] + '.json'])
+    arg.extend(['-strides', strides])
+    arg.extend([input, output])
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('Conversion from .nii to .mif failed; check '
+                        'above for errors.')
+
 def denoise(input, output, noisemap=True, extent='5,5,5', nthreads=None,
             force=True, verbose=False):
     """
