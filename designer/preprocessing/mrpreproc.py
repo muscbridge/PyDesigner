@@ -7,7 +7,7 @@ Utilities for running various MRtrix3's DWI preprocessing tools
 import os
 import os.path as op
 import subprocess
-from designer.preprocessing import preparation, util, smoothing
+from designer.preprocessing import preparation, util, smoothing, rician
 
 def miftonii(input, output, strides='1,2,3,4', nthreads=None,
              force=True, verbose=False):
@@ -453,6 +453,52 @@ def smooth(input, output, fwhm=1.25):
                            csfname=None,
                            outname=nii_path,
                            width=fwhm)
+    # Convert .nii to .mif
+    niitomif(input=nii_path, output=output, strides='1,2,3,4')
+    # Remove converted files
+    os.remove(nii_path)
+    os.remove(op.splitext(nii_path)[0] + '.bvec')
+    os.remove(op.splitext(nii_path)[0] + '.bval')
+    os.remove(op.splitext(nii_path)[0] + '.json')
+
+def riciancorrect(input, output, noise=None):
+    """
+    Performs Rician correction on input .mif
+
+    Parameters
+    ----------
+    input (str):    path to input .mif file
+    output (str):   path to output .mif file
+    noise (float):  path to noise map from dwidenoise in .nii format
+
+    Returns
+    -------
+    system call:    (none)
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if noise is not None:
+        if not op.exists(noise):
+            raise OSError('Input noisemap {} does not exist.'.format(
+                noise))
+        if op.splitext(noise)[-1] != '.nii':
+            raise OSError('Noisemap needs to be in NifTi format.')
+    else:
+        raise Exception('Rician correction cannot be performed without a '
+                        'noisemap.')
+    # Convert input .mif to .nii
+    outdir = op.dirname(output)
+    nii_path = op.join(outdir, 'dwirc.nii')
+    miftonii(input=input, output=nii_path, strides='1,2,3,4')
+    # Perform Rician correction
+    rician.rician_img_correct(nii_path,
+                              noise,
+                              outpath=nii_path)
     # Convert .nii to .mif
     niitomif(input=nii_path, output=output, strides='1,2,3,4')
     # Remove converted files
