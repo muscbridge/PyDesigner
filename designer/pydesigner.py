@@ -127,7 +127,7 @@ def main():
                         help='Standard preprocessing, bypasses most other '
                         'options. See Appendix:Standard pipeline steps '
                         'for more information. ')
-    parser.add_argument('--out_all', action='store_true',
+    parser.add_argument('--allnii', action='store_true',
                         default=False,
                         help='Output NifTi formatted files at the '
                         'end of each preprocessing step.')
@@ -498,15 +498,15 @@ def main():
     if args.denoise:
         # hardcoding this to be the initial file per dwidenoise
         # recommmendation
-        nii_denoised_name = 'd' + filetable['dwi'].getName() + '.nii'
-        nii_denoised = op.join(outpath, nii_denoised_name)
+        # file names
         mif_denoised_name = 'dwidn.mif'
         mif_denoised = op.join(outpath, mif_denoised_name)
         # output the noise map even without user permission, space is cheap
         noisemap_name = 'noisemap.nii'
         noisemap = op.join(outpath, noisemap_name)
         # check to see if this already exists
-        if not (args.resume and op.exists(denoised) and op.exists(noisemap)):
+        if not (args.resume and op.exists(mif_denoised) and \
+            op.exists(noisemap)):
             # run denoise function
             mrpreproc.denoise(input=working_path,
                               output=mif_denoised,
@@ -515,7 +515,9 @@ def main():
                               nthreads=args.nthreads,
                               force=False,
                               verbose=args.verbose)
-        if args.out_all:
+        if args.allnii:
+            nii_denoised_name = 'd' + filetable['dwi'].getName() + '.nii'
+            nii_denoised = op.join(outpath, nii_denoised_name)
             mrpreproc.miftonii(input=mif_denoised,
                                output=nii_denoised,
                                strides='1,2,3,4',
@@ -537,20 +539,20 @@ def main():
     # Run Gibbs Unringing
     #----------------------------------------------------------------------
     if args.degibbs:
-        # add to HEAD name
-        nii_degibbs_name = 'g' + filetable['HEAD'].getName() + '.nii'
-        nii_degibbs = op.join(outpath, nii_degibbs_name)
+        # file names
         mif_degibbs_name = 'dwigc.mif'
         mif_degibbs = op.join(outpath, mif_degibbs_name)
         # check to see if this already exists
-        if not (args.resume and op.exists(degibbs)):
+        if not (args.resume and op.exists(mif_degibbs)):
             # run degibbs function
             mrpreproc.degibbs(input=working_path,
                               output=mif_degibbs,
                               nthreads=args.nthreads,
                               force=False,
                               verbose=args.verbose)
-        if args.out_all:
+        if args.allnii:
+            nii_degibbs_name = 'g' + filetable['HEAD'].getName() + '.nii'
+            nii_degibbs = op.join(outpath, nii_degibbs_name)
             mrpreproc.miftonii(input=mif_degibbs,
                                output=nii_degibbs,
                                strides='1,2,3,4',
@@ -571,14 +573,11 @@ def main():
     # Undistort
     #----------------------------------------------------------------------
     if args.undistort:
-        # Add to HEAD name
-        nii_undistorted_name = 'u' + filetable['HEAD'].getName() + '.nii'
-        nii_undistorted = op.join(outpath, nii_undistorted_name)
+        # file names
         mif_undistorted_name = 'dwiec.mif'
         mif_undistorted = op.join(outpath, mif_undistorted_name)
-
         # check to see if this already exists
-        if not (args.resume and op.exists(undistorted_full)):
+        if not (args.resume and op.exists(mif_undistorted)):
             # run undistort function
             mrpreproc.undistort(input=working_path,
                                 output=mif_undistorted,
@@ -587,7 +586,9 @@ def main():
                                 nthreads=args.nthreads,
                                 force=args.force,
                                 verbose=args.verbose)
-            if args.out_all:
+            if args.allnii:
+                nii_undistorted_name = 'u' + filetable['HEAD'].getName() + '.nii'
+                nii_undistorted = op.join(outpath, nii_undistorted_name)
                 mrpreproc.miftonii(input=mif_undistorted,
                                 output=nii_undistorted,
                                 strides='1,2,3,4',
@@ -630,13 +631,11 @@ def main():
     # Smooth
     #----------------------------------------------------------------------
     if args.smooth:
-        # add to HEAD name
-        nii_smoothing_name = 's' + filetable['HEAD'].getName() + '.nii'
-        nii_smoothing_full = op.join(outpath, nii_smoothing_name)
+        # file names
         mif_smoothing_name = 'dwism.mif'
         mif_smoothing = op.join(outpath, mif_smoothing_name)
         # check to see if this already exists
-        if op.exists(nii_smoothing_full):
+        if op.exists(mif_smoothing_name):
             if not (args.resume or args.force):
                 raise Exception('Running smoothing would cause an overwrite. '
                                 'In order to run please delete the files, use '
@@ -650,7 +649,9 @@ def main():
             mrpreproc.smooth(input=working_path,
                              output=mif_smoothing,
                              fwhm=fwhm_i)
-            if args.out_all:
+            if args.allnii:
+                nii_smoothing_name = 's' + filetable['HEAD'].getName() + '.nii'
+                nii_smoothing_full = op.join(outpath, nii_smoothing_name)
                 mrpreproc.miftonii(input=mif_smoothing,
                                    output=nii_smoothing_full,
                                    strides='1,2,3,4',
@@ -670,13 +671,11 @@ def main():
     # Rician Noise Correction
     #----------------------------------------------------------------------
     if args.rician:
-        # add to HEAD name
-        nii_rician_name = 'r' + filetable['HEAD'].getName() + '.nii'
-        nii_rician_full = op.join(outpath, nii_rician_name)
+        # file names
         mif_rician_name = 'dwirc.mif'
         mif_rician = op.join(outpath, mif_rician_name)
         # check to see if this already exists
-        if op.exists(nii_rician_full):
+        if op.exists(mif_rician):
             # system call
             if not (args.resume or args.force):
                 raise Exception('Running rician correction would cause an '
@@ -684,12 +683,13 @@ def main():
                                 'In order to run this please delete the '
                                 'files, use --force, use --resume, or '
                                 'change output destination.')
-
         if not args.resume:
             mrpreproc.riciancorrect(input=working_path,
                                     output=mif_rician,
                                     noise=filetable['noisemap'].getFull())
-            if args.out_all:
+            if args.allnii:
+                nii_rician_name = 'r' + filetable['HEAD'].getName() + '.nii'
+                nii_rician_full = op.join(outpath, nii_rician_name)
                 mrpreproc.miftonii(input=mif_rician,
                                     output=nii_rician_full,
                                     strides='1,2,3,4',
@@ -727,12 +727,12 @@ def main():
         files.append(filetable['HEAD'].getFull())
         if not filetable['mask'] is None:
             snr = snrplot.makesnr(dwilist=files,
-                                    noisepath=noisemap,
-                                    maskpath=filetable['mask'].getFull())
+                                  noisepath=noisemap,
+                                  maskpath=filetable['mask'].getFull())
         else:
             snr = snrplot.makesnr(dwilist=files,
-                                    noisepath=filetable['noisemap'].getFull(),
-                                    maskpath=None)
+                                  noisepath=filetable['noisemap'].getFull(),
+                                  maskpath=None)
         snr.makeplot(path=qcpath, smooth=True, smoothfactor=3)
     
     #----------------------------------------------------------------------
