@@ -29,6 +29,8 @@ def rician_img_correct(dwiname, noisemapname, outpath=None):
     rician_correct(dwi, noise) is wrapped by this function
     """
 
+    print('Running Rician correction...')
+
     # load files
     dwiimg = nib.load(dwiname)
     noiseimg = nib.load(noisemapname)

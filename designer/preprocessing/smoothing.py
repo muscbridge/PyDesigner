@@ -30,6 +30,8 @@ def smooth_image(dwiname, csfname=None, outname='dwism.nii', width=1.2):
     smooth(dwi, csfmask=None, width=1.25) is wrapped by this function
     """
 
+    print('Running smoothing at FWHM = {}...'.format(width))
+
     dwiimg = nib.load(dwiname)
 
     if csfname is not None:
