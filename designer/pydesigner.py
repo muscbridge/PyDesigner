@@ -127,10 +127,6 @@ def main():
                         help='Standard preprocessing, bypasses most other '
                         'options. See Appendix:Standard pipeline steps '
                         'for more information. ')
-    parser.add_argument('--allnii', action='store_true',
-                        default=False,
-                        help='Output NifTi formatted files at the '
-                        'end of each preprocessing step.')
     parser.add_argument('--denoise', action='store_true', default=False,
                         help='Run thermal denoising with dwidenoise.')
     parser.add_argument('--extent', metavar='n,n,n', default='5,5,5',
@@ -152,7 +148,7 @@ def main():
                         help='Perform smoothing on the DWI data. '
                         'Recommended to also supply --csfmask in order to '
                         'avoid contaminating the voxels which border CSF.')
-    parser.add_argument('--fwhm', type=float,
+    parser.add_argument('--fwhm', type=float, default=1.25,
                         help='The FWHM to use as a multiple of voxel size. '
                         'Default 1.25')
     parser.add_argument('--kernel', metavar='n,n,n', default='3,3,3',
@@ -182,6 +178,7 @@ def main():
                         'to strip skull and improve efficiency. Optionally, '
                         'use --maskthr to specify a threshold manually.')
     parser.add_argument('--maskthr', metavar='<FA threshold>',
+                        default=0.25,
                         help='FSL bet threshold used for brain masking. '
                         'Default: 0.25')
     parser.add_argument('--user_mask', metavar='<brain mask path>',
@@ -270,12 +267,13 @@ def main():
 
     # Make an initial conversion to nifti
     init_nii = op.join(outpath, 'dwi_raw.nii')
-    mrpreproc.miftonii(input=working_path,
-                       output=init_nii,
-                       strides='1,2,3,4',
-                       nthreads=args.nthreads,
-                       force=args.force,
-                       verbose=args.verbose)
+    if not (args.resume and op.exists(init_nii)):
+        mrpreproc.miftonii(input=working_path,
+                        output=init_nii,
+                        strides='1,2,3,4',
+                        nthreads=args.nthreads,
+                        force=args.force,
+                        verbose=args.verbose)
 
     #---------------------------------------------------------------------
     # Validate Arguments
@@ -401,7 +399,8 @@ def main():
         raise Exception('Input dwi does not have .bval/.bvec pair')
 
     # Begin composing command history
-    cmdtable = {'input': mrinfoutil.commandhistory(working_path)}
+    cmdtable = {'HEAD': 'none'}
+    cmdtable['input'] = mrinfoutil.commandhistory(working_path)
 
     # Check to make sure no partial fourier if --degibbs given
     if args.degibbs and args.adv:
@@ -429,6 +428,7 @@ def main():
     eddyqcpath = op.join(qcpath, 'eddy')
     fitqcpath = op.join(qcpath, 'fitting')
     metricpath = op.join(outpath, 'metrics')
+    intermediatepath = op.join(outpath, 'intermediate_nifti')
     if not args.nofit:
         if op.exists(metricpath):
             if args.force:
@@ -474,6 +474,9 @@ def main():
             os.makedirs(eddyqcpath, exist_ok=True)
         if not args.nofit:
             os.makedirs(fitqcpath, exist_ok=True)
+            
+    if not op.exists(intermediatepath):
+        os.makedirs(intermediatepath, exist_ok=True)
 
     # TODO: add non-json RPE support, additional RPE type support
 
@@ -492,92 +495,98 @@ def main():
     if args.nthreads and args.verbose:
         print('Using ' + str(args.nthreads) + ' threads.')
 
+    # Create processing step variable to count preprocessing stage
+    step_count = 0
+
     #----------------------------------------------------------------------
     # Run Denoising
     #----------------------------------------------------------------------
     if args.denoise:
+        step_count += 1
+        denoised_name = 'dwi_denoised'
         # hardcoding this to be the initial file per dwidenoise
         # recommmendation
         # file names
-        mif_denoised_name = 'dwidn.mif'
-        mif_denoised = op.join(outpath, mif_denoised_name)
+        denoised_name_full = str(step_count)+ '_' + denoised_name 
+        nii_denoised = op.join(intermediatepath, denoised_name_full + '.nii')
+        mif_denoised = op.join(outpath, denoised_name_full + '.mif')
         # output the noise map even without user permission, space is cheap
         noisemap_name = 'noisemap.nii'
-        noisemap = op.join(outpath, noisemap_name)
+        nii_noisemap = op.join(outpath, noisemap_name)
         # check to see if this already exists
-        if not (args.resume and op.exists(mif_denoised) and \
-            op.exists(noisemap)):
+        if not (args.resume and op.exists(nii_denoised) and \
+            op.exists(nii_noisemap)):
             # run denoise function
             mrpreproc.denoise(input=working_path,
                               output=mif_denoised,
                               noisemap=True,
                               extent=args.extent,
                               nthreads=args.nthreads,
-                              force=False,
+                              force=args.force,
                               verbose=args.verbose)
-        if args.allnii:
-            nii_denoised_name = 'd' + filetable['dwi'].getName() + '.nii'
-            nii_denoised = op.join(outpath, nii_denoised_name)
             mrpreproc.miftonii(input=mif_denoised,
                                output=nii_denoised,
                                strides='1,2,3,4',
                                nthreads=args.nthreads,
                                force=args.force,
                                verbose=False)
+            # remove old working.mif and replace with new corrected .mif
+            os.remove(working_path)
+            os.rename(mif_denoised, working_path)
             # update nifti file tracking
             filetable['denoised'] = DWIFile(nii_denoised)
             filetable['HEAD'] = filetable['denoised']
-        filetable['noisemap'] = DWIFile(noisemap)
-        # remove old working.mif and replace with new corrected .mif
-        os.remove(working_path)
-        os.rename(mif_denoised, working_path)
-        # update command history
-        cmdtable['denoise'] = mrinfoutil.commandhistory(working_path)[-1]
-        cmdtable['HEAD'] = cmdtable['denoise']
+            filetable['noisemap'] = DWIFile(nii_noisemap)
+            # update command history
+            cmdtable['denoise'] = mrinfoutil.commandhistory(working_path)[-1]
+            cmdtable['HEAD'] = cmdtable['denoise']
 
     #----------------------------------------------------------------------
     # Run Gibbs Unringing
     #----------------------------------------------------------------------
     if args.degibbs:
+        step_count += 1
+        degibbs_name = 'dwi_degibbs'
         # file names
-        mif_degibbs_name = 'dwigc.mif'
-        mif_degibbs = op.join(outpath, mif_degibbs_name)
+        degibbs_name_full = str(step_count)+ '_' + degibbs_name
+        nii_degibbs = op.join(intermediatepath, degibbs_name_full + '.nii')
+        mif_degibbs = op.join(outpath, degibbs_name_full + '.mif')
         # check to see if this already exists
-        if not (args.resume and op.exists(mif_degibbs)):
+        if not (args.resume and op.exists(nii_degibbs)):
             # run degibbs function
             mrpreproc.degibbs(input=working_path,
                               output=mif_degibbs,
                               nthreads=args.nthreads,
-                              force=False,
+                              force=args.force,
                               verbose=args.verbose)
-        if args.allnii:
-            nii_degibbs_name = 'g' + filetable['HEAD'].getName() + '.nii'
-            nii_degibbs = op.join(outpath, nii_degibbs_name)
             mrpreproc.miftonii(input=mif_degibbs,
                                output=nii_degibbs,
                                strides='1,2,3,4',
                                nthreads=args.nthreads,
                                force=args.force,
                                verbose=False)
+            # remove old working.mif and replace with new corrected .mif
+            os.remove(working_path)
+            os.rename(mif_degibbs, working_path)
             # update nifti file tracking
             filetable['unrung'] = DWIFile(nii_degibbs)
             filetable['HEAD'] = filetable['unrung']
-        # remove old working.mif and replace with new corrected .mif
-        os.remove(working_path)
-        os.rename(mif_degibbs, working_path)
-        # update command history
-        cmdtable['degibbs'] = mrinfoutil.commandhistory(working_path)[-1]
-        cmdtable['HEAD'] = cmdtable['degibbs']
+            # update command history
+            cmdtable['degibbs'] = mrinfoutil.commandhistory(working_path)[-1]
+            cmdtable['HEAD'] = cmdtable['degibbs']
 
     #----------------------------------------------------------------------
     # Undistort
     #----------------------------------------------------------------------
     if args.undistort:
+        step_count += 1
+        undistorted_name = 'dwi_undistorted'
         # file names
-        mif_undistorted_name = 'dwiec.mif'
-        mif_undistorted = op.join(outpath, mif_undistorted_name)
+        undistorted_name_full = str(step_count)+ '_' + undistorted_name_full
+        nii_undistorted = op.join(intermediatepath, undistorted_name_full + '.nii')
+        mif_undistorted = op.join(outpath, undistorted_name_full + '.mif')
         # check to see if this already exists
-        if not (args.resume and op.exists(mif_undistorted)):
+        if not (args.resume and op.exists(nii_undistorted)):
             # run undistort function
             mrpreproc.undistort(input=working_path,
                                 output=mif_undistorted,
@@ -586,30 +595,25 @@ def main():
                                 nthreads=args.nthreads,
                                 force=args.force,
                                 verbose=args.verbose)
-            if args.allnii:
-                nii_undistorted_name = 'u' + filetable['HEAD'].getName() + '.nii'
-                nii_undistorted = op.join(outpath, nii_undistorted_name)
-                mrpreproc.miftonii(input=mif_undistorted,
-                                output=nii_undistorted,
-                                strides='1,2,3,4',
-                                nthreads=args.nthreads,
-                                force=args.force,
-                                verbose=False)
-                # update nifti file tracking
-                filetable['undistorted'] = DWIFile(nii_undistorted)
-                filetable['HEAD'] = filetable['undistorted']
-        # remove old working.mif and replace with new corrected .mif
-        os.remove(working_path)
-        os.rename(mif_undistorted, working_path)
-        # update command history
-        cmdtable['undistort'] = mrinfoutil.commandhistory(working_path)
-        cmdtable['HEAD'] = cmdtable['undistort']
+            mrpreproc.miftonii(input=mif_undistorted,
+                            output=nii_undistorted,
+                            strides='1,2,3,4',
+                            nthreads=args.nthreads,
+                            force=args.force,
+                            verbose=False)
+            # remove old working.mif and replace with new corrected .mif
+            os.remove(working_path)
+            os.rename(mif_undistorted, working_path)
+            # update nifti file tracking
+            filetable['undistorted'] = DWIFile(nii_undistorted)
+            filetable['HEAD'] = filetable['undistorted']
+            # update command history
+            cmdtable['undistort'] = mrinfoutil.commandhistory(working_path)
+            cmdtable['HEAD'] = cmdtable['undistort']
 
     #----------------------------------------------------------------------
     # Create Brain Mask
     #----------------------------------------------------------------------
-    if (args.maskthr is None) or not (args.maskthr):
-        args.maskthr = 0.25
     if args.mask:
         brainmask_name = 'brain_mask.nii'
         brainmask_out = op.join(outpath, brainmask_name)
@@ -631,38 +635,29 @@ def main():
     # Smooth
     #----------------------------------------------------------------------
     if args.smooth:
+        step_count += 1
+        smoothing_name = 'dwi_smoothed'
         # file names
-        mif_smoothing_name = 'dwism.mif'
-        mif_smoothing = op.join(outpath, mif_smoothing_name)
+        smoothing_name_full = str(step_count)+ '_' + smoothing_name
+        nii_smoothing = op.join(intermediatepath, smoothing_name_full + '.nii')
+        mif_smoothing = op.join(outpath, smoothing_name_full + '.mif')
         # check to see if this already exists
-        if op.exists(mif_smoothing_name):
-            if not (args.resume or args.force):
-                raise Exception('Running smoothing would cause an overwrite. '
-                                'In order to run please delete the files, use '
-                                '--force, use --resume, or change output '
-                                'destination.')
-        if not args.resume:
-            if args.fwhm:
-                fwhm_i = args.fwhm
-            else:
-                fwhm_i = 1.25
+        if not (args.resume and op.exists(nii_smoothing)):
             mrpreproc.smooth(input=working_path,
                              output=mif_smoothing,
-                             fwhm=fwhm_i)
-            if args.allnii:
-                nii_smoothing_name = 's' + filetable['HEAD'].getName() + '.nii'
-                nii_smoothing_full = op.join(outpath, nii_smoothing_name)
-                mrpreproc.miftonii(input=mif_smoothing,
-                                   output=nii_smoothing_full,
-                                   strides='1,2,3,4',
-                                   nthreads=args.nthreads,
-                                   force=args.force,
-                                   verbose=False)
-                filetable['smoothed'] = DWIFile(nii_smoothing_full)
-                filetable['HEAD'] = filetable['smoothed']
+                             fwhm=args.fwhm)
+            mrpreproc.miftonii(input=mif_smoothing,
+                                output=nii_smoothing,
+                                strides='1,2,3,4',
+                                nthreads=args.nthreads,
+                                force=args.force,
+                                verbose=False)
             # remove old working.mif and replace with new corrected .mif
             os.remove(working_path)
             os.rename(mif_smoothing, working_path)
+            # update nifti file tracking
+            filetable['smoothed'] = DWIFile(nii_smoothing)
+            filetable['HEAD'] = filetable['smoothed']
             # update command history
             cmdtable['smooth'] = mrinfoutil.commandhistory(working_path)[-1]
             cmdtable['HEAD'] = cmdtable['smooth']
@@ -671,36 +666,31 @@ def main():
     # Rician Noise Correction
     #----------------------------------------------------------------------
     if args.rician:
+        step_count += 1
+        rician_name = 'dwi_rician'
         # file names
-        mif_rician_name = 'dwirc.mif'
-        mif_rician = op.join(outpath, mif_rician_name)
+        rician_name = str(step_count)+ '_' + rician_name
+        nii_rician = op.join(intermediatepath, rician_name + '.nii')
+        mif_rician = op.join(outpath, rician_name + '.mif')
         # check to see if this already exists
-        if op.exists(mif_rician):
-            # system call
-            if not (args.resume or args.force):
-                raise Exception('Running rician correction would cause an '
-                                'overwrite. '
-                                'In order to run this please delete the '
-                                'files, use --force, use --resume, or '
-                                'change output destination.')
-        if not args.resume:
+        if not (args.resume and op.exists(nii_rician)):
             mrpreproc.riciancorrect(input=working_path,
                                     output=mif_rician,
                                     noise=filetable['noisemap'].getFull())
-            if args.allnii:
-                nii_rician_name = 'r' + filetable['HEAD'].getName() + '.nii'
-                nii_rician_full = op.join(outpath, nii_rician_name)
-                mrpreproc.miftonii(input=mif_rician,
-                                    output=nii_rician_full,
-                                    strides='1,2,3,4',
-                                    nthreads=args.nthreads,
-                                    force=args.force,
-                                    verbose=False)
-                filetable['rician_corrected'] = DWIFile(nii_rician_full)
-                filetable['HEAD'] = filetable['rician_corrected']
+            nii_rician_name = 'r' + filetable['HEAD'].getName() + '.nii'
+            nii_rician_full = op.join(outpath, nii_rician_name)
+            mrpreproc.miftonii(input=mif_rician,
+                                output=nii_rician,
+                                strides='1,2,3,4',
+                                nthreads=args.nthreads,
+                                force=args.force,
+                                verbose=False)
             # remove old working.mif and replace with new corrected .mif
             os.remove(working_path)
             os.rename(mif_rician, working_path)
+            # update nifti file tracking
+            filetable['rician_corrected'] = DWIFile(nii_rician)
+            filetable['HEAD'] = filetable['rician_corrected']
             # update command history
             cmdtable['rician'] = mrinfoutil.commandhistory(working_path)[-1]
             cmdtable['HEAD'] = cmdtable['rician']
@@ -708,15 +698,16 @@ def main():
     #----------------------------------------------------------------------
     # Make preprocessed file
     #----------------------------------------------------------------------
-    preprocessed = op.join(outpath, 'preprocessed_dwi.nii')
-    mrpreproc.miftonii(input=working_path,
-                        output=preprocessed,
-                        strides='1,2,3,4',
-                        nthreads=args.nthreads,
-                        force=args.force,
-                        verbose=False)
-    filetable['preprocessed'] = DWIFile(preprocessed)
-    filetable['HEAD'] = filetable['preprocessed']
+    preprocessed = op.join(outpath, 'dwi_preprocessed.nii')
+    if not (args.resume and op.exists(preprocessed)):
+        mrpreproc.miftonii(input=working_path,
+                            output=preprocessed,
+                            strides='1,2,3,4',
+                            nthreads=args.nthreads,
+                            force=args.force,
+                            verbose=False)
+        filetable['preprocessed'] = DWIFile(preprocessed)
+        filetable['HEAD'] = filetable['preprocessed']
 
     #----------------------------------------------------------------------
     # Compute SNR
@@ -727,7 +718,7 @@ def main():
         files.append(filetable['HEAD'].getFull())
         if not filetable['mask'] is None:
             snr = snrplot.makesnr(dwilist=files,
-                                  noisepath=noisemap,
+                                  noisepath=nii_noisemap,
                                   maskpath=filetable['mask'].getFull())
         else:
             snr = snrplot.makesnr(dwilist=files,
