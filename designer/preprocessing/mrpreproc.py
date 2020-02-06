@@ -72,8 +72,8 @@ def niitomif(input, output, strides='1,2,3,4', nthreads=None,
 
    Parameters
    ----------
-   input (str):    path to input .mif file
-   output (str):   path to output .nii file
+   input (str):    path to input .nii file
+   output (str):   path to output .mif file
    strides (str):  specify the strides of the output data in memory
                    (default: '1,2,3,4')
 
@@ -91,13 +91,13 @@ def niitomif(input, output, strides='1,2,3,4', nthreads=None,
     if op.splitext(output)[-1] != '.mif':
         raise OSError('Output specified does not possess the .mif '
                       'extension.')
-    if not op.exists(op.splitext(output)[0] + '.bvec'):
+    if not op.exists(op.splitext(input)[0] + '.bvec'):
         raise OSError('Unable to locate BVEC file" {}'.format(op.splitext(
             output)[0] + '.bvec'))
-    if not op.exists(op.splitext(output)[0] + '.bval'):
+    if not op.exists(op.splitext(input)[0] + '.bval'):
         raise OSError('Unable to locate BVAL file" {}'.format(op.splitext(
             output)[0] + '.bval'))
-    if not op.exists(op.splitext(output)[0] + '.json'):
+    if not op.exists(op.splitext(input)[0] + '.json'):
         raise OSError('Unable to locate JSON file" {}'.format(op.splitext(
             output)[0] + '.json'))
     if not isinstance(strides, str):
@@ -119,9 +119,9 @@ def niitomif(input, output, strides='1,2,3,4', nthreads=None,
     if not (nthreads is None):
         arg.extend(['-nthreads', nthreads])
     arg.extend(['-fslgrad',
-                op.splitext(output)[0] + '.bvec',
-                op.splitext(output)[0] + '.bval'])
-    arg.extend(['-json_import', op.splitext(output)[0] + '.json'])
+                op.splitext(input)[0] + '.bvec',
+                op.splitext(input)[0] + '.bval'])
+    arg.extend(['-json_import', op.splitext(input)[0] + '.json'])
     arg.extend(['-strides', strides])
     arg.extend([input, output])
     completion = subprocess.run(arg)
