@@ -449,7 +449,8 @@ class DWIParser:
             # The following loop converts input file into .mif
             for (idx, i) in enumerate(self.DWIlist):
                 if 'nifti' in self.InputType and \
-                        not op.exists(self.JSONlist[idx]):
+                        (not (op.exists(self.BVEClist[idx])) or \
+                                (op.exists(self.BVALlist[idx]))):
                     try:
                         self.json2fslgrad(i)
                     except:
@@ -573,29 +574,27 @@ class DWIParser:
             Path to NifTi file
         """
         image = DWIFile(path)
-        if not image.hasJSON():
-            raise Exception('It is not advisable to run multi-series '
-                            'processing without `.json` files. Please '
-                            'ensure your NifTi files come with .json '
-                            'files.')
-        args_info = ['mrinfo', path]
-        cmd = ' '.join(str(e) for e in args_info)
-        # Reads the "Dimension line of `mrinfo` and extracts the size
-        # of NifTi
-        pipe = subprocess.Popen(cmd, shell=True,
-                                stdout=subprocess.PIPE)
-        strlist = pipe.stdout.readlines()[3].split()
-        dims = [int(i) for i in strlist if i.isdigit()]
-        nDWI = dims[-1]
-        # Check whether for inexistence of gradient table in JSON and
-        # some mention of B0 in EPI
-        if ('b0' in image.json['SeriesDescription'] or \
-                'B0' in image.json['SeriesDescription'] or \
-                'b0' in image.json['ProtocolName'] or \
-                'B0' in image.json['ProtocolName']):
-            bval = np.zeros(nDWI, dtype=int)
-            bvec = np.zeros((3, nDWI), dtype=int)
-            fPath = op.splitext(path)[0]
-            np.savetxt((fPath + '.bvec'), bvec, delimiter=' ', fmt='%d')
-            np.savetxt((fPath + '.bval'), np.c_[bval], delimiter=' ',
-                       fmt='%d')
+        if (image.getBVAL() is None) or (image.getBVEC() is None):
+            if not image.hasJSON():
+                raise Exception('It is not advisable to run multi-series '
+                                'processing without `.json` files. Please '
+                                'ensure your NifTi files come with .json '
+                                'files.')
+            # Get number of 3D volumes in image
+            ndim = mrinfoutil.ndim(image.getFull())
+            if ndim == 4:
+                nDWI = mrinfoutil.size(image.getFull())[-1]
+            else:
+                nDWI = 1
+            # Check whether for inexistence of gradient table in JSON and
+            # some mention of B0 in EPI
+            keywords = ['b0', 'topup', 'ep']
+            searchtargets = [image.json['SeriesDescription'],
+                             image.json['ProtocolName']]
+            if any([key in keywords for word in searchtargets]):
+                bval = np.zeros(nDWI, dtype=int)
+                bvec = np.zeros((3, nDWI), dtype=int)
+                fPath = op.splitext(path)[0]
+                np.savetxt((fPath + '.bvec'), bvec, delimiter=' ', fmt='%d')
+                np.savetxt((fPath + '.bval'), np.c_[bval], delimiter=' ',
+                           fmt='%d')
