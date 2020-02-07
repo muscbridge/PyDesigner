@@ -137,6 +137,13 @@ def main():
     parser.add_argument('--undistort', action='store_true', default=False,
                         help='Run FSL eddy to perform image undistortion. '
                         'NOTE: needs a --topup to run.')
+    parser.add_argument('--topup_idx', default=None, type=str,
+                        help='Use only the indices specified from '
+                        'reverse phase encoding image to compute '
+                        'the distortion field for TOPUP. This '
+                        'significantly boosts TOPUP speed if your '
+                        'reverse PE contains more than one 3D '
+                        'volumes.')
     parser.add_argument('--smooth', action='store_true', default=False,
                         help='Perform smoothing on the DWI data. '
                         'Recommended to also supply --csfmask in order to '
@@ -144,9 +151,6 @@ def main():
     parser.add_argument('--fwhm', type=float, default=1.25,
                         help='The FWHM to use as a multiple of voxel size. '
                         'Default 1.25')
-    parser.add_argument('--kernel', metavar='n,n,n', default='3,3,3',
-                        help='Smoothing kernell formatted n,n,n.'
-                        'Default: 5,5,5.')
     parser.add_argument('--csfmask', default=None,
                         help='CSF mask for exclusion during smoothing. '
                         'Must be in the DWI space and resolution. ')
@@ -208,11 +212,11 @@ def main():
                         'if you use this option.')
     parser.add_argument('--adv', action='store_true',
                         help='Disables safety checks for advanced users who '
-                            'want to force a preprocessing step. WARNING: '
-                            'THIS FLAG IS FOR ADVANCED USERS ONLY WHO FULLY '
-                            'UNDERSTAND THE MRI SYSTEM AND ITS OUTPUTS. '
-                            'RUNNING WITH THIS FLAG COULD POTENTIALLY '
-                            'RESULT IN IMPRECISE AND INACCURATE RESULTS.')
+                        'want to force a preprocessing step. WARNING: '
+                        'THIS FLAG IS FOR ADVANCED USERS ONLY WHO FULLY '
+                        'UNDERSTAND THE MRI SYSTEM AND ITS OUTPUTS. '
+                        'RUNNING WITH THIS FLAG COULD POTENTIALLY '
+                        'RESULT IN IMPRECISE AND INACCURATE RESULTS.')
 
     # Use argument specification to actually get args
     args = parser.parse_args()
@@ -235,6 +239,14 @@ def main():
             force=args.force,
             resume=args.resume)
     working_path = op.join(outpath, 'working' + fType)
+
+    if not args.topup_idx is None:
+        mrpreproc.topupboost(input=working_path,
+                             output=working_path,
+                             idx=args.topup_idx,
+                             nthreads=args.nthreads,
+                             force=True,
+                             verbose=args.verbose)
 
     # Make an initial conversion to nifti
     init_nii = op.join(outpath, 'dwi_raw.nii')
