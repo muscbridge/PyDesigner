@@ -698,8 +698,6 @@ def main():
     #----------------------------------------------------------------------
     with open(op.join(outpath, 'log_command.json'), 'w') as fp:
         json.dump(cmdtable, fp, indent=2)
-    with open(op.join(outpath, 'log_files.json'), 'w') as fp:
-        json.dump(filetable, fp, indent=2)
 
     #----------------------------------------------------------------------
     # Tensor Fitting
