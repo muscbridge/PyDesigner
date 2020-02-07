@@ -582,7 +582,7 @@ def main():
         step_count += 1
         undistorted_name = 'dwi_undistorted'
         # file names
-        undistorted_name_full = str(step_count)+ '_' + undistorted_name_full
+        undistorted_name_full = str(step_count)+ '_' + undistorted_name
         nii_undistorted = op.join(intermediatepath, undistorted_name_full + '.nii')
         mif_undistorted = op.join(outpath, undistorted_name_full + '.mif')
         # check to see if this already exists
