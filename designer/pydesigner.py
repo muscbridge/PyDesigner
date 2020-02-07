@@ -76,20 +76,16 @@ def main():
         phase encoding, and smoothing, but no diffusion metrics:
         python3 pydesigner.py \\
                 --denoise \\
-                --eddy \\
-                --rpe_pair <rpe> \\
-                --pe_dir <dir> \\
+                --undistort \\
                 --smooth \\
+                --nofit \\
                 <dwi>
 
         In order to just do denoising, eddy with reverse phase encode, and 
         diffusion metrics:
         python3 pydesigner.py \\
                 --denoise \\
-                --eddy \\
-                --rpe_pair <rpe> \\
-                --pe_dir <dir> \\
-                --DKI \\
+                --undistort \\
                 <dwi>
 
     Standard pipeline steps:
@@ -140,10 +136,6 @@ def main():
     parser.add_argument('--undistort', action='store_true', default=False,
                         help='Run FSL eddy to perform image undistortion. '
                         'NOTE: needs a --topup to run.')
-    parser.add_argument('--topup', default=None,
-                        help='The topup b0 series with a reverse phase encode '
-                        'direction opposite the dwi. REQUIRED for '
-                        '--undistort')
     parser.add_argument('--smooth', action='store_true', default=False,
                         help='Perform smoothing on the DWI data. '
                         'Recommended to also supply --csfmask in order to '
@@ -187,28 +179,6 @@ def main():
     parser.add_argument('--fit_constraints', default='0,1,0',
                         help='Constrain the WLLS fit. '
                         'Default: 0,1,0.')
-    parser.add_argument('--rpe_none', action='store_true', default=False,
-                        help='No reverse phase encode is available; FSL eddy '
-                        'will perform eddy current and motion correction '
-                        ' only. ')
-    parser.add_argument('--rpe_pair', metavar='<reverse PE b=0 image>',
-                        help='Specify reverse phase encoding image.')
-    parser.add_argument('--rpe_all', metavar='<reverse PE dwi>',
-                        help='All DWIs have been acquired with an opposite '
-                        'phase encoding direction. This information will be '
-                        'used to perform a recombination of image volumes '
-                        '(each pair of volumes with the same b-vector but '
-                        'different phase encoding directions will be '
-                        'combined into a single volume). The argument to '
-                        'this option is the set of volumes with '
-                        'reverse phase encoding but the same b-vectors the '
-                        'same as the input image.')
-    parser.add_argument('--pe_dir', metavar='<phase encoding direction>',
-                        help='Specify the phase encoding direction of the '
-                        'input series. NOTE: REQUIRED for eddy due to a bug '
-                        'in dwipreproc. Can be signed axis number, (-0,1,+2) '
-                        'axis designator (RL, PA, IS), or '
-                        'NIfTI axis codes (i-,j,k)')
     parser.add_argument('--noqc', action='store_true', default=False,
                         help='Disable QC saving of QC metrics')
     parser.add_argument('--median', action='store_true', default=False,
@@ -299,7 +269,6 @@ def main():
         args.smooth = True
         #--extra options--
         args.mask = True
-        args.rpe_none = True
         args.degibbs = True
 
     # Can't do WMTI if no fit
@@ -325,12 +294,6 @@ def main():
         if args.rician:
             warningmsg+=stdmsg+'--rician given; overriding with --denoise\n'
             args.denoise = True
-
-    # Incompatible eddy args
-    if not args.topup and not args.rpe_none and args.undistort:
-        errmsg+='Cannot undistort without rpe selection'
-    elif args.rpe_pair:
-        errmsg+='We are sorry but this feature is unsupported for now.'
 
     # FWHM given but not smoothing
     if not args.smooth and args.fwhm:
@@ -412,14 +375,6 @@ def main():
                 'avoid artifacts.Use the "--adv" flag to run forced '
                 'corrections.')
             args.degibbs = False
-
-    if args.rpe_pair:
-        filetable['rpe_pair'] = DWIFile(args.rpe_pair)
-    if args.rpe_all:
-        filetable['rpe_all'] = DWIFile(args.rpe_all)
-
-    if args.topup:
-        filetable['topup'] = DWIFile(args.topup)
 
     #----------------------------------------------------------------------
     # Path Handling
