@@ -611,7 +611,12 @@ def main():
             os.remove(working_path)
             os.rename(mif_smoothing, working_path)
             # update command history
-            cmdtable['smooth'] = mrinfoutil.commandhistory(working_path)[-1]
+            cmdtable['smooth'] = ['designer.preprocessing.mrpreproc.smooth(input={}, '
+                                  'output={}, '
+                                  'fwhm={}'.format(working_path,
+                                                   mif_smoothing,
+                                                   args.fwhm)]
+            cmdtable['smooth'].append(mrinfoutil.commandhistory(working_path)[-1])
             cmdtable['HEAD'] = cmdtable['smooth']
         # update nifti file tracking
         filetable['smoothed'] = DWIFile(nii_smoothing)
@@ -644,7 +649,13 @@ def main():
             os.remove(working_path)
             os.rename(mif_rician, working_path)
             # update command history
-            cmdtable['rician'] = mrinfoutil.commandhistory(working_path)[-1]
+            cmdtable['rician'] = ['designer.preprocessing.mrpreproc.'
+                                  'riciancorrect(input={}, '
+                                  'output={}, '
+                                  'noise={})'.format(working_path,
+                                                      mif_rician,
+                                                      filetable['noisemap'].getFull())]
+            cmdtable['rician'].append(mrinfoutil.commandhistory(working_path)[-1])
             cmdtable['HEAD'] = cmdtable['rician']
         # update nifti file tracking
         filetable['rician_corrected'] = DWIFile(nii_rician)
