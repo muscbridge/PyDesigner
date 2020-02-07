@@ -508,7 +508,7 @@ def riciancorrect(input, output, noise=None):
     os.remove(op.splitext(nii_path)[0] + '.bval')
     os.remove(op.splitext(nii_path)[0] + '.json')
 
-def topupboost(input, output, idx=0, nthreads=None, force=False,
+def topupboost(input, output, idx=None, nthreads=None, force=False,
               verbose=False):
     """
     Analyzes an input .mif's PE direction to split into two different
@@ -576,6 +576,11 @@ def topupboost(input, output, idx=0, nthreads=None, force=False,
         seriesidx_ = 1
     else:
         seriesidx_ = 0
+    if idx is None:
+        idx = list(range(len(bind[seriesidx])))
+    elif isinstance(idx, str):
+        idx = idx.split(',')
+        idx = [int(x) for x in idx]
     if nPE > 2:
         raise Exception('Your DWI appears to have more than two '
                         'different phase encoding directions. It is '
@@ -604,7 +609,7 @@ def topupboost(input, output, idx=0, nthreads=None, force=False,
             arg_topup.extend(['-nthreads', nthreads])
         arg_topup.extend(['-coord', '3', ','.join(str_extract)])
         arg_topup.extend([input, op.join(outdir, fname_topup)])
-        completion = subprocess.run(arg)
+        completion = subprocess.run(arg_topup)
         if completion.returncode != 0:
             raise Exception('TOPUPBOOST: failed to extract specified '
                             'TOPUP B0 indices.')
@@ -632,8 +637,8 @@ def topupboost(input, output, idx=0, nthreads=None, force=False,
             arg_cat.append('-quiet')
         if not (nthreads is None):
             arg_cat.extend(['-nthreads', nthreads])
-        arg_cat.extend(['-axis 3', fname_DWI, fname_topup, output])
-        completion = subprocess.run(arg)
+        arg_cat.extend(['-axis', '3', fname_DWI, fname_topup, output])
+        completion = subprocess.run(arg_cat)
         if completion.returncode != 0:
             raise Exception('TOPUPBOOST: failed to concatenate topup and '
                             'main DWI.')
