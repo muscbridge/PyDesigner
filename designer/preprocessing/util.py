@@ -588,10 +588,14 @@ class DWIParser:
                 nDWI = 1
             # Check whether for inexistence of gradient table in JSON and
             # some mention of B0 in EPI
-            keywords = ['b0', 'topup', 'ep']
+            keywords = ['b0', 'topup']
             searchtargets = [image.json['SeriesDescription'],
                              image.json['ProtocolName']]
-            if any([key in keywords for word in searchtargets]):
+            wordtest = []
+            for word in searchtargets:
+                for key in keywords:
+                    wordtest.append(key in word)
+            if any(wordtest):
                 bval = np.zeros(nDWI, dtype=int)
                 bvec = np.zeros((3, nDWI), dtype=int)
                 fPath = op.splitext(path)[0]
