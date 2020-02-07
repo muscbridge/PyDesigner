@@ -296,12 +296,6 @@ def main():
             warningmsg+=stdmsg+'--rician given; overriding with --denoise\n'
             args.denoise = True
 
-    # FWHM given but not smoothing
-    if not args.smooth and args.fwhm:
-        warningmsg+='No --smooth given but --fwhm given; '
-        warningmsg+=' overriding with --smooth\n'
-        args.smooth = True
-
     # Check to make sure CSF mask exists if given
     if args.csfmask:
         if not op.exists(args.csfmask):
