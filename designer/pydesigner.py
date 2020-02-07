@@ -13,6 +13,7 @@ import shutil # which, rmtree
 import gzip # handles fsl's .gz suffix
 import argparse # ArgumentParser, add_argument
 import textwrap # dedent
+import json
 import numpy as np # array, ndarray
 from designer.preprocessing import util, preparation, snrplot, mrinfoutil, mrpreproc
 from designer.fitting import dwipy as dp
@@ -695,12 +696,10 @@ def main():
     #----------------------------------------------------------------------
     # Write logs
     #----------------------------------------------------------------------
-    csvwriter = csv.writer(open(op.join(outpath, 'cmd_log.csv'), 'w'))
-    for key, val in cmdtable.items():
-        csvwriter.writerow([key, val])
-    csvwriter = csv.writer(open(op.join(outpath, 'nii_log.csv'), 'w'))
-    for key, val in filetable.items():
-        csvwriter.writerow([key, val])
+    with open(op.join(outpath, 'log_command.json'), 'w') as fp:
+        json.dump(cmdtable, fp, indent=2)
+    with open(op.join(outpath, 'log_files.json'), 'w') as fp:
+        json.dump(filetable, fp, indent=2)
 
     #----------------------------------------------------------------------
     # Tensor Fitting
