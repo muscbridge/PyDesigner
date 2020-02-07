@@ -533,13 +533,13 @@ def main():
             # remove old working.mif and replace with new corrected .mif
             os.remove(working_path)
             os.rename(mif_denoised, working_path)
-            # update nifti file tracking
-            filetable['denoised'] = DWIFile(nii_denoised)
-            filetable['HEAD'] = filetable['denoised']
-            filetable['noisemap'] = DWIFile(nii_noisemap)
             # update command history
             cmdtable['denoise'] = mrinfoutil.commandhistory(working_path)[-1]
             cmdtable['HEAD'] = cmdtable['denoise']
+        # update nifti file tracking
+        filetable['denoised'] = DWIFile(nii_denoised)
+        filetable['HEAD'] = filetable['denoised']
+        filetable['noisemap'] = DWIFile(nii_noisemap)
 
     #----------------------------------------------------------------------
     # Run Gibbs Unringing
@@ -568,12 +568,12 @@ def main():
             # remove old working.mif and replace with new corrected .mif
             os.remove(working_path)
             os.rename(mif_degibbs, working_path)
-            # update nifti file tracking
-            filetable['unrung'] = DWIFile(nii_degibbs)
-            filetable['HEAD'] = filetable['unrung']
             # update command history
             cmdtable['degibbs'] = mrinfoutil.commandhistory(working_path)[-1]
             cmdtable['HEAD'] = cmdtable['degibbs']
+        # update nifti file tracking
+        filetable['unrung'] = DWIFile(nii_degibbs)
+        filetable['HEAD'] = filetable['unrung']
 
     #----------------------------------------------------------------------
     # Undistort
@@ -604,12 +604,12 @@ def main():
             # remove old working.mif and replace with new corrected .mif
             os.remove(working_path)
             os.rename(mif_undistorted, working_path)
-            # update nifti file tracking
-            filetable['undistorted'] = DWIFile(nii_undistorted)
-            filetable['HEAD'] = filetable['undistorted']
             # update command history
             cmdtable['undistort'] = mrinfoutil.commandhistory(working_path)
             cmdtable['HEAD'] = cmdtable['undistort']
+        # update nifti file tracking
+        filetable['undistorted'] = DWIFile(nii_undistorted)
+        filetable['HEAD'] = filetable['undistorted']
 
     #----------------------------------------------------------------------
     # Create Brain Mask
@@ -655,12 +655,12 @@ def main():
             # remove old working.mif and replace with new corrected .mif
             os.remove(working_path)
             os.rename(mif_smoothing, working_path)
-            # update nifti file tracking
-            filetable['smoothed'] = DWIFile(nii_smoothing)
-            filetable['HEAD'] = filetable['smoothed']
             # update command history
             cmdtable['smooth'] = mrinfoutil.commandhistory(working_path)[-1]
             cmdtable['HEAD'] = cmdtable['smooth']
+        # update nifti file tracking
+        filetable['smoothed'] = DWIFile(nii_smoothing)
+        filetable['HEAD'] = filetable['smoothed']
 
     #----------------------------------------------------------------------
     # Rician Noise Correction
@@ -688,12 +688,12 @@ def main():
             # remove old working.mif and replace with new corrected .mif
             os.remove(working_path)
             os.rename(mif_rician, working_path)
-            # update nifti file tracking
-            filetable['rician_corrected'] = DWIFile(nii_rician)
-            filetable['HEAD'] = filetable['rician_corrected']
             # update command history
             cmdtable['rician'] = mrinfoutil.commandhistory(working_path)[-1]
             cmdtable['HEAD'] = cmdtable['rician']
+        # update nifti file tracking
+        filetable['rician_corrected'] = DWIFile(nii_rician)
+        filetable['HEAD'] = filetable['rician_corrected']
                 
     #----------------------------------------------------------------------
     # Make preprocessed file
@@ -706,8 +706,8 @@ def main():
                             nthreads=args.nthreads,
                             force=args.force,
                             verbose=False)
-        filetable['preprocessed'] = DWIFile(preprocessed)
-        filetable['HEAD'] = filetable['preprocessed']
+    filetable['preprocessed'] = DWIFile(preprocessed)
+    filetable['HEAD'] = filetable['preprocessed']
 
     #----------------------------------------------------------------------
     # Compute SNR
