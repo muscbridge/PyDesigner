@@ -116,6 +116,7 @@ def main():
 
     # Optional
     parser.add_argument('-o', '--output',
+                        metavar='directory'
                         help='Output location. '
                         'Default: same path as dwi.',
                         type=str)
@@ -137,13 +138,15 @@ def main():
     parser.add_argument('--undistort', action='store_true', default=False,
                         help='Run FSL eddy to perform image undistortion. '
                         'NOTE: needs a --topup to run.')
-    parser.add_argument('--topup_idx', default=None, type=str,
+    parser.add_argument('--topupboost', default=None, type=str,
+                        metavar='index',
                         help='Use only the indices specified from '
                         'reverse phase encoding image to compute '
                         'the distortion field for TOPUP. This '
                         'significantly boosts TOPUP speed if your '
                         'reverse PE contains more than one 3D '
-                        'volumes.')
+                        'volumes. Use comma-seperated integers in the '
+                        'form n,n,n... ')
     parser.add_argument('--smooth', action='store_true', default=False,
                         help='Perform smoothing on the DWI data. '
                         'Recommended to also supply --csfmask in order to '
@@ -151,9 +154,6 @@ def main():
     parser.add_argument('--fwhm', type=float, default=1.25,
                         help='The FWHM to use as a multiple of voxel size. '
                         'Default 1.25')
-    parser.add_argument('--csfmask', default=None,
-                        help='CSF mask for exclusion during smoothing. '
-                        'Must be in the DWI space and resolution. ')
     parser.add_argument('--rician', action='store_true', default=False,
                         help='Perform Rician noise correction on the data '
                         '(requires --denoise to generate a noisemap).')
@@ -174,7 +174,7 @@ def main():
                         help='Compute a brain mask prior to tensor fitting '
                         'to strip skull and improve efficiency. Optionally, '
                         'use --maskthr to specify a threshold manually.')
-    parser.add_argument('--maskthr', metavar='<FA threshold>',
+    parser.add_argument('--maskthr', metavar='threshold',
                         default=0.25,
                         help='FSL bet threshold used for brain masking. '
                         'Default: 0.25')
