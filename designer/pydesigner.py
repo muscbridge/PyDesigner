@@ -109,13 +109,14 @@ def main():
     # Specify arguments below
 
     # Mandatory
-    parser.add_argument('dwi', help='the diffusion dataset you would like to '
-                        'process',
+    parser.add_argument('dwi',
+                        help='the diffusion dataset you would like '
+                        'to process',
                         type=str)
 
     # Optional
     parser.add_argument('-o', '--output',
-                        metavar='directory'
+                        metavar='directory',
                         help='Output location. '
                         'Default: same path as dwi.',
                         type=str)
@@ -147,9 +148,7 @@ def main():
                         'volumes. Use comma-seperated integers in the '
                         'form n,n,n... ')
     parser.add_argument('--smooth', action='store_true', default=False,
-                        help='Perform smoothing on the DWI data. '
-                        'Recommended to also supply --csfmask in order to '
-                        'avoid contaminating the voxels which border CSF.')
+                        help='Perform smoothing on the DWI data.')
     parser.add_argument('--fwhm', type=float, default=1.25,
                         help='The FWHM to use as a multiple of voxel size. '
                         'Default 1.25')
@@ -306,11 +305,6 @@ def main():
         if args.rician:
             warningmsg+=stdmsg+'--rician given; overriding with --denoise\n'
             args.denoise = True
-
-    # Check to make sure CSF mask exists if given
-    if args.csfmask:
-        if not op.exists(args.csfmask):
-            errmsg+='--csfmask file '+args.csfmask+' not found\n'
 
     # Cannot run --user_mask and --mask at the same time
     if args.user_mask and args.mask:
