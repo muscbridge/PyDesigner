@@ -137,7 +137,7 @@ def main():
     parser.add_argument('--undistort', action='store_true', default=False,
                         help='Run FSL eddy to perform image undistortion. '
                         'NOTE: needs a --topup to run.')
-    parser.add_argument('--topupboost', default=None, type=str,
+    parser.add_argument('--epiboost', default=None, type=str,
                         metavar='index',
                         help='Use only the indices specified from '
                         'reverse phase encoding image to compute '
@@ -239,7 +239,7 @@ def main():
             resume=args.resume)
     working_path = op.join(outpath, 'working' + fType)
 
-    if not args.topup_idx is None:
+    if not args.epiboost is None:
         mrpreproc.topupboost(input=working_path,
                              output=working_path,
                              idx=args.topup_idx,
