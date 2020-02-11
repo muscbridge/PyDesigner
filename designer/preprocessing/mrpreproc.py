@@ -508,6 +508,95 @@ def riciancorrect(input, output, noise=None):
     os.remove(op.splitext(nii_path)[0] + '.bval')
     os.remove(op.splitext(nii_path)[0] + '.json')
 
+def extractbzero(input, output, nthreads=None, force=False,
+              verbose=False):
+    """
+    Extracts only bzero shells from an input mif file.
+
+    Parameters:
+    ----------
+    input (str):    path to input .mif file
+    output (str):   path to output .mif file
+    nthreads (int): number of workers to use
+    force (bool):   force overwrite of existing files
+    verbose (bool): determine whether to display console output
+
+    Returns
+    -------
+    (none)          system call
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    arg = ['dwiextract']
+    if force:
+        arg.append('-force')
+    if not verbose:
+        arg.append('-quiet')
+    if not (nthreads is None):
+        arg.extend(['-nthreads', nthreads])
+    arg.extend(['-bzero', input, output])
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('Unable to extract B0s from DWI for computation '
+                        'of brain mask. See above for errors.')
+
+def extractnonbzero(input, output, nthreads=None, force=False,
+              verbose=False):
+    """
+    Extracts only non-bzero shells from an input mif file.
+
+    Parameters:
+    ----------
+    input (str):    path to input .mif file
+    output (str):   path to output .mif file
+
+    Returns
+    -------
+    (none)          system call
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    arg = ['dwiextract']
+    if force:
+        arg.append('-force')
+    if not verbose:
+        arg.append('-quiet')
+    if not (nthreads is None):
+        arg.extend(['-nthreads', nthreads])
+    arg.extend(['-no_bzero', input, output])
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('Unable to extract B0s from DWI for computation '
+                        'of brain mask. See above for errors.')
+
 def topupboost(input, output, idx=None, nthreads=None, force=False,
               verbose=False):
     """
