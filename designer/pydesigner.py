@@ -21,7 +21,6 @@ from designer.system import systemtools as systools
 from designer.postprocessing import filters
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
-import csv
 
 # Locate mrtrix3 via which-ing dwidenoise
 dwidenoise_location = shutil.which('dwidenoise')
