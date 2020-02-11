@@ -508,20 +508,18 @@ def riciancorrect(input, output, noise=None):
     os.remove(op.splitext(nii_path)[0] + '.bval')
     os.remove(op.splitext(nii_path)[0] + '.json')
 
-def topupboost(input, output, idx=None, nthreads=None, force=False,
+def extractbzero(input, output, nthreads=None, force=False,
               verbose=False):
     """
-    Analyzes an input .mif's PE direction to split into two different
-    phase encoding (PE) DWIs. B0s from opposing PE are then extracted
-    and concatenated with the DWI. This reduces the number of B0s used
-    in undistortion for a better and speedier estimation of the
-    distortion field.
+    Extracts only bzero shells from an input mif file.
 
     Parameters:
     ----------
     input (str):    path to input .mif file
     output (str):   path to output .mif file
-    idx (int):      list of B0 indexes to use in topup (default: 0)
+    nthreads (int): number of workers to use
+    force (bool):   force overwrite of existing files
+    verbose (bool): determine whether to display console output
 
     Returns
     -------
@@ -543,14 +541,110 @@ def topupboost(input, output, idx=None, nthreads=None, force=False,
                         'or False.')
     if not isinstance(verbose, bool):
         raise Exception('Please specify whether verbose is True or False.')
+    arg = ['dwiextract']
+    if force:
+        arg.append('-force')
+    if not verbose:
+        arg.append('-quiet')
+    if not (nthreads is None):
+        arg.extend(['-nthreads', nthreads])
+    arg.extend(['-bzero', input, output])
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('Unable to extract B0s from DWI for computation '
+                        'of brain mask. See above for errors.')
+
+def extractnonbzero(input, output, nthreads=None, force=False,
+              verbose=False):
+    """
+    Extracts only non-bzero shells from an input mif file.
+
+    Parameters:
+    ----------
+    input (str):    path to input .mif file
+    output (str):   path to output .mif file
+
+    Returns
+    -------
+    (none)          system call
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    arg = ['dwiextract']
+    if force:
+        arg.append('-force')
+    if not verbose:
+        arg.append('-quiet')
+    if not (nthreads is None):
+        arg.extend(['-nthreads', nthreads])
+    arg.extend(['-no_bzero', input, output])
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('Unable to extract B0s from DWI for computation '
+                        'of brain mask. See above for errors.')
+
+def topupboost(input, output, idx=None, nthreads=None, force=False,
+              verbose=False):
+    """
+    Analyzes an input .mif's PE direction to split into two different
+    phase encoding (PE) DWIs. B0s from opposing PE are then extracted
+    and concatenated with the DWI. This reduces the number of B0s used
+    in undistortion for a better and speedier estimation of the
+    distortion field.
+
+    Parameters:
+    ----------
+    input (str):    path to input .mif file
+    output (str):   path to output .mif file
+    idx (int):      list of B0 indexes to use in topup (default: 0)
+    nthreads (int): number of workers to use
+    force (bool):   force overwrite of existing files
+    verbose (bool): determine whether to display console output
+
+    Returns
+    -------
+    (none)          system call
+    """
+    print('Applying TOPUPBOOST')
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
     outdir = op.dirname(output)
-    fname_topup = op.join(outdir, 'TOPUP.mif')
+    fname_topup = op.join(outdir, 'B0_TOPUP.mif')
     fname_DWI = op.join(outdir, 'DWI_NO_TOPUP.mif')
-    # start by figuring out whether DWI is composed of multiple PE dirs
+    fname_bzero = op.join(outdir, 'B0_NON_TOPUP.mif')
+    # Start by figuring out whether DWI is composed of multiple PE dirs
     # or single PE dirs. If all PE dirs are the same, the dataset likely
     # comes with matching phase encoding and slice timing train,
     # indicating that it has a single PE direction.
-    dw_scheme = np.array(mrinfoutil.dwscheme(input))
+    dw_scheme = np.array(mrinfoutil.dwscheme(input), dtype=int)[:, -1]
     pe_scheme = np.array(mrinfoutil.pescheme(input))
     if len(pe_scheme) != len(dw_scheme):
         raise Exception('It appears that the input volume possesses a '
@@ -568,7 +662,7 @@ def topupboost(input, output, idx=None, nthreads=None, force=False,
     iteridx = np.unique(iPE)
     for i, val in enumerate(iteridx):
         bind.append(np.where(iPE == val)[0].tolist())
-        bval.append(dw_scheme[np.where(iPE == val)[0], -1].tolist())
+        bval.append(dw_scheme[np.where(iPE == val)].tolist())
     # find where the smallest number of unique bvalue occurs: that
     # series is the TOPUP sequence
     seriesidx = [len(np.unique(x).tolist()) for x in bval].index(1)
@@ -612,24 +706,27 @@ def topupboost(input, output, idx=None, nthreads=None, force=False,
         completion = subprocess.run(arg_topup)
         if completion.returncode != 0:
             raise Exception('TOPUPBOOST: failed to extract specified '
-                            'TOPUP B0 indices.')
-        # next extract DWI-only vols
-        idx_extract_ = bind[seriesidx_]
-        str_extract_= [str(x) for x in idx_extract_]
-        arg_no_topup = ['mrconvert']
+                            'TOPUP B0 indices. See above for errors.')
+        # next extract non-bzero vols
+        extractnonbzero(input, fname_DWI, nthreads=nthreads, force=force,
+              verbose=verbose)
+        # next extract first B0 from input volume
+        idx_b0 = [i for i in range(len(bval[seriesidx_])) \
+                  if bval[seriesidx_][i] == 0][0]
+        arg_b0 = ['mrconvert']
         if force:
-            arg_no_topup.append('-force')
+            arg_b0.append('-force')
         if not verbose:
-            arg_no_topup.append('-quiet')
+            arg_b0.append('-quiet')
         if not (nthreads is None):
-            arg_no_topup.extend(['-nthreads', nthreads])
-        arg_no_topup.extend(['-coord', '3', ','.join(str_extract_)])
-        arg_no_topup.extend([input, op.join(outdir, fname_DWI)])
-        completion = subprocess.run(arg_no_topup)
+            arg_b0.extend(['-nthreads', nthreads])
+        arg_b0.extend(['-coord', '3', str(idx_b0)])
+        arg_b0.extend([input, op.join(fname_DWI, fname_bzero)])
+        completion = subprocess.run(arg_b0)
         if completion.returncode != 0:
-            raise Exception('TOPUPBOOST: failed to extract non-TOPUP '
-                            'indices.')
-        # now concatenate the two series
+            raise Exception('TOPUPBOOST: failed to extract first B0 '
+                            'volume. See above for errors.')
+        # now concatenate the three split series
         arg_cat = ['mrcat']
         if force:
             arg_cat.append('-force')
@@ -637,7 +734,8 @@ def topupboost(input, output, idx=None, nthreads=None, force=False,
             arg_cat.append('-quiet')
         if not (nthreads is None):
             arg_cat.extend(['-nthreads', nthreads])
-        arg_cat.extend(['-axis', '3', fname_DWI, fname_topup, output])
+        arg_cat.extend(['-axis', '3'])
+        arg_cat.extend([fname_bzero, fname_DWI, fname_topup, output])
         completion = subprocess.run(arg_cat)
         if completion.returncode != 0:
             raise Exception('TOPUPBOOST: failed to concatenate topup and '
@@ -645,6 +743,7 @@ def topupboost(input, output, idx=None, nthreads=None, force=False,
         # Remove temp files
         os.remove(fname_topup)
         os.remove(fname_DWI)
+        os.remove(fname_bzero)
     else:
         print('WARNING: Cannot boost `undistortion without any TOPUP  '
               'sequence')

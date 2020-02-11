@@ -2,9 +2,9 @@
 Runs the PyDesigner pipeline
 """
 
-#----------------------------------------------------------------------
+#---------------------------------------------------------------------
 # Package Management
-#----------------------------------------------------------------------
+#---------------------------------------------------------------------
 import sys as sys
 import subprocess #subprocess
 import os # mkdir
@@ -21,7 +21,6 @@ from designer.system import systemtools as systools
 from designer.postprocessing import filters
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
-import csv
 
 # Locate mrtrix3 via which-ing dwidenoise
 dwidenoise_location = shutil.which('dwidenoise')
@@ -48,9 +47,9 @@ if systools.isAMD():
     systools.setenv([('MKL_DEBUG_CPU_TYPE','5')])
 
 def main():
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Parse Arguments
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Initialize ArgumentParser
     parser = argparse.ArgumentParser(
             prog='pydesigner',
@@ -116,6 +115,7 @@ def main():
 
     # Optional
     parser.add_argument('-o', '--output',
+                        metavar='directory'
                         help='Output location. '
                         'Default: same path as dwi.',
                         type=str)
@@ -137,13 +137,15 @@ def main():
     parser.add_argument('--undistort', action='store_true', default=False,
                         help='Run FSL eddy to perform image undistortion. '
                         'NOTE: needs a --topup to run.')
-    parser.add_argument('--topup_idx', default=None, type=str,
+    parser.add_argument('--topupboost', default=None, type=str,
+                        metavar='index',
                         help='Use only the indices specified from '
                         'reverse phase encoding image to compute '
                         'the distortion field for TOPUP. This '
                         'significantly boosts TOPUP speed if your '
                         'reverse PE contains more than one 3D '
-                        'volumes.')
+                        'volumes. Use comma-seperated integers in the '
+                        'form n,n,n... ')
     parser.add_argument('--smooth', action='store_true', default=False,
                         help='Perform smoothing on the DWI data. '
                         'Recommended to also supply --csfmask in order to '
@@ -151,9 +153,6 @@ def main():
     parser.add_argument('--fwhm', type=float, default=1.25,
                         help='The FWHM to use as a multiple of voxel size. '
                         'Default 1.25')
-    parser.add_argument('--csfmask', default=None,
-                        help='CSF mask for exclusion during smoothing. '
-                        'Must be in the DWI space and resolution. ')
     parser.add_argument('--rician', action='store_true', default=False,
                         help='Perform Rician noise correction on the data '
                         '(requires --denoise to generate a noisemap).')
@@ -174,7 +173,7 @@ def main():
                         help='Compute a brain mask prior to tensor fitting '
                         'to strip skull and improve efficiency. Optionally, '
                         'use --maskthr to specify a threshold manually.')
-    parser.add_argument('--maskthr', metavar='<FA threshold>',
+    parser.add_argument('--maskthr', metavar='threshold',
                         default=0.25,
                         help='FSL bet threshold used for brain masking. '
                         'Default: 0.25')
@@ -221,9 +220,9 @@ def main():
     # Use argument specification to actually get args
     args = parser.parse_args()
 
-    #---------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Parse Input Image
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     image = DWIParser(args.dwi)
     # Variable fType indicates the extension to raw_dwi.X, where X take the
     # place of known dMRI file extensions (.mif, .nii, .nii.gz). This allows
@@ -258,9 +257,9 @@ def main():
                         force=args.force,
                         verbose=args.verbose)
 
-    #---------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Validate Arguments
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
 
     errmsg = ''
     warningmsg = ''
@@ -383,9 +382,9 @@ def main():
                 'corrections.')
             args.degibbs = False
 
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Path Handling
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     qcpath = op.join(outpath, 'metrics_qc')
     eddyqcpath = op.join(qcpath, 'eddy')
     fitqcpath = op.join(qcpath, 'fitting')
@@ -460,9 +459,9 @@ def main():
     # Create processing step variable to count preprocessing stage
     step_count = 0
 
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Run Denoising
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     if args.denoise:
         step_count += 1
         denoised_name = 'dwi_denoised'
@@ -503,9 +502,9 @@ def main():
         filetable['HEAD'] = filetable['denoised']
         filetable['noisemap'] = DWIFile(nii_noisemap)
 
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Run Gibbs Unringing
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     if args.degibbs:
         step_count += 1
         degibbs_name = 'dwi_degibbs'
@@ -537,9 +536,9 @@ def main():
         filetable['unrung'] = DWIFile(nii_degibbs)
         filetable['HEAD'] = filetable['unrung']
 
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Undistort
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     if args.undistort:
         step_count += 1
         undistorted_name = 'dwi_undistorted'
@@ -573,9 +572,9 @@ def main():
         filetable['undistorted'] = DWIFile(nii_undistorted)
         filetable['HEAD'] = filetable['undistorted']
 
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Create Brain Mask
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     if args.mask:
         brainmask_name = 'brain_mask.nii'
         brainmask_out = op.join(outpath, brainmask_name)
@@ -593,9 +592,9 @@ def main():
         shutil.copy(args.user_mask, brainmask_out)
         filetable['mask'] = DWIFile(brainmask_out) 
 
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Smooth
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     if args.smooth:
         step_count += 1
         smoothing_name = 'dwi_smoothed'
@@ -629,9 +628,9 @@ def main():
         filetable['smoothed'] = DWIFile(nii_smoothing)
         filetable['HEAD'] = filetable['smoothed']
 
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Rician Noise Correction
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     if args.rician:
         step_count += 1
         rician_name = 'dwi_rician'
@@ -668,9 +667,9 @@ def main():
         filetable['rician_corrected'] = DWIFile(nii_rician)
         filetable['HEAD'] = filetable['rician_corrected']
                 
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Make preprocessed file
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     preprocessed = op.join(outpath, 'dwi_preprocessed.nii')
     if not (args.resume and op.exists(preprocessed)):
         mrpreproc.miftonii(input=working_path,
@@ -682,9 +681,9 @@ def main():
     filetable['preprocessed'] = DWIFile(preprocessed)
     filetable['HEAD'] = filetable['preprocessed']
 
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Compute SNR
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     if args.denoise and not args.noqc:
         files = []
         files.append(init_nii)
@@ -699,15 +698,15 @@ def main():
                                   maskpath=None)
         snr.makeplot(path=qcpath, smooth=True, smoothfactor=3)
     
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Write logs
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     with open(op.join(outpath, 'log_command.json'), 'w') as fp:
         json.dump(cmdtable, fp, indent=2)
 
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Tensor Fitting
-    #----------------------------------------------------------------------
+    #-----------------------------------------------------------------
     # Define some paths
     if not args.nofit:
         # create dwi fitting object
