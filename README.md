@@ -1,10 +1,8 @@
-# PyDesigner [DEVELOPMENTAL CYCLE]
+# PyDesigner
 
 [![Actions Status](https://github.com/m-ama/PyDesigner/workflows/Docker%20Build%20(Latest)/badge.svg)](https://github.com/m-ama/PyDesigner/commit/3b049c5f491ff33faf77116b135ce86e49189c27/checks?check_suite_id=332225619)
 [![Actions Status](https://github.com/m-ama/PyDesigner/workflows/Docker%20Build%20(Release)/badge.svg)](https://github.com/m-ama/PyDesigner/actions?query=workflow%3A%22Docker+Build+%28Release%29%22)
 [![Docker Pulls](https://img.shields.io/docker/pulls/dmri/neurodock?logo=docker)](https://hub.docker.com/r/dmri/neurodock)
-
-**Project is currently under developmental cycle and is undergoing stability testing and debugging. Users are recommended to wait for a stable public release instead.**
 
 <p align="center">
   <img src="https://i.imgur.com/Anc33XI.png" width="512">
@@ -23,7 +21,6 @@ and 2) this is a developmental cycle with no papers to cite back on.
 PyDesigner is a complete Python port of NYU's DESIGNER pipeline for preprocessing diffusion MRI images (dMRI). This work was motivated by:
 
 * Minimization of **dependencies** to make it easier to deploy
-  and understandable metric compared to the size in bytes.
 * **Faster** dMRI preprocessing
 * More **accurate** diffusion and kurtosis tensor estimation via cutting-edge algorithms
 * **Cross-platform compatibility** between Windows, Mac and Linux
@@ -299,7 +296,7 @@ Flags are to be preceeded by `--`. For example, to parse a _denoise_ flag, one w
   |`--maskthr`  |FSL bet threshold used for brain masking; specify only when using `--mask`|
   |`--user_mask` |path to user-provided mask|
   |`--undistort`|performs image undistortion via FSL eddy|
-  |`--topup`    | performs EPI correction byincorporating topup B0 series; required for `--undistort`|
+  |`--epiboost`|discards all but one B0 from each phase encoding direction to speed up TOPUP|
   |`--wmti`     |computes WMTI parameters|
   |`--force`    |overwrites existing files in output folder|
   |`--resume`   |resumes processing from a previous state; only if same output folder|
