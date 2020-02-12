@@ -586,19 +586,17 @@ class DWIParser:
                 nDWI = mrinfoutil.size(image.getFull())[-1]
             else:
                 nDWI = 1
-            # Check whether for inexistence of gradient table in JSON and
-            # some mention of B0 in EPI
-            keywords = ['b0', 'topup', 'top', 'up']
-            searchtargets = [image.json['SeriesDescription'],
-                             image.json['ProtocolName']]
-            wordtest = []
-            for word in searchtargets:
-                for key in keywords:
-                    wordtest.append(key in word)
-            if any(wordtest):
+            if nDWI <= 15:
                 bval = np.zeros(nDWI, dtype=int)
                 bvec = np.zeros((3, nDWI), dtype=int)
                 fPath = op.splitext(path)[0]
                 np.savetxt((fPath + '.bvec'), bvec, delimiter=' ', fmt='%d')
                 np.savetxt((fPath + '.bval'), np.c_[bval], delimiter=' ',
                            fmt='%d')
+            else:
+                raise Exception('PyDesigner currently only supports '
+                                'B0s without BVAL or BVEC pairs if '
+                                'the number of volumes is less than '
+                                '15. Please ensure all your input '
+                                'volumes come with valid BVEC/BVAL '
+                                'pairs and JSON.')
