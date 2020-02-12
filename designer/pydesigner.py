@@ -241,7 +241,7 @@ def main():
     if not args.epiboost is None:
         mrpreproc.topupboost(input=working_path,
                              output=working_path,
-                             idx=args.topup_idx,
+                             idx=args.epiboost,
                              nthreads=args.nthreads,
                              force=True,
                              verbose=args.verbose)
