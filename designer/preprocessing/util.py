@@ -588,7 +588,7 @@ class DWIParser:
                 nDWI = 1
             # Check whether for inexistence of gradient table in JSON and
             # some mention of B0 in EPI
-            keywords = ['b0', 'topup']
+            keywords = ['b0', 'topup', 'top', 'up']
             searchtargets = [image.json['SeriesDescription'],
                              image.json['ProtocolName']]
             wordtest = []
