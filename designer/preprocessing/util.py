@@ -158,6 +158,10 @@ class DWIFile:
         """
         full = name
         [pathname, ext] = op.splitext(full)
+        if ext == '.gz':
+            # split again
+            pathname = op.splitext(pathname)[0]
+            ext = '.nii.gz'
         self.path = op.dirname(pathname)
         self.name = op.basename(pathname)
 
@@ -590,9 +594,10 @@ class DWIParser:
                 bval = np.zeros(nDWI, dtype=int)
                 bvec = np.zeros((3, nDWI), dtype=int)
                 fPath = op.splitext(path)[0]
-                np.savetxt((fPath + '.bvec'), bvec, delimiter=' ', fmt='%d')
-                np.savetxt((fPath + '.bval'), np.c_[bval], delimiter=' ',
-                           fmt='%d')
+                np.savetxt(op.join(image.getPath(), image.getName() + '.bvec'), 
+                bvec, delimiter=' ', fmt='%d')
+                np.savetxt(op.join(image.getPath(), image.getName() + '.bval'),
+                np.c_[bval], delimiter=' ', fmt='%d')
             else:
                 raise Exception('PyDesigner currently only supports '
                                 'B0s without BVAL or BVEC pairs if '
