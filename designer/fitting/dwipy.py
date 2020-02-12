@@ -864,7 +864,7 @@ class DWI(object):
         for i in inputs:
             maxk = np.stack(self.kurtosisCoeff(
                 self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))]))
-            maxk = np.nanmean(maxk, axis=0)
+            maxk = np.nanmax(maxk, axis=0)
         awf = np.divide(maxk, (maxk + 3))
         # Changes voxels less than minZero, nans and infs to minZero
         awf[np.logical_or(
