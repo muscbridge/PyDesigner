@@ -54,7 +54,7 @@ REQUIRES = [
 ]
 
 # Python version requirements
-PYTHON_REQUIRES = ">=3.7"
+PYTHON_REQUIRES = ">=3.6"
 
 # Package classifiers
 CLASSIFIERS = [
