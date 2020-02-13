@@ -1,0 +1,243 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usage &mdash; PyDesigner  documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script type="text/javascript" src="_static/jquery.js"></script>
+        <script type="text/javascript" src="_static/underscore.js"></script>
+        <script type="text/javascript" src="_static/doctools.js"></script>
+        <script type="text/javascript" src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Help" href="help.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home"> PyDesigner
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Introduction</a></li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="help.html">Help</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PyDesigner</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Usage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/usage.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usage">
+<h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<p>With PyDesigner installed and ready to run, let’s floor the pedal.
+Before Running PyDesigner</p>
+<p>Ensure that all your DICOMS are converted to NifTi files and that all diffusion series have a valid .json file, as well as .bvec and .bval files where applicable. Dicom to nifti conversion can be done with dcm2niix available for download here.</p>
+<p>Ensure that none of your file or folder names contain a period (aside from the file extension; eg. DKI.nii).
+To Run PyDesigner</p>
+<p>Switch to the appropriate conda environment; run conda activate dmri if you followed this guide. Then, for any given subject, call PyDesigner with the relevant flags:</p>
+<p>python /Path/to/pydesigner.py –denoise –degibbs –smooth –rician –mask -o /Path/to/output/folder /Path/to/input_file.nii</p>
+<p>Note: Flags can be added and removed as needed. It is recommended to always run PyDesigner with the –mask flag, as this flag utilizes a brain mask with excludes non-brain voxels and subsequently speeds up processing.</p>
+<p>If your dataset contains more than one DKI average per subject, your file input may contain all relevant nifti files separated by a comma (no space superceding a comma):</p>
+<p>python /Path/to/pydesigner.py –denoise –degibbs –smooth –rician –mask -o /Path/to/output/folder /Path/to/DKI_avg_1.nii,/Path/to/DKI_avg_2.nii</p>
+<p>As long as all sequences come from the same acquisition with the same parameters (phase encoding direction, gradients, etc.), they can be combined to preprocess and produce DTI/DKI maps.</p>
+<p>Note: Multiple average inputs with additional interleved B0s can be given to PyDesigner but suport for separate B0 sequences is experimental. See PR #84 for further information.</p>
+<p>If your dataset contains a top up sequence, you can use the –topup and –undistort flags:</p>
+<p>python /Path/to/pydesigner.py –denoise –degibbs –smooth –rician –mask –topup /Path/to/reverse_phase.nii -o /Path/to/output/folder /Path/to/input_file.nii</p>
+<p>Note: Using –undistort and –topup without supplying top up data will return an error.
+Basic PyDesigner Flags</p>
+<p>Flags are to be preceeded by –. For example, to parse a denoise flag, one would type the flag as –denoise.
+Flag    Description
+standard        runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal)
+denoise         performs denoising
+extent  Denoising extent formatted n,n,n; (forces denoising) is specified
+degibbs         performs gibbs unringing correction
+smooth  performs smoothing
+rician  performs rician bias correction
+mask    computes brain mask prior to tensor fitting; recommended
+maskthr         FSL bet threshold used for brain masking; specify only when using –mask
+undistort       performs image undistortion via FSL eddy
+topup   performs EPI correction byincorporating topup B0 series; required for –undistort
+o       specifies output folder
+force   overwrites existing files in output folder
+resume  resumes processing from a previous state; only if same output folder
+resume  resumes processing from a previous state; only if same output folder
+nofit   preprocess only; does not perform tensor fitting and parameter extraction
+noakc   disables outlier correction on kurtosis fitting metrics
+nooutliers      disables IRWLLS outlier detection (not recommended for DKI)
+fit_constraints         specifies constraints for WLLS fitting; formatted n,n,n
+verbose         prints out all output: recommended for debugging
+adv     disables safety checks for advanced users who want to force a preprocessing step. WARNING: FOR ADVANCED USERS ONLY</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="help.html" class="btn btn-neutral float-right" title="Help" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Kayti Keith, Siddhartha Dhiman, Joshua Teves
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
