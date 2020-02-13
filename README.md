@@ -272,29 +272,31 @@ Flags are to be preceeded by `--`. For example, to parse a _denoise_ flag, one w
 
   | Flag        | Description |
   | :---------- | :- |
+  |`-h`|opens help text|
   |`-o, --output`|specifies output folder|
   |`-s, --standard` | runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal) |
   |`--denoise`  |performs denoising|
-  |`--extent`   |Denoising extent formatted n,n,n; (forces denoising) is specified|
+  |`--extent [n,n,n,]`   |Denoising extent formatted n,n,n; default: 5,5,5; forces denoising|
   |`--degibbs`  |performs gibbs unringing correction|
   |`--smooth`   |performs smoothing|
+  |`--fwhm [FWHM]`|specifies the full width half maximum (FWHM) for smoothing; default: 1.25|
   |`--rician`   |performs rician bias correction|
   |`--mask`     |computes brain mask prior to tensor fitting; recommended|
-  |`--maskthr`  |FSL bet threshold used for brain masking; specify only when using `--mask`|
+  |`--maskthr`  |FSL bet threshold used for brain masking; default: 0.25; specify only when using `--mask`|
   |`--user_mask` |path to user-provided mask|
   |`--undistort`|performs image undistortion via FSL eddy|
   |`--epiboost`|discards all but one B0 from each phase encoding direction to speed up TOPUP|
   |`--wmti`     |computes WMTI parameters|
+  |`--fit_constraints [n,n,n,]`|specifies constraints for WLLS fitsting; formatted n,n,n|
   |`--force`    |overwrites existing files in output folder|
   |`--resume`   |resumes processing from a previous state; only if same output folder|
   |`--nofit`    |preprocess only; does not perform tensor fitting and parameter extraction|
   |`--noakc`    |disables outlier correction on kurtosis fitting metrics|
   |`--nooutliers`|disables IRWLLS outlier detection (not recommended for DKI)|
   |`--noqc`|disables computation of acqusition QC metrics|
-  |`--fit_constraints`|specifies constraints for WLLS fitsting; formatted n,n,n|
+  |`--nthreads`  |specify number of CPU workers to use in processing|
   |`--verbose`  |prints out all output: recommended for debugging|
   |`--adv`      |disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**|
-  |`--nthreads`  |specify number of CPU workers to use in processing|
 
 ## Docker Setup
 
