@@ -8,27 +8,14 @@
   <img src="https://i.imgur.com/Anc33XI.png" width="512">
 </p>
 
-**_Disclaimer:_**
-```
-This project is in early stages of development and most likely will not work as intended. 
-We are not responsible for any data corruption, loss of valuable data, computer issues, you 
-getting fired because you chose to run this, or a thermonuclear war. We strongly encourage 
-all potential users to wait for an official release. In all seriousness, do NOT used this for
-any data analysis, speculation, or writing papers: 1) not all citations have been incorporated, 
-and 2) this is a developmental cycle with no papers to cite back on.
-```
+PyDesigner was inspired by [NYU's DESIGNER](https://github.com/NYU-DiffusionMRI/DESIGNER) dMRI preprocessing pipeline to bring pre- and post- processing to every MRI imaging scientist. This work was motivated by:
 
-PyDesigner is a complete Python port of NYU's DESIGNER pipeline for preprocessing diffusion MRI images (dMRI). This work was motivated by:
-
-* Minimization of **dependencies** to make it easier to deploy
+* Minimization of **dependencies** for easy deployment
 * **Faster** dMRI preprocessing
 * More **accurate** diffusion and kurtosis tensor estimation via cutting-edge algorithms
 * **Cross-platform compatibility** between Windows, Mac and Linux
-* **Ease-of-use** through Python classes so anyone can preprocess dMRI data
-* **Docker** compatibility for enhanced deployment
-
-This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI preprocessing and diffusion and kurtosis tensor estimation to masses.
-
+* **Ease-of-use** for minimally-experienced researchers
+* **Docker** compatibility for enhanced deployment and compatibility
 
 <p align="center">
   <a href="https://medicine.musc.edu/departments/centers/cbi/dki">
