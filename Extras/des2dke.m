@@ -13,9 +13,9 @@ function des2dke(inDir)
 
 %% Load Paths
 b0_Path = fullfile(inDir,'b0.nii');
-dwi_Path = fullfile(inDir,'dwi_designer.nii');
-bval_Path = fullfile(inDir,'dwi_designer.bval');
-bvec_Path = fullfile(inDir,'dwi_designer.bvec');
+dwi_Path = fullfile(inDir,'dwi_preprocessed.nii');
+bval_Path = fullfile(inDir,'dwi_preprocessed.bval');
+bvec_Path = fullfile(inDir,'dwi_preprocessed.bvec');
 mask_Path = fullfile(inDir,'brain_mask.nii');
 dke_Path = fullfile(inDir,'DKE');
 mkdir(dke_Path);

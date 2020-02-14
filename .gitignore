@@ -2,6 +2,8 @@
 .idea/
 __pycache__/
 .ipynb_checkpoints/
+*.egg
+*.egg-info
 
 # Files to ignore
 .DS_Store

@@ -8,7 +8,6 @@ import cvxpy as cvx
 import nibabel as nib
 import numpy as np
 from joblib import Parallel, delayed
-from scipy.special import expit as sigmoid
 import scipy.linalg as sla
 from tqdm import tqdm
 from . import dwidirs
@@ -29,7 +28,7 @@ class DWI(object):
             assert isinstance(imPath, object)
             self.hdr = nib.load(imPath)
             self.img = np.array(self.hdr.dataobj)
-            truncateIdx = np.logical_and(np.isnan(self.img),
+            truncateIdx = np.logical_or(np.isnan(self.img),
                                     (self.img < minZero))
             self.img[truncateIdx] = minZero
             # Get just NIFTI filename + extensio
@@ -521,11 +520,16 @@ class DWI(object):
             constraints = [cons * x >= np.zeros((len(cons)))]
             prob = cvx.Problem(objective, constraints)
             try:
-                prob.solve(warm_start=True,
-                           max_iter=20000)
+                prob.solve(solver=cvx.OSQP,
+                           warm_start=True,
+                           max_iter=20000,
+                           polish=True,
+                           linsys_solver='qdldl')
                 dt = x.value
+                if prob.status != 'optimal':
+                    dt = np.full(n, minZero)
             except:
-                dt = np.full_like(x.value, minZero)
+                dt = np.full(n, minZero)
         return dt
 
     def fit(self, constraints=None, reject=None):
@@ -575,13 +579,13 @@ class DWI(object):
         dwi_ = vectorize(self.img, self.mask)
         reject_ = vectorize(reject, self.mask).astype(bool)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
-        shat = np.exp(np.matmul(self.b, init))
-        self.dt = np.zeros(init.shape)
+        shat = highprecisionexp(np.matmul(self.b, init))
         if constraints is None or (constraints[0] == 0 and
                                    constraints[1] == 0 and
                                    constraints[2] == 0):
             inputs = tqdm(range(0, dwi_.shape[1]),
                           desc='Unconstrained Tensor Fit',
+                          bar_format='{desc}: [{percentage:0.0f}%]',
                           unit='vox',
                           ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
@@ -593,7 +597,8 @@ class DWI(object):
             # C is linear inequality constraint matrix A_ub
             C = self.createConstraints(constraints)
             inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Constrained Tensor Fit  ',
+                          desc='Constrained Tensor Fit',
+                          bar_format='{desc}: [{percentage:0.0f}%]',
                           unit='vox',
                           ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=self.workers,
@@ -603,7 +608,7 @@ class DWI(object):
                                          self.b[~reject_[:, i]],
                                          cons=C) for i in inputs)
         self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
-        self.s0 = np.exp(self.dt[0,:])
+        self.s0 = highprecisionexp(self.dt[0,:])
         self.dt = self.dt[1:,:]
         D_apprSq = 1/(np.sum(self.dt[(0,3,5),:], axis=0)/3)**2
         self.dt[6:,:] = self.dt[6:,:]*np.tile(D_apprSq, (15,1))
@@ -689,7 +694,7 @@ class DWI(object):
                             self.dt[2, :], self.dt[4, :], self.dt[5, :])),
             (3, 3, self.dt.shape[1]))
         # get the trace
-        rdwi = sigmoid(np.matmul(self.b[:, 1:], self.dt))
+        rdwi = highprecisionexp(np.matmul(self.b[:, 1:], self.dt))
         B = np.round(-(self.b[:, 0] + self.b[:, 3] + self.b[:, 5]) * 1000)
         uB = np.unique(B)
         trace = np.zeros((self.dt.shape[1], uB.shape[0]))
@@ -698,7 +703,8 @@ class DWI(object):
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
-                      desc='DTI params              ',
+                      desc='DTI parameters',
+                      bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='vox',
                       ncols=tqdmWidth)
         values, vectors = zip(
@@ -748,7 +754,7 @@ class DWI(object):
         trace:  sum of first eigenvalues
         """
         # get the trace
-        rdwi = sigmoid(np.matmul(self.b[:, 1:], self.dt))
+        rdwi = highprecisionexp(np.matmul(self.b[:, 1:], self.dt))
         B = np.round(-(self.b[:, 0] + self.b[:, 3] + self.b[:, 5]) * 1000)
         uB = np.unique(B)
         trace = np.zeros((self.dt.shape[1], uB.shape[0]))
@@ -760,7 +766,8 @@ class DWI(object):
         mk = np.mean(akc, 0)
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
-                      desc='DKI params              ',
+                      desc='DKI parameters',
+                      bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='vox',
                       ncols=tqdmWidth)
         ak, rk, kfa, mkt = zip(*Parallel(n_jobs=self.workers,
@@ -844,20 +851,20 @@ class DWI(object):
                 ias_rd = minZero
                 ias_tort = minZero
             return eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
-        np.seterr(invalid='raise', divide='raise')
         dir = dwidirs.dirs10000
         nvox = self.dt.shape[1]
         N = dir.shape[0]
         nblocks = 10
         maxk = np.zeros((nvox, nblocks))
         inputs = tqdm(range(nblocks),
-                      desc='Extracting AWF          ',
+                      desc='Extracting AWF',
+                      bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='iter',
                       ncols=tqdmWidth)
         for i in inputs:
             maxk = np.stack(self.kurtosisCoeff(
                 self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))]))
-            maxk = np.nanmean(maxk, axis=0)
+            maxk = np.nanmax(maxk, axis=0)
         awf = np.divide(maxk, (maxk + 3))
         # Changes voxels less than minZero, nans and infs to minZero
         awf[np.logical_or(
@@ -878,7 +885,8 @@ class DWI(object):
         ias_rd = np.zeros(nvox)
         ias_tort = np.zeros(nvox)
         inputs = tqdm(range(nvox),
-                      desc='Extracting EAS and IAS  ',
+                      desc='Extracting EAS and IAS',
+                      bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='vox',
                       ncols=tqdmWidth)
         eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort = zip(*Parallel(
@@ -896,7 +904,6 @@ class DWI(object):
         ias_ad = vectorize(np.array(ias_ad), self.mask)
         ias_rd = vectorize(np.array(ias_rd), self.mask)
         ias_tort = vectorize(np.array(ias_tort), self.mask)
-        np.seterr(**defaultErrorState)
         return awf, eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort
 
     def findViols(self, c=[0, 1, 0]):
@@ -1148,7 +1155,8 @@ class DWI(object):
             print('Entered iteration value exceeds 10...resetting to 10')
             iter = 10
         inputs = tqdm(range(iter),
-                      desc='AKC Outlier Detection   ',
+                      desc='AKC Outlier Detection',
+                      bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='blk',
                       ncols=tqdmWidth)
         for i in inputs:
@@ -1195,7 +1203,8 @@ class DWI(object):
             np.where(akc_out))  # Locate coordinates of violations
         nvox = violIdx.shape[1]
         for i in tqdm(range(dt.shape[-1]),
-                      desc='AKC Correction          ',
+                      desc='AKC Correction',
+                      bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='tensor',
                       ncols=tqdmWidth):
             for j in range(nvox):
@@ -1376,7 +1385,7 @@ class DWI(object):
                     #     bmat.T, np.log(dwi)))
                 except:
                     dt_ = np.full((bmat.shape[1], 1), minZero)
-                w = np.exp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
+                w = highprecisionexp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
                 try:
                     dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))),
                                           (np.log(dwi) * w), rcond=None)[0]
@@ -1396,7 +1405,8 @@ class DWI(object):
                 return sigma_
             sigma_ = np.zeros((nvox,1))
             inputs = tqdm(range(nvox),
-                          desc='IRLLS: Noise Estimation ',
+                          desc='IRLLS Noise Estimation',
+                          bar_format='{desc}: [{percentage:0.0f}%]',
                           unit='vox',
                           ncols=tqdmWidth)
             sigma_ = Parallel(n_jobs=self.workers, prefer='processes') \
@@ -1419,14 +1429,13 @@ class DWI(object):
             n_i = dwi_i.size
             ndof_i = n_i - bmat_i.shape[1]
             # WLLS estimation
-
             try:
                 dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
                 # dt_i = np.linalg.solve(np.dot(bmat_i.T, bmat_i),
                 #                        np.dot(bmat_i.T, np.log(dwi_i)))
             except:
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
-            w = np.exp(np.matmul(bmat_i, dt_i))
+            w = highprecisionexp(np.matmul(bmat_i, dt_i))
             try:
                 dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))),
                                        (np.log(dwi_i).reshape(
@@ -1440,12 +1449,12 @@ class DWI(object):
                 #                (dwi_i.shape[0], 1)) * w)))
             except:
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
-            dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
-
+            dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
             # Goodness-of-fit
             residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - \
                      np.log(dwi_hat)
             residu_ = dwi_i.reshape((dwi_i.shape[0],1)) - dwi_hat
+            
             try:
                 chi2 = np.sum((residu_ * residu_) /\
                               np.square(sigma)) / (ndof_i) -1
@@ -1459,6 +1468,7 @@ class DWI(object):
             gof2 = gof
             # Iterative reweighning procedure
             iter = 0
+            np.seterr(divide='raise', invalid='raise')
             while (not gof) and (iter < maxiter):
                 try:
                     C = np.sqrt(n_i/(n_i-nparam)) * \
@@ -1490,7 +1500,7 @@ class DWI(object):
                     #                (dwi_i.shape[0], 1)) * w)))
                 except:
                     dt_i = np.full((bmat_i.shape[1], 1), minZero)
-                dwi_hat = np.exp(np.matmul(bmat_i, dt_i))
+                dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
                 dwi_hat[dwi_hat < 1] = 1
                 residu = np.log(
                     dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
@@ -1500,6 +1510,7 @@ class DWI(object):
                 gof = np.linalg.norm(
                     dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
                 conv = iter
+            np.seterr(**defaultErrorState)
             # Outlier detection
             if ~gof2:
                 try:
@@ -1548,7 +1559,7 @@ class DWI(object):
                 #                     np.dot(bmat_i.T, np.log(dwi_i)))
             except:
                 dt_ = np.full((bmat_i.shape[1], 1), minZero)
-            w = np.exp(np.matmul(bmat_i, dt_))
+            w = highprecisionexp(np.matmul(bmat_i, dt_))
             try:
                 dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
                                            rcond=None)[0]
@@ -1568,16 +1579,15 @@ class DWI(object):
             #      np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
             # md = np.sum(eigv)/3
             return reject.reshape(-1), dt.reshape(-1)#, fa, md
-        np.seterr(invalid='raise', divide='raise')
         inputs = tqdm(range(nvox),
-                          desc='IRLLS: Outlier Detection',
+                          desc='IRLLS Outlier Detection',
+                          bar_format='{desc}: [{percentage:0.0f}%]',
                           unit='vox',
                           ncols=tqdmWidth)
         (reject, dt) = zip(*Parallel(n_jobs=self.workers, prefer='processes') \
             (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
         # for i in inputs:
         #     reject[:,i], dt[:,i] = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
-        np.seterr(**defaultErrorState)
         dt = np.array(dt)
         # self.dt = dt
         #Unscaling
@@ -1825,3 +1835,32 @@ def clipImage(img, range):
     img[img > range[1]] = range[1]
     img[img < range[0]] = range[0]
     return img
+
+def highprecisionexp(array, maxp=1e32):
+    """Prevents overflow warning with numpy.exp by assigning overflows
+    to a maxumum precision value
+    Classification: Function
+
+    Usage
+    -----
+    a = highprecisionexp(array)
+
+    Parameters
+    ----------
+    array:  array or scalar of number to run np.exp on
+    maxp: maximum preicison to assign if overflow
+        default: 1E32
+
+    Returns
+    -------
+    exponent or max-precision
+    """
+    np.seterr(all='ignore')
+    defaultErrorState = np.geterr()
+    np.seterr(over='raise', invalid='raise')
+    try:
+        ans = np.exp(array)
+    except:
+        ans = np.full(array.shape, maxp)
+    np.seterr(**defaultErrorState)
+    return ans

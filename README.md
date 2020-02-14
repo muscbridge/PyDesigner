@@ -1,37 +1,21 @@
-# PyDesigner [DEVELOPMENTAL CYCLE]
+# PyDesigner
 
 [![Actions Status](https://github.com/m-ama/PyDesigner/workflows/Docker%20Build%20(Latest)/badge.svg)](https://github.com/m-ama/PyDesigner/commit/3b049c5f491ff33faf77116b135ce86e49189c27/checks?check_suite_id=332225619)
 [![Actions Status](https://github.com/m-ama/PyDesigner/workflows/Docker%20Build%20(Release)/badge.svg)](https://github.com/m-ama/PyDesigner/actions?query=workflow%3A%22Docker+Build+%28Release%29%22)
 [![Docker Pulls](https://img.shields.io/docker/pulls/dmri/neurodock?logo=docker)](https://hub.docker.com/r/dmri/neurodock)
 
-**Project is currently under developmental cycle and is undergoing stability testing and debugging. Users are recommended to wait for a stable public release instead.**
-
 <p align="center">
   <img src="https://i.imgur.com/Anc33XI.png" width="512">
 </p>
 
-**_Disclaimer:_**
-```
-This project is in early stages of development and most likely will not work as intended. 
-We are not responsible for any data corruption, loss of valuable data, computer issues, you 
-getting fired because you chose to run this, or a thermonuclear war. We strongly encourage 
-all potential users to wait for an official release. In all seriousness, do NOT used this for
-any data analysis, speculation, or writing papers: 1) not all citations have been incorporated, 
-and 2) this is a developmental cycle with no papers to cite back on.
-```
+PyDesigner was inspired by [NYU's DESIGNER](https://github.com/NYU-DiffusionMRI/DESIGNER) dMRI preprocessing pipeline to bring pre- and post- processing to every MRI imaging scientist. This work was motivated by:
 
-PyDesigner is a complete Python port of NYU's DESIGNER pipeline for preprocessing diffusion MRI images (dMRI). This work was motivated by:
-
-* Minimization of **dependencies** to make it easier to deploy
-  and understandable metric compared to the size in bytes.
+* Minimization of **dependencies** for easy deployment
 * **Faster** dMRI preprocessing
 * More **accurate** diffusion and kurtosis tensor estimation via cutting-edge algorithms
 * **Cross-platform compatibility** between Windows, Mac and Linux
-* **Ease-of-use** through Python classes so anyone can preprocess dMRI data
-* **Docker** compatibility for enhanced deployment
-
-This is a collaboration project between MUSC and NYU to bring easy-to-use dMRI preprocessing and diffusion and kurtosis tensor estimation to masses.
-
+* **Ease-of-use** for minimally-experienced researchers
+* **Docker** compatibility for enhanced deployment and compatibility
 
 <p align="center">
   <a href="https://medicine.musc.edu/departments/centers/cbi/dki">
@@ -178,6 +162,9 @@ conda activate dmri
 ```
 **Note**: Environment activation (`conda activate dmri`) needs to be done each time a new terminal window is opened. If this behavior is undesired, you may set this environment as default python environment. Refer to advanced conda user guides or Google search how to do this.
 
+#### Pepare Python for PyDesigner
+**Note: Skip to [automated install](#automated-install) to configure pydesigner automatically**
+
 Once the base environment is created and activated, proceed with the installation of all packages.
 
 1. [NumPy](https://numpy.org/)
@@ -187,11 +174,13 @@ Once the base environment is created and activated, proceed with the installatio
 5. [Multiprocessing](https://docs.python.org/3.4/library/multiprocessing.html?highlight=process)
 6. [Joblib](https://joblib.readthedocs.io/en/latest/)
 7. [TQDM](https://tqdm.github.io/)
+8. [py-cpuinfo](https://github.com/workhorsy/py-cpuinfo)
+9. [matplotlib](https://matplotlib.org/)
 
 Install necessary packages with the commands:
 ```
 conda install -c anaconda numpy scipy joblib
-conda install -c conda-forge tqdm nibabel multiprocess
+conda install -c conda-forge tqdm nibabel multiprocess matplotlib py-cpuinfo 
 pip install --upgrade setuptools
 pip install cvxpy
 ```
@@ -204,9 +193,20 @@ pip install [package name]
 Completion of this step will ready your system for dMRI processing. Let's go!
 
 ### PyDesigner
-On the [main PyDesigner Github page](https://github.com/m-ama/PyDesigner), click the green "Clone or download" button to access the latest PyDesigner build. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip. 
+On the [main PyDesigner Github page](https://github.com/m-ama/PyDesigner), click the green "Clone or download" button to access the latest PyDesigner build. Click "Download ZIP". When the download is complete, find the PyDesigner-master.zip in your Downloads folder and unzip.
 
 PyDesigner is located here: `/PyDesigner-master/designer/pydesigner.py`
+
+#### Automated Install
+PyDesigner can be automatically installed with all dependencies by opening
+a CLI and changing directory to root PyDesigner directory, followed by
+```
+pip install .
+```
+This will execute the setup.py script in root directory to automatically
+configure your Python environment for PyDesigner. When running the
+automated methods, PyDesigner can simply be called with the commad
+`pydesigner` instead of specifying the `python pydesigner.py` prefix.
 
 **Note:** If you need a stable and tested build, download the most recent release from the [Release tab](https://github.com/m-ama/PyDesigner/releases). Click on `Source code (zip)` link and decompress (unzip) to any folder you desire.
 
@@ -272,26 +272,31 @@ Flags are to be preceeded by `--`. For example, to parse a _denoise_ flag, one w
 
   | Flag        | Description |
   | :---------- | :- |
-  |`standard` | runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal) |
-  |`denoise`  |performs denoising|
-  |`extent`   |Denoising extent formatted n,n,n; (forces denoising) is specified|
-  |`degibbs`  |performs gibbs unringing correction|
-  |`smooth`   |performs smoothing|
-  |`rician`   |performs rician bias correction|
-  |`mask`     |computes brain mask prior to tensor fitting; recommended|
-  |`maskthr`  |FSL bet threshold used for brain masking; specify only when using `--mask`|
-  |`undistort`|performs image undistortion via FSL eddy|
-  |`topup`    | performs EPI correction byincorporating topup B0 series; required for `--undistort`|
-  |`o`        |specifies output folder|
-  |`force`    |overwrites existing files in output folder|
-  |`resume`   |resumes processing from a previous state; only if same output folder|
-  |`resume`   |resumes processing from a previous state; only if same output folder|
-  |`nofit`    |preprocess only; does not perform tensor fitting and parameter extraction|
-  |`noakc`    |disables outlier correction on kurtosis fitting metrics|
-  |`nooutliers`|disables IRWLLS outlier detection (not recommended for DKI)|
-  |`fit_constraints`|specifies constraints for WLLS fitting; formatted n,n,n|
-  |`verbose`  |prints out all output: recommended for debugging|
-  |`adv`      |disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**|
+  |`-h`|opens help text|
+  |`-o, --output`|specifies output folder|
+  |`-s, --standard` | runs the standard pipeline (denoising, gibbs unringing, topup + eddy, b1 bias correction, CSF-excluded smoothing, rician bias correction, normalization to white matter in the first B0 image, IRWLLS, CWLLS DKI fit, outlier detection and removal) |
+  |`--denoise`  |performs denoising|
+  |`--extent [n,n,n,]`   |Denoising extent formatted n,n,n; default: 5,5,5; forces denoising|
+  |`--degibbs`  |performs gibbs unringing correction|
+  |`--smooth`   |performs smoothing|
+  |`--fwhm [FWHM]`|specifies the full width half maximum (FWHM) for smoothing; default: 1.25|
+  |`--rician`   |performs rician bias correction|
+  |`--mask`     |computes brain mask prior to tensor fitting; recommended|
+  |`--maskthr`  |FSL bet threshold used for brain masking; default: 0.25; specify only when using `--mask`|
+  |`--user_mask` |path to user-provided mask|
+  |`--undistort`|performs image undistortion via FSL eddy|
+  |`--epiboost`|discards all but one B0 from each phase encoding direction to speed up TOPUP|
+  |`--wmti`     |computes WMTI parameters|
+  |`--fit_constraints [n,n,n,]`|specifies constraints for WLLS fitsting; formatted n,n,n|
+  |`--force`    |overwrites existing files in output folder|
+  |`--resume`   |resumes processing from a previous state; only if same output folder|
+  |`--nofit`    |preprocess only; does not perform tensor fitting and parameter extraction|
+  |`--noakc`    |disables outlier correction on kurtosis fitting metrics|
+  |`--nooutliers`|disables IRWLLS outlier detection (not recommended for DKI)|
+  |`--noqc`|disables computation of acqusition QC metrics|
+  |`--nthreads`  |specify number of CPU workers to use in processing|
+  |`--verbose`  |prints out all output: recommended for debugging|
+  |`--adv`      |disables safety checks for advanced users who want to force a preprocessing step. **WARNING: FOR ADVANCED USERS ONLY**|
 
 ## Docker Setup
 
