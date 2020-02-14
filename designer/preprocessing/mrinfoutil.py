@@ -203,18 +203,18 @@ def transform(path):
 
 def commandhistory(path):
     """
-   Returns a list of command history (manipulations or transformations)
-   performed on MRtrix file format .mif
+    Returns a list of command history (manipulations or transformations)
+    performed on MRtrix file format .mif
 
-   Parameters
-   ----------
-   path:   string
+    Parameters
+    ----------
+    path:   string
            path to input image or directory
 
-   Returns
-   -------
-   Tuple
-   """
+    Returns
+    -------
+    List
+    """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
                       'folder or file specified exists.')
@@ -232,7 +232,7 @@ def commandhistory(path):
     # Remove new line delimiter
     console = str(completion.stdout).split('\\n')
     # Remove 'b'
-    console = [s.split('b')[-1] for s in console]
+    console[0] = console[0][1:]
     # Remove quotes
     console = [s.replace("'", "") for s in console]
     # Condense empty strings
@@ -243,4 +243,100 @@ def commandhistory(path):
     console = [re.sub(r'\([^)]*\)', '', s) for s in console]
     # Remove whitespace to the right of string
     console = [s.rstrip() for s in console]
-    return tuple(console)
+    return list(console)
+
+def dwscheme(path):
+    """
+    Returns a list of diffusion weighting scheme
+
+    Parameters
+    ----------
+    path:   string
+           path to input image or directory
+
+    Returns
+    -------
+    List
+    """
+    if not op.exists(path):
+        raise OSError('Input path does not exist. Please ensure that the '
+                      'folder or file specified exists.')
+    ftype = format(path)
+    if ftype != 'MRtrix':
+        raise IOError('This function only works with MRtrix (.mif) '
+                      'formatted filetypes. Please ensure that the input '
+                      'filetype meets this requirement')
+    arg = ['mrinfo', '-dwgrad']
+    arg.append(path)
+    completion = subprocess.run(arg, stdout=subprocess.PIPE)
+    if completion.returncode != 0:
+        raise IOError('Input {} is not currently supported by '
+                      'PyDesigner.'.format(path))
+    # Remove new line delimiter
+    console = str(completion.stdout).split('\\n')
+    # Remove 'b'
+    console[0] = console[0][1:]
+    # Remove quotes
+    console = [s.replace("'", "") for s in console]
+    # Condense empty strings
+    console = [s.replace('"', '') for s in console]
+    # Remove empty strings form list
+    console = list(filter(None, console))
+    # Convert list of strings to float
+    dw_scheme = []
+    for idx_a, line in enumerate(console):
+        nums = []
+        for idx_b, num in enumerate(line.split()):
+            nums.append(float(num))
+        dw_scheme.append(nums)
+    return dw_scheme
+
+def pescheme(path):
+    """
+    Returns a list of phase encoding scheme. If len(pescheme) > 1,
+    the .mif DWI contains more than one directons
+
+    Parameters
+    ----------
+    path:   string
+           path to input image or directory
+
+    Returns
+    -------
+    nPE:    int
+            numer of PE directions
+    PE:     int or int list
+            Phase encoding direction(s)
+    """
+    if not op.exists(path):
+        raise OSError('Input path does not exist. Please ensure that the '
+                      'folder or file specified exists.')
+    ftype = format(path)
+    if ftype != 'MRtrix':
+        raise IOError('This function only works with MRtrix (.mif) '
+                      'formatted filetypes. Please ensure that the input '
+                      'filetype meets this requirement')
+    arg = ['mrinfo', '-petable']
+    arg.append(path)
+    completion = subprocess.run(arg, stdout=subprocess.PIPE)
+    if completion.returncode != 0:
+        raise IOError('Input {} is not currently supported by '
+                      'PyDesigner.'.format(path))
+    # Remove new line delimiter
+    console = str(completion.stdout).split('\\n')
+    # Remove 'b'
+    console[0] = console[0][1:]
+    # Remove quotes
+    console = [s.replace("'", "") for s in console]
+    # Condense empty strings
+    console = [s.replace('"', '') for s in console]
+    # Remove empty strings form list
+    console.remove('')
+    # Convert list of strings to float
+    pe_scheme = []
+    for idx_a, line in enumerate(console):
+        nums = []
+        for idx_b, num in enumerate(line.split()):
+            nums.append(float(num))
+        pe_scheme.append(nums)
+    return pe_scheme

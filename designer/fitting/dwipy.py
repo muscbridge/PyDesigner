@@ -585,6 +585,7 @@ class DWI(object):
                                    constraints[2] == 0):
             inputs = tqdm(range(0, dwi_.shape[1]),
                           desc='Unconstrained Tensor Fit',
+                          bar_format='{desc}: [{percentage:0.0f}%]',
                           unit='vox',
                           ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
@@ -596,7 +597,8 @@ class DWI(object):
             # C is linear inequality constraint matrix A_ub
             C = self.createConstraints(constraints)
             inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Constrained Tensor Fit  ',
+                          desc='Constrained Tensor Fit',
+                          bar_format='{desc}: [{percentage:0.0f}%]',
                           unit='vox',
                           ncols=tqdmWidth)
             self.dt = Parallel(n_jobs=self.workers,
@@ -701,7 +703,8 @@ class DWI(object):
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
-                      desc='DTI params              ',
+                      desc='DTI parameters',
+                      bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='vox',
                       ncols=tqdmWidth)
         values, vectors = zip(
@@ -763,7 +766,8 @@ class DWI(object):
         mk = np.mean(akc, 0)
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
-                      desc='DKI params              ',
+                      desc='DKI parameters',
+                      bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='vox',
                       ncols=tqdmWidth)
         ak, rk, kfa, mkt = zip(*Parallel(n_jobs=self.workers,
@@ -853,13 +857,14 @@ class DWI(object):
         nblocks = 10
         maxk = np.zeros((nvox, nblocks))
         inputs = tqdm(range(nblocks),
-                      desc='Extracting AWF          ',
+                      desc='Extracting AWF',
+                      bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='iter',
                       ncols=tqdmWidth)
         for i in inputs:
             maxk = np.stack(self.kurtosisCoeff(
                 self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))]))
-            maxk = np.nanmean(maxk, axis=0)
+            maxk = np.nanmax(maxk, axis=0)
         awf = np.divide(maxk, (maxk + 3))
         # Changes voxels less than minZero, nans and infs to minZero
         awf[np.logical_or(
@@ -880,7 +885,8 @@ class DWI(object):
         ias_rd = np.zeros(nvox)
         ias_tort = np.zeros(nvox)
         inputs = tqdm(range(nvox),
-                      desc='Extracting EAS and IAS  ',
+                      desc='Extracting EAS and IAS',
+                      bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='vox',
                       ncols=tqdmWidth)
         eas_ad, eas_rd, eas_tort, ias_ad, ias_rd, ias_tort = zip(*Parallel(
@@ -1149,7 +1155,8 @@ class DWI(object):
             print('Entered iteration value exceeds 10...resetting to 10')
             iter = 10
         inputs = tqdm(range(iter),
-                      desc='AKC Outlier Detection   ',
+                      desc='AKC Outlier Detection',
+                      bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='blk',
                       ncols=tqdmWidth)
         for i in inputs:
@@ -1196,7 +1203,8 @@ class DWI(object):
             np.where(akc_out))  # Locate coordinates of violations
         nvox = violIdx.shape[1]
         for i in tqdm(range(dt.shape[-1]),
-                      desc='AKC Correction          ',
+                      desc='AKC Correction',
+                      bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='tensor',
                       ncols=tqdmWidth):
             for j in range(nvox):
@@ -1397,7 +1405,8 @@ class DWI(object):
                 return sigma_
             sigma_ = np.zeros((nvox,1))
             inputs = tqdm(range(nvox),
-                          desc='IRLLS: Noise Estimation ',
+                          desc='IRLLS Noise Estimation',
+                          bar_format='{desc}: [{percentage:0.0f}%]',
                           unit='vox',
                           ncols=tqdmWidth)
             sigma_ = Parallel(n_jobs=self.workers, prefer='processes') \
@@ -1571,7 +1580,8 @@ class DWI(object):
             # md = np.sum(eigv)/3
             return reject.reshape(-1), dt.reshape(-1)#, fa, md
         inputs = tqdm(range(nvox),
-                          desc='IRLLS: Outlier Detection',
+                          desc='IRLLS Outlier Detection',
+                          bar_format='{desc}: [{percentage:0.0f}%]',
                           unit='vox',
                           ncols=tqdmWidth)
         (reject, dt) = zip(*Parallel(n_jobs=self.workers, prefer='processes') \

@@ -11,6 +11,7 @@ import pprint #pprint
 import numpy as np
 import math
 import warnings
+from designer.preprocessing import mrinfoutil
 
 def bvec_is_fullsphere(bvec):
     """Determines if .bvec file is full or half-sphere
@@ -120,40 +121,6 @@ def find_valid_ext(pathname):
     
     return exts
 
-def imagetype(path):
-    """
-    Checks input file type
-
-    Parameters
-    ----------
-    path:   string
-        Directory or file path to inquire
-
-    Returns
-    -------
-    String containing filetype
-    """
-    cmd = ['mrinfo', '-quiet']
-    cmd.append(path)
-    completion = subprocess.run(cmd, stdout=subprocess.PIPE)
-    if completion.returncode != 0:
-        raise IOError('Input {} is not currently supported by '
-                                 'PyDesigner.'.format(path))
-    console = str(completion.stdout).split('\\n')
-    matched_indexes = []
-    # This loop iterates across the console output to find the line
-    # containing the string 'Format'.
-    i = 0
-    while i < len(console):
-        if 'Format' in console[i]:
-            matched_indexes.append(i)
-        i += 1
-    # Indexed line is split and alphabets from the second element are
-    # extracted, which determines the input type.
-    fstring = console[matched_indexes[0]].split()[1]
-    ftype = ''.join(filter(str.isalpha, fstring)).lower()
-    return ftype
-
 class DWIFile:
     """
     Diffusion data file object, used for handling paths and extensions.
@@ -191,6 +158,10 @@ class DWIFile:
         """
         full = name
         [pathname, ext] = op.splitext(full)
+        if ext == '.gz':
+            # split again
+            pathname = op.splitext(pathname)[0]
+            ext = '.nii.gz'
         self.path = op.dirname(pathname)
         self.name = op.basename(pathname)
 
@@ -387,7 +358,7 @@ class DWIParser:
         ftype = []
         i = 0
         while i < len(self.DWIlist):
-            ftype.append(imagetype(self.DWIlist[i]))
+            ftype.append(mrinfoutil.format(self.DWIlist[i]).lower())
             i += 1
         self.InputType = np.unique(ftype)
         if self.InputType.size > 1:
@@ -396,6 +367,7 @@ class DWIParser:
                             'a specific type of input exclusively. '
                             'Detected inputs were: {}'.format(
                 self.InputType))
+        self.InputType = self.InputType[0]
         DWIflist = [op.splitext(i) for i in self.DWIlist]
         # Compressed nifti (.nii.gz) have double extensions, and so
         # require double ext-splitting. The following loop takes care of
@@ -462,10 +434,10 @@ class DWIParser:
         force:      bool
             Forces file overwrite if they already exist
         """
-        # Check whether raw_dwi.(ext) exists
-        if op.exists(op.join(path, 'raw_dwi' + ext)):
+        # Check whether working.(ext) exists
+        if op.exists(op.join(path, 'working' + ext)):
             if force:
-                os.remove(op.join(path, 'raw_dwi' + ext))
+                os.remove(op.join(path, 'working' + ext))
                 for i in range(self.nDWI):
                     if op.exists(op.join(path, ('dwi' + str(i) + '.mif'))):
                         os.remove(op.join(path, ('dwi' + str(i) + '.mif')))
@@ -473,15 +445,16 @@ class DWIParser:
                 raise IOError(
                     'Concatenated series already exists. '
                     'In order to run this please delete the '
-                    'file raw_dwi, use --force, use --resume, or '
+                    'file working, use --force, use --resume, or '
                     'change output destination.')
 
-        if not (resume and op.exists(op.join(path, 'raw_dwi' + ext))):
+        if not (resume and op.exists(op.join(path, 'working' + ext))):
             miflist = []
             # The following loop converts input file into .mif
             for (idx, i) in enumerate(self.DWIlist):
                 if 'nifti' in self.InputType and \
-                        not op.exists(self.JSONlist[idx]):
+                        (not (op.exists(self.BVEClist[idx])) or \
+                                (op.exists(self.BVALlist[idx]))):
                     try:
                         self.json2fslgrad(i)
                     except:
@@ -533,7 +506,7 @@ class DWIParser:
                 for i,fname in enumerate(miflist):
                     cat_arg.append(fname)
                 cat_arg.append(
-                    op.join(path, ('raw_dwi' + '.mif')))
+                    op.join(path, ('working' + '.mif')))
                 cmd = ' '.join(str(e) for e in cat_arg)
                 completion = subprocess.run(cmd, shell=True)
                 if completion.returncode != 0:
@@ -546,14 +519,14 @@ class DWIParser:
                 if force is True:
                     cat_arg.append('-force')
                 cat_arg.append(op.join(path, 'dwi0.mif'))
-                cat_arg.append(op.join(path, 'raw_dwi.mif'))
+                cat_arg.append(op.join(path, 'working.mif'))
                 cmd = ' '.join(str(e) for e in cat_arg)
                 print(cmd)
                 completion = subprocess.run(cmd, shell=True)
                 if completion.returncode != 0:
                     raise Exception('Failed to convert single series')
             if '.mif' not in ext:
-                miflist.append(op.join(path, 'raw_dwi' + '.mif'))
+                miflist.append(op.join(path, 'working' + '.mif'))
 
             # Output concatenated .mif into other formats
             if '.mif' not in ext:
@@ -563,18 +536,18 @@ class DWIParser:
                 if force is True:
                     convert_args.append('-force')
                 convert_args.append('-export_grad_fsl')
-                convert_args.append(op.join(path, 'raw_dwi.bvec'))
-                convert_args.append(op.join(path, 'raw_dwi.bval'))
+                convert_args.append(op.join(path, 'working.bvec'))
+                convert_args.append(op.join(path, 'working.bval'))
                 convert_args.append('-json_export')
-                convert_args.append(op.join(path, 'raw_dwi.json'))
-                convert_args.append(op.join(path, 'raw_dwi.mif'))
-                convert_args.append(op.join(path, 'raw_dwi' + ext))
+                convert_args.append(op.join(path, 'working.json'))
+                convert_args.append(op.join(path, 'working.mif'))
+                convert_args.append(op.join(path, 'working' + ext))
                 cmd = ' '.join(str(e) for e in convert_args)
                 completion = subprocess.run(cmd, shell=True)
                 if completion.returncode != 0:
                     for i, fname in enumerate(miflist):
                         os.remove(fname)
-                    os.remove(op.join(path, 'raw_dwi' + ext))
+                    os.remove(op.join(path, 'working' + ext))
                     raise Exception('Concatenation to ' + str(ext) + ' '
                                     'failed. Please ensure that your input '
                                     'NifTi files have the same phase '
@@ -605,29 +578,30 @@ class DWIParser:
             Path to NifTi file
         """
         image = DWIFile(path)
-        if not image.hasJSON():
-            raise Exception('It is not advisable to run multi-series '
-                            'processing without `.json` files. Please '
-                            'ensure your NifTi files come with .json '
-                            'files.')
-        args_info = ['mrinfo', path]
-        cmd = ' '.join(str(e) for e in args_info)
-        # Reads the "Dimension line of `mrinfo` and extracts the size
-        # of NifTi
-        pipe = subprocess.Popen(cmd, shell=True,
-                                stdout=subprocess.PIPE)
-        strlist = pipe.stdout.readlines()[3].split()
-        dims = [int(i) for i in strlist if i.isdigit()]
-        nDWI = dims[-1]
-        # Check whether for inexistence of gradient table in JSON and
-        # some mention of B0 in EPI
-        if ('b0' in image.json['SeriesDescription'] or \
-                'B0' in image.json['SeriesDescription'] or \
-                'b0' in image.json['ProtocolName'] or \
-                'B0' in image.json['ProtocolName']):
-            bval = np.zeros(nDWI, dtype=int)
-            bvec = np.zeros((3, nDWI), dtype=int)
-            fPath = op.splitext(path)[0]
-            np.savetxt((fPath + '.bvec'), bvec, delimiter=' ', fmt='%d')
-            np.savetxt((fPath + '.bval'), np.c_[bval], delimiter=' ',
-                       fmt='%d')
+        if (image.getBVAL() is None) or (image.getBVEC() is None):
+            if not image.hasJSON():
+                raise Exception('It is not advisable to run multi-series '
+                                'processing without `.json` files. Please '
+                                'ensure your NifTi files come with .json '
+                                'files.')
+            # Get number of 3D volumes in image
+            ndim = mrinfoutil.ndim(image.getFull())
+            if ndim == 4:
+                nDWI = mrinfoutil.size(image.getFull())[-1]
+            else:
+                nDWI = 1
+            if nDWI <= 15:
+                bval = np.zeros(nDWI, dtype=int)
+                bvec = np.zeros((3, nDWI), dtype=int)
+                fPath = op.splitext(path)[0]
+                np.savetxt(op.join(image.getPath(), image.getName() + '.bvec'), 
+                bvec, delimiter=' ', fmt='%d')
+                np.savetxt(op.join(image.getPath(), image.getName() + '.bval'),
+                np.c_[bval], delimiter=' ', fmt='%d')
+            else:
+                raise Exception('PyDesigner currently only supports '
+                                'B0s without BVAL or BVEC pairs if '
+                                'the number of volumes is less than '
+                                '15. Please ensure all your input '
+                                'volumes come with valid BVEC/BVAL '
+                                'pairs and JSON.')

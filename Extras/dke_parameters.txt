@@ -72,7 +72,7 @@ fwhm_noise = 0;                             		% FWHM (in mm) of Gaussian kernel 
 
 % parametric map filtering
 
-median_filter_method = 1;                   		% selective median filtering applied to voxels that violate the minimum directional kurtosis constraints (default: 2): (0) no filtering; (1) weak filtering (voxels with less than 15 unviolated constraints will be filtered); (2) strong filtering (voxels with any constraint violation will be filtered)
+median_filter_method = 0;                   		% selective median filtering applied to voxels that violate the minimum directional kurtosis constraints (default: 2): (0) no filtering; (1) weak filtering (voxels with less than 15 unviolated constraints will be filtered); (2) strong filtering (voxels with any constraint violation will be filtered)
 
 % parametric map interpolation
 
