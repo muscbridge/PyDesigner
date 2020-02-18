@@ -62,7 +62,7 @@ RUN apt-get install -y --no-install-recommends \
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 # Copy and install PyDesigner
-RUn mkdir -p /tmp/PyDesigner
+RUN mkdir -p /tmp/PyDesigner
 ADD . / /tmp/PyDesigner/
 RUN pip3 install /tmp/PyDesigner
 RUN echo "alias python=python3" >> ~/.bashrc && source ~/.bashrc
@@ -102,6 +102,3 @@ ENV PATH=$PATH:/usr/lib/mrtrix3/bin
 # Remove unwanted packages
 RUN apt-get autoremove && apt-get clean
 RUN rm /tmp/fslinstaller.py && rm -r /tmp/PyDesigner
-
-# Create PyDesigner executable
-# RUN printf '#!/bin/bash\npython3 /usr/local/PyDesigner/designer/pydesigner.py "$@"' > /usr/bin/pydesigner && chmod +x /usr/bin/pydesigner
