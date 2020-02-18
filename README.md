@@ -1,7 +1,5 @@
 # PyDesigner
 
-[![Actions Status](https://github.com/m-ama/PyDesigner/workflows/Docker%20Build%20(Latest)/badge.svg)](https://github.com/m-ama/PyDesigner/commit/3b049c5f491ff33faf77116b135ce86e49189c27/checks?check_suite_id=332225619)
-[![Actions Status](https://github.com/m-ama/PyDesigner/workflows/Docker%20Build%20(Release)/badge.svg)](https://github.com/m-ama/PyDesigner/actions?query=workflow%3A%22Docker+Build+%28Release%29%22)
 [![Docker Pulls](https://img.shields.io/docker/pulls/dmri/neurodock?logo=docker)](https://hub.docker.com/r/dmri/neurodock)
 
 <p align="center">
