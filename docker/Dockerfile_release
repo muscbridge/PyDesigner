@@ -64,21 +64,9 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 # Clone PyDesigner
 ADD Installer_PyDesigner.sh /tmp/Installer_PyDesigner.sh
 RUN chmod +x /tmp/Installer_PyDesigner.sh && bash /tmp/Installer_PyDesigner.sh
-ENV PATH=$PATH:/usr/local/PyDesigner/designer
+RUN cd /tmp/PyDesigner && pip3 install .
 RUN echo "alias python=python3" >> ~/.bashrc && source ~/.bashrc
 RUN echo "alias pip=pip3" >> ~/.bashrc && source ~/.bashrc
-RUN echo "alias pydesigner='python3 /usr/local/PyDesigner/designer/pydesigner.py'" >> ~/.bashrc && source ~/.bashrc
-
-# Install Python dependencies
-RUN pip3 install --upgrade setuptools && \
-            pip3 install numpy \
-                        pandas \
-                        scipy \
-                        joblib \
-                        multiprocess \
-                        tqdm \
-                        nibabel \
-                        cvxpy
 
 # Install FSL
 RUN curl https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py -o /tmp/fslinstaller.py
@@ -91,18 +79,17 @@ ENV PATH=$PATH:$FSLDIR/bin
 ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$FSLDIR
 
 # Build and Configure MRTRIX3
-RUN git clone https://github.com/MRtrix3/mrtrix3.git /usr/lib/mrtrix3
+RUN git clone https://github.com/MRtrix3/mrtrix3.git /usr/local/mrtrix3
 ENV CXX=/usr/bin/clang++
 ENV ARCH=native
-RUN cd /usr/lib/mrtrix3 && \
+RUN cd /usr/local/mrtrix3 && \
       ./configure -nogui -openmp && \
       ./build && \
       ./set_path
-ENV PATH=$PATH:/usr/lib/mrtrix3/bin
+ENV PATH=$PATH:/usr/local/mrtrix3/bin
 
 # Remove unwanted packages
 RUN apt-get autoremove && apt-get clean
-RUN rm /tmp/fslinstaller.py && rm /tmp/Installer_PyDesigner.sh
-
-# Create PyDesigner executable
-RUN printf '#!/bin/bash\npython3 /usr/local/PyDesigner/designer/pydesigner.py "$@"' > /usr/bin/pydesigner && chmod +x /usr/bin/pydesigner
+RUN rm /tmp/fslinstaller.py && \
+      rm /tmp/Installer_PyDesigner.sh && \
+      rm -r /tmp/PyDesigner
