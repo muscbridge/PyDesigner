@@ -61,20 +61,19 @@ Slack channel`_ for live support.
 .. _Issues: https://github.com/m-ama/PyDesigner/issues
 .. _M-AMA Slack channel: https://join.slack.com/t/m-ama/shared_invite/enQtOTUyOTU0MTQ1OTQxLTQwOGZlMzI4YmY2YTUxOWY2NmYxMjgwM2E4ODdkNmU3MGYyMjFiMThlYTIwOGQyNzEzMTAzYTZmMmMyM2NjNTc
 
-System Requirements
--------------------
+**System Requirements**
+   Parallel processing in PyDesigner scales almost linearly with the
+   nummber of CPU cores present. The application is also memory-intensive
+   due to the number of parameter maps being computed.
 
-Parallel processing in PyDesigner scales almost linearly with the
-nummber of CPU cores present. The application is also memory-intensive
-due to the number of parameter maps being computed.
+   Based on this evaluation, for processing a single DWI using
+   PyDesigner, we recommend the following minimum system specifications:
 
-Based on this evaluation, for processing a single DWI using
-PyDesigner, we recommend the following minimum system specifications:
-
-    Intel i7-9700 or AMD Ryzen 1800X [8 cores]
-    16 GB RAM
-    12 GB free storage
-    Nvidia CUDA-enabled GPU
+   - Ubuntu 18.04
+   - Intel i7-9700 or AMD Ryzen 1800X [8 cores]
+   - 16 GB RAM
+   - 12 GB free storage
+   - Nvidia CUDA-enabled GPU
 
 .. toctree::
    :maxdepth: 1
