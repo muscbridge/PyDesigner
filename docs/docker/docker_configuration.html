@@ -1,0 +1,378 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Docker Configuration &mdash; PyDesigner v0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Install NeuroDock" href="docker_neurodock.html" />
+    <link rel="prev" title="Docker Installation" href="docker_install.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyDesigner
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/requirements.html">PyDesigner Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/fsl.html">FSL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/mrtrix3.html">MRtrix3 Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/python.html">Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/pydesigner.html">PyDesigner</a></li>
+</ul>
+<p class="caption"><span class="caption-text">NeuroDock (Docker)</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">NeuroDock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker_install.html">Docker Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Docker Configuration</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#docker-preferences">Docker Preferences</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#linux">Linux</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mac-os">Mac OS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#windows">Windows</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#gpu-support">GPU Support</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="docker_neurodock.html">Install NeuroDock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker_neurodock_run.html">Run NeuroDock</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyDesigner</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Docker Configuration</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/docker/docker_configuration.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="docker-configuration">
+<h1>Docker Configuration<a class="headerlink" href="#docker-configuration" title="Permalink to this headline">¶</a></h1>
+<p>Docker can be configured in a wide-varietry of ways based on hardware
+resources available. Parameters such as CPU cores, RAM and storage can
+be assigned to Docker for running NeuroDock.</p>
+<p>For validations purposes, the NeuroDock image was tested to work as
+intended on the following three systems:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Part</p></th>
+<th class="head"><p>Machine A</p></th>
+<th class="head"><p>Machine B</p></th>
+<th class="head"><p>Machine C</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Build</p></td>
+<td><p>Apple iMac Pro</p></td>
+<td><p>Custom</p></td>
+<td><p>Custom</p></td>
+</tr>
+<tr class="row-odd"><td><p>OS</p></td>
+<td><p>Mac OS X Mojave</p></td>
+<td><p>Ubuntu 18.04</p></td>
+<td><p>Microsoft Windows 10 Pro</p></td>
+</tr>
+<tr class="row-even"><td><p>CPU</p></td>
+<td><p>Intel Xeon W [8C/16T]</p></td>
+<td><p>AMD Ryzen R9 2700X [8C/16T]</p></td>
+<td><p>AMD Ryzen R9 2700X [8C/16T]</p></td>
+</tr>
+<tr class="row-odd"><td><p>Memory</p></td>
+<td><p>64 GB</p></td>
+<td><p>16 GB</p></td>
+<td><p>16 GB</p></td>
+</tr>
+<tr class="row-even"><td><p>Video</p></td>
+<td><p>Raden Pro Vega 56 8 GB</p></td>
+<td><p>Nvidia GTX 1080 8 GB</p></td>
+<td><p>Nvidia GTX 1080 8 GB</p></td>
+</tr>
+</tbody>
+</table>
+<p>We found identical results across the three operating systes on all
+these configurations.</p>
+<div class="section" id="docker-preferences">
+<h2>Docker Preferences<a class="headerlink" href="#docker-preferences" title="Permalink to this headline">¶</a></h2>
+<p>Based on Docker’s system requirements, we recommend assigning the
+following sysem resources to Docker:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>CPUs</p></td>
+<td><p>8</p></td>
+</tr>
+<tr class="row-odd"><td><p>Memory</p></td>
+<td><p>16.00 GB</p></td>
+</tr>
+<tr class="row-even"><td><p>Disk image size</p></td>
+<td><p>32.00 GB</p></td>
+</tr>
+</tbody>
+</table>
+<p>By default, Docker assigns itself half the number of available
+CPU cores and 2 GB of memory. Considering that the entire NeuroDock
+image is ~14.5 GB, we recommend at least double in disk image size.
+You may configure your Docker Engine to run on this configuration, or
+input your own values based on your processing needs. The following
+sections detail how to set these parameters.</p>
+<div class="section" id="linux">
+<h3>Linux<a class="headerlink" href="#linux" title="Permalink to this headline">¶</a></h3>
+<p>CPU and memory access to Docker containers on Linux machines is
+manipulated via CFGS scheduler flags at run time. These flags are:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">--cpus=&lt;value&gt;</span></code></p></td>
+<td><p>specify how many CPU cores to use</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">-m</span></code> or <code class="code docutils literal notranslate"><span class="pre">--memory</span></code></p></td>
+<td><p>specify the maximum amount of memory available to containers</p></td>
+</tr>
+</tbody>
+</table>
+<p>For a more comprehensive list of manupulable system parameters for
+for Linux, please visit the <a class="reference external" href="https://docs.docker.com/config/containers/resource_constraints/">Runtime options with Memory, CPUs, and GPUs</a>
+page on Docker documentation.</p>
+</div>
+<div class="section" id="mac-os">
+<h3>Mac OS<a class="headerlink" href="#mac-os" title="Permalink to this headline">¶</a></h3>
+<p>Manipulating these three variables is very simple on Mac OS because
+these parameters are located in the GUI.</p>
+<p>1. On the Docker icon in the status bar, right-click on the Docker
+icon, then <strong>Preferences</strong>.</p>
+<ol class="arabic simple" start="2">
+<li><p>Click on the <strong>Resources</strong> tab on the left</p></li>
+</ol>
+<div class="figure align-center" id="id1">
+<a class="reference internal image-reference" href="images/Docker_Mac_resources.png"><img alt="images/Docker_Mac_resources.png" src="images/Docker_Mac_resources.png" /></a>
+<p class="caption"><span class="caption-text">Docker Mac preferences GUI; click on resources</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>3. The <strong>Resourcs</strong> menu will show you the configuration, please
+change them to desired valus. You may leave “Swap” at default.</p>
+<div class="figure align-center" id="id2">
+<a class="reference internal image-reference" href="images/Docker_Mac_configs.png"><img alt="images/Docker_Mac_configs.png" src="images/Docker_Mac_configs.png" /></a>
+<p class="caption"><span class="caption-text">Docker Mac resources configuration</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+</div>
+<div class="section" id="windows">
+<h3>Windows<a class="headerlink" href="#windows" title="Permalink to this headline">¶</a></h3>
+<p>Similar to the Mac, the same sequence of steps apply for the Windows
+platform.</p>
+<p>1. Right-click on the Dpcker icon in the taskbar, then click on
+<strong>Preferences</strong>.</p>
+<ol class="arabic simple" start="2">
+<li><p>Clock on the <strong>Resources</strong> tab on the left.</p></li>
+</ol>
+<div class="figure align-center" id="id3">
+<a class="reference internal image-reference" href="images/Docker_Win_configs.png"><img alt="images/Docker_Win_configs.png" src="images/Docker_Win_configs.png" /></a>
+<p class="caption"><span class="caption-text">Docker Windows preferences GUI; configure as desired</span><a class="headerlink" href="#id3" title="Permalink to this image">¶</a></p>
+</div>
+<p>3. The <strong>Resourcs</strong> menu will show you the configuration, please
+change them to desired valus. You may leave “Swap” at default.</p>
+<p>Setting the correct configuration will force Docker to not exceed
+these constraints. By splitting up CPU and memory loads, researchers
+can process multiple DWIs simultaneously.</p>
+</div>
+</div>
+<div class="section" id="gpu-support">
+<h2>GPU Support<a class="headerlink" href="#gpu-support" title="Permalink to this headline">¶</a></h2>
+<p>At this time, there is no CUDA or ROCm GPU support. These feature are
+planned for a later release. Please use the non-Docker, native Linux
+configuration to utilize GPU for eddy and EPI correction.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="docker_neurodock.html" class="btn btn-neutral float-right" title="Install NeuroDock" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="docker_install.html" class="btn btn-neutral float-left" title="Docker Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Siddhartha Dhiman, Joshua Teves, Kayti Keith
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

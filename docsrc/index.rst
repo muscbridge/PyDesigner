@@ -92,6 +92,9 @@ PyDesigner, we recommend the following minimum system specifications:
 
    docker/introduction
    docker/docker_install
+   docker/docker_configuration
+   docker/docker_neurodock
+   docker/docker_neurodock_run
 
 
 Indices and tables

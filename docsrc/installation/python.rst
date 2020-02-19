@@ -44,7 +44,7 @@ in this guide with any name of your choice.
 Next, execute the following two line to create a Python environment
 ready for PyD installation.
 
-.. code-block:: python
+.. code-block:: console
 
     $ conda create -n dmri python=3.7
     $ conda install -n dmri pip

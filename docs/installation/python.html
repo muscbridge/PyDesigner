@@ -93,6 +93,14 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="pydesigner.html">PyDesigner</a></li>
 </ul>
+<p class="caption"><span class="caption-text">NeuroDock (Docker)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../docker/introduction.html">NeuroDock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker_install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker_configuration.html">Docker Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker_neurodock.html">Install NeuroDock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker_neurodock_run.html">Run NeuroDock</a></li>
+</ul>
 
             
           
@@ -176,7 +184,7 @@ by your OS, skip PyDesigner installation.</p>
 <div class="section" id="update-conda">
 <h2>Update Conda<a class="headerlink" href="#update-conda" title="Permalink to this headline">¶</a></h2>
 <p>First, update conda with</p>
-<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">conda update conda</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda update conda
 </pre></div>
 </div>
 </div>
@@ -191,8 +199,8 @@ create a conda environment specifically for dMRI preprocessing, called
 in this guide with any name of your choice.</p>
 <p>Next, execute the following two line to create a Python environment
 ready for PyD installation.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">dmri</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span>
-<span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">n</span> <span class="n">dmri</span> <span class="n">pip</span>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> conda create -n dmri <span class="nv">python</span><span class="o">=</span><span class="m">3</span>.7
+<span class="gp">$</span> conda install -n dmri pip
 </pre></div>
 </div>
 <p>The first line create an environment with Python v3.7, while the

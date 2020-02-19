@@ -1,0 +1,343 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Run NeuroDock &mdash; PyDesigner v0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="Install NeuroDock" href="docker_neurodock.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyDesigner
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/requirements.html">PyDesigner Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/fsl.html">FSL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/mrtrix3.html">MRtrix3 Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/python.html">Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/pydesigner.html">PyDesigner</a></li>
+</ul>
+<p class="caption"><span class="caption-text">NeuroDock (Docker)</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">NeuroDock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker_install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker_configuration.html">Docker Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docker_neurodock.html">Install NeuroDock</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Run NeuroDock</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#intro-to-docker-run">Intro to Docker Run</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#practical-run">Practical Run</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#bind-mount">Bind Mount</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#put-it-all-together">Put it all together</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyDesigner</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Run NeuroDock</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/docker/docker_neurodock_run.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="run-neurodock">
+<h1>Run NeuroDock<a class="headerlink" href="#run-neurodock" title="Permalink to this headline">¶</a></h1>
+<p>Congratulations, you’ve come this far. You’ve installed Docker and
+NeuroDock, and are probably wondering how what else to do…</p>
+<p><strong>You’re done. Not even kidding!</strong> You can now start processing data
+with PyDesigner and NeuroDock. It’s almost as if FSL, MRtrix3 and
+PyDesigner commands are built natively into your OS - be it Linux,
+Mac OS, or even Windows!</p>
+<div class="section" id="intro-to-docker-run">
+<h2>Intro to Docker Run<a class="headerlink" href="#intro-to-docker-run" title="Permalink to this headline">¶</a></h2>
+<p>Use the following form of <code class="code docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span></code> command to call all
+command made availble by NeuroDock:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker run <span class="o">[</span>OPTIONS<span class="o">]</span> IMAGE <span class="o">[</span>COMMAND<span class="o">]</span> <span class="o">[</span>ARG...<span class="o">]</span>
+</pre></div>
+</div>
+<p>where,</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Flag</p></th>
+<th class="head"><p>Definition</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">[OPTIONS]</span></code></p></td>
+<td><p>docker options to use when running the container; common options are <code class="code docutils literal notranslate"><span class="pre">-it</span></code>, <code class="code docutils literal notranslate"><span class="pre">-v</span></code>, <code class="code docutils literal notranslate"><span class="pre">-d</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">IMAGE</span></code></p></td>
+<td><p>image name to run; in this instance, this is <code class="code docutils literal notranslate"><span class="pre">dmri/neurodock</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">[COMMAND]</span></code></p></td>
+<td><p>specify which NeuroDock commands to run; these can be FSL, MRtrix3 or PyDesigner commands</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">[ARG]</span></code></p></td>
+<td><p>arguments for <code class="code docutils literal notranslate"><span class="pre">[COMMAND]</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Users are encouraged to visit the <a class="reference external" href="https://docs.docker.com/engine/reference/run/">Docker run reference</a> documentation
+for more information on controlling the :code:<a href="#id1"><span class="problematic" id="id2">`</span></a>docker run ` command.</p>
+</div>
+<div class="section" id="practical-run">
+<h2>Practical Run<a class="headerlink" href="#practical-run" title="Permalink to this headline">¶</a></h2>
+<p>The section above convered a generic way to use the <code class="code docutils literal notranslate"><span class="pre">docker</span> <span class="pre">run</span></code>
+command. For actual data analysis, we use the following options.</p>
+<p>1. <code class="code docutils literal notranslate"><span class="pre">-it</span> <span class="pre">--rm</span></code> to run docker in interative TTY mode. What this
+implies is that your NeuroDock command will run like any other OS
+commands such as <code class="code docutils literal notranslate"><span class="pre">ipconfig</span></code>, <code class="code docutils literal notranslate"><span class="pre">watch</span></code>, <code class="code docutils literal notranslate"><span class="pre">ls</span></code> etc.</p>
+<ol class="arabic simple" start="2">
+<li><p><code class="code docutils literal notranslate"><span class="pre">-v</span></code> to mount the file system or folder to processing</p></li>
+</ol>
+<div class="section" id="bind-mount">
+<h3>Bind Mount<a class="headerlink" href="#bind-mount" title="Permalink to this headline">¶</a></h3>
+<p>The second flag. <code class="code docutils literal notranslate"><span class="pre">-v</span></code>, makes visible the host’s local filesystem
+to a Docker container, which otherwise runs in a completely isolated
+system. By mounting a folder for NeuroDock, you are able to make it
+process data in said folder. The general guideline is to mount one
+subject folder at a time. It is advisable that users read through
+<a class="reference external" href="https://docs.docker.com/storage/bind-mounts/">Docker’s bind mounts</a> to understand how Docker containers handle
+storage.</p>
+<p>The correct syntax for the <code class="code docutils literal notranslate"><span class="pre">-v</span></code> flag is:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">-v [HOST PATH TO MOUNT]:[v]</span>
+</pre></div>
+</div>
+<p>Suppose a subject folder <code class="code docutils literal notranslate"><span class="pre">bond_007</span></code> in need of processing is
+structured the following way:</p>
+<div class="line-block">
+<div class="line">bond_007</div>
+<div class="line">│</div>
+<div class="line">├── nifti</div>
+<div class="line">│   ├── bond_dwi.bval</div>
+<div class="line">│   ├── bond_dwi.bvec</div>
+<div class="line">│   ├── bond_dwi.bval</div>
+<div class="line">│   ├── bond_dwi.json</div>
+<div class="line">│   ├── bond_topup.json</div>
+<div class="line">│   └── bond_topup.nii</div>
+<div class="line">│</div>
+<div class="line">└── processed (empty dir)</div>
+</div>
+<p>This subject needs to be processed PyDesigner read the input nifti
+files in the <code class="code docutils literal notranslate"><span class="pre">nifti</span></code> directory, and saves the outputs in the
+<code class="code docutils literal notranslate"><span class="pre">processed</span></code> directory. Since both <code class="code docutils literal notranslate"><span class="pre">nifti</span></code> and
+<code class="code docutils literal notranslate"><span class="pre">processed</span></code> folders belong to a common parent directory, the
+<code class="code docutils literal notranslate"><span class="pre">bond_007</span></code> directory can be mounted to give NeurDock access to
+both child directories simultaneously.</p>
+<p>Here, the directory <code class="code docutils literal notranslate"><span class="pre">bond_007</span></code> is the <code class="code docutils literal notranslate"><span class="pre">[HOST</span> <span class="pre">PATH</span> <span class="pre">TO</span> <span class="pre">MOUNT]</span></code>,
+the directory that NeuroDock will not be able to see.</p>
+<p>Next, we need to define where within the container this directory is
+mounted, <code class="code docutils literal notranslate"><span class="pre">[TARGET</span> <span class="pre">AT</span> <span class="pre">WHICH</span> <span class="pre">TO</span> <span class="pre">MOUNT]</span></code>. You may simply mount this
+in the root NeuroDock directory at <code class="code docutils literal notranslate"><span class="pre">/data</span></code>.</p>
+<p>The flag to reflect this would then be:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">-v /Users/sid/Desktop/bond_007:/data</span>
+</pre></div>
+</div>
+<p>This would make the contents of host directory <code class="code docutils literal notranslate"><span class="pre">bond_007</span></code>
+available in the NeuroDock at <code class="code docutils literal notranslate"><span class="pre">\data</span></code>. Say, for example, the
+nifti file <code class="code docutils literal notranslate"><span class="pre">bond_dwi.nii</span></code>, is located in the host system at
+<code class="code docutils literal notranslate"><span class="pre">/Users/sid/Desktop/bond_007/nifti/bond_dwi.nii</span></code>. If the above
+mounting scheme is used, the NeuroDock container will see this file in
+<code class="code docutils literal notranslate"><span class="pre">/data/nifti/bond_dwi.nii</span></code></p>
+<p>This filesystem transformation is particularly important when writing
+scripts for automatic or batch processing of subject directories using
+the NeuroDock container.</p>
+</div>
+<div class="section" id="put-it-all-together">
+<h3>Put it all together<a class="headerlink" href="#put-it-all-together" title="Permalink to this headline">¶</a></h3>
+<p>Considering everything on this page, it becomes incredibly easy to
+process a subject using the NeuoDock container. Sticking to
+<code class="code docutils literal notranslate"><span class="pre">bond_007</span></code> example above, and combining everthing so far, one
+could process Mr. Bond’s DWI with the command:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> docker run -it --rm -v /Users/sid/Desktop/bond_007:/data <span class="se">\</span>
+    dmri/neurodock pydesigner --standard <span class="se">\</span>
+    --output /data/processed <span class="se">\</span>
+    /data/nifti/bond_dwi.nii,/data/nifti/bond_topup.nii
+</pre></div>
+</div>
+<p>This command runs the <code class="code docutils literal notranslate"><span class="pre">--standard</span></code> PyDesigner pipeline on
+the input files <code class="code docutils literal notranslate"><span class="pre">/Users/sid/Desktop/bond_007/nifti/bond_dwi.nii</span></code>
+and <code class="code docutils literal notranslate"><span class="pre">/Users/sid/Desktop/bond_007/nifti/bond_topup.nii</span></code>, and
+saves all outputs into the directory <code class="code docutils literal notranslate"><span class="pre">Users/sid/Desktop/bond_007/processed</span></code></p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="docker_neurodock.html" class="btn btn-neutral float-left" title="Install NeuroDock" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Siddhartha Dhiman, Joshua Teves, Kayti Keith
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
