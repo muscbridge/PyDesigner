@@ -2,6 +2,8 @@
 
 [![Docker Pulls](https://img.shields.io/docker/pulls/dmri/neurodock?logo=docker)](https://hub.docker.com/r/dmri/neurodock)
 
+[Please view updated documentation here](https://m-ama.github.io/PyDesigner/)
+
 <p align="center">
   <img src="https://i.imgur.com/Anc33XI.png" width="512">
 </p>
