@@ -17,6 +17,7 @@ help:
 github:
 	@make html
 	@cp -a docs/html/. ./docs
+	@rm -r docs/html/
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

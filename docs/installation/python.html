@@ -1,0 +1,253 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Python &mdash; PyDesigner v0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="PyDesigner" href="pydesigner.html" />
+    <link rel="prev" title="MRtrix3 Installation" href="mrtrix3.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyDesigner
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">PyDesigner Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fsl.html">FSL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrtrix3.html">MRtrix3 Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Python</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#download-and-insall">Download and Insall</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#update-conda">Update Conda</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-new-environment">Create new environment</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="pydesigner.html">PyDesigner</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyDesigner</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Python</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/installation/python.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="python">
+<h1>Python<a class="headerlink" href="#python" title="Permalink to this headline">¶</a></h1>
+<p>PyDesigner was built and tested on Python 3.7, so we enourage all
+users to adopt this version as well. While you may use the Python
+supplied by default on your OS, we highly enocurage users to adopt a
+Conda-based Python like <a class="reference external" href="https://docs.conda.io/en/latest/miniconda.html">Miniconda</a> or <a class="reference external" href="https://www.anaconda.com/">Anaconda</a>. Conda is a command
+line tool that allows the creation of separated environments with different
+python versions and packages. This of it as running multiple virtual
+machines on the a single host - you can easily switch between any for
+different needs, or run them simultaneously.</p>
+<div class="section" id="download-and-insall">
+<h2>Download and Insall<a class="headerlink" href="#download-and-insall" title="Permalink to this headline">¶</a></h2>
+<p>Refer to either of these distributions’ page for installation. This
+guide assumes a conda (Miniconda) installation for setting up Python.
+If you already have conda, or prefer using the default Python supplied
+by your OS, skip PyDesigner installation.</p>
+</div>
+<div class="section" id="update-conda">
+<h2>Update Conda<a class="headerlink" href="#update-conda" title="Permalink to this headline">¶</a></h2>
+<p>First, update conda with</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="go">conda update conda</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="create-new-environment">
+<h2>Create new environment<a class="headerlink" href="#create-new-environment" title="Permalink to this headline">¶</a></h2>
+<p>Creating a conda environment is recommended as this will keep all of
+the dependencies required for this project isolated to just the conda
+environment called dmri. For more information about conda
+environments, see <a class="reference external" href="https://towardsdatascience.com/a-guide-to-conda-environments-bc6180fc533">The Definitive Guide to Conda Environments</a>. Next,
+create a conda environment specifically for dMRI preprocessing, called
+<code class="code docutils literal notranslate"><span class="pre">dmri</span></code>. You can choose any name, but be sure to replace <em>dmri</em>
+in this guide with any name of your choice.</p>
+<p>Next, execute the following two line to create a Python environment
+ready for PyD installation.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">create</span> <span class="o">-</span><span class="n">n</span> <span class="n">dmri</span> <span class="n">python</span><span class="o">=</span><span class="mf">3.7</span>
+<span class="n">conda</span> <span class="n">install</span> <span class="o">-</span><span class="n">n</span> <span class="n">dmri</span> <span class="n">pip</span>
+</pre></div>
+</div>
+<p>The first line create an environment with Python v3.7, while the
+second line installs the PyPi package manager.</p>
+<p>Once this is all set, you may proceed with the installation of PyD.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="pydesigner.html" class="btn btn-neutral float-right" title="PyDesigner" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="mrtrix3.html" class="btn btn-neutral float-left" title="MRtrix3 Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, Siddhartha Dhiman, Joshua Teves, Kayti Keith
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
