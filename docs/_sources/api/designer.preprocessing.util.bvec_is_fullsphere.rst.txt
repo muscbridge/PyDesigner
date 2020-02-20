@@ -1,0 +1,6 @@
+bvec_is_fullsphere
+==================
+
+.. currentmodule:: designer.preprocessing.util
+
+.. autofunction:: bvec_is_fullsphere

@@ -1,0 +1,8 @@
+List of PyDesigner Commands
+===========================
+
+Preprocessing
+-------------
+These functions are reponsible for PyDesigner's preprocessing.
+
+
