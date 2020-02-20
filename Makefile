@@ -14,6 +14,13 @@ help:
 
 .PHONY: help Makefile
 
+# This calls sphinx-apidoc to create an api folder in SOURCEDIR with
+# documentation for all Python modules
+buildapi:
+	@sphinx-apidoc -fMeET -o docsrc/api designer 
+	@echo "Auto-generation of API documentation finished. " \
+			"The generated files are in 'api/'"
+
 github:
 	@make html
 	@cp -a docs/html/. ./docs

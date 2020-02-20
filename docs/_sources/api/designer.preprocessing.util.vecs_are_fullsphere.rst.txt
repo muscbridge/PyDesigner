@@ -1,0 +1,6 @@
+vecs_are_fullsphere
+===================
+
+.. currentmodule:: designer.preprocessing.util
+
+.. autofunction:: vecs_are_fullsphere
