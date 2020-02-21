@@ -16,7 +16,7 @@ To clone the PyDesigner repository, in terminal, run:
 
 .. code-block:: console
 
-    git clone https://github.com/m-ama/PyDesigner.git
+    $ git clone https://github.com/m-ama/PyDesigner.git
 
 Install
 -------
@@ -26,7 +26,7 @@ followed by
 
 .. code-block:: console
 
-    pip install .
+    $ pip install .
 
 This will execute the :code:`setup.py` script in root directory to
 automatically configure your Python environment for PyDesigner. When

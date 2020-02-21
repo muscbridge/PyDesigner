@@ -27,7 +27,7 @@ First, update conda with
 
 .. code-block:: console
     
-    conda update conda
+    $ conda update conda
 
 Create new environment
 ----------------------
@@ -44,10 +44,10 @@ in this guide with any name of your choice.
 Next, execute the following two line to create a Python environment
 ready for PyD installation.
 
-.. code-block:: python
+.. code-block:: console
 
-    conda create -n dmri python=3.7
-    conda install -n dmri pip
+    $ conda create -n dmri python=3.7
+    $ conda install -n dmri pip
 
 The first line create an environment with Python v3.7, while the
 second line installs the PyPi package manager.

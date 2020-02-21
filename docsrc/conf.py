@@ -21,7 +21,7 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = 'PyDesigner'
-copyright = '2020, Siddhartha Dhiman, Joshua Teves, Kayti Keith'
+copyright = '2020, MUSC Advanced MRI Analysis (MAMA)'
 author = 'Siddhartha Dhiman, Joshua Teves, Kayti Keith'
 
 # The full version, including alpha/beta/rc tags
@@ -36,6 +36,7 @@ release = 'v0.2'
 extensions = [
     'sphinx.ext.githubpages',
     'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
     'sphinx_rtd_theme'
 ]
 
@@ -45,7 +46,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+exclude_patterns = ['../docs', 'api/yourpackage.rst']
 
 
 # -- Options for HTML output -------------------------------------------------

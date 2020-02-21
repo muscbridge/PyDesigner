@@ -1,0 +1,288 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>&lt;no title&gt; &mdash; PyDesigner v0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyDesigner
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../installation/requirements.html">PyDesigner Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/fsl.html">FSL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/mrtrix3.html">MRtrix3 Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/python.html">Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation/pydesigner.html">PyDesigner</a></li>
+</ul>
+<p class="caption"><span class="caption-text">NeuroDock (Docker)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../docker/introduction.html">NeuroDock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker_install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker_configuration.html">Docker Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker_neurodock.html">Install NeuroDock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker_neurodock_run.html">Run NeuroDock</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyDesigner</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>&lt;no title&gt;</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/designer.preprocessing.snrplot.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <span class="target" id="module-designer.preprocessing.snrplot"></span><dl class="class">
+<dt id="designer.preprocessing.snrplot.makesnr">
+<em class="property">class </em><code class="sig-prename descclassname">designer.preprocessing.snrplot.</code><code class="sig-name descname">makesnr</code><span class="sig-paren">(</span><em class="sig-param">dwilist</em>, <em class="sig-param">noisepath=None</em>, <em class="sig-param">maskpath=None</em><span class="sig-paren">)</span><a class="headerlink" href="#designer.preprocessing.snrplot.makesnr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class object that computes and prints SNR plots for any number of
+input DWIs</p>
+<dl class="simple">
+<dt>dwilist:    string list</dt><dd><p>list of 4D DWI (nifti-format) paths to evaluate and plot</p>
+</dd>
+<dt>noisepath:  string</dt><dd><p>path to noise map from “dwidenoise”</p>
+</dd>
+<dt>maskpath:   string (optional)</dt><dd><p>path to brain mask</p>
+</dd>
+</dl>
+<p>__init__:       constructs makesnr class
+getuniquebval:  creates a list of unique B-values for the purpose of</p>
+<blockquote>
+<div><p>SNR computation</p>
+</div></blockquote>
+<p>computesnr:     performs SNR computation
+histcount:      bins SNR values
+makeplot:       creates and saves SNR plot from bin counts</p>
+<dl class="method">
+<dt id="designer.preprocessing.snrplot.makesnr.computesnr">
+<code class="sig-name descname">computesnr</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#designer.preprocessing.snrplot.makesnr.computesnr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Computes SNR of all DWIs in class object</p>
+<p>(none)</p>
+<p>snr_dwi:    Numpy array of SNR across all DWI.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="designer.preprocessing.snrplot.makesnr.getuniquebval">
+<code class="sig-name descname">getuniquebval</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#designer.preprocessing.snrplot.makesnr.getuniquebval" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a list of unique B-values for the purpose of SNR
+computation. In the calculation of SNR, B0 signal can be averaged
+becase they are not associated to any direction. This is not true
+for non-B0 values however, because every 3D volume represents a
+different direction. To compute SNR appropriately, differences in
+gradients have to be accounted. This function creates a list of
+B-values in the order they need to appear for the calculation of
+SNR.</p>
+<p>(none)</p>
+<dl class="simple">
+<dt>b_list: Numpy vector containing list of B-vals to be used in</dt><dd><p>SNR calculation</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="designer.preprocessing.snrplot.makesnr.histcount">
+<code class="sig-name descname">histcount</code><span class="sig-paren">(</span><em class="sig-param">nbins=100</em><span class="sig-paren">)</span><a class="headerlink" href="#designer.preprocessing.snrplot.makesnr.histcount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bins SNR into nbins and returns various counting properties</p>
+<p>nbins:  int
+:return:</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="designer.preprocessing.snrplot.makesnr.makeplot">
+<code class="sig-name descname">makeplot</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">smooth=True</em>, <em class="sig-param">smoothfactor=5</em><span class="sig-paren">)</span><a class="headerlink" href="#designer.preprocessing.snrplot.makesnr.makeplot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates and saves SNR plot to a path as SNR.png</p>
+<dl class="simple">
+<dt>path:           string</dt><dd><p>directory to save the plot in</p>
+</dd>
+<dt>smooth:         bool</dt><dd><p>Specify whether to interpolate and smooth</p>
+</dd>
+<dt>smoothfactor:   int</dt><dd><p>smoothing factor to apply</p>
+</dd>
+</dl>
+<p>(none): saves plotted image into directory as SNR.png</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="designer.preprocessing.snrplot.vectorize">
+<code class="sig-prename descclassname">designer.preprocessing.snrplot.</code><code class="sig-name descname">vectorize</code><span class="sig-paren">(</span><em class="sig-param">img</em>, <em class="sig-param">mask</em><span class="sig-paren">)</span><a class="headerlink" href="#designer.preprocessing.snrplot.vectorize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns vectorized image based on brain mask, requires no input
+parameters
+If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
+If the input is 3D or 4D, vectorize it using a mask
+Classification: Method</p>
+<p>vec = dwi.vectorize(img) if there’s no mask
+vec = dwi.vectorize(img, mask) if there’s a mask</p>
+<p>vec: N X number_of_voxels vector or array, where N is the number of DWI
+volumes</p>
+</dd></dl>
+
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, MUSC Advanced MRI Analysis (MAMA)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
