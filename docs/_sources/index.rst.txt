@@ -87,6 +87,12 @@ Slack channel`_ for live support.
 
 .. toctree::
    :maxdepth: 1
+   :caption: PyDesigner IO
+
+   pydesigner_io/pydesigner_args
+
+.. toctree::
+   :maxdepth: 1
    :caption: NeuroDock (Docker)
 
    docker/introduction
