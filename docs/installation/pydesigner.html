@@ -1,0 +1,246 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>PyDesigner &mdash; PyDesigner v0.2 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+  <script type="text/javascript" src="../_static/js/modernizr.min.js"></script>
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="NeuroDock" href="../docker/introduction.html" />
+    <link rel="prev" title="Python" href="python.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> PyDesigner
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="requirements.html">PyDesigner Requirements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fsl.html">FSL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="mrtrix3.html">MRtrix3 Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">PyDesigner</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install">Install</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">NeuroDock (Docker)</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../docker/introduction.html">NeuroDock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker_install.html">Docker Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker_configuration.html">Docker Configuration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker_neurodock.html">Install NeuroDock</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../docker/docker_neurodock_run.html">Run NeuroDock</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PyDesigner</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>PyDesigner</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/installation/pydesigner.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="pydesigner">
+<h1>PyDesigner<a class="headerlink" href="#pydesigner" title="Permalink to this headline">¶</a></h1>
+<p>PyD is an installable Python package deisgned to perform pre- and
+post- processing of dMRI acquisitions.</p>
+<div class="section" id="download">
+<h2>Download<a class="headerlink" href="#download" title="Permalink to this headline">¶</a></h2>
+<p>You may clone the main <a class="reference external" href="https://github.com/m-ama/PyDesigner">PyDesigner repository</a> for the latest build,
+or download the build version of your choice from the <a class="reference external" href="https://github.com/m-ama/PyDesigner/releases">Releases tab</a>.</p>
+<p>To clone the PyDesigner repository, in terminal, run:</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> git clone https://github.com/m-ama/PyDesigner.git
+</pre></div>
+</div>
+</div>
+<div class="section" id="install">
+<h2>Install<a class="headerlink" href="#install" title="Permalink to this headline">¶</a></h2>
+<p>PyDesigner can be automatically installed with all dependencies by
+opening a CLI and changing directory to root PyDesigner directory,
+followed by</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> pip install .
+</pre></div>
+</div>
+<p>This will execute the <code class="code docutils literal notranslate"><span class="pre">setup.py</span></code> script in root directory to
+automatically configure your Python environment for PyDesigner. When
+running the automated methods, PyDesigner can simply be called with
+the commad <code class="code docutils literal notranslate"><span class="pre">pydesigner</span></code>.</p>
+<p><strong>Note:</strong> If you need a stable, tested and versioned build, download
+the most recent release from the Release tab. Click on Source code
+(zip) link and decompress (unzip) to any folder you desire.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../docker/introduction.html" class="btn btn-neutral float-right" title="NeuroDock" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="python.html" class="btn btn-neutral float-left" title="Python" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2020, MUSC Advanced MRI Analysis (MAMA)
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
