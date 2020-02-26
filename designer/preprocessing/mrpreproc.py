@@ -384,6 +384,7 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
     B0_mean = op.join(outdir, 'B0_mean.nii')
     B0_nan = op.join(outdir, 'B0.nii')
     mask = op.join(outdir, 'brain')
+    tmp_brain = op.join(outdir, 'brain.nii')
     # Extract B0 from DWI
     arg_b0_all = ['dwiextract']
     if force:
@@ -412,7 +413,7 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
         raise Exception('Unable to remove NaN from B0 for the '
                         'computation of brain mask. See above for errors.')
     # Compute brain mask from
-    arg_mask = ['bet', B0_nan, mask, '-n', '-m', '-f', str(thresh)]
+    arg_mask = ['bet', B0_nan, mask, '-m', '-f', str(thresh)]
     completion = subprocess.run(arg_mask)
     if completion.returncode != 0:
         raise Exception('Unable to compute brain mask from B0. See above '
@@ -420,6 +421,7 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
     # Remove intermediary file
     os.remove(B0_all)
     os.remove(B0_mean)
+    os.remove(tmp_brain)
     os.rename(op.join(outdir, mask + '_mask.nii'), output)
 
 def smooth(input, output, fwhm=1.25):
