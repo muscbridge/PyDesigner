@@ -1,5 +1,5 @@
-List of PyDesigner Flags
-========================
+List of Flags
+=============
 
 PyDesigner is extremely flexible when it comes to dMRI processing.
 Users can easily enable or disable various preocessing steps without

@@ -87,9 +87,10 @@ Slack channel`_ for live support.
 
 .. toctree::
    :maxdepth: 1
-   :caption: PyDesigner IO
+   :caption: PyDesigner I/O
 
    pydesigner_io/pydesigner_args
+   pydesigner_io/pydesigner_files
 
 .. toctree::
    :maxdepth: 1
@@ -109,8 +110,6 @@ Slack channel`_ for live support.
 
 .. autosummary::
    :toctree: modules
-
-   
 
 Indices and tables
 ==================
