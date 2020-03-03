@@ -179,8 +179,8 @@ folder
 <p>The list of ever possible output file is given in the table below.</p>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 33%" />
-<col style="width: 67%" />
+<col style="width: 39%" />
+<col style="width: 61%" />
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p><strong>Filename</strong></p></td>
@@ -188,108 +188,108 @@ folder
 </tr>
 <tr class="row-even"><td colspan="2"><p><strong>Root Directory</strong></p></td>
 </tr>
-<tr class="row-odd"><td><p>B0.nii</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">B0.nii</span></code></p></td>
 <td><p>mean b0 image extracted from processed DWI (exists
 only if:code:<cite>–mask</cite> is used)</p></td>
 </tr>
-<tr class="row-even"><td><p>brain_mask.nii</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">brain_mask.nii</span></code></p></td>
 <td><p>brain mask extracted from B0.nii (exists only if
 <code class="code docutils literal notranslate"><span class="pre">--mask</span></code> is used)</p></td>
 </tr>
-<tr class="row-odd"><td><p>dwi_preprocessed.nii</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">dwi_preprocessed.nii</span></code></p></td>
 <td><p>fully preprocessed DWI NifTi file</p></td>
 </tr>
-<tr class="row-even"><td><p>dwi_preprocessed.bval</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">dwi_preprocessed.bval</span></code></p></td>
 <td><p>fully preprocessed DWI’s BVAL file in FSL format</p></td>
 </tr>
-<tr class="row-odd"><td><p>dwi_preprocessed.bvec</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">dwi_preprocessed.bvec</span></code></p></td>
 <td><p>fully preprocessed DWI’s BVEC file in FSL format</p></td>
 </tr>
-<tr class="row-even"><td><p>dwi_preprocessed.json</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">dwi_preprocessed.json</span></code></p></td>
 <td><p>fully preprocessed DWI’s BIDS sidecar</p></td>
 </tr>
-<tr class="row-odd"><td><p>dwi_raw.nii</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">dwi_raw.nii</span></code></p></td>
 <td><p>raw DWI NifTi file before preprocessing</p></td>
 </tr>
-<tr class="row-even"><td><p>dwi_raw.bval</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">dwi_raw.bval</span></code></p></td>
 <td><p>raw DWI’s BVAL file in FSL format</p></td>
 </tr>
-<tr class="row-odd"><td><p>dwi_raw.bvec</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">dwi_raw.bvec</span></code></p></td>
 <td><p>raw DWI’s BVEC file in FSL format</p></td>
 </tr>
-<tr class="row-even"><td><p>dwi_raw.json</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">dwi_raw.json</span></code></p></td>
 <td><p>raw DWI’s BIDS sidecar</p></td>
 </tr>
-<tr class="row-odd"><td><p>noisemap.nii</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">noisemap.nii</span></code></p></td>
 <td><p>noisemap NifTi file produced from denoising (exists
 only if <code class="code docutils literal notranslate"><span class="pre">--denoise</span></code> is used)</p></td>
 </tr>
-<tr class="row-even"><td><p>working.mif</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">working.mif</span></code></p></td>
 <td><p>MRtrix3 file formatted DWI that is being preprocessed</p></td>
 </tr>
-<tr class="row-odd"><td><p>log_command.json</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">log_command.json</span></code></p></td>
 <td><p>history of preprocessing steps and commands run of DWI</p></td>
 </tr>
 <tr class="row-even"><td colspan="2"><p><strong>QC Metrics</strong> <code class="code docutils literal notranslate"><span class="pre">root_dir/metrics_qc</span></code></p></td>
 </tr>
-<tr class="row-odd"><td><p>SNR.png</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">SNR.png</span></code></p></td>
 <td><p>snr plots of dwi_raw.nii and dwi_preprocessed.nii</p></td>
 </tr>
-<tr class="row-even"><td><p>/fitting/outliers_akc.nii</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">/fitting/outliers_akc.nii</span></code></p></td>
 <td><p>outliers detected by brute forced kurtosis
 tensor outlier rejection algorithm (3d nifti)</p></td>
 </tr>
-<tr class="row-odd"><td><p>/fitting/outliers_irlls.nii</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">/fitting/outliers_irlls.nii</span></code></p></td>
 <td><p>outliers voxels detected by irlls outlier detection
 (4d nifti)</p></td>
 </tr>
-<tr class="row-even"><td><p>/eddy</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">/eddy</span></code></p></td>
 <td><p>all outputs of the eddy correction (exist if
 <code class="code docutils literal notranslate"><span class="pre">--undistort</span></code> is used)</p></td>
 </tr>
 <tr class="row-odd"><td colspan="2"><p><strong>DTI/DKI Metrics</strong> <code class="code docutils literal notranslate"><span class="pre">root_dir/metrics</span></code></p></td>
 </tr>
-<tr class="row-even"><td><p>ad.nii</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">ad.nii</span></code></p></td>
 <td><p>axial diffusivity map (3d nifti)</p></td>
 </tr>
-<tr class="row-odd"><td><p>rd.nii</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">rd.nii</span></code></p></td>
 <td><p>radial diffusivity map (3d nifti)</p></td>
 </tr>
-<tr class="row-even"><td><p>md.nii</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">md.nii</span></code></p></td>
 <td><p>mean diffusivity map (3d nifti)</p></td>
 </tr>
-<tr class="row-odd"><td><p>fa.nii</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">fa.nii</span></code></p></td>
 <td><p>fractional anisotropy map (3d nifti)</p></td>
 </tr>
-<tr class="row-even"><td><p>fe.nii</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">fe.nii</span></code></p></td>
 <td><p>first eigenvalues; represents the principal direction
 of water (4d nifti)</p></td>
 </tr>
-<tr class="row-odd"><td><p>trace.nii</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">trace.nii</span></code></p></td>
 <td><p>sum of diagnols of in diffusion tensor (3d nifti);
 the mean diffusivity (MD) is three times the trace
 [MD 3 * trace ]</p></td>
 </tr>
-<tr class="row-even"><td><p>ak.nii</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">ak.nii</span></code></p></td>
 <td><p>axial kurtosis map (3 nifti)</p></td>
 </tr>
-<tr class="row-odd"><td><p>rk.nii</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">rk.nii</span></code></p></td>
 <td><p>radial kurtosis map (3d nifti)</p></td>
 </tr>
-<tr class="row-even"><td><p>mk.nii</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">mk.nii</span></code></p></td>
 <td><p>mean kurtosis map (3d nifti)</p></td>
 </tr>
-<tr class="row-odd"><td><p>kfa.nii</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">kfa.nii</span></code></p></td>
 <td><p>kurtosis fractional anisotropy map (3d nifti)</p></td>
 </tr>
-<tr class="row-even"><td><p>mkt.nii</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">mkt.nii</span></code></p></td>
 <td><p>mean kurtosis tensor (3d nifti); alternative calculation
 for mean kurtosis</p></td>
 </tr>
-<tr class="row-odd"><td><p>DT.nii</p></td>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">DT.nii</span></code></p></td>
 <td><p>diffusion tensor (4d nifti; 6 three-dimensional volumes)</p></td>
 </tr>
-<tr class="row-even"><td><p>KT.nii</p></td>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">KT.nii</span></code></p></td>
 <td><p>kurtosis tensor (4d nifti; 15 three dimensional volumes)</p></td>
 </tr>
 </tbody>

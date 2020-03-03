@@ -16,95 +16,95 @@ folder
 
 The list of ever possible output file is given in the table below.
 
-+-----------------------------+----------------------------------------------------------+
-| **Filename**                | **Description**                                          |
-+-----------------------------+----------------------------------------------------------+
-| **Root Directory**                                                                     |
-+-----------------------------+----------------------------------------------------------+
-|                             |                                                          |
-| B0.nii                      | mean b0 image extracted from processed DWI (exists       |
-|                             | only if:code:`--mask` is used)                           |
-+-----------------------------+----------------------------------------------------------+
-|                             |                                                          |
-| brain_mask.nii              | brain mask extracted from B0.nii (exists only if         |
-|                             | :code:`--mask` is used)                                  |
-+-----------------------------+----------------------------------------------------------+
-| dwi_preprocessed.nii        | fully preprocessed DWI NifTi file                        |
-+-----------------------------+----------------------------------------------------------+
-| dwi_preprocessed.bval       | fully preprocessed DWI's BVAL file in FSL format         |
-+-----------------------------+----------------------------------------------------------+
-| dwi_preprocessed.bvec       | fully preprocessed DWI's BVEC file in FSL format         |
-+-----------------------------+----------------------------------------------------------+
-| dwi_preprocessed.json       | fully preprocessed DWI's BIDS sidecar                    |
-+-----------------------------+----------------------------------------------------------+
-| dwi_raw.nii                 | raw DWI NifTi file before preprocessing                  |
-+-----------------------------+----------------------------------------------------------+
-| dwi_raw.bval                | raw DWI's BVAL file in FSL format                        |
-+-----------------------------+----------------------------------------------------------+
-| dwi_raw.bvec                | raw DWI's BVEC file in FSL format                        |
-+-----------------------------+----------------------------------------------------------+
-| dwi_raw.json                | raw DWI's BIDS sidecar                                   |
-+-----------------------------+----------------------------------------------------------+
-|                             |                                                          |
-| noisemap.nii                | noisemap NifTi file produced from denoising (exists      |
-|                             | only if :code:`--denoise` is used)                       |
-+-----------------------------+----------------------------------------------------------+
-| working.mif                 | MRtrix3 file formatted DWI that is being preprocessed    |
-+-----------------------------+----------------------------------------------------------+
-| log_command.json            | history of preprocessing steps and commands run of DWI   |
-+-----------------------------+----------------------------------------------------------+
-| **QC Metrics** :code:`root_dir/metrics_qc`                                             |
-+-----------------------------+----------------------------------------------------------+
-| SNR.png                     | snr plots of dwi_raw.nii and dwi_preprocessed.nii        |
-+-----------------------------+----------------------------------------------------------+
-|                             |                                                          |
-| /fitting/outliers_akc.nii   | outliers detected by brute forced kurtosis               |
-|                             | tensor outlier rejection algorithm (3d nifti)            |
-+-----------------------------+----------------------------------------------------------+
-|                             |                                                          |
-| /fitting/outliers_irlls.nii | outliers voxels detected by irlls outlier detection      |
-|                             | (4d nifti)                                               |
-+-----------------------------+----------------------------------------------------------+
-|                             |                                                          |
-| /eddy                       | all outputs of the eddy correction (exist if             |
-|                             | :code:`--undistort` is used)                             |
-+-----------------------------+----------------------------------------------------------+
-| **DTI/DKI Metrics** :code:`root_dir/metrics`                                           |
-+-----------------------------+----------------------------------------------------------+
-| ad.nii                      | axial diffusivity map (3d nifti)                         |
-+-----------------------------+----------------------------------------------------------+
-| rd.nii                      | radial diffusivity map (3d nifti)                        |
-+-----------------------------+----------------------------------------------------------+
-| md.nii                      | mean diffusivity map (3d nifti)                          |
-+-----------------------------+----------------------------------------------------------+
-| fa.nii                      | fractional anisotropy map (3d nifti)                     |
-+-----------------------------+----------------------------------------------------------+
-| fe.nii                      |                                                          |
-|                             | first eigenvalues; represents the principal direction    |
-|                             | of water (4d nifti)                                      |
-+-----------------------------+----------------------------------------------------------+
-| trace.nii                   |                                                          |
-|                             |                                                          |
-|                             | sum of diagnols of in diffusion tensor (3d nifti);       |
-|                             | the mean diffusivity (MD) is three times the trace       |
-|                             | [MD 3 * trace ]                                          |
-+-----------------------------+----------------------------------------------------------+
-| ak.nii                      | axial kurtosis map (3 nifti)                             |
-+-----------------------------+----------------------------------------------------------+
-| rk.nii                      | radial kurtosis map (3d nifti)                           |
-+-----------------------------+----------------------------------------------------------+
-| mk.nii                      | mean kurtosis map (3d nifti)                             |
-+-----------------------------+----------------------------------------------------------+
-| kfa.nii                     | kurtosis fractional anisotropy map (3d nifti)            |
-+-----------------------------+----------------------------------------------------------+
-| mkt.nii                     |                                                          |
-|                             | mean kurtosis tensor (3d nifti); alternative calculation |
-|                             | for mean kurtosis                                        |
-+-----------------------------+----------------------------------------------------------+
-| DT.nii                      | diffusion tensor (4d nifti; 6 three-dimensional volumes) |
-+-----------------------------+----------------------------------------------------------+
-| KT.nii                      | kurtosis tensor (4d nifti; 15 three dimensional volumes) |
-+-----------------------------+----------------------------------------------------------+
++-------------------------------------+----------------------------------------------------------+
+| **Filename**                        | **Description**                                          |
++-------------------------------------+----------------------------------------------------------+
+| **Root Directory**                                                                             |
++-------------------------------------+----------------------------------------------------------+
+|                                     |                                                          |
+| :code:`B0.nii`                      | mean b0 image extracted from processed DWI (exists       |
+|                                     | only if:code:`--mask` is used)                           |
++-------------------------------------+----------------------------------------------------------+
+|                                     |                                                          |
+| :code:`brain_mask.nii`              | brain mask extracted from B0.nii (exists only if         |
+|                                     | :code:`--mask` is used)                                  |
++-------------------------------------+----------------------------------------------------------+
+| :code:`dwi_preprocessed.nii`        | fully preprocessed DWI NifTi file                        |
++-------------------------------------+----------------------------------------------------------+
+| :code:`dwi_preprocessed.bval`       | fully preprocessed DWI's BVAL file in FSL format         |
++-------------------------------------+----------------------------------------------------------+
+| :code:`dwi_preprocessed.bvec`       | fully preprocessed DWI's BVEC file in FSL format         |
++-------------------------------------+----------------------------------------------------------+
+| :code:`dwi_preprocessed.json`       | fully preprocessed DWI's BIDS sidecar                    |
++-------------------------------------+----------------------------------------------------------+
+| :code:`dwi_raw.nii`                 | raw DWI NifTi file before preprocessing                  |
++-------------------------------------+----------------------------------------------------------+
+| :code:`dwi_raw.bval`                | raw DWI's BVAL file in FSL format                        |
++-------------------------------------+----------------------------------------------------------+
+| :code:`dwi_raw.bvec`                | raw DWI's BVEC file in FSL format                        |
++-------------------------------------+----------------------------------------------------------+
+| :code:`dwi_raw.json`                | raw DWI's BIDS sidecar                                   |
++-------------------------------------+----------------------------------------------------------+
+|                                     |                                                          |
+| :code:`noisemap.nii`                | noisemap NifTi file produced from denoising (exists      |
+|                                     | only if :code:`--denoise` is used)                       |
++-------------------------------------+----------------------------------------------------------+
+| :code:`working.mif`                 | MRtrix3 file formatted DWI that is being preprocessed    |
++-------------------------------------+----------------------------------------------------------+
+| :code:`log_command.json`            | history of preprocessing steps and commands run of DWI   |
++-------------------------------------+----------------------------------------------------------+
+| **QC Metrics** :code:`root_dir/metrics_qc`                                                     |
++-------------------------------------+----------------------------------------------------------+
+| :code:`SNR.png`                     | snr plots of dwi_raw.nii and dwi_preprocessed.nii        |
++-------------------------------------+----------------------------------------------------------+
+|                                     |                                                          |
+| :code:`/fitting/outliers_akc.nii`   | outliers detected by brute forced kurtosis               |
+|                                     | tensor outlier rejection algorithm (3d nifti)            |
++-------------------------------------+----------------------------------------------------------+
+|                                     |                                                          |
+| :code:`/fitting/outliers_irlls.nii` | outliers voxels detected by irlls outlier detection      |
+|                                     | (4d nifti)                                               |
++-------------------------------------+----------------------------------------------------------+
+|                                     |                                                          |
+| :code:`/eddy`                       | all outputs of the eddy correction (exist if             |
+|                                     | :code:`--undistort` is used)                             |
++-------------------------------------+----------------------------------------------------------+
+| **DTI/DKI Metrics** :code:`root_dir/metrics`                                                   |
++-------------------------------------+----------------------------------------------------------+
+| :code:`ad.nii`                      | axial diffusivity map (3d nifti)                         |
++-------------------------------------+----------------------------------------------------------+
+| :code:`rd.nii`                      | radial diffusivity map (3d nifti)                        |
++-------------------------------------+----------------------------------------------------------+
+| :code:`md.nii`                      | mean diffusivity map (3d nifti)                          |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fa.nii`                      | fractional anisotropy map (3d nifti)                     |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fe.nii`                      |                                                          |
+|                                     | first eigenvalues; represents the principal direction    |
+|                                     | of water (4d nifti)                                      |
++-------------------------------------+----------------------------------------------------------+
+| :code:`trace.nii`                   |                                                          |
+|                                     |                                                          |
+|                                     | sum of diagnols of in diffusion tensor (3d nifti);       |
+|                                     | the mean diffusivity (MD) is three times the trace       |
+|                                     | [MD 3 * trace ]                                          |
++-------------------------------------+----------------------------------------------------------+
+| :code:`ak.nii`                      | axial kurtosis map (3 nifti)                             |
++-------------------------------------+----------------------------------------------------------+
+| :code:`rk.nii`                      | radial kurtosis map (3d nifti)                           |
++-------------------------------------+----------------------------------------------------------+
+| :code:`mk.nii`                      | mean kurtosis map (3d nifti)                             |
++-------------------------------------+----------------------------------------------------------+
+| :code:`kfa.nii`                     | kurtosis fractional anisotropy map (3d nifti)            |
++-------------------------------------+----------------------------------------------------------+
+| :code:`mkt.nii`                     |                                                          |
+|                                     | mean kurtosis tensor (3d nifti); alternative calculation |
+|                                     | for mean kurtosis                                        |
++-------------------------------------+----------------------------------------------------------+
+| :code:`DT.nii`                      | diffusion tensor (4d nifti; 6 three-dimensional volumes) |
++-------------------------------------+----------------------------------------------------------+
+| :code:`KT.nii`                      | kurtosis tensor (4d nifti; 15 three dimensional volumes) |
++-------------------------------------+----------------------------------------------------------+
 
 All other files in folder :code:`/intermediate_nifti` are used by
 PyDesigner for preprocessing flow control, especially to allow
