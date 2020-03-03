@@ -102,15 +102,6 @@ Slack channel`_ for live support.
    docker/docker_neurodock
    docker/docker_neurodock_run
 
-.. toctree::
-   :maxdepth: 4
-   :caption: List of Functions
-   
-   modules/modules
-
-.. autosummary::
-   :toctree: modules
-
 Indices and tables
 ==================
 
