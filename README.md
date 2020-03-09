@@ -2,6 +2,9 @@
 
 [Please view updated documentation here](https://m-ama.github.io/PyDesigner/)
 
+**Warning**
+Do NOT use `--epiboost` flag in any form. In its present implementation, it removes non-indexed B0s completely, leading to inaccuracies in tensor estimation.
+
 <p align="center">
   <img src="https://i.imgur.com/Anc33XI.png" width="512">
 </p>
