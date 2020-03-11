@@ -81,7 +81,7 @@ def plot(input, output, bval=None, mask=None):
     # Normalize to percentage of voxels
     y = np.divide(y, np.count_nonzero(bw)) * 100
     # Plot
-    plt.style.use('ggplot')
+    plt.style.use('seaborn')
     fig, ax = plt.subplots()
     if bval:
         bvals = np.loadtxt(bval, dtype=int)
