@@ -60,8 +60,8 @@ def plot(input, output, bval=None, mask=None):
             if op.splitext(mask)[-1] != '.nii':
                 raise OSError('Input maks {} is not nifti type '
                 ''.format(mask))
-            hdr_mask = nib.load(input)
-            bw = np.array(hdr_mask.dataobj).astype(bool)
+            hdr_mask = nib.load(mask)
+            bw = np.array(hdr_mask.dataobj)
         else:
             raise OSError('Mask path {} does not exist'.format(mask))
     else:
@@ -71,7 +71,8 @@ def plot(input, output, bval=None, mask=None):
     else:
         bvals = np.loadtxt(bval, dtype=int)
     # multiply mask by img
-    img = np.multiply(img, bw)
+    for i in range(vols):
+        img[:,:,:,i] = np.multiply(img[:,:,:,i], bw)
     # Create x-axis
     x = np.arange(start=1, stop=vols, step=1)
     # create y-axis
@@ -79,7 +80,7 @@ def plot(input, output, bval=None, mask=None):
     for i in range(len(x)):
         y[i] = np.count_nonzero(img[:, :, :, i])
     # Normalize to percentage of voxels
-    y = np.divide(y, np.count_nonzero(bw)) * 100
+    y = (y / np.count_nonzero(bw)) * 100
     # Plot
     plt.style.use('seaborn')
     fig, ax = plt.subplots()
