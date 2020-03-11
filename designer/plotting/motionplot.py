@@ -63,7 +63,7 @@ def plot(input, output, voxel=None):
     relbef = dat[:, 1]
     x = np.arange(start=1, stop=nvols+1, step=1)
     # Plot
-    plt.style.use('ggplot')
+    plt.style.use('seaborn')
     fig, ax = plt.subplots()
     ax.plot(x, relone, linewidth=1, label='Relative to first volume')
     ax.plot(x, relbef, linewidth=1, label='Relative to previous volume')
