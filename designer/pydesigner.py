@@ -568,9 +568,11 @@ def main():
         filetable['HEAD'] = filetable['undistorted']
 
         # Plot head motion
-        plot_path_full = op.join(qcpath, 'head_motion.png')
-        motionplot.plot(op.join(eddyqcpath, 'eddy_restricted_movement_rms'),
-                        plot_path_full)
+        if not args.noqc:
+            plot_path_full = op.join(qcpath, 'head_motion.png')
+            motionplot.plot(op.join(eddyqcpath, 'eddy_restricted_movement_rms'),
+                            plot_path_full,
+                            vox=mrinfoutil.spacing(working_path)[0])
 
     #-----------------------------------------------------------------
     # Create Brain Mask
