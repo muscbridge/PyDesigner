@@ -572,7 +572,7 @@ def main():
             plot_path_full = op.join(qcpath, 'head_motion.png')
             motionplot.plot(op.join(eddyqcpath, 'eddy_restricted_movement_rms'),
                             plot_path_full,
-                            voxel=mrinfoutil.spacing(working_path)[0])
+                            voxel=mrinfoutil.spacing(working_path))
 
     #-----------------------------------------------------------------
     # Create Brain Mask
