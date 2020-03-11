@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter
 
-def plot(input, output, bval=None, mask=None):
+def plot(input, output, voxel=None):
     """
     Plots subject motion from eddy_qc output file.
 
@@ -16,6 +16,8 @@ def plot(input, output, bval=None, mask=None):
         path to eddy_qc's
     output: str
         path to brain mask
+    vox:    double
+        size of isotropic voxel in mm
 
     Returns
     -------
@@ -35,14 +37,16 @@ def plot(input, output, bval=None, mask=None):
         'define the output to be an image file.'.format(output))
     if op.splitext(output)[-1] != '.png':
         raise OSError('Output path {} does not indicate a PNG file'
-        ''. format(input))
+        ' '. format(input))
     # Load file
     dat = np.loadtxt(input)
     if dat.size[-1] != 2:
         raise Exception('The input file containing eddy computed '
         'movement should have only two columns. The file {} supplied '
-        'however only contains {} column(s)'.format(input, dat.size[-1])
+        'however only contains {} column(s)'.format(input, dat.size[-1]))
     nvols = dat.shape[0]
+    if vox is not None:
+        dat = dat * vox
     # The datafile being read here should be 
     # `eddy_restricted_movement_rms`, which contians information on
     # how much a subjects moved during a DWI scan, with complete
@@ -61,11 +65,14 @@ def plot(input, output, bval=None, mask=None):
     # Plot
     plt.style.use('ggplot')
     fig, ax = plt.subplots()
-    ax.plot(x, relone, linewidth=1, label='Realtive to first volume')
+    ax.plot(x, relone, linewidth=1, label='Relative to first volume')
     ax.plot(x, relbef, linewidth=1, label='Relative to previous volume')
-    plt.plot(x, cum, linewidth=1, label='Cumulative sum of previous volumes')
+    plt.plot(x, cum, linewidth=1, label='Cumulative motion')
     plt.xlabel('Volume Number')
-    plt.ylabel('RMS of Voxel Displacement')
+    if vox is not None:
+        plt.ylabel('RMS of Head Displacement [mm]')
+    else:
+        plt.ylabel('RMS of Voxel Displacement')
     ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.30), shadow=True, ncol=2)
     ax.xaxis.set_minor_locator(AutoMinorLocator())
     ax.grid(which='minor', linestyle=':', linewidth='0.5')
