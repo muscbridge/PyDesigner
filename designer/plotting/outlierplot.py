@@ -18,9 +18,9 @@ def plot(input, output, bval=None, mask=None):
     input:  str
             list of 4D DWI (nifti-format) paths to evaluate and plot
     output: str
-            path to brain mask
-    bval:   int list
-            list of bvalues per shell
+            output path of plot in .ong format
+    bval:   str
+            path to relevant .bval file
     mask:   str
             path to brain mask in nifti format
     Returns
