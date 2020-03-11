@@ -15,7 +15,8 @@ import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import json
 import numpy as np # array, ndarray
-from designer.preprocessing import util, preparation, snrplot, mrinfoutil, mrpreproc
+from designer.preprocessing import util, preparation, mrinfoutil, mrpreproc
+from designer.plotting import snrplot, outlierplot
 from designer.fitting import dwipy as dp
 from designer.system import systemtools as systools
 from designer.postprocessing import filters
@@ -717,7 +718,20 @@ def main():
             # write outliers to qc folder
             if not args.noqc:
                 outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
+                outlier_plot_full = op.join(qcpath,
+                                    'outliers.png')
                 dp.writeNii(outliers, img.hdr, outlier_full)
+                if not filetable['mask'] is None:
+                    outlierplot.plot(input=outlier_full,
+                                    output=outlier_plot_full,
+                                    bval=filetable['HEAD'].getBVAL(),
+                                    mask=filetable['mask'].getFull())
+                else:
+                    outlierplot.plot(input=outlier_full,
+                                    output=outlier_plot_full,
+                                    bval=filetable['HEAD'].getBVAL(),
+                                    mask=None)
+
             # fit while rejecting outliers
             img.fit(fit_constraints, reject=outliers)
         else:
