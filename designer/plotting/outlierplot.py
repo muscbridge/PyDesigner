@@ -27,6 +27,7 @@ def plot(input, output, bval=None, mask=None):
     -------
     (none)  writes plot to path
     """
+    print('Plotting outliers...')
     if not op.exists(input):
         raise OSError('Input file {} does not exist'.format(input))
     if op.splitext(input)[-1] != '.nii':
