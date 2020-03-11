@@ -16,7 +16,7 @@ import textwrap # dedent
 import json
 import numpy as np # array, ndarray
 from designer.preprocessing import util, preparation, mrinfoutil, mrpreproc
-from designer.plotting import snrplot, outlierplot
+from designer.plotting import snrplot, outlierplot, motionplot
 from designer.fitting import dwipy as dp
 from designer.system import systemtools as systools
 from designer.postprocessing import filters
@@ -566,6 +566,11 @@ def main():
         # update nifti file tracking
         filetable['undistorted'] = DWIFile(nii_undistorted)
         filetable['HEAD'] = filetable['undistorted']
+
+        # Plot head motion
+        plot_path_full = op.join(qcpath, 'head_motion.png')
+        motionplot.plot(op.join(eddyqcpath, 'eddy_restricted_movement_rms'),
+                        plot_path_full)
 
     #-----------------------------------------------------------------
     # Create Brain Mask
