@@ -16,8 +16,8 @@ def plot(input, output, voxel=None):
         path to eddy_qc's
     output: str
         path to brain mask
-    vox:    double
-        size of isotropic voxel in mm
+    voxel:  float tuple
+        size of voxel in 3D i.e. (2.7, 2.7, 2.7) for 2.7 mm isotropic
 
     Returns
     -------
@@ -40,13 +40,14 @@ def plot(input, output, voxel=None):
         ' '. format(input))
     # Load file
     dat = np.loadtxt(input)
-    if dat.size[-1] != 2:
+    if dat.shape[-1] != 2:
         raise Exception('The input file containing eddy computed '
         'movement should have only two columns. The file {} supplied '
         'however only contains {} column(s)'.format(input, dat.size[-1]))
     nvols = dat.shape[0]
-    if vox is not None:
-        dat = dat * vox
+    if voxel is not None:
+        voxel = sum(voxel)/len(voxel)
+        dat = dat * voxel
     # The datafile being read here should be 
     # `eddy_restricted_movement_rms`, which contians information on
     # how much a subjects moved during a DWI scan, with complete
@@ -60,20 +61,22 @@ def plot(input, output, voxel=None):
     #   cum:    cunulative motion from relbef
     relone = dat[:, 0]
     relbef = dat[:, 1]
-    cum = np.cumsum(relbef)
     x = np.arange(start=1, stop=nvols+1, step=1)
     # Plot
     plt.style.use('ggplot')
     fig, ax = plt.subplots()
     ax.plot(x, relone, linewidth=1, label='Relative to first volume')
     ax.plot(x, relbef, linewidth=1, label='Relative to previous volume')
-    plt.plot(x, cum, linewidth=1, label='Cumulative motion')
     plt.xlabel('Volume Number')
-    if vox is not None:
+    if voxel is not None:
         plt.ylabel('RMS of Head Displacement [mm]')
+        plt.text(0, -2, '$\dag$ average voxel dimension is used in '
+                'converting voxel displacement to head displacement '
+                '$V_{avg} = (V_x + V_y + V_z) / 3$',
+                ha='left', size=6)
     else:
         plt.ylabel('RMS of Voxel Displacement')
-    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.30), shadow=True, ncol=2)
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.10), shadow=True, ncol=2)
     ax.xaxis.set_minor_locator(AutoMinorLocator())
     ax.grid(which='minor', linestyle=':', linewidth='0.5')
     plt.title('Intervolume Head Motion')

@@ -572,7 +572,7 @@ def main():
             plot_path_full = op.join(qcpath, 'head_motion.png')
             motionplot.plot(op.join(eddyqcpath, 'eddy_restricted_movement_rms'),
                             plot_path_full,
-                            vox=mrinfoutil.spacing(working_path)[0])
+                            voxel=mrinfoutil.spacing(working_path)[0])
 
     #-----------------------------------------------------------------
     # Create Brain Mask
@@ -682,6 +682,8 @@ def main():
                             verbose=False)
     filetable['preprocessed'] = DWIFile(preprocessed)
     filetable['HEAD'] = filetable['preprocessed']
+    # Remove working.mif
+    os.remove(working_path)
 
     #-----------------------------------------------------------------
     # Compute SNR
