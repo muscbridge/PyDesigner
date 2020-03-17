@@ -599,7 +599,7 @@ def extractnonbzero(input, output, nthreads=None, force=False,
         raise Exception('Unable to extract B0s from DWI for computation '
                         'of brain mask. See above for errors.')
 
-def topupboost(input, output, idx=None, nthreads=None, force=False,
+def epiboost(input, output, num=1, nthreads=None, force=False,
               verbose=False):
     """
     Analyzes an input .mif's PE direction to split into two different
@@ -612,7 +612,7 @@ def topupboost(input, output, idx=None, nthreads=None, force=False,
     ----------
     input (str):    path to input .mif file
     output (str):   path to output .mif file
-    idx (int):      list of B0 indexes to use in topup (default: 0)
+    num (int):      numer of B0s pairs to use in EPI correction
     nthreads (int): number of workers to use
     force (bool):   force overwrite of existing files
     verbose (bool): determine whether to display console output
@@ -621,7 +621,7 @@ def topupboost(input, output, idx=None, nthreads=None, force=False,
     -------
     (none)          system call
     """
-    print('Applying TOPUPBOOST')
+    print('Applying EPIBOOST')
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
                       'the folder or file specified exists.')
@@ -629,6 +629,12 @@ def topupboost(input, output, idx=None, nthreads=None, force=False,
         raise OSError('Specifed directory for output file {} does not '
                       'exist. Please ensure that this is a valid '
                       'directory.'.format(op.dirname(output)))
+    if not isinstance(num, int):
+        raise Exception('Number of B0s to use needs to be specified '
+                        'as an integer.')
+    if not num > 0:
+        raise Exception('Number of B0s to use needs to be a positive '
+                        'integer greater than 0.')
     if not (nthreads is None):
         if not isinstance(nthreads, int):
             raise Exception('Please specify the number of threads as an '
@@ -640,14 +646,26 @@ def topupboost(input, output, idx=None, nthreads=None, force=False,
         raise Exception('Please specify whether verbose is True or False.')
     outdir = op.dirname(output)
     fname_topup = op.join(outdir, 'B0_TOPUP.mif')
-    fname_DWI = op.join(outdir, 'DWI_NO_TOPUP.mif')
-    fname_bzero = op.join(outdir, 'B0_NON_TOPUP.mif')
+    fname_bzero = op.join(outdir, 'B0_ALL.mif')
+    # Extract all B0s
+    arg_B0 = ['dwiextract']
+    if force:
+        arg_B0.append('-force')
+    if not verbose:
+        arg_B0.append('-quiet')
+    if not (nthreads is None):
+        arg_B0.extend(['-nthreads', nthreads])
+    arg_B0.extend(['-bzero', input, fname_bzero])
+    completion = subprocess.run(arg_B0)
+    if completion.returncode != 0:
+        raise Exception('EPIBOOST: failed to extract B0s from DWI '
+                        'See above for errors.')
     # Start by figuring out whether DWI is composed of multiple PE dirs
     # or single PE dirs. If all PE dirs are the same, the dataset likely
     # comes with matching phase encoding and slice timing train,
     # indicating that it has a single PE direction.
-    dw_scheme = np.array(mrinfoutil.dwscheme(input), dtype=int)[:, -1]
-    pe_scheme = np.array(mrinfoutil.pescheme(input))
+    dw_scheme = np.array(mrinfoutil.dwscheme(fname_bzero), dtype=int)[:, -1]
+    pe_scheme = np.array(mrinfoutil.pescheme(fname_bzero))
     if len(pe_scheme) != len(dw_scheme):
         raise Exception('It appears that the input volume possesses a '
                         'dw_scheme of length {}, and pe_scheme of length '
@@ -657,95 +675,42 @@ def topupboost(input, output, idx=None, nthreads=None, force=False,
     uPE, indPE, iPE = np.unique(pe_scheme, axis=0, return_index=True,
                                 return_inverse=True)
     nPE = len(uPE)
-    # Figure out which of unique series refers to actual TOPUP
-    # volumes.
+    if nPE < 2:
+        raise Exception('DWI consists of just one PE direction. '
+                        'Unable to extract B0s.')
+    # Index unique PE directions
     bval = []
     bind = []
     iteridx = np.unique(iPE)
     for i, val in enumerate(iteridx):
         bind.append(np.where(iPE == val)[0].tolist())
         bval.append(dw_scheme[np.where(iPE == val)].tolist())
-    # find where the smallest number of unique bvalue occurs: that
-    # series is the TOPUP sequence
-    seriesidx = [len(np.unique(x).tolist()) for x in bval].index(1)
-    if seriesidx == 0:
-        seriesidx_ = 1
-    else:
-        seriesidx_ = 0
-    if idx is None:
-        idx = list(range(len(bind[seriesidx])))
-    elif isinstance(idx, str):
-        idx = idx.split(',')
-        idx = [int(x) for x in idx]
-    if nPE > 2:
-        raise Exception('Your DWI appears to have more than two '
-                        'different phase encoding directions. It is '
-                        'impossible to correct this at the moment. '
-                        'Please use only two unique PE directions or '
-                        'none.')
-    elif nPE == 2:
-        if len(idx) > len(bind[seriesidx]):
-            raise IndexError('Your selection of {} indices: {} from your '
-                             'topup sequence are more than the {} indices '
-                             'it actually contains. Please make sure '
-                             'your indices do not exceed the total '
-                             'number of 3D volumes in your TOPUP '
-                             'sequence.'.format(len(idx),
-                                                idx,
-                                                len(bind[seriesidx])))
-        # First extract TOPUP vols
-        idx_extract = [bind[seriesidx][i] for i in idx]
-        str_extract = [str(x) for x in idx_extract]
-        arg_topup = ['mrconvert']
-        if force:
-            arg_topup.append('-force')
-        if not verbose:
-            arg_topup.append('-quiet')
-        if not (nthreads is None):
-            arg_topup.extend(['-nthreads', nthreads])
-        arg_topup.extend(['-coord', '3', ','.join(str_extract)])
-        arg_topup.extend([input, op.join(outdir, fname_topup)])
-        completion = subprocess.run(arg_topup)
-        if completion.returncode != 0:
-            raise Exception('TOPUPBOOST: failed to extract specified '
-                            'TOPUP B0 indices. See above for errors.')
-        # next extract non-bzero vols
-        extractnonbzero(input, fname_DWI, nthreads=nthreads, force=force,
-              verbose=verbose)
-        # next extract first B0 from input volume
-        idx_b0 = [i for i in range(len(bval[seriesidx_])) \
-                  if bval[seriesidx_][i] == 0][0]
-        arg_b0 = ['mrconvert']
-        if force:
-            arg_b0.append('-force')
-        if not verbose:
-            arg_b0.append('-quiet')
-        if not (nthreads is None):
-            arg_b0.extend(['-nthreads', nthreads])
-        arg_b0.extend(['-coord', '3', str(idx_b0)])
-        arg_b0.extend([input, op.join(fname_DWI, fname_bzero)])
-        completion = subprocess.run(arg_b0)
-        if completion.returncode != 0:
-            raise Exception('TOPUPBOOST: failed to extract first B0 '
-                            'volume. See above for errors.')
-        # now concatenate the three split series
-        arg_cat = ['mrcat']
-        if force:
-            arg_cat.append('-force')
-        if not verbose:
-            arg_cat.append('-quiet')
-        if not (nthreads is None):
-            arg_cat.extend(['-nthreads', nthreads])
-        arg_cat.extend(['-axis', '3'])
-        arg_cat.extend([fname_bzero, fname_DWI, fname_topup, output])
-        completion = subprocess.run(arg_cat)
-        if completion.returncode != 0:
-            raise Exception('TOPUPBOOST: failed to concatenate topup and '
-                            'main DWI.')
-        # Remove temp files
-        os.remove(fname_topup)
-        os.remove(fname_DWI)
-        os.remove(fname_bzero)
-    else:
-        print('WARNING: Cannot boost `undistortion without any TOPUP  '
-              'sequence')
+    # Check whether number of B0s to extract exceed those in DWI
+    if num > min([len(x) for x in bval]):
+        raise Exception('Specified number of B0s pairs to extract '
+                        '({}) exceed those physically present in DWI '
+                        '({}), please ensure that variable `num` '
+                        'suitably represents the number of B0s in DWI.'
+                        .format(num, min([len(x) for x in bval])))
+    # Extract the first `num` pairs from each PE direction
+    num = np.arange(0, num, dtype=int).tolist()
+    idx_extract = []
+    for idx, val in enumerate(bind):
+        idx_extract.extend([val[i] for i in num])
+    # Extract EPI volume
+    str_extract = [str(x) for x in idx_extract]
+    arg_epi = ['mrconvert']
+    if force:
+        arg_epi.append('-force')
+    if not verbose:
+        arg_epi.append('-quiet')
+    if not (nthreads is None):
+        arg_epi.extend(['-nthreads', nthreads])
+    arg_epi.extend(['-coord', '3', ','.join(str_extract)])
+    arg_epi.extend([fname_bzero, fname_topup])
+    completion = subprocess.run(arg_epi)
+    if completion.returncode != 0:
+        raise Exception('TOPUPBOOST: failed to extract specified '
+                        'TOPUP B0 indices. See above for errors.')
+    # Remove temp files
+    os.remove(fname_bzero)
