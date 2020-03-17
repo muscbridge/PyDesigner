@@ -240,8 +240,8 @@ def degibbs(input, output, nthreads=None, force=False, verbose=False):
         raise Exception('mrdegibbs failed, please look above for error '
                         'sources.')
 
-def undistort(input, output, rpe='rpe_header', qc=None, 
-              nthreads=None, force=False, verbose=False):
+def undistort(input, output, rpe='rpe_header', epib0=1,
+              qc=None, nthreads=None, force=False, verbose=False):
     """
     Runs MRtrix3's `dwipreproc` command with optimal parameters for
     PyDesigner.
@@ -253,6 +253,8 @@ def undistort(input, output, rpe='rpe_header', qc=None,
     output (str):     path to output .mif file
     rpe (str):        reverse phase encoding of the dataset (default:
                       rpe_header)
+    epib0 (int):      number of reverse PE dir B0 pairs to use in
+                      TOPUP correction
     qc (bool):        specify whether to generate eddy QC metric (
                       default: True)
     nthreads (int):   number of threads in multi-threaded applications
@@ -274,6 +276,9 @@ def undistort(input, output, rpe='rpe_header', qc=None,
         raise Exception('Entered RPE selection is not valid. Please '
                         'choose either "rpe_none", "rpe_pair", '
                         '"rpe_all", or "rpe_header".')
+    if not isinstance(epib0, int):
+        raise Exception('Number of TOPUP B0s need to be specified as '
+                        'as an integer.')
     if not qc is None:
         if not isinstance(qc, str):
             raise Exception('Please specify QC directory as a string')
@@ -290,7 +295,6 @@ def undistort(input, output, rpe='rpe_header', qc=None,
                         'or False.')
     if not isinstance(verbose, bool):
         raise Exception('Please specify whether verbose is True or False.')
-    
     rpe = '-' + rpe
     # Get output directory
     outdir = op.dirname(output)
@@ -321,6 +325,19 @@ def undistort(input, output, rpe='rpe_header', qc=None,
     else:
         # half
         repol_string += '--slm=linear'
+    if epib0 > 0:
+        try:
+            epi_path = op.join(outdir, 'B0_EPI.mif')
+            epiboost(input=input,
+                    output=epi_path,
+                    num=epib0,
+                    nthreads=nthreads,
+                    force=force,
+                    verbose=verbose)
+            arg.extend(['-se_epi', epi_path])
+        except:
+            print('[WARNING] Unable to apply EPI boost because DWI '
+            'consists of single PE direction.')
     arg.extend(['-eddy_options', repol_string])
     arg.append(rpe)
     if not qc is None:
@@ -333,6 +350,12 @@ def undistort(input, output, rpe='rpe_header', qc=None,
     # Remove temporarily generated files
     os.remove(op.join(outdir, 'dwiec.bvec'))
     os.remove(op.join(outdir, 'dwiec.bval'))
+    if epib0 > 0:
+        try:
+            os.remove(epi_path)
+        except:
+            print('[Warning] unable to remove {} because it does not '
+            'exist'.format(epi_path))
     
 def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
               verbose=False):
@@ -625,6 +648,8 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
                       'the folder or file specified exists.')
+    if op.splitext(output)[-1] != '.mif':
+        raise OSError('Output should be specified as a .mif file.')
     if not op.exists(op.dirname(output)):
         raise OSError('Specifed directory for output file {} does not '
                       'exist. Please ensure that this is a valid '
@@ -645,7 +670,6 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
     if not isinstance(verbose, bool):
         raise Exception('Please specify whether verbose is True or False.')
     outdir = op.dirname(output)
-    fname_topup = op.join(outdir, 'B0_TOPUP.mif')
     fname_bzero = op.join(outdir, 'B0_ALL.mif')
     # Extract all B0s
     arg_B0 = ['dwiextract']
@@ -707,7 +731,7 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
     if not (nthreads is None):
         arg_epi.extend(['-nthreads', nthreads])
     arg_epi.extend(['-coord', '3', ','.join(str_extract)])
-    arg_epi.extend([fname_bzero, fname_topup])
+    arg_epi.extend([fname_bzero, output])
     completion = subprocess.run(arg_epi)
     if completion.returncode != 0:
         raise Exception('TOPUPBOOST: failed to extract specified '
