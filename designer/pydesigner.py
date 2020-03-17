@@ -139,15 +139,13 @@ def main():
     parser.add_argument('--undistort', action='store_true', default=False,
                         help='Run FSL eddy to perform image undistortion. '
                         'NOTE: needs a --topup to run.')
-    parser.add_argument('--epiboost', default=None, type=str,
-                        metavar='index',
-                        help='Use only the indices specified from '
-                        'reverse phase encoding image to compute '
-                        'the distortion field for TOPUP. This '
-                        'significantly boosts TOPUP speed if your '
-                        'reverse PE contains more than one 3D '
-                        'volumes. Use comma-seperated integers in the '
-                        'form n,n,n... ')
+    parser.add_argument('--epi', default=0, type=int,
+                        metavar='n',
+                        help='Number of reverse phase encoded B0 '
+                        'pairs to use in TOPUP. Using less pairs '
+                        'results in faster TOPUP correction. '
+                        'Specfying 0 results in using all B0 pairs.'
+                        'We recommend using just one pair. Default: 0')
     parser.add_argument('--smooth', action='store_true', default=False,
                         help='Perform smoothing on the DWI data.')
     parser.add_argument('--fwhm', type=float, default=1.25,
@@ -238,14 +236,6 @@ def main():
             force=args.force,
             resume=args.resume)
     working_path = op.join(outpath, 'working' + fType)
-
-    if not args.epiboost is None:
-        mrpreproc.topupboost(input=working_path,
-                             output=working_path,
-                             idx=args.epiboost,
-                             nthreads=args.nthreads,
-                             force=True,
-                             verbose=args.verbose)
 
     # Make an initial conversion to nifti
     init_nii = op.join(outpath, 'dwi_raw.nii')
@@ -548,6 +538,7 @@ def main():
                                 output=mif_undistorted,
                                 rpe='rpe_header',
                                 qc=eddyqcpath,
+                                epib0=args.epi,
                                 nthreads=args.nthreads,
                                 force=args.force,
                                 verbose=args.verbose)
