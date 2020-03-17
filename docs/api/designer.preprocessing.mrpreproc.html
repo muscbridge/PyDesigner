@@ -212,6 +212,23 @@ verbose (bool):   display information messages (default: False)</p>
 </dd></dl>
 
 <dl class="function">
+<dt id="designer.preprocessing.mrpreproc.epiboost">
+<code class="sig-prename descclassname">designer.preprocessing.mrpreproc.</code><code class="sig-name descname">epiboost</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">output</em>, <em class="sig-param">num=1</em>, <em class="sig-param">nthreads=None</em>, <em class="sig-param">force=False</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#designer.preprocessing.mrpreproc.epiboost" title="Permalink to this definition">¶</a></dt>
+<dd><p>Analyzes an input .mif’s PE direction to split into two different
+phase encoding (PE) DWIs. B0s from opposing PE are then extracted
+and concatenated with the DWI. This reduces the number of B0s used
+in undistortion for a better and speedier estimation of the
+distortion field.</p>
+<p>input (str):    path to input .mif file
+output (str):   path to output .mif file
+num (int):      numer of B0s pairs to use in EPI correction
+nthreads (int): number of workers to use
+force (bool):   force overwrite of existing files
+verbose (bool): determine whether to display console output</p>
+<p>(none)          system call</p>
+</dd></dl>
+
+<dl class="function">
 <dt id="designer.preprocessing.mrpreproc.extractbzero">
 <code class="sig-prename descclassname">designer.preprocessing.mrpreproc.</code><code class="sig-name descname">extractbzero</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">output</em>, <em class="sig-param">nthreads=None</em>, <em class="sig-param">force=False</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#designer.preprocessing.mrpreproc.extractbzero" title="Permalink to this definition">¶</a></dt>
 <dd><p>Extracts only bzero shells from an input mif file.</p>
@@ -280,25 +297,8 @@ fwhm (float):   full-width half-maximum (FWHM) of smoothing to apply</p>
 </dd></dl>
 
 <dl class="function">
-<dt id="designer.preprocessing.mrpreproc.topupboost">
-<code class="sig-prename descclassname">designer.preprocessing.mrpreproc.</code><code class="sig-name descname">topupboost</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">output</em>, <em class="sig-param">idx=None</em>, <em class="sig-param">nthreads=None</em>, <em class="sig-param">force=False</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#designer.preprocessing.mrpreproc.topupboost" title="Permalink to this definition">¶</a></dt>
-<dd><p>Analyzes an input .mif’s PE direction to split into two different
-phase encoding (PE) DWIs. B0s from opposing PE are then extracted
-and concatenated with the DWI. This reduces the number of B0s used
-in undistortion for a better and speedier estimation of the
-distortion field.</p>
-<p>input (str):    path to input .mif file
-output (str):   path to output .mif file
-idx (int):      list of B0 indexes to use in topup (default: 0)
-nthreads (int): number of workers to use
-force (bool):   force overwrite of existing files
-verbose (bool): determine whether to display console output</p>
-<p>(none)          system call</p>
-</dd></dl>
-
-<dl class="function">
 <dt id="designer.preprocessing.mrpreproc.undistort">
-<code class="sig-prename descclassname">designer.preprocessing.mrpreproc.</code><code class="sig-name descname">undistort</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">output</em>, <em class="sig-param">rpe='rpe_header'</em>, <em class="sig-param">qc=None</em>, <em class="sig-param">nthreads=None</em>, <em class="sig-param">force=False</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#designer.preprocessing.mrpreproc.undistort" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">designer.preprocessing.mrpreproc.</code><code class="sig-name descname">undistort</code><span class="sig-paren">(</span><em class="sig-param">input</em>, <em class="sig-param">output</em>, <em class="sig-param">rpe='rpe_header'</em>, <em class="sig-param">epib0=1</em>, <em class="sig-param">qc=None</em>, <em class="sig-param">nthreads=None</em>, <em class="sig-param">force=False</em>, <em class="sig-param">verbose=False</em><span class="sig-paren">)</span><a class="headerlink" href="#designer.preprocessing.mrpreproc.undistort" title="Permalink to this definition">¶</a></dt>
 <dd><p>Runs MRtrix3’s <cite>dwipreproc</cite> command with optimal parameters for
 PyDesigner.</p>
 <p>input (str):      path to input .mif file</p>
@@ -308,6 +308,8 @@ rpe (str):        reverse phase encoding of the dataset (default:</p>
 <div><p>rpe_header)</p>
 </div></blockquote>
 <dl class="simple">
+<dt>epib0 (int):      number of reverse PE dir B0 pairs to use in</dt><dd><p>TOPUP correction</p>
+</dd>
 <dt>qc (bool):        specify whether to generate eddy QC metric (</dt><dd><p>default: True)</p>
 </dd>
 </dl>

@@ -33,9 +33,9 @@ THe list below covers all these flags.
 |                                | eddy current correction, and co-registration. Does not run EPI     |
 |                                | correction if reverse phase encoding DWI is absent                 |
 +--------------------------------+--------------------------------------------------------------------+
-| :code:`--epiboost`             |                                                                    |
-|                                | speeds up topup if a reverse PE is present; specify the integer(s) |
-|                                | index of B0 volume to use                                          |
+| :code:`--epi`                  |                                                                    |
+|                                | speeds up topup if a reverse PE is present; specify the number     |
+|                                | (integer) of reverse PE direction B0 pairs to use                  |
 +--------------------------------+--------------------------------------------------------------------+
 | :code:`--mask`                 | computes a brain mask at 0.20 threshold                            |
 +--------------------------------+--------------------------------------------------------------------+
