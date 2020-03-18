@@ -672,18 +672,8 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
     outdir = op.dirname(output)
     fname_bzero = op.join(outdir, 'B0_ALL.mif')
     # Extract all B0s
-    arg_B0 = ['dwiextract']
-    if force:
-        arg_B0.append('-force')
-    if not verbose:
-        arg_B0.append('-quiet')
-    if not (nthreads is None):
-        arg_B0.extend(['-nthreads', nthreads])
-    arg_B0.extend(['-bzero', input, fname_bzero])
-    completion = subprocess.run(arg_B0)
-    if completion.returncode != 0:
-        raise Exception('EPIBOOST: failed to extract B0s from DWI '
-                        'See above for errors.')
+    extractbzero(input, fname_bzero, nthreads=nthreads, force=force,
+              verbose=verbose)
     # Start by figuring out whether DWI is composed of multiple PE dirs
     # or single PE dirs. If all PE dirs are the same, the dataset likely
     # comes with matching phase encoding and slice timing train,
