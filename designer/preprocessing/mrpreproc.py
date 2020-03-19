@@ -18,20 +18,20 @@ def miftonii(input, output, strides='1,2,3,4', nthreads=None,
 
     Parameters
     ----------
-    input: :obj: `str`
+    input : str
         Path to input .mif file
-    output: :obj: `str`
+    output : str
         Path to output .nii file
-    strides: :obj: `str`, optional
+    strides : str, optional
         Specify the strides of the output data in memory
         (Default: '1,2,3,4')
-    nthreads: :obj: `integer`, optional
+    nthreads : int, optional
         Specify the number of threads to use in processing
         (Default: all available threads)
-    force: :obj: `bool`, optional
+    force : bool, optional
         Force overwrite of output files if pre-existing
         (Default:False)
-    verbose: :obj: `bool`, optional
+    verbose : bool, optional
         Specify whether to print console output (Default: False)
 
     Returns
@@ -89,20 +89,20 @@ def niitomif(input, output, strides='1,2,3,4', nthreads=None,
 
     Parameters
     ----------
-    input :obj: `str`
+    input : str
         Path to input .nii file
-    output: :obj: `str`
+    output : str
         Path to output .mif file
-    strides: :obj: `str`, optional
+    strides : str, optional
         Specify the strides of the output data in memory
         (Default: '1,2,3,4')
-    nthreads: :obj: `integer`, optional
+    nthreads : int, optional
         Specify the number of threads to use in processing
         (Default: all available threads)
-    force: :obj: `bool`, optional
+    force : bool, optional
         Force overwrite of output files if pre-existing
         (Default:False)
-    verbose: :obj: `bool`, optional
+    verbose : bool, optional
         Specify whether to print console output (Default: False)
 
     Returns
@@ -169,23 +169,23 @@ def denoise(input, output, noisemap=True, extent='5,5,5', nthreads=None,
 
     Parameters
     ----------
-    input: :obj: `str`
+    input : str
         Path to input .mif file
-    output: :obj: `str`
+    output : str
         Path to output .mif file
-    noisemap: :obj: `bool`, optional
+    noisemap : bool, optional
         Specify whether or not to save the noisemap as a 
         nifti file (Default: True)
-    extent: obj: `str`, optional
+    extent : str, optional
         Set the window size of the denoising filter.
         (Default: '5,5,5')
-    nthreads: :obj: `integer`, optional
+    nthreads : int, optional
         Specify the number of threads to use in processing
         (Default: all available threads)
-    force: :obj: `bool`, optional
+    force : bool, optional
         Force overwrite of output files if pre-existing
         (Default:False)
-    verbose: :obj: `bool`, optional
+    verbose : bool, optional
         Specify whether to print console output (Default: False)
 
     Returns
@@ -239,17 +239,17 @@ def degibbs(input, output, nthreads=None, force=False, verbose=False):
 
     Parameters
     ----------
-    input: :obj: `str`
+    input : str
         Path to input .mif file
-    output: :obj: `str`
+    output : str
         Path to output .mif file
-    nthreads: :obj: `integer`, optional
+    nthreads : int, optional
         Specify the number of threads to use in processing
         (Default: all available threads)
-    force: :obj: `bool`, optional
+    force : bool, optional
         Force overwrite of output files if pre-existing
         (Default:False)
-    verbose: :obj: `bool`, optional
+    verbose : bool, optional
         Specify whether to print console output (Default: False)
 
     Returns
@@ -293,24 +293,24 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
 
     Parameters
     ----------
-    input: :obj: `str`
+    input : str
         Path to input .mif file
-    output: :obj: `str`
+    output : str
         Path to output .mif file
-    rpe: :obj: `str`, {'rpe_header', 'rpe-pair', 'rpe_all, 'rpe_all'}, optional
+    rpe : str, {'rpe_header', 'rpe-pair', 'rpe_all, 'rpe_all'}, optional
         Reverse phase encoding of the dataset. (Default: 'rpe_header')
-    epib0: :obj: `int`
+    epib0 : int
         Number of reverse PE dir B0 pairs to use in TOPUP correction
         (Default: 1)
-    qc: :obj: `bool`
+    qc : bool
         Specify whether to generate eddy QC metrics (Default: True)
-    nthreads: :obj: `integer`, optional
+    nthreads : int, optional
         Specify the number of threads to use in processing
         (Default: all available threads)
-    force: :obj: `bool`, optional
+    force : bool, optional
         Force overwrite of output files if pre-existing
         (Default:False)
-    verbose: :obj: `bool`, optional
+    verbose : bool, optional
         Specify whether to print console output (Default: False)
 
     Returns
@@ -417,19 +417,19 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
 
     Parameters
     ----------
-    input: :obj: `str`
+    input : str
         Path to input .mif file
-    output: :obj: `str`
+    output : str
         Path to output .nii brainmask file
-    thresh: :obj: `float`
+    thresh : float
         BET threshold ranging from 0 to 1 (Default: 0.25)
-    nthreads: :obj: `integer`, optional
+    nthreads : int, optional
         Specify the number of threads to use in processing
         (Default: all available threads)
-    force: :obj: `bool`, optional
+    force : bool, optional
         Force overwrite of output files if pre-existing
         (Default:False)
-    verbose: :obj: `bool`, optional
+    verbose : bool, optional
         Specify whether to print console output (Default: False)
 
     Returns
@@ -513,11 +513,11 @@ def smooth(input, output, fwhm=1.25):
 
     Parameters
     ----------
-    input; :obj: `str`
+    input : str
         Path to input .mif file
-    output: :obj: `str`
+    output : str
         Path to output .mif file
-    fwhm: :obj: `float`
+    fwhm : float
         The full width half max in voxels to be smoothed
         (Default: 1.25)
 
@@ -557,11 +557,11 @@ def riciancorrect(input, output, noise=None):
 
     Parameters
     ----------
-    input: :obj: `str`
+    input : str
         Path to input .mif file
-    output: :obj: `str`
+    output : str
         Path to output .mif file
-    noise: :obj: `str`
+    noise : str
         Path to noise map from dwidenoise in .nii format (Default: None)
 
     Returns
@@ -607,17 +607,17 @@ def extractbzero(input, output, nthreads=None, force=False,
 
     Parameters:
     ----------
-    input: :obj: `str`
+    input : str
         Path to input .mif file
-    output: :obj: `str`
+    output : str
         Path to output .mif file
-    nthreads: :obj: `integer`, optional
+    nthreads : int, optional
         Specify the number of threads to use in processing
         (Default: all available threads)
-    force: :obj: `bool`, optional
+    force : bool, optional
         Force overwrite of output files if pre-existing
         (Default:False)
-    verbose: :obj: `bool`, optional
+    verbose : bool, optional
         Specify whether to print console output (Default: False)
 
     Returns
@@ -660,17 +660,17 @@ def extractnonbzero(input, output, nthreads=None, force=False,
 
     Parameters:
     ----------
-    input: :obj: `str`
+    input : str
         Path to input .mif file
-    output: :obj: `str`
+    output : str
         Path to output .mif file
-    nthreads: :obj: `integer`, optional
+    nthreads : int, optional
         Specify the number of threads to use in processing
         (Default: all available threads)
-    force: :obj: `bool`, optional
+    force : bool, optional
         Force overwrite of output files if pre-existing
         (Default:False)
-    verbose: :obj: `bool`, optional
+    verbose : bool, optional
         Specify whether to print console output (Default: False)
 
     Returns
@@ -717,19 +717,19 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
 
     Parameters:
     ----------
-    input: :obj: `str`
+    input : str
         Path to input .mif file
-    output: :obj: `str`
+    output : str
         Path to output .mif file
-    num: :obj: `int`
+    num : int
         Number of B0s pairs to use in EPI correction (Default: 1)
-    nthreads: :obj: `integer`, optional
+    nthreads : int, optional
         Specify the number of threads to use in processing
         (Default: all available threads)
-    force: :obj: `bool`, optional
+    force : bool, optional
         Force overwrite of output files if pre-existing
         (Default:False)
-    verbose: :obj: `bool`, optional
+    verbose : bool, optional
         Specify whether to print console output (Default: False)
 
     Returns
