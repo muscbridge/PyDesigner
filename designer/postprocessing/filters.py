@@ -65,7 +65,7 @@ def median(input, output, mask=None):
         Path to input nifti file
     output : str
         Path to output nifti file
-    mask :`str`
+    mask : str, optional
         Path to brainmask nifti file (Default: None)
 
     Returns
