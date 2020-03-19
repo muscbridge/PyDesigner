@@ -4,6 +4,7 @@
 """
 This module contains filter(s) for postprocessing DTI/DKI maps
 """
+
 #---------------------------------------------------------------------
 # Package Management
 #---------------------------------------------------------------------
@@ -21,12 +22,16 @@ def readnii(input):
 
     Parameters
     ----------
-    input: path to nifti fule
+    input : str
+        Path to nifti file
 
     Returns
     -------
-    img:    numpy array
-    hdr:    image header
+    hdr : class
+        Nibabel class object
+    img : ndarray
+        3D or 4D array containing the loaded nifti image
+    
     """
     hdr = nib.load(input)
     img = np.array(hdr.dataobj)
@@ -38,9 +43,14 @@ def writenii(hdr, img, output):
 
     Parameters
     ----------
-    hdr:    image header
-    img:    numpy array
-    output: path to save file as
+    hdr : class
+        Nibabel class object
+    img : ndarray
+        3D or 4D array containing the image array
+    output : str
+        Path to save file as
+
+    None; writes out file
     """
     struct = nib.Nifti1Image(img, hdr.affine, hdr.header)
     nib.save(struct, output)
@@ -51,14 +61,16 @@ def median(input, output, mask=None):
 
     Parameters
     ----------
-    input:  path to input nifti file
-    output: path to output nifti file
-    mask:   path to brainmask nifti file
-            default: None
+    input : str
+        Path to input nifti file
+    output : str
+        Path to output nifti file
+    mask :`str`
+        Path to brainmask nifti file (Default: None)
 
     Returns
     -------
-    written to drive
+    None; writes out file
     """
     if not op.exists(input):
         raise IOError('Input file {} does not exist.'.format(input))
