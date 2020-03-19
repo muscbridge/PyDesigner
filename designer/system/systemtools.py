@@ -8,14 +8,10 @@ def isIntel():
     """
     Inquires whether CPU is manufactured by Intel
 
-    Parameters
-    ----------
-    (none)
-
     Returns
     -------
-    ans:    bool
-            True if Intel; False otherwise
+    ans : bool
+        True if Intel; False otherwise
     """
     sysString = cpuinfo.get_cpu_info()['brand']
     if 'Intel' in sysString:
@@ -28,14 +24,10 @@ def isAMD():
     """
     Inquires whether CPU is manufactured by AMD
 
-    Parameters
-    ----------
-    (none)
-
     Returns
     -------
-    ans:    bool
-            True if AMD; False otherwise
+    ans : bool
+        True if AMD; False otherwise
     """
     sysString = cpuinfo.get_cpu_info()['brand']
     if 'AMD' in sysString:
@@ -51,13 +43,13 @@ def setenv(envlist):
 
     Parameters
     ----------
-    envlist:    string list
-                List containing environment variables to set. Each entry in
-                the list is a [(ENV_VARIABLE, ENV_VAL)]
+    envlist : list of str
+    List containing environment variables to set. Each entry in the
+    list is a [(ENV_VARIABLE, ENV_VAL)]
 
     Returns
     -------
-    (none)      sets system variable
+    None; sets environment variables defined in `envlist`
 
     """
     environ = dict(os.environ)
