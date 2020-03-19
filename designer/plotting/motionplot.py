@@ -12,22 +12,21 @@ def plot(input, output, voxel=None):
 
     Parameters
     ----------
-    input:  str
-        path to eddy_qc's
-    output: str
-        path to brain mask
-    voxel:  float tuple
-        size of voxel in 3D i.e. (2.7, 2.7, 2.7) for 2.7 mm isotropic
+    input :  str
+        Path to eddy_qc's
+    output : str
+        Path to brain mask
+    voxel :  tuple of float
+        Size of voxel in 3D i.e. (2.7, 2.7, 2.7) for 2.7 mm isotropic
 
     Returns
     -------
-    none
-        writes plot to path
+    None; writes out plot to file
     
     See Also
     --------
-    outlierplot: plots outliers from IRLLS
-    snrplot:     plots DWI's SNR  
+    outlierplot : plots outliers from IRLLS
+    snrplot : plots DWI's SNR  
     """
     print('Plotting motion...')
     if not op.exists(input):
