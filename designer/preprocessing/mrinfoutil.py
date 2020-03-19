@@ -18,9 +18,9 @@ def getconsole(path, flag):
 
     Parameters
     ----------
-    path: :obj: `str`
+    path : str
         Path to input image or directory
-    flag: :obj: `str`
+    flag : str
         Flag to pass onto mrinfo
 
     Returns
@@ -50,7 +50,7 @@ def format(path):
 
     Parameters
     ----------
-    path: :obj: `str`
+    path : str
         Path to input image or directory
 
     Returns
@@ -67,7 +67,7 @@ def ndim(path):
 
     Parameters
     ----------
-    path: :obj: `str`
+    path : str
         Path to input image or directory
 
     Returns
@@ -84,7 +84,7 @@ def size(path):
 
     Parameters
     ----------
-    path: :obj: `str`
+    path : str
         Path to input image or directory
 
     Returns
@@ -102,7 +102,7 @@ def spacing(path):
 
     Parameters
     ----------
-    path: :obj: `str`
+    path : str
         Path to input image or directory
 
     Returns
@@ -120,7 +120,7 @@ def datatype(path):
 
     Parameters
     ----------
-    path: :obj: `str`
+    path : str
         Path to input image or directory
 
     Returns
@@ -136,7 +136,7 @@ def strides(path):
 
     Parameters
     ----------
-    path: :obj: `str`
+    path : str
         Path to input image or directory
 
     Returns
@@ -154,7 +154,7 @@ def offset(path):
 
     Parameters
     ----------
-    path: :obj: `str`
+    path : str
         Path to input image or directory
 
     Returns
@@ -172,7 +172,7 @@ def multiplier(path):
 
     Parameters
     ----------
-    path: :obj: `str`
+    path : str
         Path to input image or directory
 
     Returns
@@ -190,7 +190,7 @@ def transform(path):
 
     Parameters
     ----------
-    path: :obj: `str` 
+    path : str
         Path to input image or directory
 
     Returns
@@ -219,7 +219,7 @@ def commandhistory(path):
 
     Parameters
     ----------
-    path: :obj: `str`
+    path : str
         Path to input image or directory
 
     Returns
@@ -263,7 +263,7 @@ def dwscheme(path):
 
     Parameters
     ----------
-    path: :obj: `str` 
+    path : str
         Path to input image or directory
 
     Returns
@@ -311,7 +311,7 @@ def pescheme(path):
 
     Parameters
     ----------
-    path: :obj: `str`
+    path : str
         Path to input image or directory
 
     Returns
