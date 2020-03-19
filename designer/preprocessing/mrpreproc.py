@@ -518,8 +518,8 @@ def smooth(input, output, fwhm=1.25):
     output: :obj: `str`
         Path to output .mif file
     fwhm: :obj: `float`
-        Full-width half-maximum (FWHM) of voxel size to apply
-        smoothing (Default: 1.25)
+        The full width half max in voxels to be smoothed
+        (Default: 1.25)
 
     Returns
     -------
