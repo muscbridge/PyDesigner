@@ -11,21 +11,29 @@ minZero = 1e-8
 np.seterr(all='ignore')
 
 def vectorize(img, mask):
-    """ Returns vectorized image based on brain mask, requires no input
+    """
+    Returns vectorized image based on brain mask, requires no input
     parameters
     If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
     If the input is 3D or 4D, vectorize it using a mask
     Classification: Method
 
-    Usage
-    -----
-    vec = dwi.vectorize(img) if there's no mask
-    vec = dwi.vectorize(img, mask) if there's a mask
+    Parameters
+    ----------
+    img : ndarray
+        1D, 2D, 3D or 4D image array to vectorize
+    mask : ndarray
+        3D image array for masking
 
     Returns
     -------
-    vec: N X number_of_voxels vector or array, where N is the number of DWI
-    volumes
+    vec : N X number_of_voxels vector or array, where N is the number
+        of DWI volumes
+
+    Usage
+    -----
+    vec = vectorize(img) if there's no mask
+    vec = vectorize(img, mask) if there's a mask
     """
     if mask is None:
         mask = np.ones((img.shape[0],
@@ -67,26 +75,35 @@ class makesnr:
 
     Parameters
     ----------
-    dwilist:    string list
-                list of 4D DWI (nifti-format) paths to evaluate and plot
-    noisepath:  string
-                path to noise map from "dwidenoise"
-    maskpath:   string (optional)
-                path to brain mask
+    dwilist : list of str
+        List of 4D DWI (nifti-format) paths to evaluate and plot
+    noisepath : str
+        Path to noise map from "dwidenoise"
+    maskpath : str, optional
+        Path to brain mask
 
-    Attributes
+    Methods
     ----------
-    __init__:       constructs makesnr class
-    getuniquebval:  creates a list of unique B-values for the purpose of
+    __init__ : constructs makesnr class
+    getuniquebval : creates a list of unique B-values for the purpose of
                     SNR computation
-    computesnr:     performs SNR computation
-    histcount:      bins SNR values
-    makeplot:       creates and saves SNR plot from bin counts
+    computesnr : performs SNR computation
+    histcount : bins SNR values
+    makeplot : creates and saves SNR plot from bin counts
 
     """
     def __init__(self, dwilist, noisepath=None, maskpath=None):
         """
         Constructor for makesnr class
+
+        Parameters
+        ----------
+        dwilist : list of str
+            String list of nifti paths to plot
+        noisepath : str
+            Path to noisemap (Default: None)
+        maskpath : str, optional
+            Path to nifti brain mask (Default: None)
         """
         if noisepath is None:
             raise Exception('Please provide the path to noise map from '
@@ -156,14 +173,11 @@ class makesnr:
         B-values in the order they need to appear for the calculation of
         SNR.
 
-        Parameters
-        ----------
-        (none)
-
         Returns
         -------
-        b_list: Numpy vector containing list of B-vals to be used in
-                SNR calculation
+        b_list : ndarray
+            Numpy vector containing list of B-values to be used in
+            SNR calculation
         """
 
         b_list = []
@@ -189,13 +203,10 @@ class makesnr:
         """
         Computes SNR of all DWIs in class object
 
-        Parameters
-        ----------
-        (none)
-
         Returns
         -------
-        snr_dwi:    Numpy array of SNR across all DWI.
+        snr_dwi : ndarray
+            Numpy array of SNR across all DWI.
         """
         bval_list = self.getuniquebval()
         snr_dwi = np.zeros((self.nvox, bval_list.shape[1], self.nDWI))
@@ -232,8 +243,17 @@ class makesnr:
 
         Parameters
         ----------
-        nbins:  int
-        :return:
+        nbins :  int
+        Number of bins to plot
+
+        Returns
+        -------
+        count : ndarray
+            Array of count of voxels in bins
+        binval : ndarray
+            Array of bin values
+        unibvals : ndarray
+            Array containing all unique B-values detected
         """
         if not isinstance(nbins, int):
             raise ValueError('Number of bins (nbins) entered is not an '
@@ -272,16 +292,16 @@ class makesnr:
 
         Parameters
         ----------
-        path:           string
-                        directory to save the plot in
-        smooth:         bool
-                        Specify whether to interpolate and smooth
-        smoothfactor:   int
-                        smoothing factor to apply
+        path : str
+            Directory to save the plot in
+        smooth : bool, optional
+            Specify whether to interpolate and smooth (Default: True)
+        smoothfactor : int, optional
+            Smoothing factor to apply (Default: 5)
 
         Returns
         -------
-        (none): saves plotted image into directory as SNR.png
+        None: Writes out image into directory as SNR.png
         """
         if not isinstance(smoothfactor, int):
             raise ValueError('Please specify an integer for smooth '
