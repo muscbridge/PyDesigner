@@ -12,13 +12,13 @@ def smooth_image(dwiname, csfname=None, outname='dwism.nii', width=1.2):
 
     Parameters
     ----------
-    dwiname : :obj: `string`
+    dwiname : str
         Filename of image to be smoothed
-    csfname : :obj: `string`
+    csfname : str
         Filename of CSF mask
-    outname : :obj: `string`
+    outname : str
         Filename to be written out
-    width : :obj: `float`
+    width : float
         The full width half max in voxels to be smoothed. Default: 1.25
 
     Returns
@@ -56,7 +56,7 @@ def smooth(dwi, csfmask=None, width=1.25):
         the DWI acquisition.
     csfmask : (S) img_like object
         The mask of CSF that will be applied to each volume in DWI
-    width : :obj: `float`, optional
+    width : float, optional
         The full width half max in voxels to be smoothed. Default: 1.25
        
     Returns
@@ -103,7 +103,7 @@ def nansmooth(imgslice, fwhm):
     ----------
     imgslice : (X x Y) img_like or array_like object
         2D image to be smoothed
-    fwhm : :obj: float
+    fwhm : float
         The full width half max to be used for smoothing
 
     Returns
