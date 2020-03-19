@@ -16,7 +16,7 @@ def vectorize(img, mask):
     parameters
     If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
     If the input is 3D or 4D, vectorize it using a mask
-    Classification: Method
+    Classification: Function
 
     Parameters
     ----------
