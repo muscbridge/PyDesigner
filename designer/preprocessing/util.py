@@ -579,7 +579,8 @@ class DWIParser:
         return path
 
     def json2fslgrad(self, path):
-        """Creates FSL .bvec and .bval for series missing that information.
+        """
+        Creates FSL .bvec and .bval for series missing that information.
         Some datasets have their B0s separately that do not produce fsl
         gradients upon conversion to NifTi. This function creates those
         missing features for complete concatenation from .json file. Use
