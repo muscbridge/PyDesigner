@@ -17,11 +17,12 @@ from designer.preprocessing import util # preprocessing
 DWIFile = util.DWIFile
 
 def fix_bval(bvalfile):
-    """Converts all whitespace into newlines in the file
+    """
+    Converts all whitespace into newlines in the file
 
     Parameters
     ----------
-    bvalfile :obj: `str`
+    bvalfile: :obj: `str`
         The .bval to ensure is the correct format for mrtrix
 
     Returns
@@ -43,11 +44,12 @@ def fix_bval(bvalfile):
         f.write(data)
 
 def make_simple_mif(filetable):
-    """Makes a single .mif from the HEAD dwi file
+    """
+    Makes a single .mif from the HEAD dwi file
 
     Parameters
     ----------
-    filetable :dict:
+    filetable: :dict:
         The filetable that pydesigner.py uses to track files
 
     Returns
@@ -81,11 +83,12 @@ def make_simple_mif(filetable):
     filetable['dwimif'] = finalmif
 
 def make_se_epi(filetable):
-    """Makes a single spin-echo epi from the topup and the dwi
+    """
+    Makes a single spin-echo epi from the topup and the dwi
 
     Parameters
     ----------
-    filetable :dict:
+    filetable: :dict:
         The filetable that pydesigner.py uses to track files
 
     Returns
