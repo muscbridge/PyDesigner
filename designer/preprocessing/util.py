@@ -19,7 +19,7 @@ def bvec_is_fullsphere(bvec):
 
     Parameters
     ----------
-    bvec: :obj: `str`
+    bvec : str
         The filename of the bvec
 
     Returns
@@ -47,11 +47,12 @@ def bvec_is_fullsphere(bvec):
     return vecs_are_fullsphere(data)
 
 def vecs_are_fullsphere(bvecs):
-    """Determines if input vectors are full or half-sphere
+    """
+    Determines if input vectors are full or half-sphere
 
     Parameters
     ----------
-    bvecs: ndarray
+    bvecs : ndarray
         Aray of size [n_vectors x 3]
 
     Returns
@@ -99,12 +100,12 @@ def find_valid_ext(pathname):
 
     Parameters
     ----------
-    pathname: :obj: `str`
+    pathname : str
         The name to try and find extensions for
 
     Returns
     -------
-    array
+    list of str
         Array of valid file extensions for the basename
     """
     # Go ahead and return blank if the pathname is blank
@@ -136,15 +137,15 @@ class DWIFile:
 
     Attributes
     ----------
-    path: string
+    path : str
         The path to the file
-    name: string
+    name : str
         The base name of the file
-    ext: array
+    ext : list of str
         The valid extensions for this grouping of dwi data
-    acquisition: bool
+    acquisition : bool
         Indicates if a DWI acquisition or not, relevant for .bval/.bvec
-    json: struct
+    json : struct
         The contents of the .json metadata if available
     """
 
@@ -157,9 +158,9 @@ class DWIFile:
 
         Parameters
         ----------
-        name: :obj: `str`
-            The name that the user has supplied for the file. Could be a
-            whole path, could be a filename, could be basename.
+        name : str
+            The name that the user has supplied for the file. Could be
+            a whole path, could be a filename, could be basename.
         """
         full = name
         [pathname, ext] = op.splitext(full)
@@ -311,7 +312,7 @@ class DWIFile:
         Returns
         -------
         bool
-            Whether the encoding is partial fourier or not
+            True if encoding is partial fourier; False otherwise
         """
 
         if not self.isAcquisition():
@@ -351,19 +352,19 @@ class DWIParser:
 
     Attributes
     ----------
-    DWIlist: list of str
+    DWIlist : list of str
         Contains paths to all input series
-    DWInlist: list of str
+    DWInlist : list of str
         Contains path to file names without extension
-    DWIext: list of str
+    DWIext : list of str
         Contains extension of input files
-    BVALlist: list of str
+    BVALlist : list of str
         Contains paths to all BVAL files
-    BVEClist: list of str
+    BVEClist : list of str
         Contains paths to all BVEC files
-    JSONlist: list of str
+    JSONlist : list of str
         Contains paths to all JSON files
-    nDWI: int
+    nDWI : int
         Number of DWIs entered   
     """
     def __init__(self, path):
@@ -372,12 +373,12 @@ class DWIParser:
 
         Parameters
         ----------
-        path: :obj: `str`
+        path : str
             path to input DWI
 
         Returns
         -------
-        self: :obj: `class`
+        self : class
             DWIParser class object
         """
         UserCpath = path.rsplit(',')
@@ -422,17 +423,17 @@ class DWIParser:
 
         Parameters
         ----------
-        path: :obj: `str`
+        path : str
             Directory where to store concatenated series
-        ext: :obj: `str`
+        ext : str
             Extenstion to save concatenated file in. Refer to MRTRIX3's
             `mrconvert` function for a list of possible extensions
-        force: :obj: `bool`, optional
+        force : bool, optional
             Force overwrite of output files if pre-existing
             (Default:False)
-        verbose: :obj: `bool`, optional
+        verbose : bool, optional
             Specify whether to print console output (Default: False)
-        resume: :obj: `bool`, optional
+        resume : bool, optional
             Continue from an aborted or partial previous run of
             pydesigner (Default: False)
         
@@ -586,7 +587,7 @@ class DWIParser:
 
         Parameters
         ----------
-        path: :obj: `str`
+        path : str
             Path to NifTi file
 
         Returns
