@@ -22,7 +22,7 @@ def fix_bval(bvalfile):
 
     Parameters
     ----------
-    bvalfile: :obj: `str`
+    bvalfile : str
         The .bval to ensure is the correct format for mrtrix
 
     Returns
@@ -49,7 +49,7 @@ def make_simple_mif(filetable):
 
     Parameters
     ----------
-    filetable: :dict:
+    filetable : dict of str
         The filetable that pydesigner.py uses to track files
 
     Returns
@@ -88,7 +88,7 @@ def make_se_epi(filetable):
 
     Parameters
     ----------
-    filetable: :dict:
+    filetable : dict of str
         The filetable that pydesigner.py uses to track files
 
     Returns
