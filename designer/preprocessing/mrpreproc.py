@@ -4,6 +4,7 @@
 """
 Utilities for running various MRtrix3's DWI preprocessing tools
 """
+
 import os
 import os.path as op
 import subprocess
@@ -17,14 +18,29 @@ def miftonii(input, output, strides='1,2,3,4', nthreads=None,
 
     Parameters
     ----------
-    input (str):    path to input .mif file
-    output (str):   path to output .nii file
-    strides (str):  specify the strides of the output data in memory
-                    (default: '1,2,3,4')
+    input: :obj: `str`
+        Path to input .mif file
+    output: :obj: `str`
+        Path to output .nii file
+    strides: :obj: `str`, optional
+        Specify the strides of the output data in memory
+        (Default: '1,2,3,4')
+    nthreads: :obj: `integer`, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force: :obj: `bool`, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose: :obj: `bool`, optional
+        Specify whether to print console output (Default: False)
 
     Returns
     -------
-    system call:    (none)
+    None; writes out file
+
+    See Also
+    --------
+    niitomif
     """
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
@@ -68,20 +84,35 @@ def miftonii(input, output, strides='1,2,3,4', nthreads=None,
 def niitomif(input, output, strides='1,2,3,4', nthreads=None,
              force=True, verbose=False):
     """
-   Converts input `.nii` images to output `.nif` images provided that
-   all BVEC, BVAL and JSON files are provided and named same as input .nii
+    Converts input `.nii` images to output `.nif` images provided that
+    all BVEC, BVAL and JSON files are provided and named same as input .nii
 
-   Parameters
-   ----------
-   input (str):    path to input .nii file
-   output (str):   path to output .mif file
-   strides (str):  specify the strides of the output data in memory
-                   (default: '1,2,3,4')
+    Parameters
+    ----------
+    input :obj: `str`
+        Path to input .nii file
+    output: :obj: `str`
+        Path to output .mif file
+    strides: :obj: `str`, optional
+        Specify the strides of the output data in memory
+        (Default: '1,2,3,4')
+    nthreads: :obj: `integer`, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force: :obj: `bool`, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose: :obj: `bool`, optional
+        Specify whether to print console output (Default: False)
 
-   Returns
-   -------
-   system call:    (none)
-   """
+    Returns
+    -------
+    None; writes out file
+
+    See Also
+    --------
+    miftonii
+    """
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
                       'the folder or file specified exists.')
@@ -138,20 +169,28 @@ def denoise(input, output, noisemap=True, extent='5,5,5', nthreads=None,
 
     Parameters
     ----------
-    input (str):      path to input .mif file
-
-    output (str):     path to output .mif file
-    noisemap (bool):  specify whether or not to save the noisemap as a
-                      nifti file (default: True)
-    extent (str):     set the window size of the denoising filter.
-                      (default: 5,5,5)
-    nthreads (int):   number of threads in multi-threaded applications
-    force (bool):     force overwrite of output files (default: False)
-    verbose (bool):   display information messages (default: False)
+    input: :obj: `str`
+        Path to input .mif file
+    output: :obj: `str`
+        Path to output .mif file
+    noisemap: :obj: `bool`, optional
+        Specify whether or not to save the noisemap as a 
+        nifti file (Default: True)
+    extent: obj: `str`, optional
+        Set the window size of the denoising filter.
+        (Default: '5,5,5')
+    nthreads: :obj: `integer`, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force: :obj: `bool`, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose: :obj: `bool`, optional
+        Specify whether to print console output (Default: False)
 
     Returns
     -------
-    system call:    (none)
+    None; writes out file
     """
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
@@ -200,16 +239,22 @@ def degibbs(input, output, nthreads=None, force=False, verbose=False):
 
     Parameters
     ----------
-    input (str):      path to input .mif file
-
-    output (str):     path to output .mif file
-    nthreads (int):   number of threads in multi-threaded applications
-    force (bool):     force overwrite of output files (default: False)
-    verbose (bool):   display information messages (default: False)
+    input: :obj: `str`
+        Path to input .mif file
+    output: :obj: `str`
+        Path to output .mif file
+    nthreads: :obj: `integer`, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force: :obj: `bool`, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose: :obj: `bool`, optional
+        Specify whether to print console output (Default: False)
 
     Returns
     -------
-    system call:    (none)
+    None; writes out file
     """
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
@@ -248,22 +293,29 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
 
     Parameters
     ----------
-    input (str):      path to input .mif file
-
-    output (str):     path to output .mif file
-    rpe (str):        reverse phase encoding of the dataset (default:
-                      rpe_header)
-    epib0 (int):      number of reverse PE dir B0 pairs to use in
-                      TOPUP correction
-    qc (bool):        specify whether to generate eddy QC metric (
-                      default: True)
-    nthreads (int):   number of threads in multi-threaded applications
-    force (bool):     force overwrite of output files (default: False)
-    verbose (bool):   display information messages (default: False)
+    input: :obj: `str`
+        Path to input .mif file
+    output: :obj: `str`
+        Path to output .mif file
+    rpe: :obj: `str`, {'rpe_header', 'rpe-pair', 'rpe_all, 'rpe_all'}, optional
+        Reverse phase encoding of the dataset. (Default: 'rpe_header')
+    epib0: :obj: `int`
+        Number of reverse PE dir B0 pairs to use in TOPUP correction
+        (Default: 1)
+    qc: :obj: `bool`
+        Specify whether to generate eddy QC metrics (Default: True)
+    nthreads: :obj: `integer`, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force: :obj: `bool`, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose: :obj: `bool`, optional
+        Specify whether to print console output (Default: False)
 
     Returns
     -------
-    system call:    (none)
+    None; writes out file
     """
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
@@ -365,16 +417,24 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
 
     Parameters
     ----------
-    input (str):      path to input .mif file
-    output (str):     path to output .nii brainmask file
-    thresh (flt):     BET threshold ranging from 0 to 1 (default: 0.25)
-    nthreads (int):   number of threads in multi-threaded applications
-    force (bool):     force overwrite of output files (default: False)
-    verbose (bool):   display information messages (default: False)
+    input: :obj: `str`
+        Path to input .mif file
+    output: :obj: `str`
+        Path to output .nii brainmask file
+    thresh: :obj: `float`
+        BET threshold ranging from 0 to 1 (Default: 0.25)
+    nthreads: :obj: `integer`, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force: :obj: `bool`, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose: :obj: `bool`, optional
+        Specify whether to print console output (Default: False)
 
     Returns
     -------
-    system call:    (none)
+    None; writes out file
     """
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
@@ -453,13 +513,17 @@ def smooth(input, output, fwhm=1.25):
 
     Parameters
     ----------
-    input (str):    path to input .mif file
-    output (str):   path to output .mif file
-    fwhm (float):   full-width half-maximum (FWHM) of smoothing to apply
+    input; :obj: `str`
+        Path to input .mif file
+    output: :obj: `str`
+        Path to output .mif file
+    fwhm: :obj: `float`
+        Full-width half-maximum (FWHM) of voxel size to apply
+        smoothing (Default: 1.25)
 
     Returns
     -------
-    system call:    (none)
+    None; writes out file
     """
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
@@ -493,13 +557,16 @@ def riciancorrect(input, output, noise=None):
 
     Parameters
     ----------
-    input (str):    path to input .mif file
-    output (str):   path to output .mif file
-    noise (float):  path to noise map from dwidenoise in .nii format
+    input: :obj: `str`
+        Path to input .mif file
+    output: :obj: `str`
+        Path to output .mif file
+    noise: :obj: `str`
+        Path to noise map from dwidenoise in .nii format (Default: None)
 
     Returns
     -------
-    system call:    (none)
+    None; writes out file
     """
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
@@ -540,15 +607,22 @@ def extractbzero(input, output, nthreads=None, force=False,
 
     Parameters:
     ----------
-    input (str):    path to input .mif file
-    output (str):   path to output .mif file
-    nthreads (int): number of workers to use
-    force (bool):   force overwrite of existing files
-    verbose (bool): determine whether to display console output
+    input: :obj: `str`
+        Path to input .mif file
+    output: :obj: `str`
+        Path to output .mif file
+    nthreads: :obj: `integer`, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force: :obj: `bool`, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose: :obj: `bool`, optional
+        Specify whether to print console output (Default: False)
 
     Returns
     -------
-    (none)          system call
+    None; writes out file
     """
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
@@ -586,12 +660,22 @@ def extractnonbzero(input, output, nthreads=None, force=False,
 
     Parameters:
     ----------
-    input (str):    path to input .mif file
-    output (str):   path to output .mif file
+    input: :obj: `str`
+        Path to input .mif file
+    output: :obj: `str`
+        Path to output .mif file
+    nthreads: :obj: `integer`, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force: :obj: `bool`, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose: :obj: `bool`, optional
+        Specify whether to print console output (Default: False)
 
     Returns
     -------
-    (none)          system call
+    None; writes out file
     """
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
@@ -633,16 +717,24 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
 
     Parameters:
     ----------
-    input (str):    path to input .mif file
-    output (str):   path to output .mif file
-    num (int):      numer of B0s pairs to use in EPI correction
-    nthreads (int): number of workers to use
-    force (bool):   force overwrite of existing files
-    verbose (bool): determine whether to display console output
+    input: :obj: `str`
+        Path to input .mif file
+    output: :obj: `str`
+        Path to output .mif file
+    num: :obj: `int`
+        Number of B0s pairs to use in EPI correction (Default: 1)
+    nthreads: :obj: `integer`, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force: :obj: `bool`, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose: :obj: `bool`, optional
+        Specify whether to print console output (Default: False)
 
     Returns
     -------
-    (none)          system call
+    None; writes out file
     """
     print('Applying EPIBOOST')
     if not op.exists(input):
@@ -724,7 +816,7 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
     arg_epi.extend([fname_bzero, output])
     completion = subprocess.run(arg_epi)
     if completion.returncode != 0:
-        raise Exception('TOPUPBOOST: failed to extract specified '
+        raise Exception('EPIBOOST: failed to extract specified '
                         'TOPUP B0 indices. See above for errors.')
     # Remove temp files
     os.remove(fname_bzero)
