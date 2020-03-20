@@ -28,8 +28,10 @@ buildapi:
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
-	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-
 # This calls sphinx-apidoc to create an api folder in SOURCEDIR with
 # documentation for all Python modules
 	@$(APIBUILD) -fMeET -o "$(APIBUILDDIR)" "$(APIDIR)"
+# Then build
+	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+
+
