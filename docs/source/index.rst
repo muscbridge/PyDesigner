@@ -87,13 +87,6 @@ Slack channel`_ for live support.
 
 .. toctree::
    :maxdepth: 1
-   :caption: PyDesigner I/O
-
-   pydesigner_io/pydesigner_args
-   pydesigner_io/pydesigner_files
-
-.. toctree::
-   :maxdepth: 1
    :caption: NeuroDock (Docker)
 
    docker/introduction
@@ -101,6 +94,15 @@ Slack channel`_ for live support.
    docker/docker_configuration
    docker/docker_neurodock
    docker/docker_neurodock_run
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Reference
+
+   reference/pydesigner_args
+   reference/pydesigner_files
+   reference/acknowledgements
+
 
 Indices and tables
 ==================
