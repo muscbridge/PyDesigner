@@ -15,24 +15,23 @@ def plot(input, output, bval=None, mask=None):
 
     Parameters
     ----------
-    input:  str
-        list of 4D DWI (nifti-format) paths to evaluate and plot
-    output: str
-        output path of plot in .ong format
-    bval:   str
-        path to relevant .bval file
-    mask:   str
-        path to brain mask in nifti format
+    input :  str
+        List of 4D DWI (nifti-format) paths to evaluate and plot
+    output : str
+        Output path of plot in .ong format
+    bval : str
+        Path to relevant .bval file
+    mask : str
+        Path to brain mask in nifti format
 
     Returns
     -------
-    none
-        writes plot to path
+    None; writes out plot to file
 
     See Also
     --------
-    motionplot: plots subject motion from eddy_qc output file
-    snrplot:    plots DWI's SNR  
+    motionplot : plots subject motion from eddy_qc output file
+    snrplot : plots DWI's SNR  
     """
     print('Plotting outliers...')
     if not op.exists(input):
