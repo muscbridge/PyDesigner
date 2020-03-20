@@ -66,9 +66,3 @@ html_static_path = ['_static']
 # This defines which which master document to use for generating docs.
 # We'll use `index.rst` instead of `contents.rst`.
 master_doc = 'index'
-
-# Tell Sphinx to locate the configuration file in `docs/source/conf.py`
-# because we are using separate source and build directories. Otherwise
-# Sphinx will look in `docs/conf.py`
-sphinx:
-  configuration: docs/source/conf.py
