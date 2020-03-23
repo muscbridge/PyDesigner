@@ -33,7 +33,7 @@ PyDesigner makes this easy, and you will love it!
 
 .. _NYU's DESIGNER: https://github.com/NYU-DiffusionMRI/DESIGNER
 
-.. image:: images/PyDesigner-Logo.png
+.. image:: docs/source/images/PyDesigner-Logo.png
    :width: 384pt
 
 Notable Features
