@@ -213,7 +213,7 @@ class DWI(object):
         Returns
         -------
         ans : bool
-        True if DKI; false otherwise
+            True if DKI; false otherwise
 
         Examples
         --------
@@ -233,8 +233,8 @@ class DWI(object):
         Parameters
         ----------
         order :  2 or 4 (int or None)
-                Tensor order number, 2 for diffusion and 4 for kurtosis.
-                Default: None; auto-detect
+            Tensor order number, 2 for diffusion and 4 for kurtosis.
+            Default: None; auto-detect
 
         Returns
         -------
@@ -253,14 +253,14 @@ class DWI(object):
         depicted in the table below. This will soon be depreciated and
         updated with MRTRIX3's layout.
         =============================
-        ------D------
+        ++++++D++++++
         1  |    D11
         2  |    D12
         3  |    D13
         4  |    D22
         5  |    D23
         6  |    D33
-        ------K------
+        ++++++K++++++
        1  |   W1111
        2  |   W1112
        3  |   W1113
@@ -588,7 +588,7 @@ class DWI(object):
 
         For Constrained Fitting:
         The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
-                                                 -------     ------
+                                                 ======     =======
                                                     P           q
         where A is denoted by multiplier matrix (w * b)
         Multiplying by a positive constant (0.5) does not change the value
