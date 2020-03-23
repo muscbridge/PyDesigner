@@ -79,7 +79,8 @@ Slack channel`_ for live support.
 .. toctree::
    :maxdepth: 1
    :caption: Installation
-
+   
+   installation/changelog
    installation/requirements
    installation/fsl
    installation/mrtrix3
