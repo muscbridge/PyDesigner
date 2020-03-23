@@ -28,6 +28,10 @@ followed by
 
     $ pip install .
 
+**Note**:
+    Remember to switch to your conda environement before parsing this
+    command.
+
 This will execute the :code:`setup.py` script in root directory to
 automatically configure your Python environment for PyDesigner. When
 running the automated methods, PyDesigner can simply be called with
