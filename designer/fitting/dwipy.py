@@ -582,6 +582,7 @@ class DWI(object):
             The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
                                                       ~~~~~      ~~~~~
                                                         P          q
+        
         where A is denoted by multiplier matrix (w * b)
         Multiplying by a positive constant (0.5) does not change the value
         of optimum x*. Similarly, the constant offset b.T*b does not
