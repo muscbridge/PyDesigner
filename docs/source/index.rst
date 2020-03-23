@@ -39,7 +39,8 @@ PyDesigner makes this easy, and you will love it!
 .. image:: images/PyDesigner-Logo.png
    :width: 384pt
 
-**Notable Features:**
+Notable Features
+================
 
 - **100% Python-based** scripts
 - **Minimized package dependencies** for small package footprint
@@ -102,7 +103,7 @@ Slack channel`_ for live support.
    reference/pydesigner_args
    reference/pydesigner_files
    reference/acknowledgements
-
+   reference/contributors
 
 Indices and tables
 ==================
