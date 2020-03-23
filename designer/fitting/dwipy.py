@@ -255,14 +255,14 @@ class DWI(object):
         
          .. code-block:: none
 
-            ======D======
+            ~~~~~~D~~~~~~
             1  |    D11
             2  |    D12
             3  |    D13
             4  |    D22
             5  |    D23
             6  |    D33
-            ======K======
+            ~~~~~~K~~~~~~
             1  |   W1111
             2  |   W1112
             3  |   W1113
@@ -592,8 +592,8 @@ class DWI(object):
         .. code-block:: none
 
             The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
-                                                      =====      =====
-                                                        P           q
+                                                      ~~~~~      ~~~~~
+                                                        P          q
         where A is denoted by multiplier matrix (w * b)
         Multiplying by a positive constant (0.5) does not change the value
         of optimum x*. Similarly, the constant offset b.T*b does not
@@ -1758,7 +1758,7 @@ class DWI(object):
         .. code-block:: none
         
             MRTRIX3 Tensors                     DESIGNER Tensors
-            ===============                     ================
+            ~~~~~~~~~~~~~~~                     ~~~~~~~~~~~~~~~~
 
             0   D0      1   1                       1   1
             1   D1      2   2                       1   2
@@ -1784,10 +1784,10 @@ class DWI(object):
             20  K14     1   2   3   3               3   3   3   3
 
             Value Assignment
-            ================
+            ~~~~~~~~~~~~~~~~
 
             MRTRIX3         DESIGNER
-            =======         ========
+            ~~~~~~~         ~~~~~~~~
                 0               0
                 1               3
                 2               5
