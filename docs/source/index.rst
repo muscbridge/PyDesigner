@@ -102,7 +102,7 @@ Slack channel`_ for live support.
 
    reference/pydesigner_args
    reference/pydesigner_files
-   reference/acknowledgements
+   reference/grants
    reference/contributors
 
 Indices and tables
