@@ -117,7 +117,6 @@ class DWI(object):
     def getBvals(self):
         """
         Returns a vector of b-values, requires no input arguments
-        Classification: Method
 
         Returns
         -------
@@ -134,7 +133,6 @@ class DWI(object):
         """
         Returns an array of gradient vectors, requires no input
         parameters
-        Classification: Method
         
         Returns
         -------
@@ -151,7 +149,6 @@ class DWI(object):
         """
         Returns the maximum b-value in a dataset to determine between
         DTI and DKI, requires no input parameters
-        Classification: Method
 
         Returns
         -------
@@ -185,7 +182,6 @@ class DWI(object):
         """
         Returns whether input image is DTI or DKI compatible, requires
         no input parameters
-        Classification: Method
 
         Returns
         -------
@@ -213,7 +209,7 @@ class DWI(object):
         Returns
         -------
         ans : bool
-        True if DKI; false otherwise
+            True if DKI; false otherwise
 
         Examples
         --------
@@ -228,13 +224,12 @@ class DWI(object):
     def createTensorOrder(self, order=None):
         """
         Creates tensor order array and indices
-        Classification: Method
 
         Parameters
         ----------
         order :  2 or 4 (int or None)
-                Tensor order number, 2 for diffusion and 4 for kurtosis.
-                Default: None; auto-detect
+            Tensor order number, 2 for diffusion and 4 for kurtosis.
+            Default: None; auto-detect
 
         Returns
         -------
@@ -247,35 +242,37 @@ class DWI(object):
         --------
         (cnt, ind) = dwi.createTensorOrder(order)
 
-        Additional Information
-        ----------------------
+        Notes
+        -----
         The tensors for this pipeline are based on NYU's designer layout as
         depicted in the table below. This will soon be depreciated and
         updated with MRTRIX3's layout.
-        =============================
-        ------D------
-        1  |    D11
-        2  |    D12
-        3  |    D13
-        4  |    D22
-        5  |    D23
-        6  |    D33
-        ------K------
-       1  |   W1111
-       2  |   W1112
-       3  |   W1113
-       4  |   W1122
-       5  |   W1123
-       6  |   W1133
-       7  |   W1222
-       8  |   W1223
-       9  |   W1233
-       10 |   W1333
-       11 |   W2222
-       12 |   W2223
-       13 |   W2233
-       14 |   W2333
-       15 |   W3333
+        
+         .. code-block:: none
+
+            ~~~~~~D~~~~~~
+            1  |    D11
+            2  |    D12
+            3  |    D13
+            4  |    D22
+            5  |    D23
+            6  |    D33
+            ~~~~~~K~~~~~~
+            1  |   W1111
+            2  |   W1112
+            3  |   W1113
+            4  |   W1122
+            5  |   W1123
+            6  |   W1133
+            7  |   W1222
+            8  |   W1223
+            9  |   W1233
+            10 |   W1333
+            11 |   W2222
+            12 |   W2223
+            13 |   W2233
+            14 |   W2333
+            15 |   W3333
         """
         imType = self.tensorType()
         if order is None:
@@ -313,7 +310,6 @@ class DWI(object):
     def fibonacciSphere(self, samples=1, randomize=True):
         """
         Returns evenly spaced points on a sphere
-        Classification: Method
 
         Parameters
         ----------
@@ -353,7 +349,6 @@ class DWI(object):
     def radialSampling(self, dir, n):
         """
         Get the radial component of a metric from a set of directions
-        Classification: Method
 
         Parameters
         ----------
@@ -385,7 +380,6 @@ class DWI(object):
     def diffusionCoeff(self, dt, dir):
         """
         Computes apparent diffusion coefficient (ADC)
-        Classification: Method
 
         Parameters
         ----------
@@ -413,7 +407,6 @@ class DWI(object):
     def kurtosisCoeff(self, dt, dir):
         """
         Computes apparent kurtosis coefficient (AKC)
-        Classification: Method
 
         Parameters
         ----------
@@ -445,7 +438,6 @@ class DWI(object):
     def dtiTensorParams(self, nn):
         """
         Computes sorted DTI tensor eigenvalues and eigenvectors
-        Classification: Method
 
         Parameters
         ----------
@@ -473,7 +465,6 @@ class DWI(object):
         """
         Uses average directional statistics to approximate axial
         kurtosis(AK) and radial kurtosis (RK)
-        Classification: Method
 
         Parameters
         ----------
@@ -550,26 +541,6 @@ class DWI(object):
         quadratic convex optimization. This is a helper function for
         dwi.fit() so a multiprocessing parallel loop can be iterated over
         voxels
-        Classification: Method
-
-        For Unconstrained Fitting:
-        In the absence of constraints, an exact formulation in the form
-        Cx = b is produced. This is further simplified to x_hat = C^+ *
-        b. One can use the Moore-Penrose method to compute the
-        pseudoinverse to approximate diffusion tensors.
-
-        For Constrained Fitting:
-        The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
-                                                 -------     ------
-                                                    P           q
-        where A is denoted by multiplier matrix (w * b)
-        Multiplying by a positive constant (0.5) does not change the value
-        of optimum x*. Similarly, the constant offset b.T*b does not
-        affect x*, therefore we can leave these out.
-
-        Minimize: || C*x -b ||_2^2
-            subject to A*x <= b
-            No lower or upper bounds
 
         Parameters
         ----------
@@ -596,6 +567,30 @@ class DWI(object):
         Examples
         --------
         dt = dwi.wlls(shat, dwi, b, constraints)
+
+        Notes
+        -----
+        For Unconstrained Fitting:
+        In the absence of constraints, an exact formulation in the form
+        Cx = b is produced. This is further simplified to x_hat = C^+ *
+        b. One can use the Moore-Penrose method to compute the
+        pseudoinverse to approximate diffusion tensors.
+
+        For Constrained Fitting:
+        .. code-block:: none
+
+            The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
+                                                      ~~~~~      ~~~~~
+                                                        P          q
+        
+        where A is denoted by multiplier matrix (w * b)
+        Multiplying by a positive constant (0.5) does not change the value
+        of optimum x*. Similarly, the constant offset b.T*b does not
+        affect x*, therefore we can leave these out.
+
+        Minimize: || C*x -b ||_2^2
+            subject to A*x <= b
+            No lower or upper bounds
         """
         w = np.diag(shat)
         # Unconstrained Fitting
@@ -629,7 +624,6 @@ class DWI(object):
     def fit(self, constraints=None, reject=None):
         """
         Returns fitted diffusion or kurtosis tensor
-        Classification: Method
 
         Parameters
         ----------
@@ -711,10 +705,9 @@ class DWI(object):
         """
         Generates constraint array for constrained minimization quadratic
         programming
-        Classification: Method
 
-        Parameter(s)
-        -----------
+        Parameters
+        ----------
         constraints :   array_like(dtype=int)
             [1 X 3] logical vector indicating which constraints
             out of three to enable (Default: [0, 1, 0])
@@ -722,8 +715,8 @@ class DWI(object):
             C1 is Kapp > 0
             C3 is Kapp < 3/(b*Dapp)
 
-        Return(s)
-        ---------
+        Returns
+        -------
         C : ndarray(dtype=float)
             Array containing constraints to consider during
             minimization, C is shaped [number of constraints enforced *
@@ -765,7 +758,6 @@ class DWI(object):
         """
         Extract all DTI parameters from DT tensor. Warning, this can
         only be run after tensor fitting dwi.fit()
-        Classification: Method
 
         Returns
         -------
@@ -835,7 +827,6 @@ class DWI(object):
         """
         Extract all DKI parameters from DT tensor. Warning, this can
         only be run after tensor fitting dwi.fit()
-        Classification: Method
 
         Returns
         -------
@@ -894,7 +885,6 @@ class DWI(object):
         """
         Returns white matter tract integrity (WMTI) parameters. Warning:
         this can only be run after fitting and DWI.extractDTI().
-        Classification: Method
 
         Returns
         -------
@@ -1018,7 +1008,6 @@ class DWI(object):
     def findViols(self, c=[0, 1, 0]):
         """
         Returns a 3D violation map of voxels that violate constraints.
-        Classification: Method
 
         Parameters
         ----------
@@ -1105,7 +1094,6 @@ class DWI(object):
         operant for all b-values. Whether an outlier occurs at b1000
         or b1000 and b2000, that voxel is still a violation unless
         none of the b-values have outliers.
-        Classification: Method
 
         Parameters
         ----------
@@ -1149,7 +1137,6 @@ class DWI(object):
     def findVoxelViol(self, adcVox, akcVox, maxB, c):
         """
         Returns the proportions of violations occurring at a voxel.
-        Classification: Method
 
         Parameters
         ----------
@@ -1227,7 +1214,6 @@ class DWI(object):
     def multiplyMask(self, img):
         """
         Multiplies a 3D image by the brain mask
-        Classification: Method
 
         Parameters
         ----------
@@ -1250,7 +1236,6 @@ class DWI(object):
         occur. Multiprocessing is disabled because this is a
         memory-intensive task.
         To be run only after tensor fitting.
-        Classification: Method
 
         Parameters
         ----------
@@ -1295,7 +1280,6 @@ class DWI(object):
         Applies AKC outlier map to DT to replace outliers with a
         moving median. Run this only after tensor fitting and akc
         outlier detection.
-        Classification: Method
 
         Parameters
         ----------
@@ -1399,7 +1383,6 @@ class DWI(object):
         This functions performs outlier detection and robust parameter
         estimation for diffusion MRI using the iterative reweigthed
         linear least squares (IRLLS) approach.
-        Classification: Method
 
         Parameters
         ----------
@@ -1727,61 +1710,6 @@ class DWI(object):
         """
         Reorders tensors in DT to those of MRTRIX in accordance to
         the table below
-        Classification: Method
-
-        MRTRIX3 Tensors                     DESIGNER Tensors
-        ---------------                     ----------------
-
-        0   D0      1   1                       1   1
-        1   D1      2   2                       1   2
-        2   D2      3   3                       1   3
-        3   D3      1   2                       2   2
-        4   D4      1   3                       2   3
-        5   D5      2   3                       3   3
-
-        6   K0      1   1   1   1               1   1   1   1
-        7   K1      2   2   2   2               1   1   1   2
-        8   K2      3   3   3   3               1   1   1   3
-        9   K3      1   1   1   2               1   1   2   2
-        10  K4      1   1   1   3               1   1   2   3
-        11  K5      1   2   2   2               1   1   3   3
-        12  K6      1   3   3   3               1   2   2   2
-        13  K7      2   2   2   3               1   2   2   3
-        14  K8      2   3   3   3               1   2   3   3
-        15  K9      1   1   2   2               1   3   3   3
-        16  K10     1   1   3   3               2   2   2   2
-        17  K11     2   2   3   3               2   2   2   3
-        18  K12     1   1   2   3               2   2   3   3
-        19  K13     1   2   2   3               2   3   3   3
-        20  K14     1   2   3   3               3   3   3   3
-
-        Value Assignment
-        ----------------
-
-        MRTRIX3         DESIGNER
-        -------         --------
-            0               0
-            1               3
-            2               5
-            3               1
-            4               2
-            5               4
-
-            6               6
-            7               16
-            8               20
-            9               7
-            10              8
-            11              12
-            12              15
-            13              17
-            14              19
-            15              9
-            16              11
-            17              18
-            18              10
-            19              13
-            20              14
 
         Parameters
         ----------
@@ -1798,6 +1726,66 @@ class DWI(object):
         Examples
         --------
         dt = dwi.tensorReorder()
+
+        Notes
+        -----
+        MRTRIX3 and Designer tensors are described below.
+
+        .. code-block:: none
+        
+            MRTRIX3 Tensors                     DESIGNER Tensors
+            ~~~~~~~~~~~~~~~                     ~~~~~~~~~~~~~~~~
+
+            0   D0      1   1                       1   1
+            1   D1      2   2                       1   2
+            2   D2      3   3                       1   3
+            3   D3      1   2                       2   2
+            4   D4      1   3                       2   3
+            5   D5      2   3                       3   3
+
+            6   K0      1   1   1   1               1   1   1   1
+            7   K1      2   2   2   2               1   1   1   2
+            8   K2      3   3   3   3               1   1   1   3
+            9   K3      1   1   1   2               1   1   2   2
+            10  K4      1   1   1   3               1   1   2   3
+            11  K5      1   2   2   2               1   1   3   3
+            12  K6      1   3   3   3               1   2   2   2
+            13  K7      2   2   2   3               1   2   2   3
+            14  K8      2   3   3   3               1   2   3   3
+            15  K9      1   1   2   2               1   3   3   3
+            16  K10     1   1   3   3               2   2   2   2
+            17  K11     2   2   3   3               2   2   2   3
+            18  K12     1   1   2   3               2   2   3   3
+            19  K13     1   2   2   3               2   3   3   3
+            20  K14     1   2   3   3               3   3   3   3
+
+            Value Assignment
+            ~~~~~~~~~~~~~~~~
+
+            MRTRIX3         DESIGNER
+            ~~~~~~~         ~~~~~~~~
+                0               0
+                1               3
+                2               5
+                3               1
+                4               2
+                5               4
+
+                6               6
+                7               16
+                8               20
+                9               7
+                10              8
+                11              12
+                12              15
+                13              17
+                14              19
+                15              9
+                16              11
+                17              18
+                18              10
+                19              13
+                20              14
         """
         if self.dt is None:
             raise Exception('Please run dwi.fit() to generate a tensor '
@@ -1844,7 +1832,6 @@ class DWI(object):
         """
         Computes 3D violation mask of outliers detected from IRLLS
         method
-        Classification: Method
 
         Parameters
         ----------
@@ -1932,7 +1919,6 @@ def vectorize(img, mask):
 def writeNii(map, hdr, outDir, range=None):
     """
     Write clipped NifTi images
-    Classification: Function
 
     Parameters
     ----------
