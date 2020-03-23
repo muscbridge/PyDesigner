@@ -252,30 +252,32 @@ class DWI(object):
         The tensors for this pipeline are based on NYU's designer layout as
         depicted in the table below. This will soon be depreciated and
         updated with MRTRIX3's layout.
-        =============================
-        ++++++D++++++
-        1  |    D11
-        2  |    D12
-        3  |    D13
-        4  |    D22
-        5  |    D23
-        6  |    D33
-        ++++++K++++++
-       1  |   W1111
-       2  |   W1112
-       3  |   W1113
-       4  |   W1122
-       5  |   W1123
-       6  |   W1133
-       7  |   W1222
-       8  |   W1223
-       9  |   W1233
-       10 |   W1333
-       11 |   W2222
-       12 |   W2223
-       13 |   W2233
-       14 |   W2333
-       15 |   W3333
+        
+         .. code-block:: none
+
+            ======D======
+            1  |    D11
+            2  |    D12
+            3  |    D13
+            4  |    D22
+            5  |    D23
+            6  |    D33
+            ======K======
+            1  |   W1111
+            2  |   W1112
+            3  |   W1113
+            4  |   W1122
+            5  |   W1123
+            6  |   W1133
+            7  |   W1222
+            8  |   W1223
+            9  |   W1233
+            10 |   W1333
+            11 |   W2222
+            12 |   W2223
+            13 |   W2233
+            14 |   W2333
+            15 |   W3333
         """
         imType = self.tensorType()
         if order is None:
@@ -587,9 +589,11 @@ class DWI(object):
         pseudoinverse to approximate diffusion tensors.
 
         For Constrained Fitting:
-        The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
-                                                 ======     =======
-                                                    P           q
+        .. code-block:: none
+
+            The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
+                                                      =====      =====
+                                                        P           q
         where A is denoted by multiplier matrix (w * b)
         Multiplying by a positive constant (0.5) does not change the value
         of optimum x*. Similarly, the constant offset b.T*b does not
@@ -1750,60 +1754,62 @@ class DWI(object):
         Notes
         -----
         MRTRIX3 and Designer tensors are described below.
+
+        .. code-block:: none
         
-        MRTRIX3 Tensors                     DESIGNER Tensors
-        ===============                     ================
+            MRTRIX3 Tensors                     DESIGNER Tensors
+            ===============                     ================
 
-        0   D0      1   1                       1   1
-        1   D1      2   2                       1   2
-        2   D2      3   3                       1   3
-        3   D3      1   2                       2   2
-        4   D4      1   3                       2   3
-        5   D5      2   3                       3   3
+            0   D0      1   1                       1   1
+            1   D1      2   2                       1   2
+            2   D2      3   3                       1   3
+            3   D3      1   2                       2   2
+            4   D4      1   3                       2   3
+            5   D5      2   3                       3   3
 
-        6   K0      1   1   1   1               1   1   1   1
-        7   K1      2   2   2   2               1   1   1   2
-        8   K2      3   3   3   3               1   1   1   3
-        9   K3      1   1   1   2               1   1   2   2
-        10  K4      1   1   1   3               1   1   2   3
-        11  K5      1   2   2   2               1   1   3   3
-        12  K6      1   3   3   3               1   2   2   2
-        13  K7      2   2   2   3               1   2   2   3
-        14  K8      2   3   3   3               1   2   3   3
-        15  K9      1   1   2   2               1   3   3   3
-        16  K10     1   1   3   3               2   2   2   2
-        17  K11     2   2   3   3               2   2   2   3
-        18  K12     1   1   2   3               2   2   3   3
-        19  K13     1   2   2   3               2   3   3   3
-        20  K14     1   2   3   3               3   3   3   3
+            6   K0      1   1   1   1               1   1   1   1
+            7   K1      2   2   2   2               1   1   1   2
+            8   K2      3   3   3   3               1   1   1   3
+            9   K3      1   1   1   2               1   1   2   2
+            10  K4      1   1   1   3               1   1   2   3
+            11  K5      1   2   2   2               1   1   3   3
+            12  K6      1   3   3   3               1   2   2   2
+            13  K7      2   2   2   3               1   2   2   3
+            14  K8      2   3   3   3               1   2   3   3
+            15  K9      1   1   2   2               1   3   3   3
+            16  K10     1   1   3   3               2   2   2   2
+            17  K11     2   2   3   3               2   2   2   3
+            18  K12     1   1   2   3               2   2   3   3
+            19  K13     1   2   2   3               2   3   3   3
+            20  K14     1   2   3   3               3   3   3   3
 
-        Value Assignment
-        ================
+            Value Assignment
+            ================
 
-        MRTRIX3         DESIGNER
-        =======         ========
-            0               0
-            1               3
-            2               5
-            3               1
-            4               2
-            5               4
+            MRTRIX3         DESIGNER
+            =======         ========
+                0               0
+                1               3
+                2               5
+                3               1
+                4               2
+                5               4
 
-            6               6
-            7               16
-            8               20
-            9               7
-            10              8
-            11              12
-            12              15
-            13              17
-            14              19
-            15              9
-            16              11
-            17              18
-            18              10
-            19              13
-            20              14
+                6               6
+                7               16
+                8               20
+                9               7
+                10              8
+                11              12
+                12              15
+                13              17
+                14              19
+                15              9
+                16              11
+                17              18
+                18              10
+                19              13
+                20              14
         """
         if self.dt is None:
             raise Exception('Please run dwi.fit() to generate a tensor '
