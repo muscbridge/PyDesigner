@@ -22,5 +22,5 @@ python:
   install:
      - requirements: docs/requirements.txt
      - method: pip
-       path: designer/setup.py
+       path: .
   system_packages: true
