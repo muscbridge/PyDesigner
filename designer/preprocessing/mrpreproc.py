@@ -605,7 +605,7 @@ def extractbzero(input, output, nthreads=None, force=False,
     """
     Extracts only bzero shells from an input mif file.
 
-    Parameters:
+    Parameters
     ----------
     input : str
         Path to input .mif file
@@ -658,7 +658,7 @@ def extractnonbzero(input, output, nthreads=None, force=False,
     """
     Extracts only non-bzero shells from an input mif file.
 
-    Parameters:
+    Parameters
     ----------
     input : str
         Path to input .mif file
@@ -715,7 +715,7 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
     in undistortion for a better and speedier estimation of the
     distortion field.
 
-    Parameters:
+    Parameters
     ----------
     input : str
         Path to input .mif file

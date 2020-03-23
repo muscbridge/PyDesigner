@@ -247,8 +247,8 @@ class DWI(object):
         --------
         (cnt, ind) = dwi.createTensorOrder(order)
 
-        Additional Information
-        ----------------------
+        Notes
+        -----
         The tensors for this pipeline are based on NYU's designer layout as
         depicted in the table below. This will soon be depreciated and
         updated with MRTRIX3's layout.
@@ -552,25 +552,6 @@ class DWI(object):
         voxels
         Classification: Method
 
-        For Unconstrained Fitting:
-        In the absence of constraints, an exact formulation in the form
-        Cx = b is produced. This is further simplified to x_hat = C^+ *
-        b. One can use the Moore-Penrose method to compute the
-        pseudoinverse to approximate diffusion tensors.
-
-        For Constrained Fitting:
-        The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
-                                                 -------     ------
-                                                    P           q
-        where A is denoted by multiplier matrix (w * b)
-        Multiplying by a positive constant (0.5) does not change the value
-        of optimum x*. Similarly, the constant offset b.T*b does not
-        affect x*, therefore we can leave these out.
-
-        Minimize: || C*x -b ||_2^2
-            subject to A*x <= b
-            No lower or upper bounds
-
         Parameters
         ----------
         shat : ndarray(dtype=float)
@@ -596,6 +577,27 @@ class DWI(object):
         Examples
         --------
         dt = dwi.wlls(shat, dwi, b, constraints)
+
+        Notes
+        -----
+        For Unconstrained Fitting:
+        In the absence of constraints, an exact formulation in the form
+        Cx = b is produced. This is further simplified to x_hat = C^+ *
+        b. One can use the Moore-Penrose method to compute the
+        pseudoinverse to approximate diffusion tensors.
+
+        For Constrained Fitting:
+        The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
+                                                 -------     ------
+                                                    P           q
+        where A is denoted by multiplier matrix (w * b)
+        Multiplying by a positive constant (0.5) does not change the value
+        of optimum x*. Similarly, the constant offset b.T*b does not
+        affect x*, therefore we can leave these out.
+
+        Minimize: || C*x -b ||_2^2
+            subject to A*x <= b
+            No lower or upper bounds
         """
         w = np.diag(shat)
         # Unconstrained Fitting
@@ -713,8 +715,8 @@ class DWI(object):
         programming
         Classification: Method
 
-        Parameter(s)
-        -----------
+        Parameters
+        ----------
         constraints :   array_like(dtype=int)
             [1 X 3] logical vector indicating which constraints
             out of three to enable (Default: [0, 1, 0])
@@ -722,8 +724,8 @@ class DWI(object):
             C1 is Kapp > 0
             C3 is Kapp < 3/(b*Dapp)
 
-        Return(s)
-        ---------
+        Returns
+        -------
         C : ndarray(dtype=float)
             Array containing constraints to consider during
             minimization, C is shaped [number of constraints enforced *
@@ -1729,8 +1731,28 @@ class DWI(object):
         the table below
         Classification: Method
 
+        Parameters
+        ----------
+        dwiType : str, {'dti', 'dki'}
+            Indicates whether image is DTI or DKI
+
+        Returns
+        -------
+        DT : ndarray(dtype=float)
+            4D image containing DT tensor
+        KT : ndarray(dtype=float)
+            4D image containing KT tensor
+
+        Examples
+        --------
+        dt = dwi.tensorReorder()
+
+        Notes
+        -----
+        MRTRIX3 and Designer tensors are described below.
+        
         MRTRIX3 Tensors                     DESIGNER Tensors
-        ---------------                     ----------------
+        ===============                     ================
 
         0   D0      1   1                       1   1
         1   D1      2   2                       1   2
@@ -1756,10 +1778,10 @@ class DWI(object):
         20  K14     1   2   3   3               3   3   3   3
 
         Value Assignment
-        ----------------
+        ================
 
         MRTRIX3         DESIGNER
-        -------         --------
+        =======         ========
             0               0
             1               3
             2               5
@@ -1782,22 +1804,6 @@ class DWI(object):
             18              10
             19              13
             20              14
-
-        Parameters
-        ----------
-        dwiType : str, {'dti', 'dki'}
-            Indicates whether image is DTI or DKI
-
-        Returns
-        -------
-        DT : ndarray(dtype=float)
-            4D image containing DT tensor
-        KT : ndarray(dtype=float)
-            4D image containing KT tensor
-
-        Examples
-        --------
-        dt = dwi.tensorReorder()
         """
         if self.dt is None:
             raise Exception('Please run dwi.fit() to generate a tensor '
