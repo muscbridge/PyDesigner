@@ -55,6 +55,15 @@ The list of ever possible output file is given in the table below.
 +-------------------------------------+----------------------------------------------------------+
 | **QC Metrics** :code:`root_dir/metrics_qc`                                                     |
 +-------------------------------------+----------------------------------------------------------+
+|                                     |                                                          |
+| :code:`head_motion.png`             | estimated head motion plotted from displacement field    |
+|                                     | computed by EPI and eddy current correction (exists if   |
+|                                     | :code:`--undistort` is used)                             |
++-------------------------------------+----------------------------------------------------------+
+|                                     |                                                          |
+| :code:`outliers`                    | plot of percentage outliers detected by IRLLS outlier    |
+|                                     | detection                                                |
++-------------------------------------+----------------------------------------------------------+
 | :code:`SNR.png`                     | snr plots of dwi_raw.nii and dwi_preprocessed.nii        |
 +-------------------------------------+----------------------------------------------------------+
 |                                     |                                                          |
@@ -66,7 +75,7 @@ The list of ever possible output file is given in the table below.
 |                                     | (4d nifti)                                               |
 +-------------------------------------+----------------------------------------------------------+
 |                                     |                                                          |
-| :code:`/eddy`                       | all outputs of the eddy correction (exist if             |
+| :code:`/eddy`                       | all outputs of the eddy correction (exists if            |
 |                                     | :code:`--undistort` is used)                             |
 +-------------------------------------+----------------------------------------------------------+
 | **DTI/DKI Metrics** :code:`root_dir/metrics`                                                   |
