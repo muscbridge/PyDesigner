@@ -1,6 +1,0 @@
-find_valid_ext
-==============
-
-.. currentmodule:: designer.preprocessing.util
-
-.. autofunction:: find_valid_ext
