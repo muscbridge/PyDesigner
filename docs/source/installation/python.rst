@@ -53,4 +53,3 @@ The first line create an environment with Python v3.7, while the
 second line installs the PyPi package manager.
 
 Once this is all set, you may proceed with the installation of PyD.
-

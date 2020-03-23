@@ -59,6 +59,3 @@ resources that can be diverted towards better performance.
 
 Now that you know some differences, it is time to move on to preparing
 the Docker image!
-
-
-
