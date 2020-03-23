@@ -30,7 +30,7 @@ TBA
 * Documentation inconsistencies
 
 `v0.2 [The Cupid Release]`_
-------------------------
+---------------------------
 
 Feb 26, 2020
 
@@ -53,7 +53,7 @@ Feb 26, 2020
 * CSF masking; feature failed to work consistently
 
 `v0.11-dev`_
----------
+------------
 
 Dec 2, 2019
 
@@ -72,12 +72,11 @@ Dec 2, 2019
 * None
 
 `v0.1-dev`_
---------
+-----------
 
 Oct 22, 2019
 
 Initial port of MATLAB code to Python. 200,000,000,000 BCE
-
 
 
 .. Links
