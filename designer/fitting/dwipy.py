@@ -117,7 +117,6 @@ class DWI(object):
     def getBvals(self):
         """
         Returns a vector of b-values, requires no input arguments
-        Classification: Method
 
         Returns
         -------
@@ -134,7 +133,6 @@ class DWI(object):
         """
         Returns an array of gradient vectors, requires no input
         parameters
-        Classification: Method
         
         Returns
         -------
@@ -151,7 +149,6 @@ class DWI(object):
         """
         Returns the maximum b-value in a dataset to determine between
         DTI and DKI, requires no input parameters
-        Classification: Method
 
         Returns
         -------
@@ -185,7 +182,6 @@ class DWI(object):
         """
         Returns whether input image is DTI or DKI compatible, requires
         no input parameters
-        Classification: Method
 
         Returns
         -------
@@ -228,7 +224,6 @@ class DWI(object):
     def createTensorOrder(self, order=None):
         """
         Creates tensor order array and indices
-        Classification: Method
 
         Parameters
         ----------
@@ -315,7 +310,6 @@ class DWI(object):
     def fibonacciSphere(self, samples=1, randomize=True):
         """
         Returns evenly spaced points on a sphere
-        Classification: Method
 
         Parameters
         ----------
@@ -355,7 +349,6 @@ class DWI(object):
     def radialSampling(self, dir, n):
         """
         Get the radial component of a metric from a set of directions
-        Classification: Method
 
         Parameters
         ----------
@@ -387,7 +380,6 @@ class DWI(object):
     def diffusionCoeff(self, dt, dir):
         """
         Computes apparent diffusion coefficient (ADC)
-        Classification: Method
 
         Parameters
         ----------
@@ -415,7 +407,6 @@ class DWI(object):
     def kurtosisCoeff(self, dt, dir):
         """
         Computes apparent kurtosis coefficient (AKC)
-        Classification: Method
 
         Parameters
         ----------
@@ -447,7 +438,6 @@ class DWI(object):
     def dtiTensorParams(self, nn):
         """
         Computes sorted DTI tensor eigenvalues and eigenvectors
-        Classification: Method
 
         Parameters
         ----------
@@ -475,7 +465,6 @@ class DWI(object):
         """
         Uses average directional statistics to approximate axial
         kurtosis(AK) and radial kurtosis (RK)
-        Classification: Method
 
         Parameters
         ----------
@@ -552,7 +541,6 @@ class DWI(object):
         quadratic convex optimization. This is a helper function for
         dwi.fit() so a multiprocessing parallel loop can be iterated over
         voxels
-        Classification: Method
 
         Parameters
         ----------
@@ -635,7 +623,6 @@ class DWI(object):
     def fit(self, constraints=None, reject=None):
         """
         Returns fitted diffusion or kurtosis tensor
-        Classification: Method
 
         Parameters
         ----------
@@ -717,7 +704,6 @@ class DWI(object):
         """
         Generates constraint array for constrained minimization quadratic
         programming
-        Classification: Method
 
         Parameters
         ----------
@@ -771,7 +757,6 @@ class DWI(object):
         """
         Extract all DTI parameters from DT tensor. Warning, this can
         only be run after tensor fitting dwi.fit()
-        Classification: Method
 
         Returns
         -------
@@ -841,7 +826,6 @@ class DWI(object):
         """
         Extract all DKI parameters from DT tensor. Warning, this can
         only be run after tensor fitting dwi.fit()
-        Classification: Method
 
         Returns
         -------
@@ -900,7 +884,6 @@ class DWI(object):
         """
         Returns white matter tract integrity (WMTI) parameters. Warning:
         this can only be run after fitting and DWI.extractDTI().
-        Classification: Method
 
         Returns
         -------
@@ -1024,7 +1007,6 @@ class DWI(object):
     def findViols(self, c=[0, 1, 0]):
         """
         Returns a 3D violation map of voxels that violate constraints.
-        Classification: Method
 
         Parameters
         ----------
@@ -1111,7 +1093,6 @@ class DWI(object):
         operant for all b-values. Whether an outlier occurs at b1000
         or b1000 and b2000, that voxel is still a violation unless
         none of the b-values have outliers.
-        Classification: Method
 
         Parameters
         ----------
@@ -1155,7 +1136,6 @@ class DWI(object):
     def findVoxelViol(self, adcVox, akcVox, maxB, c):
         """
         Returns the proportions of violations occurring at a voxel.
-        Classification: Method
 
         Parameters
         ----------
@@ -1233,7 +1213,6 @@ class DWI(object):
     def multiplyMask(self, img):
         """
         Multiplies a 3D image by the brain mask
-        Classification: Method
 
         Parameters
         ----------
@@ -1256,7 +1235,6 @@ class DWI(object):
         occur. Multiprocessing is disabled because this is a
         memory-intensive task.
         To be run only after tensor fitting.
-        Classification: Method
 
         Parameters
         ----------
@@ -1301,7 +1279,6 @@ class DWI(object):
         Applies AKC outlier map to DT to replace outliers with a
         moving median. Run this only after tensor fitting and akc
         outlier detection.
-        Classification: Method
 
         Parameters
         ----------
@@ -1405,7 +1382,6 @@ class DWI(object):
         This functions performs outlier detection and robust parameter
         estimation for diffusion MRI using the iterative reweigthed
         linear least squares (IRLLS) approach.
-        Classification: Method
 
         Parameters
         ----------
@@ -1733,7 +1709,6 @@ class DWI(object):
         """
         Reorders tensors in DT to those of MRTRIX in accordance to
         the table below
-        Classification: Method
 
         Parameters
         ----------
@@ -1856,7 +1831,6 @@ class DWI(object):
         """
         Computes 3D violation mask of outliers detected from IRLLS
         method
-        Classification: Method
 
         Parameters
         ----------
@@ -1944,7 +1918,6 @@ def vectorize(img, mask):
 def writeNii(map, hdr, outDir, range=None):
     """
     Write clipped NifTi images
-    Classification: Function
 
     Parameters
     ----------
