@@ -80,6 +80,6 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 
 .. Links
-.. v0.2 [The Cupid Release]: https://github.com/m-ama/PyDesigner/releases/tag/v0.2
-.. v0.11-dev: https://github.com/m-ama/PyDesigner/releases/tag/dev-0.11
-.. v0.2-dev: https://github.com/m-ama/PyDesigner/releases/tag/0.1-dev
+.. _v0.2 [The Cupid Release]: https://github.com/m-ama/PyDesigner/releases/tag/v0.2
+.. _v0.11-dev: https://github.com/m-ama/PyDesigner/releases/tag/dev-0.11
+.. _v0.2-dev: https://github.com/m-ama/PyDesigner/releases/tag/0.1-dev
