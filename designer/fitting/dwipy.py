@@ -124,8 +124,8 @@ class DWI(object):
         ndarray(dtype=float)
             Vector array of b-values
 
-        Usage
-        -----
+        Examples
+        --------
         bvals = dwi.getBvals(), where dwi is the DWI class object
         """
         return self.grad[:,3]
@@ -141,8 +141,8 @@ class DWI(object):
         ndarray(dtype=float)
             [N x 3] array of gradient vectors
 
-        Usage
-        -----
+        Examples
+        --------
         bvecs = dwi.getBvecs(), where dwi is the DWI class object
         """
         return self.grad[:,0:3]
@@ -158,8 +158,8 @@ class DWI(object):
         float
             maximum B-value in DWI
 
-        Usage
-        -----
+        Examples
+        --------
         a = dwi.maxBval(), where dwi is the DWI class object
 
         """
@@ -175,8 +175,8 @@ class DWI(object):
         ndarray
             number of gradient directions
 
-        Usage
-        -----
+        Examples
+        --------
         n = dwi.getndirs(), where dwi is the DWI class object
         """
         return np.sum(self.grad[:, 3] == self.maxBval())
@@ -192,8 +192,8 @@ class DWI(object):
         str
             'dti' or 'dki'
 
-        Usage
-        -----
+        Examples
+        --------
         a = dwi.tensorType(), where dwi is the DWI class object
         """
         if self.maxBval() <= 1.5:
@@ -215,8 +215,8 @@ class DWI(object):
         ans : bool
         True if DKI; false otherwise
 
-        Usage
-        -----
+        Examples
+        --------
         ans = dwi.isdki(), where dwi is the DWI class object
         """
         if self.tensorType() == 'dki':
@@ -243,8 +243,8 @@ class DWI(object):
         ind : ndarray(dtype=int)
             Indices of count
 
-        Usage
-        -----
+        Examples
+        --------
         (cnt, ind) = dwi.createTensorOrder(order)
 
         Additional Information
@@ -331,8 +331,8 @@ class DWI(object):
             [3 x samples] array containing evenly spaced points
             from a sphere
 
-        Usage
-        ----
+        Examples
+        --------
         dirs = dwi.fibonacciSphere(256, True)
         """
         rnd = 1
@@ -366,8 +366,8 @@ class DWI(object):
         -------
         dirs :   Matrix containing radial components
 
-        Usage
-        -----
+        Examples
+        --------
         grad = dwi.radiansampling(dir, number_of_dirs)
 
         """
@@ -399,8 +399,8 @@ class DWI(object):
         adc : ndarray(dtype=float)
             Array containing apparent diffusion coefficient
 
-        Usage
-        -----
+        Examples
+        --------
         adc = dwi.diffusionCoeff(dt, dir)
         """
         dcnt, dind = self.createTensorOrder(2)
@@ -427,8 +427,8 @@ class DWI(object):
         adc : ndarray(dtype=float)
             Array containing apparent kurtosis coefficient
 
-        Usage
-        -----
+        Examples
+        --------
         adc = dwi.kurtosisCoeff(dt, dir)
         """
         wcnt, wind = self.createTensorOrder(4)
@@ -459,8 +459,8 @@ class DWI(object):
         vectors : ndarray(dtype=float)
             Array pf sorted eigenvectors
 
-        Usage
-        -----
+        Examples
+        --------
         (values, vectors) = dwi.dtiTensorParams(DT)
         """
         values, vectors = np.linalg.eig(nn)
@@ -493,8 +493,8 @@ class DWI(object):
         mkt : ndarray(dtype=float)
             Mean Kurtosis Tensor
 
-        Usage
-        -----
+        Examples
+        --------
         (rk, ak) = dwi.dkiTensorParams(v1, dt)
         """
         dirs = np.vstack((v1, -v1))
@@ -593,8 +593,8 @@ class DWI(object):
         dt : ndarray(dtype=float)
             Diffusion tensor
 
-        Usage
-        -----
+        Examples
+        --------
         dt = dwi.wlls(shat, dwi, b, constraints)
         """
         w = np.diag(shat)
@@ -640,8 +640,8 @@ class DWI(object):
             4D array containing information on voxels to exclude
             from DT estimation (Default: None)
 
-        Usage
-        -----
+        Examples
+        --------
         dwi.fit()
         dwi.fit(constraints=[0,1,0], reject=irlls_output)
         """
@@ -729,8 +729,8 @@ class DWI(object):
             minimization, C is shaped [number of constraints enforced *
             number of directions, 22]
 
-        Usage
-        -----
+        Examples
+        --------
         C = dwi.createConstraints([0, 1, 0])
         """
         if sum(constraints) >= 0 and sum(constraints) <= 3:
@@ -782,8 +782,8 @@ class DWI(object):
         trace : ndarray(dtype=float)
             Sum of first eigenvalues
 
-        Usage
-        -----
+        Examples
+        --------
         (md, rd, ad, fa) = dwi.extractDTI(), where dwi is the DWI class
         object
         """
@@ -837,11 +837,6 @@ class DWI(object):
         only be run after tensor fitting dwi.fit()
         Classification: Method
 
-        Usage
-        -----
-        (mk, rk, ak, fe, trace) = dwi.extractDTI(), where dwi is the DWI
-        class object
-
         Returns
         -------
         mk : ndarray(dtype=float)
@@ -856,6 +851,11 @@ class DWI(object):
             Mean Kurtosis Tensor
         trace : ndarray(dtype=float)
             Sum of first eigenvalues
+
+        Examples
+        --------
+        (mk, rk, ak, fe, trace) = dwi.extractDTI(), where dwi is the DWI
+        class object
         """
         # get the trace
         rdwi = highprecisionexp(np.matmul(self.b[:, 1:], self.dt))
@@ -1037,8 +1037,8 @@ class DWI(object):
             violations. Voxels with values contain violaions and voxel
             values represent proportion of directional violations.
 
-                Usage
-        -----
+        Examples
+        --------
         map = findViols(img, [0 1 0]
 
         """
@@ -1117,8 +1117,8 @@ class DWI(object):
         map : ndarray(dtype=int)
             3D map of number of good directions
 
-        Usage
-        -----
+        Examples
+        --------
         map = dwi.goodDirections(outliers)
         """
         # Compute number of good directions
@@ -1167,8 +1167,8 @@ class DWI(object):
             percentaghhe ranging from 0 to 1 that indicates proportion
             of violations occuring at voxel.
 
-        Usage
-        -----
+        Examples
+        --------
         map = findViols(voxel, [0 1 0]
         """
         tmp = np.zeros(3)
@@ -1265,8 +1265,8 @@ class DWI(object):
             3D map containing outliers where AKC falls fails the
             inequality test -2 < AKC < 10
 
-        Usage
-        -----
+        Examples
+        --------
         akc_out = dwi.akoutliers(), where dwi is the DWI class object
         """
         dir = dwidirs.dirs10000
@@ -1307,8 +1307,8 @@ class DWI(object):
             Specifies what kind of connected-component connectivity to
             use for median determination
 
-        Usage
-        -----
+        Examples
+        --------
         dwi.akccorrect(akc_out), where dwi is the DWI class object
         """
         # Get box filter properties
@@ -1431,8 +1431,8 @@ class DWI(object):
         dt : ndarray(dtype=float)
             IRLLS method of DT estimation
 
-        Usage
-        -----
+        Examples
+        --------
         outliers = dwi.irlls()
         """
         # if not excludeb0.dtype:
@@ -1795,8 +1795,8 @@ class DWI(object):
         KT : ndarray(dtype=float)
             4D image containing KT tensor
 
-        Usage
-        -----
+        Examples
+        --------
         dt = dwi.tensorReorder()
         """
         if self.dt is None:
@@ -1857,8 +1857,8 @@ class DWI(object):
             3D mask where voxel value is the percentage of directional
             violations
 
-        Usage
-        -----
+        Examples
+        --------
         mask = dwi.irllsviolmask(outliers)
         """
         img = vectorize(reject, self.mask)
@@ -1891,8 +1891,8 @@ def vectorize(img, mask):
     vec : N X number_of_voxels vector or array, where N is the number
         of DWI volumes
 
-    Usage
-    -----
+    Examples
+    --------
     vec = vectorize(img) if there's no mask
     vec = vectorize(img, mask) if there's a mask
     """
@@ -1950,8 +1950,8 @@ def writeNii(map, hdr, outDir, range=None):
     -------
     None; writes out file
 
-    Usage
-    -----
+    Examples
+    --------
     writeNii(matrix, header, output_directory, [0, 2])
 
     See Also
@@ -1981,8 +1981,8 @@ def clipImage(img, range):
     -------
     clippedImage:   clipped image; same size as img
 
-    Usage
-    -----
+    Examples
+    --------
     clippedImage = clipImage(image, [0 3])
     Clips input matrix in the range 0 to 3
     """
@@ -2007,8 +2007,8 @@ def highprecisionexp(array, maxp=1e32):
     -------
     exponent or max-precision
 
-    Usage
-    -----
+    Examples
+    --------
     a = highprecisionexp(array)
     """
     np.seterr(all='ignore')
