@@ -83,7 +83,7 @@ fi
 if [ "$ISFSL" -eq "0" ]; then
     echo -e "${NC}Installing FSL${NC}"
     curl https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py -o /tmp/fslinstaller.py
-    sudo echo $FSLINSTALL| python2 /tmp/fslinstaller.py -V 6.0.2
+    sudo echo $FSLINSTALL| python2 /tmp/fslinstaller.py -V 6.0.3
     sudo echo 'export FSLDIR=/usr/local/fsl' >> ~/.bashrc
     sudo echo 'export FSLOUTPUTTYPE=NIFTI_GZ' >> ~/.bashrc
     sudo echo 'export PATH=$PATH:$FSLDIR/bin' >> ~/.bashrc
