@@ -1,0 +1,112 @@
+#!/bin/bash
+# This script installs PyDesigner and all dependencies within
+# Debian-based systems
+# Author: Siddhartha Dhiman
+#
+# Note:
+#   The scipt will ask for root password if not run by root user
+
+# Declate predefined variables
+ISFSL=0
+ISMRTRIX=0
+ISPYD=0
+FSLINSTALL=/usr/local/fsl
+MRTRIXINSTALL=/usr/local/mrtrix3
+RED='\033[0;31m'
+GREEN='\033[32m'
+NC='\033[0m'
+
+
+# Install dependencies
+sudo apt-get update && \
+    sudo apt-get install -y \
+        apt-utils \
+        wget \
+        curl \
+        nano \
+        software-properties-common \
+        python2.7 python-pip \
+        python3 python3-pip \
+        jq
+
+sudo apt-get install -y --no-install-recommends \
+    clang \
+    git \
+    python-numpy \
+    libeigen3-dev \
+    zlib1g-dev \
+    libqt4-opengl-dev \
+    libgl1-mesa-dev \
+    libfftw3-dev \
+    libtiff5-dev \
+    libomp-dev
+
+# Check installation of FSL, MRtrix3 and PyDesigner
+if [[ $(echo $FSLDIR) ]]; then
+    echo -e "${GREEN}Existing FSL installation found${NC}\n"
+    ISFSL=1
+else 
+    echo -e "${RED}FSL installation not found...marked for installation\n${NC}"
+    ISFSL=0
+fi
+
+if [[ $(which dwipreproc) ]]; then
+    echo -e "${GREEN}Existing MRtrix3 installation found\n${NC}"
+    ISMRTRIX=1
+else 
+    echo -e "${RED}MRtrix3 installation not found...marked for installation\n${NC}"
+    ISMRTRIX=0
+fi
+
+if [[ $(which pydesigner) ]]; then
+    echo -e "${GREEN}Existing PyDesigner installation found\n${NC}"
+    ISPYD=1
+else 
+    echo -e "${RED}PyDesigner installation not found...marked for installation\n${NC}"
+    ISPYD=0
+fi
+
+# Install PyDesigner
+if [ "$ISPYD" -eq "0" ]; then
+    sudo mkdir -p /tmp/PyDesigner
+    export PYDVER=$(curl -s https://api.github.com/repos/m-ama/PyDesigner/releases | jq -r '.[0] | .tag_name')
+    export URL=$(curl -s https://api.github.com/repos/m-ama/PyDesigner/releases | jq -r '.[0] | .tarball_url')
+    echo -e "${NC}Installing PyDesigner $PYDVER${NC}"
+    sudo wget -q -O - $URL | sudo tar -xzf - -C /tmp/PyDesigner --strip 1
+    sudo pip3 install /tmp/PyDesigner
+    sudo rm -r /tmp/PyDesigner
+else
+    :
+fi
+
+# Install FSL
+if [ "$ISFSL" -eq "0" ]; then
+    echo -e "${NC}Installing FSL${NC}"
+    curl https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py -o /tmp/fslinstaller.py
+    sudo echo $FSLINSTALL| python2 /tmp/fslinstaller.py -V 6.0.2
+    sudo echo 'export FSLDIR=/usr/local/fsl' >> ~/.bashrc
+    sudo echo 'export FSLOUTPUTTYPE=NIFTI_GZ' >> ~/.bashrc
+    sudo echo 'export PATH=$PATH:$FSLDIR/bin' >> ~/.bashrc
+    sudo echo 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$FSLDIR' >> ~/.bashrc
+else
+    :
+fi
+
+# Install MRtrix3
+if [ "$ISMRTRIX" -eq "0" ]; then
+    echo -e "${NC}Installing MRTrix3${NC}"
+    sudo git clone https://github.com/MRtrix3/mrtrix3.git /usr/local/mrtrix3
+    CXX=/usr/bin/clang++
+    ARCH=native
+    ./usr/local/mrtrix3/configure && \
+        ./usr/local/mrtrix3/build && \
+        ./usr/local/mrtrix3/set_path
+    sudo echo 'export PATH=$PATH:/usr/local/mrtrix3/bin' >> ~/.bashrc
+else
+    :
+fi
+
+source ~/.bashrc
+echo -e "${GREEN}Installation Complete"
+echo -e "Please close this Terminal window and reopen a new window for"
+echo -e "changes to take effect\n${NC}"
