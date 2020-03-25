@@ -1,8 +1,7 @@
 # ==============================================================================
-# MAMA-Docker
+# NeuroDock
 # A docker container that contains all PyDesigner dependencies such as MRTRIX3,
-# FSL, and Python to preprocess diffusion MRI images. Additional dependencies 
-# will be incorporated as the pipeline progresses further
+# FSL, and Python to preprocess diffusion MRI images.
 #
 # Maintainer: Siddhartha Dhiman
 # ------------------------------------------------------------------------------
@@ -10,7 +9,7 @@
 #    1.) FSL
 #    2.) MRTRIX3
 #    3.) Python 2.7
-#    4.) Python 3 
+#    4.) Python 3.6
 #    6.) PyDesigner
 # ==============================================================================
 
