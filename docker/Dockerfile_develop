@@ -1,9 +1,8 @@
 
 # ==============================================================================
-# MAMA-Docker
+# NeuroDock
 # A docker container that contains all PyDesigner dependencies such as MRTRIX3,
-# FSL, and Python to preprocess diffusion MRI images. Additional dependencies 
-# will be incorporated as the pipeline progresses further
+# FSL, and Python to preprocess diffusion MRI images.
 #
 # Maintainer: Siddhartha Dhiman
 # ------------------------------------------------------------------------------
@@ -11,7 +10,7 @@
 #    1.) FSL
 #    2.) MRTRIX3
 #    3.) Python 2.7
-#    4.) Python 3 
+#    4.) Python 3.6
 #    6.) PyDesigner
 # ==============================================================================
 
@@ -59,11 +58,11 @@ RUN apt-get install -y --no-install-recommends \
       libtiff5-dev \
       libomp-dev
 
-RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+ARG DEBIAN_FRONTEND=noninteractive
 
 # Clone PyDesigner
 RUN mkdir -p /tmp/PyDesigner
-RUN git clone -b maintenance/0.2.X --single-branch https://github.com/m-ama/PyDesigner.git /tmp/PyDesigner
+RUN git clone -b develop --single-branch https://github.com/m-ama/PyDesigner.git /tmp/PyDesigner
 RUN pip3 install /tmp/PyDesigner
 RUN echo "alias python=python3" >> ~/.bashrc && source ~/.bashrc
 RUN echo "alias pip=pip3" >> ~/.bashrc && source ~/.bashrc
@@ -90,5 +89,4 @@ ENV PATH=$PATH:/usr/local/mrtrix3/bin
 
 # Remove unwanted packages
 RUN apt-get autoremove && apt-get clean
-RUN rm /tmp/fslinstaller.py && \
-      rm -r /tmp/PyDesigner
+RUN rm /tmp/fslinstaller.py && rm -r /tmp/PyDesigner
