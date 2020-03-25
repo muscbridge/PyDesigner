@@ -80,7 +80,7 @@ RUN pip3 install --upgrade setuptools && \
 
 # Install FSL
 RUN curl https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py -o /tmp/fslinstaller.py
-RUN echo "/usr/local/fsl" | python2 /tmp/fslinstaller.py -V 6.0.2
+RUN echo "/usr/local/fsl" | python2 /tmp/fslinstaller.py -V 6.0.3
 
 # Configure FSL Environment
 ENV FSLDIR=/usr/local/fsl
