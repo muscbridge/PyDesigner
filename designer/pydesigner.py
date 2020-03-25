@@ -15,6 +15,7 @@ import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import json
 import numpy as np # array, ndarray
+from designer.info import __version__
 from designer.preprocessing import util, preparation, mrinfoutil, mrpreproc
 from designer.plotting import snrplot, outlierplot, motionplot
 from designer.fitting import dwipy as dp
@@ -214,6 +215,8 @@ def main():
                         'UNDERSTAND THE MRI SYSTEM AND ITS OUTPUTS. '
                         'RUNNING WITH THIS FLAG COULD POTENTIALLY '
                         'RESULT IN IMPRECISE AND INACCURATE RESULTS.')
+    parser.add_argument('-v', '--version', action='version',
+                        version=__version__)
 
     # Use argument specification to actually get args
     args = parser.parse_args()
