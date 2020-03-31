@@ -463,30 +463,22 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
     if fsl_suffix == 'NIFTI_GZ':
         os.environ['FSLOUTPUTTYPE'] = 'NIFTI'
     outdir = op.dirname(output)
-    B0_mean = op.join(outdir, 'B0_mean.nii')
     B0_nan = op.join(outdir, 'B0_nan.nii')
     mask = op.join(outdir, 'brain')
     tmp_brain = op.join(outdir, 'brain.nii')
     # Extract averaged B0 from DWI
     extractmeanbzero(input=input,
-                        output=B0_mean,
+                        output=B0_nan,
                         nthreads=nthreads,
                         force=force,
                         verbose=verbose)
-    # Now remove nan create mask using `fslmaths`
-    arg_b0_nan = ['fslmaths', B0_mean, '-nan', B0_nan]
-    completion = subprocess.run(arg_b0_nan)
-    if completion.returncode != 0:
-        raise Exception('Unable to remove NaN from B0 for the '
-                        'computation of brain mask. See above for errors.')
-    # Compute brain mask from
+    # Compute brain mask
     arg_mask = ['bet', B0_nan, mask, '-m', '-f', str(thresh)]
     completion = subprocess.run(arg_mask)
     if completion.returncode != 0:
         raise Exception('Unable to compute brain mask from B0. See above '
                         'for errors')
     # Remove intermediary file
-    os.remove(B0_mean)
     os.remove(B0_nan)
     os.remove(tmp_brain)
     os.rename(op.join(outdir, mask + '_mask.nii'), output)
@@ -640,7 +632,7 @@ def extractbzero(input, output, nthreads=None, force=False,
 def extractmeanbzero(input, output, nthreads=None, force=False,
               verbose=False):
     """
-    Extracts average B0 from all B0 shells.
+    Extracts average B0 from all B0 shells, with NaNs removed.
 
     Parameters
     ----------
@@ -679,16 +671,24 @@ def extractmeanbzero(input, output, nthreads=None, force=False,
         raise Exception('Please specify whether verbose is True or False.')
     outdir = op.dirname(output)
     fname_bzero = op.join(outdir, 'B0_ALL.mif')
+    fname_mean = op.join(outdir, 'B0_MEAN.mif')
     # Extract all B0s
     extractbzero(input, fname_bzero, nthreads=nthreads, force=force,
               verbose=verbose)
-    arg = (['mrmath', '-axis', '3', fname_bzero, 'mean', output])
-    completion = subprocess.run(arg)
+    arg_mean = ['mrmath', '-axis', '3', fname_bzero, 'mean', fname_mean]
+    completion = subprocess.run(arg_mean)
     if completion.returncode != 0:
-        raise Exception('Unable to extract B0s from DWI for computation '
-                        'of brain mask. See above for errors.')
+        raise Exception('Unable to compute mean of B0s. See above for'
+                        'errors.')
+    arg_nan = ['mrcalc', fname_mean, '-finite', fname_mean,
+                '0', '-if', output]
+    completion = subprocess.run(arg_nan)
+    if completion.returncode != 0:
+        raise Exception('Unable to remove NaNs from averaged B0. See'
+                        'above for errors.')
     # Remove non-essential files
     os.remove(fname_bzero)
+    os.remove(fname_mean)
 
 def extractnonbzero(input, output, nthreads=None, force=False,
               verbose=False):
