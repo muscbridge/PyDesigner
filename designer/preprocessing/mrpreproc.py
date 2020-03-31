@@ -463,47 +463,23 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
     if fsl_suffix == 'NIFTI_GZ':
         os.environ['FSLOUTPUTTYPE'] = 'NIFTI'
     outdir = op.dirname(output)
-    B0_all = op.join(outdir, 'B0_all.mif')
-    B0_mean = op.join(outdir, 'B0_mean.nii')
-    B0_nan = op.join(outdir, 'B0.nii')
+    B0_nan = op.join(outdir, 'B0_nan.nii')
     mask = op.join(outdir, 'brain')
     tmp_brain = op.join(outdir, 'brain.nii')
-    # Extract B0 from DWI
-    arg_b0_all = ['dwiextract']
-    if force:
-        arg_b0_all.append('-force')
-    if not verbose:
-        arg_b0_all.append('-quiet')
-    if not (nthreads is None):
-        arg_b0_all.extend(['-nthreads', nthreads])
-    arg_b0_all.append('-bzero')
-    arg_b0_all.extend([input, B0_all])
-    completion = subprocess.run(arg_b0_all)
-    if completion.returncode != 0:
-        raise Exception('Unable to extract B0s from DWI for computation '
-                        'of brain mask. See above for errors.')
-    # Now compute mean
-    arg_b0_mean = (['mrmath', '-axis', '3', B0_all, 'mean', B0_mean])
-    completion = subprocess.run(arg_b0_mean)
-    if completion.returncode != 0:
-        raise Exception('Unable to compute mean of B0s for computation '
-                        'of brain mask. See above for errors.')
-
-    # Now remove nan create mask using `fslmaths`
-    arg_b0_nan = ['fslmaths', B0_mean, '-nan', B0_nan]
-    completion = subprocess.run(arg_b0_nan)
-    if completion.returncode != 0:
-        raise Exception('Unable to remove NaN from B0 for the '
-                        'computation of brain mask. See above for errors.')
-    # Compute brain mask from
+    # Extract averaged B0 from DWI
+    extractmeanbzero(input=input,
+                        output=B0_nan,
+                        nthreads=nthreads,
+                        force=force,
+                        verbose=verbose)
+    # Compute brain mask
     arg_mask = ['bet', B0_nan, mask, '-m', '-f', str(thresh)]
     completion = subprocess.run(arg_mask)
     if completion.returncode != 0:
         raise Exception('Unable to compute brain mask from B0. See above '
                         'for errors')
     # Remove intermediary file
-    os.remove(B0_all)
-    os.remove(B0_mean)
+    os.remove(B0_nan)
     os.remove(tmp_brain)
     os.rename(op.join(outdir, mask + '_mask.nii'), output)
 
@@ -652,6 +628,67 @@ def extractbzero(input, output, nthreads=None, force=False,
     if completion.returncode != 0:
         raise Exception('Unable to extract B0s from DWI for computation '
                         'of brain mask. See above for errors.')
+
+def extractmeanbzero(input, output, nthreads=None, force=False,
+              verbose=False):
+    """
+    Extracts average B0 from all B0 shells, with NaNs removed.
+
+    Parameters
+    ----------
+    input : str
+        Path to input .mif file
+    output : str
+        Path to output .mif or .nii file
+    nthreads : int, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force : bool, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose : bool, optional
+        Specify whether to print console output (Default: False)
+
+    Returns
+    -------
+    None; writes out file
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    outdir = op.dirname(output)
+    fname_bzero = op.join(outdir, 'B0_ALL.mif')
+    fname_mean = op.join(outdir, 'B0_MEAN.mif')
+    # Extract all B0s
+    extractbzero(input, fname_bzero, nthreads=nthreads, force=force,
+              verbose=verbose)
+    arg_mean = ['mrmath', '-axis', '3', fname_bzero, 'mean', fname_mean]
+    completion = subprocess.run(arg_mean)
+    if completion.returncode != 0:
+        raise Exception('Unable to compute mean of B0s. See above for'
+                        'errors.')
+    arg_nan = ['mrcalc', fname_mean, '-finite', fname_mean,
+                '0', '-if', output]
+    completion = subprocess.run(arg_nan)
+    if completion.returncode != 0:
+        raise Exception('Unable to remove NaNs from averaged B0. See'
+                        'above for errors.')
+    # Remove non-essential files
+    os.remove(fname_bzero)
+    os.remove(fname_mean)
 
 def extractnonbzero(input, output, nthreads=None, force=False,
               verbose=False):
@@ -820,3 +857,77 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
                         'TOPUP B0 indices. See above for errors.')
     # Remove temp files
     os.remove(fname_bzero)
+
+def reslice(input, output, voxel, interp='linear', nthreads=None,
+            force=False, verbose=False):
+    """
+    Reslices input image to target voxel size
+
+    Parameters
+    ----------
+    input : str
+        Path to input .mif file
+    output : str
+        Path to output .mif file
+    voxel : float or tuple of float
+        x, y, z voxel size in mm
+    interp : str, {'linear', 'nearest', 'cubic' , 'sinc'}, optional
+        set the interpolation method to use when resizing (Default: 
+        'linear')
+    nthreads : int, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force : bool, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose : bool, optional
+        Specify whether to print console output (Default: False)
+
+    Returns
+    -------
+    None; writes out file
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if op.splitext(output)[-1] != '.mif':
+        raise OSError('Output should be specified as a .mif file.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if not isinstance(voxel, str):
+        raise Exception('Voxel size needs to be defined as a string '
+                        ' of three values')
+    if len(voxel.split(',')) != 3:
+        raise Exception('Please specify voxel size for each axis '
+                        'x, y, and z i.e. "3,3,3" for 3 mm isotropic')
+    if not isinstance(interp, str):
+        raise Exception('Interpolation method needs to be specified '
+                        'as a string')
+    if interp not in ('linear', 'nearest', 'cubic', 'sinc'):
+        raise Exception('User specified interpoaltion method {} is '
+                        'not a valid option'.format(interp))
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    arg = ['mrresize']
+    if force:
+        arg.append('-force')
+    if not verbose:
+        arg.append('-quiet')
+    if not (nthreads is None):
+        arg.extend(['-nthreads', nthreads])
+    arg.extend(['-voxel', voxel])
+    arg.extend(['-interp', interp])
+    arg.extend([input, output])
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('EPIBOOST: failed to extract specified '
+                        'TOPUP B0 indices. See above for errors.')

@@ -14,6 +14,7 @@ TBA
 * Head motion plot from on eddy_qc outputs
 * Outlier plot from IRRLS outlier detection
 * Updated documentation
+* Option to reslice DWI with ``--reslice [x,y,z]``
 
 **Changed**:
 
@@ -24,6 +25,10 @@ TBA
   estimation. The new method now preserves all B0s, thereby allowing
   faster EPI distortion correction without degrading DTI/DKI maps.
 * Documentation moved to ReadTheDocs
+* Moved B0 production module from designer.preprocessing.brainmask to
+  a separate function at ``designer.preprocessing.extractmeanbzero()`` 
+  that gets called by PyDesigner main. This allows a B0.nii to be
+  produced regardless of the ``--mask`` flag.
 
 **Removed**:
 
