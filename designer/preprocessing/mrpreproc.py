@@ -653,6 +653,59 @@ def extractbzero(input, output, nthreads=None, force=False,
         raise Exception('Unable to extract B0s from DWI for computation '
                         'of brain mask. See above for errors.')
 
+def extractmeanbzero(input, output, nthreads=None, force=False,
+              verbose=False):
+    """
+    Extracts average B0 from all B0 shells.
+
+    Parameters
+    ----------
+    input : str
+        Path to input .mif file
+    output : str
+        Path to output .mif or .nii file
+    nthreads : int, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force : bool, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose : bool, optional
+        Specify whether to print console output (Default: False)
+
+    Returns
+    -------
+    None; writes out file
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    outdir = op.dirname(output)
+    fname_bzero = op.join(outdir, 'B0_ALL.mif')
+    # Extract all B0s
+    extractbzero(input, fname_bzero, nthreads=nthreads, force=force,
+              verbose=verbose)
+    arg = (['mrmath', '-axis', '3', fname_bzero, 'mean', output])
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('Unable to extract B0s from DWI for computation '
+                        'of brain mask. See above for errors.')
+    # Remove non-essential files
+    os.remove(fname_bzero)
+
 def extractnonbzero(input, output, nthreads=None, force=False,
               verbose=False):
     """

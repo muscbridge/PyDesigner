@@ -706,7 +706,28 @@ def main():
         # update nifti file tracking
         filetable['rician_corrected'] = DWIFile(nii_rician)
         filetable['HEAD'] = filetable['rician_corrected']
-                
+
+    #-----------------------------------------------------------------
+    # Extract averaged B0
+    #-----------------------------------------------------------------
+    # file names
+    b0_name = 'B0'
+    nii_b0 = op.join(outpath, b0_name + '.nii')
+    # check to see if this already exists
+    if not (args.resume and op.exists(nii_b0)):
+        # extract mean B0
+        mrpreproc.extractmeanbzero(input=working_path,
+                                    output=nii_b0,
+                                    nthreads=args.nthreads,
+                                    force=args.force,
+                                    verbose=args.verbose)
+        # update command history
+        cmdtable['B0'] = mrinfoutil.commandhistory(working_path)[-1]
+        cmdtable['HEAD'] = cmdtable['B0']
+    # update nifti file tracking
+    filetable['B0'] = DWIFile(nii_b0)
+    filetable['HEAD'] = filetable['B0']
+
     #-----------------------------------------------------------------
     # Make preprocessed file
     #-----------------------------------------------------------------
