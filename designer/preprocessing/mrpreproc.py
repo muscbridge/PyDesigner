@@ -463,32 +463,16 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
     if fsl_suffix == 'NIFTI_GZ':
         os.environ['FSLOUTPUTTYPE'] = 'NIFTI'
     outdir = op.dirname(output)
-    B0_all = op.join(outdir, 'B0_all.mif')
     B0_mean = op.join(outdir, 'B0_mean.nii')
-    B0_nan = op.join(outdir, 'B0.nii')
+    B0_nan = op.join(outdir, 'B0_nan.nii')
     mask = op.join(outdir, 'brain')
     tmp_brain = op.join(outdir, 'brain.nii')
-    # Extract B0 from DWI
-    arg_b0_all = ['dwiextract']
-    if force:
-        arg_b0_all.append('-force')
-    if not verbose:
-        arg_b0_all.append('-quiet')
-    if not (nthreads is None):
-        arg_b0_all.extend(['-nthreads', nthreads])
-    arg_b0_all.append('-bzero')
-    arg_b0_all.extend([input, B0_all])
-    completion = subprocess.run(arg_b0_all)
-    if completion.returncode != 0:
-        raise Exception('Unable to extract B0s from DWI for computation '
-                        'of brain mask. See above for errors.')
-    # Now compute mean
-    arg_b0_mean = (['mrmath', '-axis', '3', B0_all, 'mean', B0_mean])
-    completion = subprocess.run(arg_b0_mean)
-    if completion.returncode != 0:
-        raise Exception('Unable to compute mean of B0s for computation '
-                        'of brain mask. See above for errors.')
-
+    # Extract averaged B0 from DWI
+    extractmeanbzero(input=input,
+                        output=B0_mean,
+                        nthreads=nthreads,
+                        force=force,
+                        verbose=verbose)
     # Now remove nan create mask using `fslmaths`
     arg_b0_nan = ['fslmaths', B0_mean, '-nan', B0_nan]
     completion = subprocess.run(arg_b0_nan)
@@ -502,8 +486,8 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
         raise Exception('Unable to compute brain mask from B0. See above '
                         'for errors')
     # Remove intermediary file
-    os.remove(B0_all)
     os.remove(B0_mean)
+    os.remove(B0_nan)
     os.remove(tmp_brain)
     os.rename(op.join(outdir, mask + '_mask.nii'), output)
 
