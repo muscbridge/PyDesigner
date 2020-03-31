@@ -28,6 +28,10 @@ preprocessing pipeline, to accomodate all types of datasets.
 
 --extent        Shape of denoising extent matrix, defaults to 5,5,5
 
+--reslice       Reslices input DWI and outputs to a specific resolution in mm
+
+--interp        The interpolation method to use when resizing
+
 --degibbs       Corrects Gibb’s ringing
 
 --undistort     Undistorts image using a suite of EPI distortion correction, eddy current correction, and co-registration. Does not run EPI correction if reverse phase encoding DWI is absent.
