@@ -686,7 +686,7 @@ def main():
         files = []
         files.append(init_nii)
         files.append(filetable['HEAD'].getFull())
-        if not filetable['mask'] is None:
+        if 'mask' in filetable:
             snr = snrplot.makesnr(dwilist=files,
                                   noisepath=nii_noisemap,
                                   maskpath=filetable['mask'].getFull())
@@ -724,7 +724,7 @@ def main():
                 outlier_plot_full = op.join(qcpath,
                                     'outliers.png')
                 dp.writeNii(outliers, img.hdr, outlier_full)
-                if not filetable['mask'] is None:
+                if 'mask' in filetable:
                     outlierplot.plot(input=outlier_full,
                                     output=outlier_plot_full,
                                     bval=filetable['HEAD'].getBVAL(),
