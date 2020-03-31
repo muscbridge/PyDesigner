@@ -820,3 +820,77 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
                         'TOPUP B0 indices. See above for errors.')
     # Remove temp files
     os.remove(fname_bzero)
+
+def reslice(input, output, voxel, interp='linear', nthreads=None,
+            force=False, verbose=False):
+    """
+    Reslices input image to target voxel size
+
+    Parameters
+    ----------
+    input : str
+        Path to input .mif file
+    output : str
+        Path to output .mif file
+    voxel : float or tuple of float
+        x, y, z voxel size in mm
+    interp : str, {'linear', 'nearest', 'cubic' , 'sinc'}, optional
+        set the interpolation method to use when resizing (Default: 
+        'linear')
+    nthreads : int, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force : bool, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose : bool, optional
+        Specify whether to print console output (Default: False)
+
+    Returns
+    -------
+    None; writes out file
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if op.splitext(output)[-1] != '.mif':
+        raise OSError('Output should be specified as a .mif file.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if not isinstance(voxel, str):
+        raise Exception('Voxel size needs to be defined as a string '
+                        ' of three values')
+    if len(voxel.split(',')) != 3:
+        raise Exception('Please specify voxel size for each axis '
+                        'x, y, and z i.e. "3,3,3" for 3 mm isotropic')
+    if not isinstance(interp, str):
+        raise Exception('Interpolation method needs to be specified '
+                        'as a string')
+    if interp not in ('linear', 'nearest', 'cubic', 'sinc'):
+        raise Exception('User specified interpoaltion method {} is '
+                        'not a valid option'.format(interp))
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    arg = ['mrresize']
+    if force:
+        arg.append('-force')
+    if not verbose:
+        arg.append('-quiet')
+    if not (nthreads is None):
+        arg.extend(['-nthreads', nthreads])
+    arg.extend(['-voxel', voxel])
+    arg.extend(['-interp', interp])
+    arg.extend([input, output])
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('EPIBOOST: failed to extract specified '
+                        'TOPUP B0 indices. See above for errors.')

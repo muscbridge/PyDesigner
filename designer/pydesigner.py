@@ -133,6 +133,14 @@ def main():
                         help='Denoising extent formatted n,n,n (forces '
                         ' denoising. '
                         'Default: 5,5,5.')
+    parser.add_argument('--reslice', metavar='x,y,z',
+                        help='Relices DWI to resolution specified in '
+                        'millimeters (mm). Performing reslicing will '
+                        'skip plotting of SNR curves.')
+    parser.add_argument('--interp', action='store_true', default='linear',
+                        help='Set the interpolation to use when '
+                        'reslicing. Choices are linear (default), ' 
+                        'nearest, cubic, sinc.')
     parser.add_argument('--degibbs', action='store_true', default=False,
                         help='Perform gibbs unringing. Only perform if you '
                         'have full Fourier encoding. The program will check '
@@ -491,6 +499,42 @@ def main():
         filetable['noisemap'] = DWIFile(nii_noisemap)
 
     #-----------------------------------------------------------------
+    # Run Reslicing
+    #-----------------------------------------------------------------
+    if args.reslice:
+        step_count += 1
+        reslice_name = 'dwi_reslice'
+        # file names
+        reslice_name_full = str(step_count)+ '_' + reslice_name
+        nii_reslice = op.join(intermediatepath, reslice_name_full + '.nii')
+        mif_reslice = op.join(outpath, reslice_name_full + '.mif')
+        # check to see if this already exists
+        if not (args.resume and op.exists(nii_reslice)):
+            # run degibbs function
+            mrpreproc.reslice(input=working_path,
+                              output=mif_reslice,
+                              voxel=args.reslice,
+                              interp=args.interp,
+                              nthreads=args.nthreads,
+                              force=args.force,
+                              verbose=args.verbose)
+            mrpreproc.miftonii(input=mif_reslice,
+                               output=nii_reslice,
+                               strides='1,2,3,4',
+                               nthreads=args.nthreads,
+                               force=args.force,
+                               verbose=False)
+            # remove old working.mif and replace with new corrected .mif
+            os.remove(working_path)
+            os.rename(mif_reslice, working_path)
+            # update command history
+            cmdtable['reslice'] = mrinfoutil.commandhistory(working_path)[-1]
+            cmdtable['HEAD'] = cmdtable['reslice']
+        # update nifti file tracking
+        filetable['reslice'] = DWIFile(nii_reslice)
+        filetable['HEAD'] = filetable['reslice']
+
+    #-----------------------------------------------------------------
     # Run Gibbs Unringing
     #-----------------------------------------------------------------
     if args.degibbs:
@@ -682,7 +726,7 @@ def main():
     #-----------------------------------------------------------------
     # Compute SNR
     #-----------------------------------------------------------------
-    if args.denoise and not args.noqc:
+    if (args.denoise and not args.reslice) and not args.noqc:
         files = []
         files.append(init_nii)
         files.append(filetable['HEAD'].getFull())
