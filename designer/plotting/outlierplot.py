@@ -73,7 +73,7 @@ def plot(input, output, bval=None, mask=None):
     for i in range(vols):
         img[:,:,:,i] = np.multiply(img[:,:,:,i], bw)
     # Create x-axis
-    x = np.arange(start=1, stop=vols, step=1)
+    x = np.arange(start=0, stop=vols, step=1)
     # create y-axis
     y = np.zeros_like(x)
     for i in range(len(x)):
@@ -85,23 +85,19 @@ def plot(input, output, bval=None, mask=None):
     fig, ax = plt.subplots()
     if bval:
         bvals = np.loadtxt(bval, dtype=int)
-        points = np.array([x, y]).T.reshape(-1, 1, 2)
-        segments = np.concatenate([points[:-1], points[1:]], axis=1)
-        norm = plt.Normalize(bvals.min(), bvals.max())
-        lc = LineCollection(segments, cmap='Set1', norm=norm, alpha=0.8)
-        lc.set_array(bvals)
-        lc.set_linewidth(2)
-        line = ax.add_collection(lc)
-        cbar = fig.colorbar(line, ax=ax)
-        cbar.set_label('B-Value')
+        # Plot line
     else:
-        plt.plot(x, y, "-", lw=0.5, color="black", alpha=0.8)
-    plt.scatter(x, y, s=10, color="black", linewidths=0, alpha=0.90)
+        bvals = np.zeros(len(x))
+    plt.plot(x, y, "-", lw=1, color="black", alpha=0.40)
+    scat = plt.scatter(x, y, c=bvals, s=10, linewidths=0, alpha=1, cmap='Set1')
     plt.xlabel('Shell Number')
     plt.ylabel('Percentage of Outlier Voxels (%)')
     plt.xticks(rotation=45)
     ax.xaxis.set_minor_locator(AutoMinorLocator())
     ax.grid(which='minor', linestyle=':', linewidth='0.5')
+    if bval:
+        cbar = fig.colorbar(scat, ax=ax)
+        cbar.set_label('B-Value')
     if mask is None:
         plt.title('IRLLS Outlier Determination in DWI')
     else:
