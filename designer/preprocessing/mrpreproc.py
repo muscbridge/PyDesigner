@@ -933,10 +933,10 @@ def reslice(input, output, size, interp='linear',
     if not isinstance(verbose, bool):
         raise Exception('Please specify whether verbose is True or False.')
     if dim_str == '-voxel':
-        current_size = [float(x) for x in (mrinfoutil.spacing(input))][0:3]
+        current_size = [round(float(x), 2) for x in (mrinfoutil.spacing(input))][0:3]
     elif dim_str == '-size':
-        current_size =[float(x) for x in mrinfoutil.size(input)][0:3]
-    specified_size = [float(x) for x in size.split(',')]
+        current_size =[round(float(x), 2) for x in mrinfoutil.size(input)][0:3]
+    specified_size = [round(float(x), 2) for x in size.split(',')]
     if specified_size == current_size:
         print('[WARNING] target reslicing dimensions {} are the same '
             'as input image dimensions {}, writing file without '
