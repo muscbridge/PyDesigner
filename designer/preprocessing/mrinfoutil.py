@@ -26,7 +26,7 @@ def getconsole(path, flag):
     Returns
     -------
     str
-        MRtrix3's mrinfo conmsol output
+        MRtrix3's mrinfo console output
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '

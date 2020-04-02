@@ -94,12 +94,10 @@ def main():
         1. dwidenoise (thermal denoising)
         2. mrdegibbs (gibbs unringing)
         3. topup + eddy (undistortion)
-        4. b1 bias correction
-        4. CSF-excluded smoothing
-        5. rician bias correction
-        6. normalization to white matter in first b0 image
-        7. IRWLLS, CWLLS DKI fit
-        8. Outlier detection and removal
+        4. rician bias correction
+        5. normalization to white matter in first b0 image
+        6. IRWLLS, CWLLS DKI fit
+        7. Outlier detection and removal
 
     See also:
         GitHub      https://github.com/m-ama/PyDesigner
@@ -134,9 +132,12 @@ def main():
                         ' denoising. '
                         'Default: 5,5,5.')
     parser.add_argument('--reslice', metavar='x,y,z',
-                        help='Relices DWI to resolution specified in '
-                        'millimeters (mm). Performing reslicing will '
-                        'skip plotting of SNR curves.')
+                        help='Relices DWI to voxel resolution '
+                        'specified in millimeters (mm) or output '
+                        'dimensions. Performing reslicing will skip '
+                        'plotting of SNR curves. Providing dimensions '
+                        'greater than 9 will swtich from mm voxel '
+                        'reslicing to output image reslicing.')
     parser.add_argument('--interp', action='store_true', default='linear',
                         help='Set the interpolation to use when '
                         'reslicing. Choices are linear (default), ' 
@@ -148,7 +149,7 @@ def main():
     parser.add_argument('--undistort', action='store_true', default=False,
                         help='Run FSL eddy to perform image undistortion. '
                         'NOTE: needs a --topup to run.')
-    parser.add_argument('--epi', default=0, type=int,
+    parser.add_argument('--rpe_pairs', default=0, type=int,
                         metavar='n',
                         help='Number of reverse phase encoded B0 '
                         'pairs to use in TOPUP. Using less pairs '
@@ -504,19 +505,28 @@ def main():
     if args.reslice:
         step_count += 1
         reslice_name = 'dwi_reslice'
+        noise_name = 'noisemap_resliced'
         # file names
         reslice_name_full = str(step_count)+ '_' + reslice_name
         nii_reslice = op.join(intermediatepath, reslice_name_full + '.nii')
         mif_reslice = op.join(outpath, reslice_name_full + '.mif')
+        nii_noise = op.join(outpath, noise_name + '.nii')
         # check to see if this already exists
         if not (args.resume and op.exists(nii_reslice)):
-            # run degibbs function
+            # run reslice function on both DWI and noisemap
             mrpreproc.reslice(input=working_path,
                               output=mif_reslice,
-                              voxel=args.reslice,
+                              size=args.reslice,
                               interp=args.interp,
                               nthreads=args.nthreads,
                               force=args.force,
+                              verbose=args.verbose)
+            mrpreproc.reslice(input=nii_noisemap,
+                              output=nii_noise,
+                              size=args.reslice,
+                              interp=args.interp,
+                              nthreads=args.nthreads,
+                              force=True,
                               verbose=args.verbose)
             mrpreproc.miftonii(input=mif_reslice,
                                output=nii_reslice,
@@ -527,6 +537,7 @@ def main():
             # remove old working.mif and replace with new corrected .mif
             os.remove(working_path)
             os.rename(mif_reslice, working_path)
+            os.rename(nii_noise, nii_noisemap)
             # update command history
             cmdtable['reslice'] = mrinfoutil.commandhistory(working_path)[-1]
             cmdtable['HEAD'] = cmdtable['reslice']
@@ -585,7 +596,7 @@ def main():
                                 output=mif_undistorted,
                                 rpe='rpe_header',
                                 qc=eddyqcpath,
-                                epib0=args.epi,
+                                epib0=args.rpe_pairs,
                                 nthreads=args.nthreads,
                                 force=args.force,
                                 verbose=args.verbose)

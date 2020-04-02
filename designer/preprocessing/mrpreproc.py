@@ -7,6 +7,7 @@ Utilities for running various MRtrix3's DWI preprocessing tools
 
 import os
 import os.path as op
+from shutil import copyfile
 import subprocess
 import numpy as np
 from designer.preprocessing import preparation, util, smoothing, rician, mrinfoutil
@@ -388,8 +389,14 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
                     verbose=verbose)
             arg.extend(['-se_epi', epi_path])
         except:
-            print('[WARNING] Unable to apply EPI boost because DWI '
+            print('[WARNING] Unable to apply TOPUPBOOST because DWI '
             'consists of single PE direction.')
+            # Remove the B0_ALL.mif file that is created when epiboost
+            # function fails
+            try:
+                os.remove(op.join(outdir, 'B0_ALL.mif'))
+            except OSError:
+                pass
     arg.extend(['-eddy_options', repol_string])
     arg.append(rpe)
     if not qc is None:
@@ -858,19 +865,19 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
     # Remove temp files
     os.remove(fname_bzero)
 
-def reslice(input, output, voxel, interp='linear', nthreads=None,
-            force=False, verbose=False):
+def reslice(input, output, size, interp='linear',
+            nthreads=None, force=False, verbose=False):
     """
     Reslices input image to target voxel size
 
     Parameters
     ----------
     input : str
-        Path to input .mif file
+        Path to input file; .mif or .nii
     output : str
-        Path to output .mif file
-    voxel : float or tuple of float
-        x, y, z voxel size in mm
+        Path to output file; .mif or .nii
+    size : tuple of float
+        x, y, z voxel size in mm or output dimensions.
     interp : str, {'linear', 'nearest', 'cubic' , 'sinc'}, optional
         set the interpolation method to use when resizing (Default: 
         'linear')
@@ -886,22 +893,36 @@ def reslice(input, output, voxel, interp='linear', nthreads=None,
     Returns
     -------
     None; writes out file
+
+    Notes
+    -----
+    If any of the axes in ``size`` is specified to be over 9 mm, this
+    functions reslices to defined output dimensions, instead of voxel
+    size. This is done to automatically reslice with minimal user
+    input, and also because voxel size beyond 9 mm in unrealistic.
+
+    Additionally, if target resolution is the same as input file's
+    resolution, reslicing is skipped but the output file is still
+    generated.
     """
+    dim_str = '-voxel'
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
                       'the folder or file specified exists.')
-    if op.splitext(output)[-1] != '.mif':
-        raise OSError('Output should be specified as a .mif file.')
     if not op.exists(op.dirname(output)):
         raise OSError('Specifed directory for output file {} does not '
                       'exist. Please ensure that this is a valid '
                       'directory.'.format(op.dirname(output)))
-    if not isinstance(voxel, str):
+    if not isinstance(size, str):
         raise Exception('Voxel size needs to be defined as a string '
                         ' of three values')
-    if len(voxel.split(',')) != 3:
-        raise Exception('Please specify voxel size for each axis '
-                        'x, y, and z i.e. "3,3,3" for 3 mm isotropic')
+    if len(size.split(',')) != 3:
+        raise Exception('Please specify voxel size for each axis or '
+                        'single digit for all axes i.e. "3,3,3" for '
+                        '3 mm isotropic or "42,42,130" for output '
+                        'dimensions of 42, 42, 130 voxels.')
+    if max([float(x) for x in size.split(',')]) > 9:
+        dim_str = '-size'
     if not isinstance(interp, str):
         raise Exception('Interpolation method needs to be specified '
                         'as a string')
@@ -917,6 +938,17 @@ def reslice(input, output, voxel, interp='linear', nthreads=None,
                         'or False.')
     if not isinstance(verbose, bool):
         raise Exception('Please specify whether verbose is True or False.')
+    if dim_str == '-voxel':
+        current_size = [round(float(x), 2) for x in (mrinfoutil.spacing(input))][0:3]
+    elif dim_str == '-size':
+        current_size =[round(float(x), 2) for x in mrinfoutil.size(input)][0:3]
+    specified_size = [round(float(x), 2) for x in size.split(',')]
+    if specified_size == current_size:
+        print('[WARNING] target reslicing dimensions {} are the same '
+            'as input image dimensions {}, writing file without '
+            'reslicing'.format(specified_size, current_size))
+        copyfile(input, output)
+        return
     arg = ['mrresize']
     if force:
         arg.append('-force')
@@ -924,10 +956,9 @@ def reslice(input, output, voxel, interp='linear', nthreads=None,
         arg.append('-quiet')
     if not (nthreads is None):
         arg.extend(['-nthreads', nthreads])
-    arg.extend(['-voxel', voxel])
+    arg.extend([dim_str, size])
     arg.extend(['-interp', interp])
     arg.extend([input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception('EPIBOOST: failed to extract specified '
-                        'TOPUP B0 indices. See above for errors.')
+        raise Exception('Failed to reslice. See above for errors.')

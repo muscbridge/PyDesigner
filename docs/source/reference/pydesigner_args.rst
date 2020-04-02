@@ -28,7 +28,7 @@ preprocessing pipeline, to accomodate all types of datasets.
 
 --extent        Shape of denoising extent matrix, defaults to 5,5,5
 
---reslice       Reslices input DWI and outputs to a specific resolution in mm
+--reslice       Reslices input DWI and outputs to a specific resolution in mm or output dimensions
 
 --interp        The interpolation method to use when resizing
 
@@ -36,7 +36,7 @@ preprocessing pipeline, to accomodate all types of datasets.
 
 --undistort     Undistorts image using a suite of EPI distortion correction, eddy current correction, and co-registration. Does not run EPI correction if reverse phase encoding DWI is absent.
 
---epi N         Speeds up topup if a reverse PE is present; specify the number (integer) of reverse PE direction B0 pairs to use
+--rpe_pairs N   Speeds up topup if a reverse PE is present; specify the number (integer) of reverse PE direction B0 pairs to use
 
 --mask          Computes a brain mask at 0.20 threshold by default
 
