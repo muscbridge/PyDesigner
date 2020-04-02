@@ -7,6 +7,7 @@ Utilities for running various MRtrix3's DWI preprocessing tools
 
 import os
 import os.path as op
+from shutil import copyfile
 import subprocess
 import numpy as np
 from designer.preprocessing import preparation, util, smoothing, rician, mrinfoutil
@@ -893,6 +894,10 @@ def reslice(input, output, size, interp='linear',
     functions reslices to defined output dimensions, instead of voxel
     size. This is done to automatically reslice with minimal user
     input, and also because voxel size beyond 9 mm in unrealistic.
+
+    Additionally, if target resolution is the same as input file's
+    resolution, reslicing is skipped but the output file is still
+    generated.
     """
     dim_str = '-voxel'
     if not op.exists(input):
@@ -927,6 +932,17 @@ def reslice(input, output, size, interp='linear',
                         'or False.')
     if not isinstance(verbose, bool):
         raise Exception('Please specify whether verbose is True or False.')
+    if dim_str == '-voxel':
+        current_size = [float(x) for x in (mrinfoutil.spacing(input))][0:3]
+    elif dim_str == '-size':
+        current_size =[float(x) for x in mrinfoutil.size(input)][0:3]
+    specified_size = [float(x) for x in size.split(',')]
+    if specified_size == current_size:
+        print('[WARNING] target reslicing dimensions {} are the same '
+            'as input image dimensions {}, writing file without '
+            'reslicing'.format(specified_size, current_size))
+        copyfile(input, output)
+        return
     arg = ['mrresize']
     if force:
         arg.append('-force')
