@@ -389,13 +389,8 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
                     verbose=verbose)
             arg.extend(['-se_epi', epi_path])
         except:
-            print('[WARNING] Unable to apply EPI boost because DWI '
+            print('[WARNING] Unable to apply TOPUPBOOST because DWI '
             'consists of single PE direction.')
-            try:
-                os.remove(op.join(outdir, 'B0_ALL.mif'))
-            except OSError:
-                pass
-    arg.extend(['-eddy_options', repol_string])
     arg.append(rpe)
     if not qc is None:
         arg.extend(['-eddyqc_all', qc])
@@ -778,7 +773,7 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
     -------
     None; writes out file
     """
-    print('Applying EPIBOOST')
+    print('TOPUPBOOST: Splitting {} user-specified RPE pairs'.format(num))
     if not op.exists(input):
         raise OSError('Input path does not exist. Please ensure that '
                       'the folder or file specified exists.')
@@ -805,63 +800,68 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
         raise Exception('Please specify whether verbose is True or False.')
     outdir = op.dirname(output)
     fname_bzero = op.join(outdir, 'B0_ALL.mif')
-    # Extract all B0s
-    extractbzero(input, fname_bzero, nthreads=nthreads, force=force,
-              verbose=verbose)
-    # Start by figuring out whether DWI is composed of multiple PE dirs
-    # or single PE dirs. If all PE dirs are the same, the dataset likely
-    # comes with matching phase encoding and slice timing train,
-    # indicating that it has a single PE direction.
-    dw_scheme = np.array(mrinfoutil.dwscheme(fname_bzero), dtype=int)[:, -1]
-    pe_scheme = np.array(mrinfoutil.pescheme(fname_bzero))
-    if len(pe_scheme) != len(dw_scheme):
-        raise Exception('It appears that the input volume possesses a '
-                        'dw_scheme of length {}, and pe_scheme of length '
-                         '{}. These number need to match. Please check '
-                        'your dataset or contact us on GitHub'.format(
-            len(dw_scheme), len(pe_scheme)))
-    uPE, indPE, iPE = np.unique(pe_scheme, axis=0, return_index=True,
-                                return_inverse=True)
-    nPE = len(uPE)
-    if nPE < 2:
-        raise Exception('DWI consists of just one PE direction. '
-                        'Unable to extract B0s.')
-    # Index unique PE directions
-    bval = []
-    bind = []
-    iteridx = np.unique(iPE)
-    for i, val in enumerate(iteridx):
-        bind.append(np.where(iPE == val)[0].tolist())
-        bval.append(dw_scheme[np.where(iPE == val)].tolist())
-    # Check whether number of B0s to extract exceed those in DWI
-    if num > min([len(x) for x in bval]):
-        raise Exception('Specified number of B0s pairs to extract '
-                        '({}) exceed those physically present in DWI '
-                        '({}), please ensure that variable `num` '
-                        'suitably represents the number of B0s in DWI.'
-                        .format(num, min([len(x) for x in bval])))
-    # Extract the first `num` pairs from each PE direction
-    num = np.arange(0, num, dtype=int).tolist()
-    idx_extract = []
-    for idx, val in enumerate(bind):
-        idx_extract.extend([val[i] for i in num])
-    # Extract EPI volume
-    str_extract = [str(x) for x in idx_extract]
-    arg_epi = ['mrconvert']
-    if force:
-        arg_epi.append('-force')
-    if not verbose:
-        arg_epi.append('-quiet')
-    if not (nthreads is None):
-        arg_epi.extend(['-nthreads', nthreads])
-    arg_epi.extend(['-coord', '3', ','.join(str_extract)])
-    arg_epi.extend([fname_bzero, output])
-    completion = subprocess.run(arg_epi)
-    if completion.returncode != 0:
-        raise Exception('EPIBOOST: failed to extract specified '
+    try:
+        # Extract all B0s
+        extractbzero(input, fname_bzero, nthreads=nthreads, force=force,
+                verbose=verbose)
+        # Start by figuring out whether DWI is composed of multiple PE dirs
+        # or single PE dirs. If all PE dirs are the same, the dataset likely
+        # comes with matching phase encoding and slice timing train,
+        # indicating that it has a single PE direction.
+        dw_scheme = np.array(mrinfoutil.dwscheme(fname_bzero), dtype=int)[:, -1]
+        pe_scheme = np.array(mrinfoutil.pescheme(fname_bzero))
+        if len(pe_scheme) != len(dw_scheme):
+            raise Exception('It appears that the input volume possesses a '
+                            'dw_scheme of length {}, and pe_scheme of length '
+                            '{}. These number need to match. Please check '
+                            'your dataset or contact us on GitHub'.format(
+                len(dw_scheme), len(pe_scheme)))
+        uPE, indPE, iPE = np.unique(pe_scheme, axis=0, return_index=True,
+                                    return_inverse=True)
+        nPE = len(uPE)
+        if nPE < 2:
+            raise Exception('DWI consists of just one PE direction. '
+                            'Unable to extract B0s.')
+        # Index unique PE directions
+        bval = []
+        bind = []
+        iteridx = np.unique(iPE)
+        for i, val in enumerate(iteridx):
+            bind.append(np.where(iPE == val)[0].tolist())
+            bval.append(dw_scheme[np.where(iPE == val)].tolist())
+        # Check whether number of B0s to extract exceed those in DWI
+        if num > min([len(x) for x in bval]):
+            raise Exception('Specified number of B0s pairs to extract '
+                            '({}) exceed those physically present in DWI '
+                            '({}), please ensure that variable `num` '
+                            'suitably represents the number of B0s in DWI.'
+                            .format(num, min([len(x) for x in bval])))
+        # Extract the first `num` pairs from each PE direction
+        num = np.arange(0, num, dtype=int).tolist()
+        idx_extract = []
+        for idx, val in enumerate(bind):
+            idx_extract.extend([val[i] for i in num])
+        # Extract EPI volume
+        str_extract = [str(x) for x in idx_extract]
+        arg_epi = ['mrconvert']
+        if force:
+            arg_epi.append('-force')
+        if not verbose:
+            arg_epi.append('-quiet')
+        if not (nthreads is None):
+            arg_epi.extend(['-nthreads', nthreads])
+        arg_epi.extend(['-coord', '3', ','.join(str_extract)])
+        arg_epi.extend([fname_bzero, output])
+        completion = subprocess.run(arg_epi)
+        if completion.returncode != 0:
+            raise Exception('TOPUPBOOST: failed to extract specified '
+                            'TOPUP B0 indices. See above for errors.')
+    except:
+        # Remove temp files
+        os.remove(fname_bzero)
+        raise Exception('TOPUPBOOST: failed to extract specified '
                         'TOPUP B0 indices. See above for errors.')
-    # Remove temp files
-    os.remove(fname_bzero)
+    
 
 def reslice(input, output, size, interp='linear',
             nthreads=None, force=False, verbose=False):
