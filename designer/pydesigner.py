@@ -94,12 +94,10 @@ def main():
         1. dwidenoise (thermal denoising)
         2. mrdegibbs (gibbs unringing)
         3. topup + eddy (undistortion)
-        4. b1 bias correction
-        4. CSF-excluded smoothing
-        5. rician bias correction
-        6. normalization to white matter in first b0 image
-        7. IRWLLS, CWLLS DKI fit
-        8. Outlier detection and removal
+        4. rician bias correction
+        5. normalization to white matter in first b0 image
+        6. IRWLLS, CWLLS DKI fit
+        7. Outlier detection and removal
 
     See also:
         GitHub      https://github.com/m-ama/PyDesigner
