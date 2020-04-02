@@ -389,8 +389,10 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
                     verbose=verbose)
             arg.extend(['-se_epi', epi_path])
         except:
-            print('[WARNING] Unable to apply EPI boost because DWI '
+            print('[WARNING] Unable to apply TOPUPBOOST because DWI '
             'consists of single PE direction.')
+            # Remove the B0_ALL.mif file that is created when epiboost
+            # function fails
             try:
                 os.remove(op.join(outdir, 'B0_ALL.mif'))
             except OSError:
