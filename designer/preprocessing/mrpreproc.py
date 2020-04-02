@@ -391,6 +391,10 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
         except:
             print('[WARNING] Unable to apply EPI boost because DWI '
             'consists of single PE direction.')
+            try:
+                os.remove(op.join(outdir, 'B0_ALL.mif'))
+            except OSError:
+                pass
     arg.extend(['-eddy_options', repol_string])
     arg.append(rpe)
     if not qc is None:
