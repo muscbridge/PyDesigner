@@ -149,7 +149,7 @@ def main():
     parser.add_argument('--undistort', action='store_true', default=False,
                         help='Run FSL eddy to perform image undistortion. '
                         'NOTE: needs a --topup to run.')
-    parser.add_argument('--epi', default=0, type=int,
+    parser.add_argument('--rpe_pairs', default=0, type=int,
                         metavar='n',
                         help='Number of reverse phase encoded B0 '
                         'pairs to use in TOPUP. Using less pairs '
@@ -596,7 +596,7 @@ def main():
                                 output=mif_undistorted,
                                 rpe='rpe_header',
                                 qc=eddyqcpath,
-                                epib0=args.epi,
+                                epib0=args.rpe_pairs,
                                 nthreads=args.nthreads,
                                 force=args.force,
                                 verbose=args.verbose)
