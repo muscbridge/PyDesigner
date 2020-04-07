@@ -13,18 +13,20 @@ import re
 
 def getconsole(path, flag):
     """
-    Fetches the console output of mrinfo
+    Fetches the console output of MRtrix3's mrinfo with specified
+    flag
 
     Parameters
     ----------
-    path:   string
-            path to input image or directory
-    flag:   string
-            flag to pass onto mrinfo
+    path : str
+        Path to input image or directory
+    flag : str
+        Flag to pass onto mrinfo
 
     Returns
     -------
-    String, information for flag
+    str
+        MRtrix3's mrinfo console output
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
@@ -44,48 +46,51 @@ def getconsole(path, flag):
 
 def format(path):
     """
-    Returns the file format of DWI at path
+    Returns the file format of input DWI
 
     Parameters
     ----------
-    path:   string
-            path to input image or directory
+    path : str
+        Path to input image or directory
 
     Returns
     -------
-    String indicating format
+    str
+        Image file format
     """
     type = getconsole(path, '-format')
     return type
 
 def ndim(path):
     """
-    Returns the number of image dimensions
+    Returns the number of image dimensions of input DWI
 
     Parameters
     ----------
-    path:   string
-            path to input image or directory
+    path : str
+        Path to input image or directory
 
     Returns
     -------
-    Int, number of dimensions in image
+    int
+        Number of dimensions in image
     """
     num = getconsole(path, '-ndim')
     return int(num)
 
 def size(path):
     """
-    Returns the size of image along each axis
+    Returns the size of input DWI image along each axis
 
     Parameters
     ----------
-    path:  string
-            path to input image or directory
+    path : str
+        Path to input image or directory
 
     Returns
     -------
-    Int tuple, number of voxels in [X, Y, Z, B-value]
+    tuple of int
+        Number of voxels in [X, Y, Z, B-value]
     """
     num = getconsole(path, '-size').split()
     num = tuple(map(int, num))
@@ -93,16 +98,17 @@ def size(path):
 
 def spacing(path):
     """
-    Returns the voxel spacing along each image dimension
+    Returns the voxel spacing along each of input DWI's dimensions
 
     Parameters
     ----------
-    path:  string
-            path to input image or directory
+    path : str
+        Path to input image or directory
 
     Returns
     -------
-    Int tuple, number of spacing between voxels [X, Y, Z, B-value]
+    tuple of int
+        Number of spacing between voxels [X, Y, Z, B-value]
     """
     num = getconsole(path, '-spacing').split()
     num = tuple(map(float, num))
@@ -110,31 +116,33 @@ def spacing(path):
 
 def datatype(path):
     """
-    Returns the data type used for image storage
+    Returns the data type used for storing input DWI
 
     Parameters
     ----------
-    path:   string
-            path to input image or directory
+    path : str
+        Path to input image or directory
 
     Returns
     -------
-    Str, mrtrix3 datatypes
+    str
+        MRtrix3 datatype
     """
     return getconsole(path, '-datatype')
 
 def strides(path):
     """
-    Returns data strides
+    Returns data strides of input DWI
 
     Parameters
     ----------
-    path:   string
-            path to input image or directory
+    path : str
+        Path to input image or directory
 
     Returns
     -------
-    Int tuple, mrtrix3 strides
+    tuple of ints
+        MRtrix3's strides
     """
     num = getconsole(path, '-strides').split()
     num = tuple(map(int, num))
@@ -142,16 +150,17 @@ def strides(path):
 
 def offset(path):
     """
-    Returns the image intensity offset
+    Returns the input DWI's intensity offset
 
     Parameters
     ----------
-    path:   string
-            path to input image or directory
+    path : str
+        Path to input image or directory
 
     Returns
     -------
-    Flaot, image intensity offset
+    float
+        Image intensity offset
     """
     num = getconsole(path, '-offset')
     num = float(num)
@@ -159,16 +168,17 @@ def offset(path):
 
 def multiplier(path):
     """
-    Returns the image intensity multiplier
+    Returns the input DWI's intensity multiplier
 
     Parameters
     ----------
-    path:   string
-            path to input image or directory
+    path : str
+        Path to input image or directory
 
     Returns
     -------
-    Float, image intensity multiplier
+    float
+        Image intensity multiplier
     """
     num = getconsole(path, '-multiplier')
     num = float(num)
@@ -176,16 +186,17 @@ def multiplier(path):
 
 def transform(path):
     """
-    Returns the 4-by-4 voxel to image transformation matrix
+    Returns the input DWI's 4x4 voxel to image transformation matrix
 
     Parameters
     ----------
-    path:   string
-            path to input image or directory
+    path : str
+        Path to input image or directory
 
     Returns
     -------
-    Tuple float list
+    tuple of float
+        Image transformation matrix
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
@@ -208,12 +219,13 @@ def commandhistory(path):
 
     Parameters
     ----------
-    path:   string
-           path to input image or directory
+    path : str
+        Path to input image or directory
 
     Returns
     -------
-    List
+    list of str
+        command history of input file
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
@@ -247,16 +259,17 @@ def commandhistory(path):
 
 def dwscheme(path):
     """
-    Returns a list of diffusion weighting scheme
+    Returns a list of input DWI's diffusion weighting scheme
 
     Parameters
     ----------
-    path:   string
-           path to input image or directory
+    path : str
+        Path to input image or directory
 
     Returns
     -------
-    List
+    list of float
+        diffusion weighing scheme
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
@@ -298,15 +311,15 @@ def pescheme(path):
 
     Parameters
     ----------
-    path:   string
-           path to input image or directory
+    path : str
+        Path to input image or directory
 
     Returns
     -------
-    nPE:    int
-            numer of PE directions
-    PE:     int or int list
-            Phase encoding direction(s)
+    nPE: int
+        Number of PE directions
+    PE: int or list of int
+        Phase encoding direction(s)
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '

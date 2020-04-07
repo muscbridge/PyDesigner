@@ -14,16 +14,18 @@ import warnings
 from designer.preprocessing import mrinfoutil
 
 def bvec_is_fullsphere(bvec):
-    """Determines if .bvec file is full or half-sphere
+    """
+    Determines if .bvec file is full or half-sphere
 
     Parameters
     ----------
-    bvec : string
+    bvec : str
         The filename of the bvec
 
     Returns
     -------
-    True if full-sphere, False if half
+    bool
+        True if full-sphere, False if half
     """
 
     # Check for existence
@@ -45,16 +47,18 @@ def bvec_is_fullsphere(bvec):
     return vecs_are_fullsphere(data)
 
 def vecs_are_fullsphere(bvecs):
-    """Determines if input vectors are full or half-sphere
+    """
+    Determines if input vectors are full or half-sphere
 
     Parameters
     ----------
     bvecs : ndarray
-        Matrix of size [n_vectors x 3]
+        Aray of size [n_vectors x 3]
 
     Returns
     -------
-    True if full-sphere, False if half
+    bool
+        True if full-sphere, False if half
 
     Notes
     -----
@@ -91,16 +95,17 @@ def vecs_are_fullsphere(bvecs):
     return (theta >= 110)
 
 def find_valid_ext(pathname):
-    """Finds valid extensions for dwifile, helper function
+    """
+    Finds valid extensions for dwifile, helper function
 
     Parameters
     ----------
-    pathname : string
+    pathname : str
         The name to try and find extensions for
 
     Returns
     -------
-    array
+    list of str
         Array of valid file extensions for the basename
     """
     # Go ahead and return blank if the pathname is blank
@@ -132,11 +137,11 @@ class DWIFile:
 
     Attributes
     ----------
-    path : string
+    path : str
         The path to the file
-    name : string
+    name : str
         The base name of the file
-    ext : array
+    ext : list of str
         The valid extensions for this grouping of dwi data
     acquisition : bool
         Indicates if a DWI acquisition or not, relevant for .bval/.bvec
@@ -145,16 +150,17 @@ class DWIFile:
     """
 
     def __init__(self, name):
-        """Constructor for dwifile
+        """
+        Constructor for dwifile
 
         Attempts to find the file and launches interactive file-finder if
         it doesn't exist or can't be found.
 
         Parameters
         ----------
-        name : string
-            The name that the user has supplied for the file. Could be a
-            whole path, could be a filename, could be basename.
+        name : str
+            The name that the user has supplied for the file. Could be
+            a whole path, could be a filename, could be basename.
         """
         full = name
         [pathname, ext] = op.splitext(full)
@@ -186,31 +192,34 @@ class DWIFile:
             self.json = None
 
     def getName(self):
-        """Get the name without the path for this dwifile
+        """
+        Get the name without the path for this dwifile
 
         Returns
         -------
-        string
+        str
             Name of the file without extensions
         """
         return self.name
 
     def getPath(self):
-        """Get the path without the name for this dwifile
+        """
+        Get the path without the name for this dwifile
 
         Returns
         -------
-        string
+        str
             The path to this file
         """
         return self.path
 
     def getFull(self):
-        """Get the path and name combined for thsi dwifile
+        """
+        Get the path and name combined for thsi dwifile
 
         Returns
         -------
-        string
+        str
             The full path and filename with extension
         """
 
@@ -220,7 +229,8 @@ class DWIFile:
             return op.join(self.path, self.name + '.nii.gz')
 
     def isAcquisition(self):
-        """Check if this object is an acquisition
+        """
+        Check if this object is an acquisition
 
         Returns
         -------
@@ -231,10 +241,12 @@ class DWIFile:
         return self.acquisition
 
     def hasJSON(self):
-        """Checks if this object has a .json file
+        """
+        Checks if this object has a .json file
 
         Returns
         -------
+        bool
             True if has .json, False if not
         """
         if self.json:
@@ -243,11 +255,12 @@ class DWIFile:
             return False
 
     def getJSON(self):
-        """Returns the .json filename for this DWIFile
+        """
+        Returns the .json filename for this DWIFile
 
         Returns
         -------
-        string
+        str
             The full path to the .json file
         """
         if self.hasJSON():
@@ -259,11 +272,12 @@ class DWIFile:
             return None
 
     def getBVAL(self):
-        """Returns the .bval filename for this DWIFile
+        """
+        Returns the .bval filename for this DWIFile
 
         Returns
         -------
-        string
+        str
             The full path to the .bval
         """
         if self.isAcquisition():
@@ -275,11 +289,12 @@ class DWIFile:
             return None
 
     def getBVEC(self):
-        """Returns the .bvec filename for this DWIFile
+        """
+        Returns the .bvec filename for this DWIFile
 
         Returns
         -------
-        string
+        str
             The full path to the .bvec
         """
 
@@ -291,12 +306,13 @@ class DWIFile:
         else:
             return None
     def isPartialFourier(self):
-        """Returns whether the volume is partial fourier encoded
+        """
+        Returns whether the volume is partial fourier encoded
 
         Returns
         -------
-        boolean
-            Whether the encoding is partial fourier or not
+        bool
+            True if encoding is partial fourier; False otherwise
         """
 
         if not self.isAcquisition():
@@ -336,22 +352,35 @@ class DWIParser:
 
     Attributes
     ----------
-    DWIlist :   list of strings
+    DWIlist : list of str
         Contains paths to all input series
-    DWInlist:   list of strings
+    DWInlist : list of str
         Contains path to file names without extension
-    DWIext:     list of strings
+    DWIext : list of str
         Contains extension of input files
-    BVALlist:   list of strings
+    BVALlist : list of str
         Contains paths to all BVAL files
-    BVEClist:   list of strings
+    BVEClist : list of str
         Contains paths to all BVEC files
-    JSONlist:   list of strings
+    JSONlist : list of str
         Contains paths to all JSON files
-    nDWI:       int
+    nDWI : int
         Number of DWIs entered   
     """
     def __init__(self, path):
+        """
+        DWIParser class initiator
+
+        Parameters
+        ----------
+        path : str
+            path to input DWI
+
+        Returns
+        -------
+        self : class
+            DWIParser class object
+        """
         UserCpath = path.rsplit(',')
         self.DWIlist = [op.realpath(i) for i in UserCpath]
         # This loop determines the types of inputs parsed into the function
@@ -384,55 +413,33 @@ class DWIParser:
         self.DWIext = [i[1] for i in DWIflist]
         self.nDWI = len(self.DWIlist)
 
-    # def makeext(self, dwipath):
-    #     """
-    #     Makes FSL grad and JSON extensions for files that don't posses
-    #     header information
-    #
-    #     Parameters
-    #     ----------
-    #     dwipath:    string
-    #                 path to dwi without extension
-    #
-    #     Returns
-    #     -------
-    #     BVALpath:   string
-    #                 path to BVAL
-    #     BVECpath:   string
-    #                 path to BVEC
-    #     JSONpath:   string
-    #                 path to JSON
-    #     """
-    #     # First, check whether an extension to input path exists
-    #     splitpath = op.splitext(dwipath)
-    #     # If an extension does not exist, entered path is valid
-    #     if not splitpath[1]:
-    #         BVALpath = dwipath + '.bval'
-    #         BVECpath = dwipath + '.bvec'
-    #         JSONpath = dwipath + '.json'
-    #     else:
-    #         raise Exception('Ensure that the path to DWI is entered '
-    #                         'without an extension')
-    #     return BVALpath, BVECpath, JSONpath
-
     def cat(self, path, ext='.nii', verbose=False, force=False,
             resume=False):
-        """Concatenates all input series when nDWI > 1 into a 4D NifTi
+        """
+        Concatenates all input series when nDWI > 1 into a 4D NifTi
         along with a appropriate BVAL, BVEC and JSON files.
         Concatenation of series via MRTRIX3 requires every NifTi file to
         come with BVAL/BVEC to produce a .json with `dw_scheme`.
 
         Parameters
         ----------
-        path:       string
+        path : str
             Directory where to store concatenated series
-        ext:        string
+        ext : str
             Extenstion to save concatenated file in. Refer to MRTRIX3's
             `mrconvert` function for a list of possible extensions
-        verbose:    bool
-            Displays MRTRIX3's console output
-        force:      bool
-            Forces file overwrite if they already exist
+        force : bool, optional
+            Force overwrite of output files if pre-existing
+            (Default:False)
+        verbose : bool, optional
+            Specify whether to print console output (Default: False)
+        resume : bool, optional
+            Continue from an aborted or partial previous run of
+            pydesigner (Default: False)
+        
+        Returns
+        -------
+        None; writes out file
         """
         # Check whether working.(ext) exists
         if op.exists(op.join(path, 'working' + ext)):
@@ -560,13 +567,20 @@ class DWIParser:
                 os.remove(fname)
 
     def getPath(self):
-        """Returns directory where first file in DWI list is stored
+        """
+        Returns directory where first file in DWI list is stored
+
+        Returns
+        -------
+        str
+            directory of first DWI
         """
         path = os.path.dirname(os.path.abspath(self.DWIlist[0]))
         return path
 
     def json2fslgrad(self, path):
-        """Creates FSL .bvec and .bval for series missing that information.
+        """
+        Creates FSL .bvec and .bval for series missing that information.
         Some datasets have their B0s separately that do not produce fsl
         gradients upon conversion to NifTi. This function creates those
         missing features for complete concatenation from .json file. Use
@@ -574,8 +588,12 @@ class DWIParser:
 
         Parameters
         ----------
-        path:   string
+        path : str
             Path to NifTi file
+
+        Returns
+        -------
+        None; writes out file
         """
         image = DWIFile(path)
         if (image.getBVAL() is None) or (image.getBVEC() is None):

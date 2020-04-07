@@ -13,11 +13,11 @@ def rician_img_correct(dwiname, noisemapname, outpath=None):
 
     Parameters
     ----------
-    dwiname : :obj: `string`
+    dwiname : str
         Filename of image to be corrected
-    noisemapname :obj: `string`
+    noisemapname : str
         Filename of noisemap to use for correction
-    outpath :obj: `string`
+    outpath : str
         Path to put resulting file
 
     Returns
@@ -69,7 +69,7 @@ def rician_correct(dwi, noisemap):
         the DWI acquisition.
     csfmask : (X x Y x Z x N) img_like object
         The noise map from dwidenoise
-    width : :obj: `float`, optional
+    width : float, optional
         The full width half max in voxels to be smoothed. Default: 1.25
        
     Returns

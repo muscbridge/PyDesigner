@@ -15,7 +15,9 @@ import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import json
 import numpy as np # array, ndarray
-from designer.preprocessing import util, preparation, snrplot, mrinfoutil, mrpreproc
+from designer.info import __version__
+from designer.preprocessing import util, preparation, mrinfoutil, mrpreproc
+from designer.plotting import snrplot, outlierplot, motionplot
 from designer.fitting import dwipy as dp
 from designer.system import systemtools as systools
 from designer.postprocessing import filters
@@ -92,12 +94,10 @@ def main():
         1. dwidenoise (thermal denoising)
         2. mrdegibbs (gibbs unringing)
         3. topup + eddy (undistortion)
-        4. b1 bias correction
-        4. CSF-excluded smoothing
-        5. rician bias correction
-        6. normalization to white matter in first b0 image
-        7. IRWLLS, CWLLS DKI fit
-        8. Outlier detection and removal
+        4. rician bias correction
+        5. normalization to white matter in first b0 image
+        6. IRWLLS, CWLLS DKI fit
+        7. Outlier detection and removal
 
     See also:
         GitHub      https://github.com/m-ama/PyDesigner
@@ -131,6 +131,17 @@ def main():
                         help='Denoising extent formatted n,n,n (forces '
                         ' denoising. '
                         'Default: 5,5,5.')
+    parser.add_argument('--reslice', metavar='x,y,z',
+                        help='Relices DWI to voxel resolution '
+                        'specified in millimeters (mm) or output '
+                        'dimensions. Performing reslicing will skip '
+                        'plotting of SNR curves. Providing dimensions '
+                        'greater than 9 will swtich from mm voxel '
+                        'reslicing to output image reslicing.')
+    parser.add_argument('--interp', action='store_true', default='linear',
+                        help='Set the interpolation to use when '
+                        'reslicing. Choices are linear (default), ' 
+                        'nearest, cubic, sinc.')
     parser.add_argument('--degibbs', action='store_true', default=False,
                         help='Perform gibbs unringing. Only perform if you '
                         'have full Fourier encoding. The program will check '
@@ -138,15 +149,13 @@ def main():
     parser.add_argument('--undistort', action='store_true', default=False,
                         help='Run FSL eddy to perform image undistortion. '
                         'NOTE: needs a --topup to run.')
-    parser.add_argument('--epiboost', default=None, type=str,
-                        metavar='index',
-                        help='Use only the indices specified from '
-                        'reverse phase encoding image to compute '
-                        'the distortion field for TOPUP. This '
-                        'significantly boosts TOPUP speed if your '
-                        'reverse PE contains more than one 3D '
-                        'volumes. Use comma-seperated integers in the '
-                        'form n,n,n... ')
+    parser.add_argument('--rpe_pairs', default=0, type=int,
+                        metavar='n',
+                        help='Number of reverse phase encoded B0 '
+                        'pairs to use in TOPUP. Using less pairs '
+                        'results in faster TOPUP correction. '
+                        'Specfying 0 results in using all B0 pairs.'
+                        'We recommend using just one pair. Default: 0')
     parser.add_argument('--smooth', action='store_true', default=False,
                         help='Perform smoothing on the DWI data.')
     parser.add_argument('--fwhm', type=float, default=1.25,
@@ -215,6 +224,8 @@ def main():
                         'UNDERSTAND THE MRI SYSTEM AND ITS OUTPUTS. '
                         'RUNNING WITH THIS FLAG COULD POTENTIALLY '
                         'RESULT IN IMPRECISE AND INACCURATE RESULTS.')
+    parser.add_argument('-v', '--version', action='version',
+                        version=__version__)
 
     # Use argument specification to actually get args
     args = parser.parse_args()
@@ -237,14 +248,6 @@ def main():
             force=args.force,
             resume=args.resume)
     working_path = op.join(outpath, 'working' + fType)
-
-    if not args.epiboost is None:
-        mrpreproc.topupboost(input=working_path,
-                             output=working_path,
-                             idx=args.epiboost,
-                             nthreads=args.nthreads,
-                             force=True,
-                             verbose=args.verbose)
 
     # Make an initial conversion to nifti
     init_nii = op.join(outpath, 'dwi_raw.nii')
@@ -497,6 +500,52 @@ def main():
         filetable['noisemap'] = DWIFile(nii_noisemap)
 
     #-----------------------------------------------------------------
+    # Run Reslicing
+    #-----------------------------------------------------------------
+    if args.reslice:
+        step_count += 1
+        reslice_name = 'dwi_reslice'
+        noise_name = 'noisemap_resliced'
+        # file names
+        reslice_name_full = str(step_count)+ '_' + reslice_name
+        nii_reslice = op.join(intermediatepath, reslice_name_full + '.nii')
+        mif_reslice = op.join(outpath, reslice_name_full + '.mif')
+        nii_noise = op.join(outpath, noise_name + '.nii')
+        # check to see if this already exists
+        if not (args.resume and op.exists(nii_reslice)):
+            # run reslice function on both DWI and noisemap
+            mrpreproc.reslice(input=working_path,
+                              output=mif_reslice,
+                              size=args.reslice,
+                              interp=args.interp,
+                              nthreads=args.nthreads,
+                              force=args.force,
+                              verbose=args.verbose)
+            mrpreproc.reslice(input=nii_noisemap,
+                              output=nii_noise,
+                              size=args.reslice,
+                              interp=args.interp,
+                              nthreads=args.nthreads,
+                              force=True,
+                              verbose=args.verbose)
+            mrpreproc.miftonii(input=mif_reslice,
+                               output=nii_reslice,
+                               strides='1,2,3,4',
+                               nthreads=args.nthreads,
+                               force=args.force,
+                               verbose=False)
+            # remove old working.mif and replace with new corrected .mif
+            os.remove(working_path)
+            os.rename(mif_reslice, working_path)
+            os.rename(nii_noise, nii_noisemap)
+            # update command history
+            cmdtable['reslice'] = mrinfoutil.commandhistory(working_path)[-1]
+            cmdtable['HEAD'] = cmdtable['reslice']
+        # update nifti file tracking
+        filetable['reslice'] = DWIFile(nii_reslice)
+        filetable['HEAD'] = filetable['reslice']
+
+    #-----------------------------------------------------------------
     # Run Gibbs Unringing
     #-----------------------------------------------------------------
     if args.degibbs:
@@ -547,6 +596,7 @@ def main():
                                 output=mif_undistorted,
                                 rpe='rpe_header',
                                 qc=eddyqcpath,
+                                epib0=args.rpe_pairs,
                                 nthreads=args.nthreads,
                                 force=args.force,
                                 verbose=args.verbose)
@@ -565,6 +615,13 @@ def main():
         # update nifti file tracking
         filetable['undistorted'] = DWIFile(nii_undistorted)
         filetable['HEAD'] = filetable['undistorted']
+
+        # Plot head motion
+        if not args.noqc:
+            plot_path_full = op.join(qcpath, 'head_motion.png')
+            motionplot.plot(op.join(eddyqcpath, 'eddy_restricted_movement_rms'),
+                            plot_path_full,
+                            voxel=mrinfoutil.spacing(working_path))
 
     #-----------------------------------------------------------------
     # Create Brain Mask
@@ -660,7 +717,28 @@ def main():
         # update nifti file tracking
         filetable['rician_corrected'] = DWIFile(nii_rician)
         filetable['HEAD'] = filetable['rician_corrected']
-                
+
+    #-----------------------------------------------------------------
+    # Extract averaged B0
+    #-----------------------------------------------------------------
+    # file names
+    b0_name = 'B0'
+    nii_b0 = op.join(outpath, b0_name + '.nii')
+    # check to see if this already exists
+    if not (args.resume and op.exists(nii_b0)):
+        # extract mean B0
+        mrpreproc.extractmeanbzero(input=working_path,
+                                    output=nii_b0,
+                                    nthreads=args.nthreads,
+                                    force=args.force,
+                                    verbose=args.verbose)
+        # update command history
+        cmdtable['B0'] = mrinfoutil.commandhistory(working_path)[-1]
+        cmdtable['HEAD'] = cmdtable['B0']
+    # update nifti file tracking
+    filetable['B0'] = DWIFile(nii_b0)
+    filetable['HEAD'] = filetable['B0']
+
     #-----------------------------------------------------------------
     # Make preprocessed file
     #-----------------------------------------------------------------
@@ -674,15 +752,17 @@ def main():
                             verbose=False)
     filetable['preprocessed'] = DWIFile(preprocessed)
     filetable['HEAD'] = filetable['preprocessed']
+    # Remove working.mif
+    os.remove(working_path)
 
     #-----------------------------------------------------------------
     # Compute SNR
     #-----------------------------------------------------------------
-    if args.denoise and not args.noqc:
+    if (args.denoise and not args.reslice) and not args.noqc:
         files = []
         files.append(init_nii)
         files.append(filetable['HEAD'].getFull())
-        if not filetable['mask'] is None:
+        if 'mask' in filetable:
             snr = snrplot.makesnr(dwilist=files,
                                   noisepath=nii_noisemap,
                                   maskpath=filetable['mask'].getFull())
@@ -717,7 +797,20 @@ def main():
             # write outliers to qc folder
             if not args.noqc:
                 outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
+                outlier_plot_full = op.join(qcpath,
+                                    'outliers.png')
                 dp.writeNii(outliers, img.hdr, outlier_full)
+                if 'mask' in filetable:
+                    outlierplot.plot(input=outlier_full,
+                                    output=outlier_plot_full,
+                                    bval=filetable['HEAD'].getBVAL(),
+                                    mask=filetable['mask'].getFull())
+                else:
+                    outlierplot.plot(input=outlier_full,
+                                    output=outlier_plot_full,
+                                    bval=filetable['HEAD'].getBVAL(),
+                                    mask=None)
+
             # fit while rejecting outliers
             img.fit(fit_constraints, reject=outliers)
         else:

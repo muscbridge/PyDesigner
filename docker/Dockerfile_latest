@@ -1,9 +1,7 @@
-
 # ==============================================================================
-# MAMA-Docker
+# NeuroDock
 # A docker container that contains all PyDesigner dependencies such as MRTRIX3,
-# FSL, and Python to preprocess diffusion MRI images. Additional dependencies 
-# will be incorporated as the pipeline progresses further
+# FSL, and Python to preprocess diffusion MRI images.
 #
 # Maintainer: Siddhartha Dhiman
 # ------------------------------------------------------------------------------
@@ -11,7 +9,7 @@
 #    1.) FSL
 #    2.) MRTRIX3
 #    3.) Python 2.7
-#    4.) Python 3 
+#    4.) Python 3.6
 #    6.) PyDesigner
 # ==============================================================================
 
@@ -63,14 +61,18 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 # Clone PyDesigner
 RUN mkdir -p /tmp/PyDesigner
-RUN git clone https://github.com/m-ama/PyDesigner.git /tmp/PyDesigner
+RUN curl -s https://api.github.com/repos/m-ama/PyDesigner/releases/latest \
+      | grep tarball_url \
+      | cut -d '"' -f 4 \
+      | wget -q -i - -O - \
+      | tar -xzvf - -C /tmp/PyDesigner --strip 1
 RUN pip3 install /tmp/PyDesigner
 RUN echo "alias python=python3" >> ~/.bashrc && source ~/.bashrc
 RUN echo "alias pip=pip3" >> ~/.bashrc && source ~/.bashrc
 
 # Install FSL
 RUN curl https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py -o /tmp/fslinstaller.py
-RUN echo "/usr/local/fsl" | python2 /tmp/fslinstaller.py -V 6.0.2
+RUN echo "/usr/local/fsl" | python2 /tmp/fslinstaller.py -V 6.0.3
 
 # Configure FSL Environment
 ENV FSLDIR=/usr/local/fsl

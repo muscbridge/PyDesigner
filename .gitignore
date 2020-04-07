@@ -4,6 +4,8 @@ __pycache__/
 .ipynb_checkpoints/
 *.egg
 *.egg-info
+.vscode/
+/docs/build/
 
 # Files to ignore
 .DS_Store
