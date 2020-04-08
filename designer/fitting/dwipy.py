@@ -57,44 +57,41 @@ class DWI(object):
             Number of CPU workers to use in processing (Defaults to
             all physically present workers)
         """
-        if os.path.exists(imPath):
-            assert isinstance(imPath, object)
-            self.hdr = nib.load(imPath)
-            self.img = np.array(self.hdr.dataobj)
-            truncateIdx = np.logical_or(np.isnan(self.img),
-                                    (self.img < minZero))
-            self.img[truncateIdx] = minZero
-            # Get just NIFTI filename + extensio
-            (path, file) = os.path.split(imPath)
-            # Remove extension from NIFTI filename
-            fName = os.path.splitext(file)[0]
-            # Add .bval to NIFTI filename
-            bvalPath = os.path.join(path, fName + '.bval')
-            # Add .bvec to NIFTI filename
-            bvecPath = os.path.join(path, fName + '.bvec')
-            if os.path.exists(bvalPath) and os.path.exists(bvecPath):
-                # Load bvecs
-                bvecs = np.loadtxt(bvecPath)
-                # Load bvals
-                bvals = np.rint(np.loadtxt(bvalPath) / 1000)
-                # Combine bvecs and bvals into [n x 4] array where n is
-                # number of DWI volumes. [Gx Gy Gz Bval]
-                self.grad = np.c_[np.transpose(bvecs), bvals]
-            else:
-                raise NameError('Unable to locate BVAL or BVEC files')
-            maskPath = os.path.join(path,'brain_mask.nii')
-            if os.path.exists(maskPath):
-                tmp = nib.load(maskPath)
-                self.mask = np.array(tmp.dataobj).astype(bool)
-                self.maskStatus = True
-            else:
-                self.mask = np.ones((self.img.shape[0], self.img.shape[
-                    1], self.img.shape[2]), order='F')
-                self.maskStatus = False
-                print('No brain mask supplied')
+        if not os.path.exists(imPath):
+            raise OSError('Input image {} not found'.format(imPath))
+        self.hdr = nib.load(imPath)
+        self.img = np.array(self.hdr.dataobj)
+        truncateIdx = np.logical_or(np.isnan(self.img),
+                                (self.img < minZero))
+        self.img[truncateIdx] = minZero
+        # Get just NIFTI filename + extensio
+        (path, file) = os.path.split(imPath)
+        # Remove extension from NIFTI filename
+        fName = os.path.splitext(file)[0]
+        # Add .bval to NIFTI filename
+        bvalPath = os.path.join(path, fName + '.bval')
+        # Add .bvec to NIFTI filename
+        bvecPath = os.path.join(path, fName + '.bvec')
+        if os.path.exists(bvalPath) and os.path.exists(bvecPath):
+            # Load bvecs
+            bvecs = np.loadtxt(bvecPath)
+            # Load bvals
+            bvals = np.rint(np.loadtxt(bvalPath) / 1000)
+            # Combine bvecs and bvals into [n x 4] array where n is
+            # number of DWI volumes. [Gx Gy Gz Bval]
+            self.grad = np.c_[np.transpose(bvecs), bvals]
         else:
-            assert('File in path not found. Please locate file and try '
-                   'again')
+            raise NameError('Unable to locate BVAL or BVEC files')
+        maskPath = os.path.join(path,'brain_mask.nii')
+        if os.path.exists(maskPath):
+            tmp = nib.load(maskPath)
+            self.mask = np.array(tmp.dataobj).astype(bool)
+            self.maskStatus = True
+        else:
+            self.mask = np.ones((self.img.shape[0], self.img.shape[
+                1], self.img.shape[2]), order='F')
+            self.maskStatus = False
+            print('No brain mask supplied')
         tqdm.write('Image ' + fName + '.nii loaded successfully')
         if not isinstance(nthreads, int):
             raise Exception('Variable nthreads need to be an integer')
@@ -904,8 +901,10 @@ class DWI(object):
             Intra-axonal Space Tortuosity
         """
         def wmtihelper(dt, dir, adc, akc, awf, adc2dt):
-            akc[akc < minZero] = minZero # Avoid complex output. However,
+            # Avoid complex output. However,
             # negative AKC might be taken care of by applying constraints
+            with np.errstate(invalid='ignore'):
+                akc[akc < minZero] = minZero 
             try:
                 # Eigenvalue decomposition of De
                 De = np.multiply(
@@ -954,7 +953,7 @@ class DWI(object):
         nvox = self.dt.shape[1]
         N = dir.shape[0]
         nblocks = 10
-        maxk = np.zeros((nvox, nblocks))
+        maxk = np.zeros((nvox, nblocks)).astype(float)
         inputs = tqdm(range(nblocks),
                       desc='Extracting AWF',
                       bar_format='{desc}: [{percentage:0.0f}%]',
@@ -962,13 +961,14 @@ class DWI(object):
                       ncols=tqdmWidth)
         for i in inputs:
             maxk = np.stack(self.kurtosisCoeff(
-                self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))]))
+                self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))])).astype(float)
             maxk = np.nanmax(maxk, axis=0)
-        awf = np.divide(maxk, (maxk + 3))
+        awf = np.divide(maxk, (maxk + 3)).astype(float)
         # Changes voxels less than minZero, nans and infs to minZero
-        awf[np.logical_or(
+        truncateIdx = np.logical_or(
             np.logical_or(np.isnan(awf), np.isinf(awf)),
-            awf < minZero)] = minZero
+            (awf < minZero))
+        awf[truncateIdx] = minZero
         dirs = dwidirs.dirs30
         adc = self.diffusionCoeff(self.dt[:6], dirs)
         akc = self.kurtosisCoeff(self.dt, dirs)
