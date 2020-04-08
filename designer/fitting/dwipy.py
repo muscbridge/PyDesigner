@@ -904,8 +904,10 @@ class DWI(object):
             Intra-axonal Space Tortuosity
         """
         def wmtihelper(dt, dir, adc, akc, awf, adc2dt):
-            akc[akc < minZero] = minZero # Avoid complex output. However,
+            # Avoid complex output. However,
             # negative AKC might be taken care of by applying constraints
+            with np.errstate(invalid='ignore'):
+                akc[akc < minZero] = minZero 
             try:
                 # Eigenvalue decomposition of De
                 De = np.multiply(
@@ -954,7 +956,7 @@ class DWI(object):
         nvox = self.dt.shape[1]
         N = dir.shape[0]
         nblocks = 10
-        maxk = np.zeros((nvox, nblocks))
+        maxk = np.zeros((nvox, nblocks)).astype(float)
         inputs = tqdm(range(nblocks),
                       desc='Extracting AWF',
                       bar_format='{desc}: [{percentage:0.0f}%]',
@@ -962,13 +964,14 @@ class DWI(object):
                       ncols=tqdmWidth)
         for i in inputs:
             maxk = np.stack(self.kurtosisCoeff(
-                self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))]))
+                self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))])).astype(float)
             maxk = np.nanmax(maxk, axis=0)
-        awf = np.divide(maxk, (maxk + 3))
+        awf = np.divide(maxk, (maxk + 3)).astype(float)
         # Changes voxels less than minZero, nans and infs to minZero
-        awf[np.logical_or(
+        truncateIdx = np.logical_or(
             np.logical_or(np.isnan(awf), np.isinf(awf)),
-            awf < minZero)] = minZero
+            (awf < minZero))
+        awf[truncateIdx] = minZero
         dirs = dwidirs.dirs30
         adc = self.diffusionCoeff(self.dt[:6], dirs)
         akc = self.kurtosisCoeff(self.dt, dirs)
