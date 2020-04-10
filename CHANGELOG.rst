@@ -4,10 +4,30 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
-v0.3 [Upcoming]
----------------
+`v0.31`_
+--------
 
-TBA
+Apr 9, 2020
+
+**Added**:
+
+* NaN check in AWF calculculation that prevents further errors in intra-axonal
+  and extra-axonal WMTI metrics computation
+
+**Changed**:
+
+* ``designer.fitting.dwipy`` input file detection method
+* ``Dockerfile_release`` now deletes the correct temporary file to prevent build
+  error
+
+**Removed**:
+
+* None
+
+`v0.3`_
+--------
+
+Apr 8, 2020
 
 **Added**:
 
@@ -85,6 +105,8 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 
 .. Links
+.. _v0.31: https://github.com/m-ama/PyDesigner/releases/tag/v0.31
+.. _v0.3: https://github.com/m-ama/PyDesigner/releases/tag/v0.3
 .. _v0.2 [The Cupid Release]: https://github.com/m-ama/PyDesigner/releases/tag/v0.2
 .. _v0.11-dev: https://github.com/m-ama/PyDesigner/releases/tag/dev-0.11
 .. _v0.2-dev: https://github.com/m-ama/PyDesigner/releases/tag/0.1-dev

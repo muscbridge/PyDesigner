@@ -90,5 +90,5 @@ ENV PATH=$PATH:/usr/local/mrtrix3/bin
 # Remove unwanted packages
 RUN apt-get autoremove && apt-get clean
 RUN rm /tmp/fslinstaller.py && \
-      rm /tmp/Installer_PyDesigner.sh && \
+      rm /tmp/install_pydesigner_release && \
       rm -r /tmp/PyDesigner
