@@ -114,6 +114,26 @@ The list of ever possible output file is given in the table below.
 +-------------------------------------+----------------------------------------------------------+
 | :code:`KT.nii`                      | kurtosis tensor (4d nifti; 15 three dimensional volumes) |
 +-------------------------------------+----------------------------------------------------------+
+| **WMTI Metrics** :code:`root_dir/metrics`                                                      |
++-------------------------------------+----------------------------------------------------------+
+| :code:`wmti_awf.nii`                | axonal water fraction (3d nifti)                         |
++-------------------------------------+----------------------------------------------------------+
+| :code:`wmti_eas_ad`                 | extra-axonal axial diffusivity (3d nifti)                |
++-------------------------------------+----------------------------------------------------------+
+| :code:`wmti_eas_rd`                 | extra-axonal radial diffusivity (3d nifti)               |
++-------------------------------------+----------------------------------------------------------+
+| :code:`wmti_eas_md`                 | extra-axonal mean diffusivity (3d nifti)                 |
++-------------------------------------+----------------------------------------------------------+
+| :code:`wmti_eas_tort`               | extra-axonal tortuosity (3d nifti)                       |
++-------------------------------------+----------------------------------------------------------+
+| :code:`wmti_ias_ad`                 | intra-axonal axial diffusivity (3d nifti)                |
++-------------------------------------+----------------------------------------------------------+
+| :code:`wmti_ias_rd`                 | intra-axonal radial diffusivity (3d nifti)               |
++-------------------------------------+----------------------------------------------------------+
+| :code:`wmti_ias_da`                 | intra-axonal intrinsic diffusivity  (3d nifti)           |
++-------------------------------------+----------------------------------------------------------+
+| :code:`wmti_ias_tort`               | intra-axonal tortuosity (3d nifti)                       |
++-------------------------------------+----------------------------------------------------------+
 
 All other files in folder :code:`/intermediate_nifti` are used by
 PyDesigner for preprocessing flow control, especially to allow
