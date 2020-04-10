@@ -10,7 +10,7 @@ __execdir__ = os.path.basename(
     )
 )
 __packagename__ = 'PyDesigner'
-__version__='v0.3'
+__version__='v0.31'
 __author__ = 'PyDesigner developers'
 __copyright__ = 'Copyright 2020, PyDesigner developers, MUSC Advanced Image Analysis (MAMA)'
 __credits__ = [
