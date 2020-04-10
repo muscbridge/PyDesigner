@@ -130,7 +130,7 @@ The list of ever possible output file is given in the table below.
 +-------------------------------------+----------------------------------------------------------+
 | :code:`wmti_ias_rd`                 | intra-axonal radial diffusivity (3d nifti)               |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_ias_md`                 | intra-axonal mean diffusivity (3d nifti)                 |
+| :code:`wmti_ias_da`                 | intra-axonal intrinsic diffusivity  (3d nifti)           |
 +-------------------------------------+----------------------------------------------------------+
 | :code:`wmti_ias_tort`               | intra-axonal tortuosity (3d nifti)                       |
 +-------------------------------------+----------------------------------------------------------+

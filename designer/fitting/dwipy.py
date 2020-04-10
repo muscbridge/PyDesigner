@@ -1015,7 +1015,7 @@ class DWI(object):
         ias_rd = vectorize(np.array(ias_rd), self.mask)
         ias_da = vectorize(np.array(ias_da), self.mask)
         ias_tort = vectorize(np.array(ias_tort), self.mask)
-        return awf, eas_ad, eas_rd, eas_md, eas_tort, ias_ad, ias_rd, da, ias_tort
+        return awf, eas_ad, eas_rd, eas_md, eas_tort, ias_ad, ias_rd, ias_da, ias_tort
 
     def findViols(self, c=[0, 1, 0]):
         """

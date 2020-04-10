@@ -891,7 +891,7 @@ def main():
                     output=op.join(metricpath, 'trace.nii'),
                     mask=filetable['mask'].getFull())
             if args.wmti:
-                awf, eas_ad, eas_rd, eas_da, eas_tort, ias_ad, ias_rd, ias_da, ias_tort = \
+                awf, eas_ad, eas_rd, eas_md, eas_tort, ias_ad, ias_rd, ias_da, ias_tort = \
                     img.extractWMTI()
                 dp.writeNii(awf, img.hdr,
                             op.join(metricpath, 'wmti_awf'))
@@ -899,8 +899,8 @@ def main():
                             op.join(metricpath, 'wmti_eas_ad'))
                 dp.writeNii(eas_rd, img.hdr,
                             op.join(metricpath, 'wmti_eas_rd'))
-                dp.writeNii(eas_da, img.hdr,
-                            op.join(metricpath, 'wmti_eas_da'))
+                dp.writeNii(eas_md, img.hdr,
+                            op.join(metricpath, 'wmti_eas_md'))
                 dp.writeNii(eas_tort, img.hdr,
                             op.join(metricpath, 'wmti_eas_tort'))
                 dp.writeNii(ias_ad, img.hdr,

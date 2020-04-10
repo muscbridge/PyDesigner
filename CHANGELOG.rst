@@ -11,12 +11,14 @@ Apr 10, 2020
 
 **Added**:
 
-* Extra- and intra-axonal mean diffusivities calculation in WMTI
+* Intrinsic inter-axonal and mean extra-axonal diffusivity
+  calculation to WMTI
 
 **Changed**:
 
 * Method ``json2fslgrad`` converted from class method to function
   definition
+* Documentation update
 
 **Removed**:
 
