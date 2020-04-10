@@ -891,7 +891,7 @@ def main():
                     output=op.join(metricpath, 'trace.nii'),
                     mask=filetable['mask'].getFull())
             if args.wmti:
-                awf, eas_ad, eas_rd, eas_md, eas_tort, ias_ad, ias_rd, ias_md, ias_tort = \
+                awf, eas_ad, eas_rd, eas_da, eas_tort, ias_ad, ias_rd, ias_da, ias_tort = \
                     img.extractWMTI()
                 dp.writeNii(awf, img.hdr,
                             op.join(metricpath, 'wmti_awf'))
@@ -899,16 +899,16 @@ def main():
                             op.join(metricpath, 'wmti_eas_ad'))
                 dp.writeNii(eas_rd, img.hdr,
                             op.join(metricpath, 'wmti_eas_rd'))
-                dp.writeNii(eas_md, img.hdr,
-                            op.join(metricpath, 'wmti_eas_md'))
+                dp.writeNii(eas_da, img.hdr,
+                            op.join(metricpath, 'wmti_eas_da'))
                 dp.writeNii(eas_tort, img.hdr,
                             op.join(metricpath, 'wmti_eas_tort'))
                 dp.writeNii(ias_ad, img.hdr,
                             op.join(metricpath, 'wmti_ias_ad'))
                 dp.writeNii(ias_rd, img.hdr,
                             op.join(metricpath, 'wmti_ias_rd'))
-                dp.writeNii(ias_md, img.hdr,
-                            op.join(metricpath, 'wmti_ias_md'))
+                dp.writeNii(ias_da, img.hdr,
+                            op.join(metricpath, 'wmti_ias_da'))
                 dp.writeNii(ias_tort, img.hdr,
                             op.join(metricpath, 'wmti_ias_tort'))
                 if args.median:
@@ -921,8 +921,8 @@ def main():
                         output=op.join(metricpath, 'wmti_eas_rd.nii'),
                         mask=filetable['mask'].getFull())
                     filters.median(
-                        input=op.join(metricpath, 'wmti_eas_md.nii'),
-                        output=op.join(metricpath, 'wmti_eas_md.nii'),
+                        input=op.join(metricpath, 'wmti_eas_da.nii'),
+                        output=op.join(metricpath, 'wmti_eas_da.nii'),
                         mask=filetable['mask'].getFull())
                     filters.median(
                         input=op.join(metricpath, 'wmti_eas_tort.nii'),
@@ -937,8 +937,8 @@ def main():
                         output=op.join(metricpath, 'wmti_ias_rd.nii'),
                         mask=filetable['mask'].getFull())
                     filters.median(
-                        input=op.join(metricpath, 'wmti_ias_md.nii'),
-                        output=op.join(metricpath, 'wmti_ias_md.nii'),
+                        input=op.join(metricpath, 'wmti_ias_da.nii'),
+                        output=op.join(metricpath, 'wmti_ias_da.nii'),
                         mask=filetable['mask'].getFull())
                     filters.median(
                         input=op.join(metricpath, 'wmti_ias_tort.nii'),
