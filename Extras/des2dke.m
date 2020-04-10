@@ -12,7 +12,7 @@ function des2dke(inDir)
 %   Email:  dhiman@musc.edu
 
 %% Load Paths
-b0_Path = fullfile(inDir,'b0.nii');
+b0_Path = fullfile(inDir,'B0.nii');
 dwi_Path = fullfile(inDir,'dwi_preprocessed.nii');
 bval_Path = fullfile(inDir,'dwi_preprocessed.bval');
 bvec_Path = fullfile(inDir,'dwi_preprocessed.bvec');
