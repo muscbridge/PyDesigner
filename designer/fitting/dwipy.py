@@ -891,8 +891,8 @@ class DWI(object):
             Extra-axonal space Axial Diffusivity
         eas_rd : ndarray(dtype=float)
             Extra-axonal Space Radial Diffusivity
-        eas_da : ndarray(dtype=float)
-            Extra-axonal Space Intrinsic Diffusivity
+        eas_md : ndarray(dtype=float)
+            Extra-axonal Space Mean Diffusivity
         eas_tort : ndarray(dtype=float)
             Extra-axonal Space Tortuosity
         ias_ad : ndarray(dtype=float)
@@ -922,7 +922,7 @@ class DWI(object):
                 eigval = np.sort(eigval)[::-1]
                 eas_ad = eigval[0]
                 eas_rd = 0.5 * (eigval[1] + eigval[2])
-                eas_da = np.add(eas_ad, (2 * eas_rd)) / 3
+                eas_md = np.add(eas_ad, (2 * eas_rd)) / 3
                 try:
                     eas_tort = eas_ad / eas_rd
                 except:
@@ -930,7 +930,7 @@ class DWI(object):
             except:
                 eas_ad = minZero
                 eas_rd = minZero
-                eas_da = minZero
+                eas_md = minZero
                 eas_tort = minZero
             try:
                 # Eigenvalue decomposition of Da
@@ -956,7 +956,7 @@ class DWI(object):
                 ias_rd = minZero
                 ias_da = minZero
                 ias_tort = minZero
-            return eas_ad, eas_rd, eas_da, eas_tort, ias_ad, ias_rd, ias_da, ias_tort
+            return eas_ad, eas_rd, eas_md, eas_tort, ias_ad, ias_rd, ias_da, ias_tort
         dir = dwidirs.dirs10000
         nvox = self.dt.shape[1]
         N = dir.shape[0]
@@ -987,7 +987,7 @@ class DWI(object):
                                  np.diag(dcnt)))
         eas_ad = np.zeros(nvox)
         eas_rd = np.zeros(nvox)
-        eas_da = np.zeros(nvox)
+        eas_md = np.zeros(nvox)
         eas_tort = np.zeros(nvox)
         ias_ad = np.zeros(nvox)
         ias_rd = np.zeros(nvox)
@@ -998,7 +998,7 @@ class DWI(object):
                       bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='vox',
                       ncols=tqdmWidth)
-        eas_ad, eas_rd, eas_da, eas_tort, ias_ad, ias_rd, ias_da, ias_tort = zip(*Parallel(
+        eas_ad, eas_rd, eas_md, eas_tort, ias_ad, ias_rd, ias_da, ias_tort = zip(*Parallel(
             n_jobs=self.workers, prefer='processes')(
             delayed(wmtihelper)(self.dt[:, i],
                                 dirs,
@@ -1009,13 +1009,13 @@ class DWI(object):
         awf = vectorize(awf, self.mask)
         eas_ad = vectorize(np.array(eas_ad), self.mask)
         eas_rd = vectorize(np.array(eas_rd), self.mask)
-        eas_da = vectorize(np.array(eas_da), self.mask)
+        eas_md = vectorize(np.array(eas_md), self.mask)
         eas_tort = vectorize(np.array(eas_tort), self.mask)
         ias_ad = vectorize(np.array(ias_ad), self.mask)
         ias_rd = vectorize(np.array(ias_rd), self.mask)
         ias_da = vectorize(np.array(ias_da), self.mask)
         ias_tort = vectorize(np.array(ias_tort), self.mask)
-        return awf, eas_ad, eas_rd, eas_da, eas_tort, ias_ad, ias_rd, ias_da, ias_tort
+        return awf, eas_ad, eas_rd, eas_md, eas_tort, ias_ad, ias_rd, da, ias_tort
 
     def findViols(self, c=[0, 1, 0]):
         """
