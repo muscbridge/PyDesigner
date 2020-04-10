@@ -126,6 +126,52 @@ def find_valid_ext(pathname):
     
     return exts
 
+def json2fslgrad(path):
+    """
+    Creates FSL .bvec and .bval for series missing that information.
+    Some datasets have their B0s separately that do not produce fsl
+    gradients upon conversion to NifTi. This function creates those
+    missing features for complete concatenation from .json file. Use
+    with caution if and only if you know your input series is a DWI.
+
+    Parameters
+    ----------
+    path : str
+        Path to NifTi file
+
+    Returns
+    -------
+    None; writes out file
+    """
+    image = DWIFile(path)
+    if (image.getBVAL() is None) or (image.getBVEC() is None):
+        if not image.hasJSON():
+            raise Exception('It is not advisable to run multi-series '
+                            'processing without `.json` files. Please '
+                            'ensure your NifTi files come with .json '
+                            'files.')
+        # Get number of 3D volumes in image
+        ndim = mrinfoutil.ndim(image.getFull())
+        if ndim == 4:
+            nDWI = mrinfoutil.size(image.getFull())[-1]
+        else:
+            nDWI = 1
+        if nDWI <= 15:
+            bval = np.zeros(nDWI, dtype=int)
+            bvec = np.zeros((3, nDWI), dtype=int)
+            fPath = op.splitext(path)[0]
+            np.savetxt(op.join(image.getPath(), image.getName() + '.bvec'), 
+            bvec, delimiter=' ', fmt='%d')
+            np.savetxt(op.join(image.getPath(), image.getName() + '.bval'),
+            np.c_[bval], delimiter=' ', fmt='%d')
+        else:
+            raise Exception('PyDesigner currently only supports '
+                            'B0s without BVAL or BVEC pairs if '
+                            'the number of volumes is less than '
+                            '15. Please ensure all your input '
+                            'volumes come with valid BVEC/BVAL '
+                            'pairs and JSON.')
+
 class DWIFile:
     """
     Diffusion data file object, used for handling paths and extensions.
@@ -463,7 +509,7 @@ class DWIParser:
                         (not (op.exists(self.BVEClist[idx])) or \
                                 (op.exists(self.BVALlist[idx]))):
                     try:
-                        self.json2fslgrad(i)
+                        json2fslgrad(i)
                     except:
                         raise IOError('Please supply a valid JSON file '
                                       'accompanying {}'.format(i))
@@ -577,49 +623,3 @@ class DWIParser:
         """
         path = os.path.dirname(os.path.abspath(self.DWIlist[0]))
         return path
-
-    def json2fslgrad(self, path):
-        """
-        Creates FSL .bvec and .bval for series missing that information.
-        Some datasets have their B0s separately that do not produce fsl
-        gradients upon conversion to NifTi. This function creates those
-        missing features for complete concatenation from .json file. Use
-        with caution if and only if you know your input series is a DWI.
-
-        Parameters
-        ----------
-        path : str
-            Path to NifTi file
-
-        Returns
-        -------
-        None; writes out file
-        """
-        image = DWIFile(path)
-        if (image.getBVAL() is None) or (image.getBVEC() is None):
-            if not image.hasJSON():
-                raise Exception('It is not advisable to run multi-series '
-                                'processing without `.json` files. Please '
-                                'ensure your NifTi files come with .json '
-                                'files.')
-            # Get number of 3D volumes in image
-            ndim = mrinfoutil.ndim(image.getFull())
-            if ndim == 4:
-                nDWI = mrinfoutil.size(image.getFull())[-1]
-            else:
-                nDWI = 1
-            if nDWI <= 15:
-                bval = np.zeros(nDWI, dtype=int)
-                bvec = np.zeros((3, nDWI), dtype=int)
-                fPath = op.splitext(path)[0]
-                np.savetxt(op.join(image.getPath(), image.getName() + '.bvec'), 
-                bvec, delimiter=' ', fmt='%d')
-                np.savetxt(op.join(image.getPath(), image.getName() + '.bval'),
-                np.c_[bval], delimiter=' ', fmt='%d')
-            else:
-                raise Exception('PyDesigner currently only supports '
-                                'B0s without BVAL or BVEC pairs if '
-                                'the number of volumes is less than '
-                                '15. Please ensure all your input '
-                                'volumes come with valid BVEC/BVAL '
-                                'pairs and JSON.')

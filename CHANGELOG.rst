@@ -4,6 +4,26 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+`v0.32`_
+--------
+
+Apr 10, 2020
+
+**Added**:
+
+* Intrinsic inter-axonal and mean extra-axonal diffusivity
+  calculation to WMTI
+
+**Changed**:
+
+* Method ``json2fslgrad`` converted from class method to function
+  definition
+* Documentation update
+
+**Removed**:
+
+* None
+
 `v0.31`_
 --------
 
@@ -105,6 +125,7 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 
 .. Links
+.. _v0.31: https://github.com/m-ama/PyDesigner/releases/tag/v0.32
 .. _v0.31: https://github.com/m-ama/PyDesigner/releases/tag/v0.31
 .. _v0.3: https://github.com/m-ama/PyDesigner/releases/tag/v0.3
 .. _v0.2 [The Cupid Release]: https://github.com/m-ama/PyDesigner/releases/tag/v0.2
