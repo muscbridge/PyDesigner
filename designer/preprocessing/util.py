@@ -157,7 +157,7 @@ def json2fslgrad(path):
         else:
             nDWI = 1
         if nDWI <= 15:
-            bval = np.zeros(nDWI, dtype=int)
+            bval = np.zeros((1, nDWI), dtype=int)
             bvec = np.zeros((3, nDWI), dtype=int)
             fPath = op.splitext(path)[0]
             np.savetxt(op.join(image.getPath(), image.getName() + '.bvec'), 

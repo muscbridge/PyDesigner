@@ -18,6 +18,8 @@ Apr 10, 2020
 
 * Method ``json2fslgrad`` converted from class method to function
   definition
+* ``json2fslgrad`` now transposes B0s in BVAL file in accordance with
+  FSL's gradient scheme
 * Documentation update
 
 **Removed**:
