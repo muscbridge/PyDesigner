@@ -15,7 +15,7 @@ preprocess_options.fn_nii = 'dke.nii';       		% four-dimensional nifti image fi
 
 % imaging diffusion weightings and directions
 
-bval = [0 1000 2000];                          		% diffusion weightings (b-values) in s/mm^2 units; the first element of vector must always be 0
+bval = bval-changeme;                          		% diffusion weightings (b-values) in s/mm^2 units; the first element of vector must always be 0
 
 ndir = changeme;                                      	% number of gradient directions; if a scalar value is specified, the number of gradient directions for all b values is set to the scalar; otherwise, a 1-by-(nbval-1) vector should be specified, with each element of the vector corresponding to the number of gradient directions for a nonzero b-value
 
@@ -63,7 +63,7 @@ dti_method.noise_tolerance = 0.09;          		% threshold for outlier detection 
 
 % diffusion-weighted image filtering
 
-fwhm_img = 0 * [2.0 2.0 2.0];            		% full width at half maximum (FWHM) (in mm) of Gaussian kernel for smoothing diffusion-weighted images (default: 1.25 * voxel size); a zero value indicates no smoothing
+fwhm_img = res-changeme;            		% full width at half maximum (FWHM) (in mm) of Gaussian kernel for smoothing diffusion-weighted images (default: 1.25 * voxel size); a zero value indicates no smoothing
 
 % Rician noise subtraction
 
@@ -72,7 +72,7 @@ fwhm_noise = 0;                             		% FWHM (in mm) of Gaussian kernel 
 
 % parametric map filtering
 
-median_filter_method = 0;                   		% selective median filtering applied to voxels that violate the minimum directional kurtosis constraints (default: 2): (0) no filtering; (1) weak filtering (voxels with less than 15 unviolated constraints will be filtered); (2) strong filtering (voxels with any constraint violation will be filtered)
+median_filter_method = 1;                   		% selective median filtering applied to voxels that violate the minimum directional kurtosis constraints (default: 2): (0) no filtering; (1) weak filtering (voxels with less than 15 unviolated constraints will be filtered); (2) strong filtering (voxels with any constraint violation will be filtered)
 
 % parametric map interpolation
 
