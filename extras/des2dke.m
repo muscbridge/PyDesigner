@@ -86,7 +86,7 @@ fprintf('\tD:...writing gradient\n');
 save(fullfile(p,'gradient_dke.txt'),'Gradient1','-ASCII');
 
 %% Create DKE Parameter File
-fprintf('4: Creating parameter files\n');
+fprintf('4: Creating DKE parameter files\n');
 fid=fopen('dke_parameters.txt'); %Original file
 fout=fullfile(dke_Path,'dke_parameters.txt');% new file
 
@@ -96,9 +96,28 @@ while(~feof(fid))
     s=fgetl(fid);
     s=strrep(s,'dir-sub-changeme',dke_Path); %s=strrep(s,'A201', subject_list{i}) replace subject
     s=strrep(s,'ndir = changeme',sprintf('ndir = %d',length(b1_idx_new)));
+    s=strrep(s,'bval = changeme',sprintf('bval = [%s]', num2str(unique(bval))));
     s=strrep(s,'fn-gradients-changeme',fullfile(dke_Path,'gradient_dke.txt'));
+    s=strrep(s,'fwhm_img = res-changeme',sprintf('fwhm_img = 0 * [%s]', num2str(hdr.PixelDimensions(1:3),3)));
     fprintf(fidout,'%s\n',s);
 end
 fclose(fid);
 fclose(fidout);
 fprintf('.....Completed.....\n');
+
+%% Create FT Parameter File
+fprintf('4: Creating FT parameter files\n');
+fid=fopen('ft_parameters.txt'); %Original file
+fout=fullfile(dke_Path,'ft_parameters.txt');% new file
+
+fidout=fopen(fout,'w');
+
+while(~feof(fid))
+    s=fgetl(fid);
+    s=strrep(s,'dir-sub-changeme',dke_Path); %s=strrep(s,'A201', subject_list{i}) replace subject
+    fprintf(fidout,'%s\n',s);
+end
+fclose(fid);
+fclose(fidout);
+fprintf('.....Completed.....\n');
+

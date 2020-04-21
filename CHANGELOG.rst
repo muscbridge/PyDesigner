@@ -7,7 +7,7 @@ page
 `v0.32`_
 --------
 
-Apr 10, 2020
+Apr 21, 2020
 
 **Added**:
 
@@ -21,6 +21,9 @@ Apr 10, 2020
 * ``json2fslgrad`` now transposes B0s in BVAL file in accordance with
   FSL's gradient scheme
 * Documentation update
+* ``Extras`` directory renamed to ``extras``
+* DKE conversion scripts modified to correctly create ft and dke
+  parameter files
 
 **Removed**:
 

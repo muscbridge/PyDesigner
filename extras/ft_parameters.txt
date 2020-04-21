@@ -1,0 +1,40 @@
+%--------------------------------------------------------------------------
+%USER OPTIONS
+%--------------------------------------------------------------------------
+studydir = 'dir-sub-changeme'; %Full path to directory containing DT.mat, KT.mat, and fa.nii files.
+subject_list = {''};         %Specify subject numbers (i.e. {'Subject01','Subject02','Subject03',...}).
+
+%ODF Optimizatinon
+
+    odf_optimization = 1;   %Analyze the kurtosis dODF (1) or skip odf optimization (0). This step must be performed prior to tractography.
+    sd = 4;                 %[3,4, or 5] Sampling distribution to use. See sphericalgrid3(4,5).m documentation for more info.
+    quasiNewton = 1;        %Apply non-linear optimization to increase accuracy of peak detection (1) or use orientations directly from the pre-defined sampling distribution (0).
+    radial_weight = 4;      %Radial weighting power.Recommended radial_weight = 4.  
+    release_memory = 0;     %Do not release memory (0), release memory after each subject (1), or release memory more frequently (2). See User's Guide for additional info.         
+    wrt_flg = 1;            %Write outputs (1) or don't write outputs (0).
+    pre_name = '';          %String to append to the beginning of output names.
+    post_name = '';         %String to append to the end of output names.
+    
+%Tractography
+
+    tractography_flg = 1;      %Perform tractography (1) or don't perform tractography (0).
+    fa_threshold = 0.1;        %FA threshold.
+    angle_threshold = 35;      %Angle threshold in degrees.
+    trk_length = 20;           %Minimum tract length in mm.
+    step_size = 1;             %Step size in mm (0 defaults to half of the voxel length).
+    trk_mask = '';             %Path to tracking mask to apply in addition to other tract termination criteria defined above. Should be in the same orientation as the fa.nii image.
+    seed_mask = '';            %Mask within which to put seeds. Should be in the same orientation as the fa.nii image
+    seednum = 1E5;             %Number of random seed points in the tracking mask. 
+    shift = 0.5;               %Shift applied to voxel coordinates in .trk file.
+    output_DTI_trks = 1;       %Include tractography performed from just the diffusion tensor (1) or don't (0).
+    image_orientation = 'LAS'; %Orientation of input image volumes. By convention, spm writes images in 'LAS.'  
+    odf_orientation = 'RAS';   %Orientation of the gradient table used to estimate the diffusion and kurtosis tensors. If SPM is used to estimate the gradient tables, this should be 'LAS.'
+    
+    
+%Make DSI Studio .fib file
+
+    make_fib_file = 1;      %Make .fib file to read in DSI Studio (1) or skip this step (0).
+    save_odfs = 1;          %Save dODFS in .fib file (1) or not (0). This only affects visualization as orientations are still saved for tractography. 
+    scale_odf = 0.5;        %Affects overall size of odfs in .fib file. This only affects visualization.
+    odf_size = 20000;       %Size of odf_n variables. Reduce this if there are issues with RAM.
+    odf_res = 'low';        %{'low' or 'high'}; Number of points saved in ODFs ~ only affects visualization. Use 'low' to reduce memory requirements and use 'high' for the smoothest dODF surface renderings. 
