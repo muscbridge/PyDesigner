@@ -11,11 +11,12 @@ from joblib import Parallel, delayed
 import scipy.linalg as sla
 from tqdm import tqdm
 from . import dwidirs
+from . import thresholds
 
 # Define the lowest number possible before it is considered a zero
 minZero = 1e-8
 # Define number of directions to resample after computing all tensors
-dirSample = 256
+dirSample = thresholds.__minZero__
 # Progress bar Properties
 tqdmWidth = 70  # Number of columns of progress bar
 # Set default numpy errorstates
@@ -158,6 +159,39 @@ class DWI(object):
 
         """
         return max(np.unique(self.grad[:,3])).astype(int)
+    
+    def maxDKIBval(self):
+        """
+        Returns the maximum non-FBI b-value in a dataset
+
+        Returns
+        -------
+        float
+            maximum non-FBI B-value in DWI
+
+        Examples
+        --------
+        a = dwi.maxDKIBval(), where dwi is the DWI class object
+
+        """
+        exclude_idx = self.grad[:, 3] < thresholds.__maxdkibval__
+        return max(np.unique(self.grad[exclude_idx,3])).astype(int)
+    
+    def idxdki(self):
+        """
+        Returns the index of all DTI/DKI B-values according to bvals
+        in record
+
+        Returns
+        -------
+        bool
+            Index of DTI/DKI b-values
+
+        """
+        exclude_idx = np.ones_like(self.grad[:, 3], dtype=bool)
+        if self.isdki():
+            exclude_idx = self.grad[:, 3] <= self.maxDKIBval()
+        return exclude_idx
 
     def getndirs(self):
         """
@@ -173,7 +207,7 @@ class DWI(object):
         --------
         n = dwi.getndirs(), where dwi is the DWI class object
         """
-        return np.sum(self.grad[:, 3] == self.maxBval())
+        return np.sum(self.grad[:, 3] == self.maxDKIBval())
 
     def tensorType(self):
         """
@@ -189,11 +223,15 @@ class DWI(object):
         --------
         a = dwi.tensorType(), where dwi is the DWI class object
         """
-        if self.maxBval() <= 1.5:
-            type = 'dti'
-        elif self.maxBval() > 1.5:
-            type = 'dki'
-        else:
+        type = []
+        if self.maxDKIBval() <= 1.5:
+            type.append('dti')
+        if self.maxDKIBval() > 1.5 and \
+            self.maxDKIBval() < thresholds.__maxdkibval__:
+            type.append('dki')
+        if self.maxBval() >= thresholds.__maxdkibval__:
+            type.append('fbi')
+        if not type:
             raise ValueError('tensortype: Error in determining maximum '
                              'BVAL')
         return type
@@ -212,7 +250,26 @@ class DWI(object):
         --------
         ans = dwi.isdki(), where dwi is the DWI class object
         """
-        if self.tensorType() == 'dki':
+        if 'dki' in self.tensorType():
+            ans = True
+        else:
+            ans = False
+        return ans
+
+    def isfbi(self):
+        """
+        Returns bool value to specify whether image input image is FBI
+
+        Returns
+        -------
+        and : bool
+            True if FBI; false otherwise
+        
+        Examples
+        --------
+        ans = dwi.isfbi(), where dwi is the DWI class object
+        """
+        if 'fbi' in self.tensorType():
             ans = True
         else:
             ans = False
@@ -637,14 +694,17 @@ class DWI(object):
         dwi.fit(constraints=[0,1,0], reject=irlls_output)
         """
         # Handle rejected voxels from IRLLS
+        exclude_idx = self.idxdki()
         if reject is None:
-            reject = np.zeros(self.img.shape)
-        grad = self.grad
+            reject = np.zeros(self.img[:, :, :, exclude_idx].shape)
+        grad = self.grad[exclude_idx, :]
+        grad_orig = grad
         order = np.floor(np.log(np.abs(np.max(grad[:,-1])+1))/np.log(10))
+        img = self.img[:, :, :, exclude_idx]
         if order >= 2:
             grad[:, -1] = grad[:, -1]
-        self.img.astype(np.double)
-        self.img[self.img <= 0] = np.finfo(np.double).eps
+        img.astype(np.double)
+        img[img <= 0] = np.finfo(np.double).eps
         grad.astype(np.double)
         normgrad = np.sqrt(np.sum(grad[:,:3]**2, 1))
         normgrad[normgrad == 0] = 1
@@ -652,16 +712,16 @@ class DWI(object):
         grad[np.isnan(grad)] = 0
         dcnt, dind = self.createTensorOrder(2)
         wcnt, wind = self.createTensorOrder(4)
-        ndwis = self.img.shape[-1]
+        ndwis = img.shape[-1]
         bs = np.ones((ndwis, 1))
         bD = np.tile(dcnt,(ndwis, 1))*grad[:,dind[:, 0]]*grad[:,dind[:, 1]]
-        bW = np.tile(wcnt, (ndwis, 1)) * self.grad[:,wind[:, 0]] * \
-             self.grad[:, wind[:, 1]] * self.grad[:, wind[:,2]] *  \
-             self.grad[:,wind[:,3]]
+        bW = np.tile(wcnt, (ndwis, 1)) * grad_orig[:,wind[:, 0]] * \
+             grad_orig[:, wind[:, 1]] * grad_orig[:, wind[:,2]] *  \
+             grad_orig[:,wind[:,3]]
         self.b = np.concatenate((bs, (
-                    np.tile(-self.grad[:, -1], (6, 1)).T * bD), np.squeeze(
-            1 / 6 * np.tile(self.grad[:, -1], (15, 1)).T ** 2) * bW), 1)
-        dwi_ = vectorize(self.img, self.mask)
+                    np.tile(-self.grad[exclude_idx, -1], (6, 1)).T * bD), np.squeeze(
+            1 / 6 * np.tile(self.grad[exclude_idx, -1], (15, 1)).T ** 2) * bW), 1)
+        dwi_ = vectorize(img, self.mask)
         reject_ = vectorize(reject, self.mask).astype(bool)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = highprecisionexp(np.matmul(self.b, init))
@@ -743,7 +803,7 @@ class DWI(object):
             if constraints[2] > 0:  # K < 3/(b*Dapp)
                 C = np.append(C, np.hstack(
                     (np.zeros((ndirs, 1)),
-                     3 / self.maxBval() * \
+                     3 / self.maxDKIBval() * \
                      np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]],
                      np.tile(-wcnt, [ndirs, 1]) * cDirs[:, wind[:, 1]] * \
                      cDirs[:,wind[:, 2]] * cDirs[:,wind[:, 3]])),axis=0)
@@ -1047,7 +1107,7 @@ class DWI(object):
             c = [0, 0, 0]
         nvox = self.dt.shape[1]
         sumViols = np.zeros(nvox)
-        maxB = self.maxBval()
+        maxB = self.maxDKIBval()
         adc = self.diffusionCoeff(self.dt[:6], self.dirs)
         akc = self.kurtosisCoeff(self.dt, self.dirs)
         tmp = np.zeros(3)
@@ -1122,7 +1182,7 @@ class DWI(object):
         map = dwi.goodDirections(outliers)
         """
         # Compute number of good directions
-        maxB = self.maxBval()
+        maxB = self.maxDKIBval()
         outliers_ = vectorize(outliers, self.mask)
         nvox = outliers_.shape[1]
         nonB0 = ~(self.grad[:, -1] < 0.01)
@@ -1211,7 +1271,7 @@ class DWI(object):
         print('...computing directional violations (parallel)')
         nvox = self.dt.shape[1]
         map = np.zeros(nvox)
-        maxB = self.maxBval()
+        maxB = self.maxDKIBval()
         adc = self.diffusionCoeff(self.dt[:6], self.dirs)
         akc = self.kurtosisCoeff(self.dt, self.dirs)
         inputs = tqdm(range(0, nvox))
@@ -1446,19 +1506,21 @@ class DWI(object):
                    'and 1')
         if bounds < 1:
             assert('option: Bounds should be set to a value >= 1')
+        exclude_idx = np.ones_like(self.grad[:, 3], dtype=bool)
+        exclude_idx = self.idxdki()
         # Vectorize DWI
-        dwi = vectorize(self.img, self.mask)
+        dwi = vectorize(self.img[:, :, :, exclude_idx], self.mask)
         (ndwi, nvox) = dwi.shape
-        b = np.array(self.grad[:, 3])
+        b = np.array(self.grad[exclude_idx, 3])
         b = np.reshape(b, (len(b), 1))
-        g = self.grad[:, 0:3]
+        g = self.grad[exclude_idx, 0:3]
         # Apply Scaling
         scaling = False
         if np.sum(dwi < 1)/np.size(dwi) < 0.001:
             dwi[dwi < 1] = 1
         else:
             scaling = True
-            if self.maxBval() < 10:
+            if self.maxDKIBval() < 10:
                 tmp = dwi[dwi < 0.05]
             else:
                 tmp = dwi[dwi < 50]
@@ -1487,7 +1549,7 @@ class DWI(object):
         # Initialization
         b0_pos = np.zeros(b.shape,dtype=bool, order='F')
         if excludeb0:
-            if self.maxBval() < 10:
+            if self.maxDKIBval() < 10:
                 b0_pos = b < 0.01
             else:
                 b0_pos = b < 10

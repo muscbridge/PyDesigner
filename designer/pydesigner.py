@@ -191,6 +191,9 @@ def main():
     parser.add_argument('--fit_constraints', default='0,1,0',
                         help='Constrain the WLLS fit. '
                         'Default: 0,1,0.')
+    parser.add_argument('--fbwm', default=True,
+                        help='Perform Fiber Ball White Matter '
+                        'Modeling')
     parser.add_argument('--noqc', action='store_true', default=False,
                         help='Disable QC saving of QC metrics')
     parser.add_argument('--median', action='store_true', default=False,
@@ -797,19 +800,19 @@ def main():
             # write outliers to qc folder
             if not args.noqc:
                 outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
-                outlier_plot_full = op.join(qcpath,
-                                    'outliers.png')
-                dp.writeNii(outliers, img.hdr, outlier_full)
-                if 'mask' in filetable:
-                    outlierplot.plot(input=outlier_full,
-                                    output=outlier_plot_full,
-                                    bval=filetable['HEAD'].getBVAL(),
-                                    mask=filetable['mask'].getFull())
-                else:
-                    outlierplot.plot(input=outlier_full,
-                                    output=outlier_plot_full,
-                                    bval=filetable['HEAD'].getBVAL(),
-                                    mask=None)
+                # outlier_plot_full = op.join(qcpath,
+                #                     'outliers.png')
+                # dp.writeNii(outliers, img.hdr, outlier_full)
+                # if 'mask' in filetable:
+                #     outlierplot.plot(input=outlier_full,
+                #                     output=outlier_plot_full,
+                #                     bval=filetable['HEAD'].getBVAL(),
+                #                     mask=filetable['mask'].getFull())
+                # else:
+                #     outlierplot.plot(input=outlier_full,
+                #                     output=outlier_plot_full,
+                #                     bval=filetable['HEAD'].getBVAL(),
+                #                     mask=None)
 
             # fit while rejecting outliers
             img.fit(fit_constraints, reject=outliers)
@@ -945,7 +948,11 @@ def main():
                         output=op.join(metricpath, 'wmti_ias_tort.nii'),
                         mask=filetable['mask'].getFull())
             # reorder tensor for mrtrix3
-            DT, KT = img.tensorReorder(img.tensorType())
+            if 'dti' in img.tensorType():
+                tensorType = 'dti'
+            else:
+                tensorType = 'dki'
+            DT, KT = img.tensorReorder(tensorType)
             dp.writeNii(DT, img.hdr, op.join(metricpath, 'DT'))
             dp.writeNii(KT, img.hdr, op.join(metricpath, 'KT'))
 
