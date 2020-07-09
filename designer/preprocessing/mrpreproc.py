@@ -289,7 +289,7 @@ def degibbs(input, output, nthreads=None, force=False, verbose=False):
 def undistort(input, output, rpe='rpe_header', epib0=1,
               qc=None, nthreads=None, force=False, verbose=False):
     """
-    Runs MRtrix3's `dwipreproc` command with optimal parameters for
+    Runs MRtrix3's `dwifslpreproc` command with optimal parameters for
     PyDesigner.
 
     Parameters
@@ -363,7 +363,7 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
                         'failed during undistortion, please look '
                         'above for errors.')
     # Form main undistortion argument
-    arg = ['dwipreproc']
+    arg = ['dwifslpreproc']
     if force:
         arg.append('-force')
     if not verbose:
@@ -373,7 +373,7 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
     # Determine whether half or full sphere sampling
     repol_string = '--repol '
     if util.bvec_is_fullsphere(op.join(outdir, 'dwiec.bvec')):
-        # is full, add appropriate dwipreproc option
+        # is full, add appropriate dwifslpreproc option
         repol_string += '--data_is_shelled'
     else:
         # half
@@ -404,7 +404,7 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
     arg.extend([input, output])
     completion = subprocess.run(arg, cwd=outdir)
     if completion.returncode != 0:
-        raise Exception('dwipreproc failed, please look above for '
+        raise Exception('dwifslpreproc failed, please look above for '
                         'error sources.')
     # Remove temporarily generated files
     os.remove(op.join(outdir, 'dwiec.bvec'))
