@@ -45,7 +45,7 @@ class DWI(object):
     workers : int
         Number of CPU workers to use in processing
     """
-    def __init__(self, imPath, nthreads=-1):
+    def __init__(self, imPath, mask=None, nthreads=-1):
         """
         DWI class initializer
 
@@ -83,7 +83,10 @@ class DWI(object):
             self.grad = np.c_[np.transpose(bvecs), bvals]
         else:
             raise NameError('Unable to locate BVAL or BVEC files')
-        maskPath = os.path.join(path,'brain_mask.nii')
+        if mask is None:
+            maskPath = os.path.join(path,'brain_mask.nii')
+        else:
+            maskPath = mask
         if os.path.exists(maskPath):
             tmp = nib.load(maskPath)
             self.mask = np.array(tmp.dataobj).astype(bool)
