@@ -7,16 +7,19 @@ import random
 import cvxpy as cvx
 import nibabel as nib
 import numpy as np
+import numpy.matlib as npm
 from joblib import Parallel, delayed
 import scipy.linalg as sla
+from scipy.special import sph_harm, gamma, hyp1f1, factorial
 from tqdm import tqdm
 from . import dwidirs
-from . import thresholds
+from . import thresholds as th
+import time
 
 # Define the lowest number possible before it is considered a zero
-minZero = 1e-8
+minZero = th.__minZero__
 # Define number of directions to resample after computing all tensors
-dirSample = thresholds.__minZero__
+dirSample = th.__dirs__
 # Progress bar Properties
 tqdmWidth = 70  # Number of columns of progress bar
 # Set default numpy errorstates
@@ -177,8 +180,21 @@ class DWI(object):
         a = dwi.maxDKIBval(), where dwi is the DWI class object
 
         """
-        exclude_idx = self.grad[:, 3] < thresholds.__maxdkibval__
+        exclude_idx = self.grad[:, 3] < th.__maxdkibval__
         return max(np.unique(self.grad[exclude_idx,3])).astype(int)
+
+    def idxb0(self):
+        """
+        Returns the index of all B-zeros according to bvals
+        in record
+
+        Returns
+        -------
+        idx : bool
+            Index of DTI/DKI b-values
+
+        """
+        return(self.grad[:, -1] == 0)
     
     def idxdki(self):
         """
@@ -187,14 +203,32 @@ class DWI(object):
 
         Returns
         -------
-        bool
+        idx : bool
             Index of DTI/DKI b-values
 
         """
-        exclude_idx = np.ones_like(self.grad[:, 3], dtype=bool)
+        idx = np.ones_like(self.grad[:, -1], dtype=bool)
         if self.isdki():
-            exclude_idx = self.grad[:, 3] <= self.maxDKIBval()
-        return exclude_idx
+            idx = self.grad[:, 3] <= self.maxDKIBval()
+        return idx
+
+    def idxfbi(self):
+        """
+        Returns the index of all FBI B-values according to bvals
+        in record
+
+        Returns
+        -------
+        bool
+            Index of DTI/DKI b-values.
+
+        """
+        idx = np.ones_like(self.grad[:, 3], dtype=bool)
+        if self.isfbi():
+            idx = self.grad[:, -1] > th.__minfbibval__
+        else:
+            raise IndexError('No valid FBI sequence found.')
+        return idx
 
     def getndirs(self):
         """
@@ -230,9 +264,9 @@ class DWI(object):
         if self.maxDKIBval() <= 1.5:
             type.append('dti')
         if self.maxDKIBval() > 1.5 and \
-            self.maxDKIBval() < thresholds.__maxdkibval__:
+            self.maxDKIBval() < th.__maxdkibval__:
             type.append('dki')
-        if self.maxBval() >= thresholds.__maxdkibval__:
+        if self.maxBval() >= th.__maxdkibval__:
             type.append('fbi')
         if not type:
             raise ValueError('tensortype: Error in determining maximum '
@@ -401,7 +435,7 @@ class DWI(object):
             x = np.cos(phi) * r
             z = np.sin(phi) * r
             points.append([x,y,z])
-        return points
+        return np.array(points)
 
     def radialSampling(self, dir, n):
         """
@@ -420,18 +454,18 @@ class DWI(object):
 
         Examples
         --------
-        grad = dwi.radiansampling(dir, number_of_dirs)
+        grad = dwi.radialSampling(dir, number_of_dirs)
 
         """
         dt = 2*np.pi/n
-        theta = np.arange(0,2*np.pi-dt,dt)
+        theta = np.arange(0, 2*np.pi-dt,dt)
         dirs = np.vstack((np.cos(theta), np.sin(theta), 0*theta))
         v = np.hstack((-dir[1], dir[0], 0))
         s = np.sqrt(np.sum(v**2))
         c = dir[2]
         V = np.array([[0, -v[2], v[1]],[v[2], 0, -v[0]],[-v[1], v[0], 0]])
         R = np.eye(3) + V + np.matmul(V,V) * (1-c)/(s**2)
-        dirs = np.matmul(R, dirs)
+        dirs = np.matmul(R, dirs).T
         return dirs
 
     def diffusionCoeff(self, dt, dir):
@@ -548,7 +582,7 @@ class DWI(object):
         dirs = np.vstack((v1, -v1))
         akc = self.kurtosisCoeff(dt, dirs)
         ak = np.mean(akc)
-        dirs = self.radialSampling(v1, dirSample).T
+        dirs = self.radialSampling(v1, dirSample)
         akc = self.kurtosisCoeff(dt, dirs)
         rk = np.mean(akc)
         W_F = np.sqrt(dt[6]**2 + \
@@ -941,6 +975,339 @@ class DWI(object):
         mkt = vectorize(mkt, self.mask)
         return mk, rk, ak, kfa, mkt, trace
 
+    def fbi(self, fbwm=True, rectify=True):
+        """
+        Perform fiber ball imaging (FBI) and FBI white matter model
+        (FBWM) analyses
+
+        Parameters
+        ----------
+        fbwm : bool
+            Perform FBWM parameterization if True
+        rectify : bool
+            Perform fODF rectification if True
+        Returns
+        -------
+        
+        """
+        #--------------------FUNCTION SEPARATOR-----------------------
+        def shbasis(deg, theta, phi):
+            """
+            Computes shperical harmonic basis set for even degrees of
+            harmonics
+
+            Parameters
+            ----------
+            deg : list of ints
+                Degrees of harmonic
+            theta : array_like
+                (n, ) vector denoting azimuthal coordinates
+            phi : array_like
+                (n, ) vector denoting polar coordinates
+            
+            Returns
+            -------
+            complex array_like
+                Harmonic samples at theta and phi at specified order
+            """
+            if not any([isinstance(x, int) for x in deg]):
+                try:
+                    deg = [int(x) for x in deg]
+                except:
+                    raise TypeError('Please supply degree of '
+                    'shperical harmonic as an integer')
+            SH = []
+            for n in deg:
+                for m in range(-n, n + 1):
+                    if (n % 2) == 0:
+                        SH.append(sph_harm(m, n, phi, theta))
+            return np.array(SH, dtype=np.complex, order='F').T
+        
+        def fbi_helper(dwi, b0, B, H, Pl0, gl, rectify=True,
+            fbwm_B=None, fbwm_H=None, fbwm_B1=None, fbwm_B2=None,
+            fbwm_dt=None, fbwm_degs=None):
+            """
+            Computes FBI calculations for a given voxel. This function
+            will perform FBWM only if all optional FBWM parameters are
+            parsed.
+
+            Parameters
+            ----------
+            dwi : array_like(dtype=float)
+                Signal across DWI at a given voxel
+            b0 : float
+                Averaged B0 signal at a given voxel
+            B : array_like(dtype=complex)
+                dMRI spherical harmonic expansion
+            H : array_like(dtype=complex)
+                ODF from spherical harmonic expansion
+            Pl0 : array_like(dtype=float)
+                Legendre polynomail
+            gl : array_like(dtype=float)
+                Correction factor
+            rectify : bool; optional
+                Specify whether to perform fODF rectification
+                (Default: True)
+            fbwm_B : array_like(dtype=complex); optional
+                DKI spherical harmonic expansion
+            fbwm_H : array_like(dtype=complex); optional
+                DKI ODF from spherical harmonic expansion
+            fbwm_degs : array_like(dtype=int); optional
+                Harmonics used in DKI spherical harmonic expansion
+            fbwm_B1 : array_like(dtype=float); optional
+                Signal across DWI at B1000 at a given voxel
+            fbwm_B2 : array_like(dtype=float); optional
+                Signal across DWI at B2000 at a given voxel
+            fbwm_dt : array_like(dtype=float); optional
+                Diffusion tensor at a given voxel
+            
+
+            Returns
+            -------
+            zeta : float
+                zeta parameter
+            faa : float
+                intra-axonal fractional anisotropy
+
+            """
+            fbwm = False
+            if not ((fbwm_B is None) and (fbwm_H is None) and 
+                    (fbwm_B1 is None) and (fbwm_B2 is None) and 
+                    (fbwm_dt is None)):
+                fbwm = True
+            # For references to alm and clm see FBI papers, they (alm
+            # and clm) are defined in all of them
+            alm = np.dot(np.linalg.pinv(B),(dwi/b0)) # DWI signal SH coefficients (these are complex)
+            alm[np.isnan(alm)] = minZero
+            a00 = alm[0].real # the imaginary part is on the order of 10^-18 (this is for zeta)
+            clm = alm*gl[0]*np.power(np.sqrt(4*np.pi)*alm[0]*Pl0*gl,-1) # fODF SH coefficients (these are complex)
+            c00 = clm[0]
+            clm = clm/c00
+            clm = clm*(1/np.sqrt(4*np.pi))
+            # need to figure out how to do peak detection (on this variable and then read out odf structures like in MATLAB code)
+            # only the real part would be read out but that would need to be done later on after the rectification process below
+            ODF = np.matmul(H,clm)
+            if rectify:
+                # fODF rectification
+                fODF = ODF.real # grab real part of the fODF
+                fODF[np.isnan(fODF)] = 0
+                Fmax = np.max(fODF) # get the max peak value of the ODF
+                lB = 0 # initial lower bound
+                uB = Fmax # initial upper bound
+                M = 1 # initialze iteration counter
+                Mmax = 1000 # max iterations (could prbably be 100 too)
+                if Fmax > 0:
+                    while M <= Mmax:
+                        # BEGIN: bi-section algorithm
+                        midpt = (lB + uB)/2
+                        fODF_lB = np.sum((np.abs(fODF - lB) - fODF - lB)*AREA,0)
+                        fODF_midpt = np.sum((np.abs(fODF - midpt) - fODF - midpt)*AREA,0)
+                        if fODF_midpt == 0 or (uB - lB)/2 < 10**-8:
+                            EPS = midpt
+                            break
+                        else:
+                            M = M + 1
+                            if np.sign(fODF_midpt) == np.sign(fODF_lB):
+                                lB = midpt
+                            else:
+                                uB = midpt
+                        # END: bi-section algorithm
+                    # Subract solution from each ODF point
+                    ODF = (1/2)*(np.abs(ODF - EPS) + ODF - EPS)
+                    ODF = ODF.real
+                    odf_pts = np.arange(ODF.size)
+                    # due to numerical error, we manually set
+                    # very very very tiny peaks to zero afte the fact...
+                    for p in odf_pts:
+                        if ODF[p] > -10**-8 and ODF[p] < 0:
+                            ODF[p] = 0
+                        elif ODF[p] < 10**-8 and ODF[p] > 0:
+                            ODF[p] = 0
+                # Re-expand the rectified fODF into SH's
+                clm_rec = np.matmul(AREA*ODF,np.conj(H))
+                clm = clm_rec
+                c00 = clm[0]
+                clm = clm/c00
+                clm = clm*(1/np.sqrt(4*np.pi))
+            # zeta and FAA calculations
+            # NOTE: zeta is not affected by the rectification, only FAA
+            zeta = a00*np.sqrt(self.maxBval())/np.pi
+            faa = np.sqrt(3*np.sum(np.abs(clm[1:6]**2))/(5*np.abs(clm[0])**2 + 2 * np.sum(np.abs(clm[1:6]**2))))
+            # BEGIN: construct axonal DT (aDT)
+            c00 = clm[0]
+            c2_2 = clm[1]
+            c2_1 = clm[2]
+            c20 = clm[3]
+            c21 = clm[4]
+            c22 = clm[5]
+            A11 = ((np.sqrt(30)/3)*c00 - (np.sqrt(6)/3)*c20 + c22 + c2_2)
+            A22 = ((np.sqrt(30)/3)*c00 - (np.sqrt(6)/3)*c20 - c22 - c2_2)
+            A33 = ((np.sqrt(30)/3)*c00 + (2*np.sqrt(6)/3)*c20)
+            A12 = (1j*(c22 - c2_2))
+            A13 = ((-c21 + c2_1))
+            A23 = (1j*(-c21 - c2_1))
+            aDT = np.array([A11, A12, A13, A12, A22, A23, A13, A23, A33]).real
+            aDT = 1/(c00*np.sqrt(30))*aDT
+            iaDT = np.reshape(aDT,(3,3)).real
+            if fbwm:
+                BT = np.unique(self.getBvals())[1:]
+                GT = [
+                        self.grad[self.grad[:, -1] == 1, 0:3],
+                        self.grad[self.grad[:, -1]  == 2, 0:3],
+                        self.grad[self.grad[:, -1]  == self.maxBval(), 0:3]
+                    ]
+                ndir = [len(GT[0]), len(GT[1]),len(GT[2])]
+                f_grid = np.linspace(0,1,100) # define AWF grid (100 pts evenly spaced between 0 (min) and 1 (max))
+                f_grid = f_grid * np.ones((1,100)) # makes it in to a proper array...weird but it works
+                int_grid = np.linspace(0,99,100) # define grid points to iterate over (100 of them)
+                int_grid = int_grid * np.ones((1,100)) # same as above, makes it a proper array object...?
+                # This holds the SH basis sets for each b-value shell
+                shB = [fbwm_B,fbwm_H,B] # list object: to access, shB[0] = B1 (for example)
+                # This hold all DWI volumes for each b-vlaue shell
+                IMG = [fbwm_B1, fbwm_B2, dwi] # list object: to access
+                # BEGIN: DT construction (should be modified to fit with PyDesigner output)
+                # This is based on DKE DT output as of 05/05/2020
+                iDT = np.array(
+                    [fbwm_dt[0],
+                    fbwm_dt[3],
+                    fbwm_dt[4],
+                    fbwm_dt[3],
+                    fbwm_dt[1],
+                    fbwm_dt[5],
+                    fbwm_dt[4],
+                    fbwm_dt[5],
+                    fbwm_dt[2]]
+                    )
+                iDT = np.reshape(iDT,(3,3))
+                # END: DT construction
+                # initialze correction factor elements that will be looped over and filled accordingly...
+                g2l_fa_R = np.zeros((len(Pl0),f_grid.shape[1]), order = 'F')
+                g2l_fa_R_b = np.zeros((len(BT),f_grid.shape[1],len(Pl0)), order = 'F')
+                g2l_fa_R_large = np.zeros((len(Pl0),f_grid.shape[1]), order = 'F')
+                # BEGIN: cost function
+                # Not many comments here, See McKinnon 2018 FBWm paper for details
+                for b in range(0,len(BT)):
+                    idx_hyper = BT[b] * np.power(f_grid,2) * np.power(zeta,-2) < 20 # when should hypergeometric function be implemented? When b*D is small
+                    idx_Y = 0
+                    for l in degs[::2]:
+                        hypergeom_opt = np.sum((gamma((l+1)/2 + int_grid) * gamma(l+(3/2)) * ((-BT[b] * f_grid[idx_hyper]**2 * zeta**-2)*np.ones((1,len(f_grid[idx_hyper])))).T ** int_grid / (factorial(int_grid) * gamma(l+(3/2) + int_grid) * gamma((l+1)/2))),1)*np.ones((1,len(f_grid[idx_hyper])))
+                        g2l_fa_R[idx_Y:idx_Y+(2*l+1),np.squeeze(idx_hyper)] = npm.repmat((factorial(l/2) * (BT[b] * f_grid[idx_hyper]**2 * zeta**-2) ** ((l+1)/2) / gamma(l+(3/2)) * hypergeom_opt),(2*l+1),1) # Eq. 9 FBWM paper
+                        idx_Y = idx_Y + (2*l+1)
+                    g2l_fa_R_b[b,np.squeeze(idx_hyper),:] = g2l_fa_R[:,np.squeeze(idx_hyper)].T
+                    idx_Y = 0
+                    for l in degs[::2]:
+                        g2l_fa_R_large[idx_Y:idx_Y+(2*l+1), np.squeeze(~idx_hyper)] = npm.repmat((np.exp(-l/2 * (l+1) / ((2*BT[b] * (f_grid[~idx_hyper]**2 * zeta**-2))))),(2*l+1),1) # Eq. 20 FBI paper
+                        idx_Y = idx_Y + (2*l+1)
+                    g2l_fa_R_b[b,np.squeeze(~idx_hyper),:] = g2l_fa_R_large[:,np.squeeze(~idx_hyper)].T
+                # here is the core piece of the cost function:
+                cost_fn = np.zeros((100), order = 'F')
+                for grid in np.squeeze(int_grid.astype('int')):
+                    for b in range(0,len(BT)):
+                        awf = f_grid[:,grid] # define AWF grid
+                        # Se and Sa are the theoretical extra-axonal and intra-axonal signals that will be compared with IMG[:] DWI values for each voxel element
+                        Se = (b0 * np.exp((-BT[b] * (1-awf)**-1) * np.diag((GT[b].dot((iDT - (awf**3 * zeta**-2) * iaDT).dot(GT[b].T)))))) * (1 - awf) # Eq. 3 FBWM paper
+                        Sa = (2*np.pi*b0*zeta*np.sqrt(np.pi/BT[b])) * (shB[b].dot((Pl0 * np.squeeze(g2l_fa_R_b[b,grid,:])*clm))) # Eq. 4 FBM paper
+                        cost_fn[grid] = cost_fn[grid] + ndir[b]**-1 * np.sum((IMG[b] - Se - Sa)**2)
+                    cost_fn[grid] = b0**-1 * np.sqrt(len(BT)**-1 * cost_fn[grid]) # Eq. 21 FBWM paper
+                    iDT_img = iDT
+                    iaDT_img = iaDT
+
+            return zeta, faa
+
+        #--------------------FUNCTION SEPARATOR-----------------------
+        start = time.process_time()
+        img = self.img
+        bt_unique = np.unique(self.grad[:, -1])
+        b0 = np.mean(img[:, :, :, self.idxb0()], axis=3)
+        # Vectorize images
+        b0 = vectorize(b0, self.mask)
+        img = vectorize(img, self.mask)
+        # Create shperical harmonic (SH) base set
+        degs = np.arange(self.maxBval() + 1, dtype=int)
+        l_tot = 2*degs + 1 # total harmonics in the degree
+        l_num = 2 * degs[::2] + 1 # how many per degree (evens only)
+        harmonics = []
+        sh_end = 1 # initialize the SH set for indexing
+        for h in range(0,len(degs[::2])):
+            sh_start = sh_end + l_num[h] - 1
+            sh_end = sh_start + l_num[h] - 1
+            harmonics.extend(np.arange(sh_start,sh_end+1))
+        # Define the azimuthal (phi) and polar(theta) angles for our
+        # spherical expansion using the experimentally defined
+        # gradients from the scanner
+        theta = np.arccos(self.grad[self.idxfbi(), 2])
+        phi = np.arctan2(self.grad[self.idxfbi() ,1], self.grad[self.idxfbi() ,0])
+        spherical_grid = dwidirs.sh_grid # this is only HALF-SPHERE
+        S1 = spherical_grid[:,0] # theta, i think
+        S2 = spherical_grid[:,1] # phi, i think
+        AREA = spherical_grid[:,2] # need the area since it is impossible to get exact isotropic (uniform) sampling
+        B = shbasis(degs, theta, phi)
+        H = shbasis(degs, S2, S1)
+        if fbwm:
+            theta1 = np.arccos(self.grad[self.idxfbi(),2])
+            phi1 =  np.arctan2(self.grad[self.idxfbi(),1],self.grad[self.idxfbi(),0])
+
+            theta2 = np.arccos(self.grad[self.idxfbi(),2])
+            phi2 =  np.arctan2(self.grad[self.idxfbi(),1],self.grad[self.idxfbi(),0])
+
+            fbwm_B = shbasis(degs,phi1,theta1)
+            fbwm_H = shbasis(degs,phi2,theta2)
+        idx_Y = 0
+        Pl0 = np.zeros((len(harmonics), 1), order ='F') # need Legendre polynomial Pl0
+        gl = np.zeros((len(harmonics), 1), order ='F') # calculate correction factor (see original FBI paper, Jensen 2016)
+        for l in degs[::2]:
+            Pl0[idx_Y:idx_Y+(2*l+1), :] = (np.power(-1,l/2)* np.math.factorial(l)) / (np.power(4,l/2)*np.power(np.math.factorial(l/2),2))*np.ones((2*l+1,1))
+            gl[idx_Y:idx_Y+(2*l+1), :] = (np.math.factorial(l/2)*np.power(self.maxBval()*th.__d0__,(l+1)/2))/gamma(l+3/2)*hyp1f1((l+1)/2,l+3/2,-self.maxBval()*th.__d0__)*np.ones((2*l+1,1))
+            idx_Y = idx_Y + (2*l+1)
+        Pl0 = np.squeeze(Pl0)
+        gl = np.squeeze(gl)
+        # initialize the outputs
+        SH = np.zeros((len(harmonics),img.shape[1]), dtype = 'complex', order = 'F') # will hold the clm (SH coefficients)
+        zeta = np.zeros(img.shape[1],order = 'F') # zeta (see original FBI paper)
+        faa = np.zeros(img.shape[1],order = 'F') # FAA (see McKinnon 2018, Moss 2019)
+        print('Execution time: {} seconds' .format(time.process_time() - start))
+        inputs = tqdm(range(0, img.shape[1]),
+                        desc='FBI Fit',
+                        bar_format='{desc}: [{percentage:0.0f}%]',
+                        unit='vox',
+                        ncols=tqdmWidth)
+        for i in inputs:
+            zeta, faa = fbi_helper(
+                dwi=img[self.idxfbi(), i],
+                b0 = b0[i],
+                B = B,
+                H = H,
+                Pl0=Pl0,
+                gl = gl,
+                rectify=rectify,
+                fbwm_B = fbwm_B,
+                fbwm_H = fbwm_H,
+                fbwm_B1 = img[self.grad[:, -1] == 1, i],
+                fbwm_B2 = img[self.grad[:, -1] == 2, i],
+                fbwm_dt = self.dt[:, i],
+                fbwm_degs=degs
+                )
+        # zeta, faa = zip(*Parallel(n_jobs=self.workers,
+        #                           prefer='processes') \
+        #     (delayed(fbi_helper)(
+        #         dwi=img[self.idxfbi(), i],
+        #         b0 = b0[i],
+        #         B = B,
+        #         H = H,
+        #         Pl0=Pl0,
+        #         gl = gl,
+        #         rectify=rectify,
+        #         fbwm_B = fbwm_B,
+        #         fbwm_H = fbwm_H,
+        #         fbwm_B1 = img[self.grad[:, -1] == 1, i],
+        #         fbwm_B2 = img[self.grad[:, -1] == 2, i],
+        #         fbwm_dt = self.dt[:, i],
+        #         fbwm_degs=degs
+        #     ) for i in inputs))
+        
+        return zeta, faa
+
+            
     def extractWMTI(self):
         """
         Returns white matter tract integrity (WMTI) parameters. Warning:
