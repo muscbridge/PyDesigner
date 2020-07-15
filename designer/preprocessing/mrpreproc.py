@@ -7,7 +7,7 @@ Utilities for running various MRtrix3's DWI preprocessing tools
 
 import os
 import os.path as op
-from shutil import copyfile
+from shutil import copyfile, which
 import subprocess
 import numpy as np
 from designer.preprocessing import preparation, util, smoothing, rician, mrinfoutil
@@ -289,8 +289,8 @@ def degibbs(input, output, nthreads=None, force=False, verbose=False):
 def undistort(input, output, rpe='rpe_header', epib0=1,
               qc=None, nthreads=None, force=False, verbose=False):
     """
-    Runs MRtrix3's `dwifslpreproc` command with optimal parameters for
-    PyDesigner.
+    Runs MRtrix3's distortion correction command with optimal
+    parameters for PyDesigner.
 
     Parameters
     ----------
@@ -363,7 +363,11 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
                         'failed during undistortion, please look '
                         'above for errors.')
     # Form main undistortion argument
-    arg = ['dwifslpreproc']
+    arg = []
+    if which('dwipreproc') is None:
+        arg.append('dwifslpreproc')
+    else:
+        arg.append('dwipreproc')
     if force:
         arg.append('-force')
     if not verbose:
