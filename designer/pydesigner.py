@@ -947,6 +947,60 @@ def main():
                         input=op.join(metricpath, 'wmti_ias_tort.nii'),
                         output=op.join(metricpath, 'wmti_ias_tort.nii'),
                         mask=filetable['mask'].getFull())
+            if img.isfbi():
+                zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost_fn = img.fbi()
+                    dp.writeNii(zeta, img.hdr,
+                            op.join(metricpath, 'zeta'))
+                    dp.writeNii(faa, img.hdr,
+                            op.join(metricpath, 'faa'))
+                    dp.writeNii(min_awf, img.hdr,
+                            op.join(metricpath, 'min_awf'))
+                    dp.writeNii(Da, img.hdr,
+                            op.join(metricpath, 'Da'))
+                    dp.writeNii(De_mean, img.hdr,
+                            op.join(metricpath, 'De_mean'))
+                    dp.writeNii(De_ax, img.hdr,
+                            op.join(metricpath, 'De_ax'))
+                    dp.writeNii(De_rad, img.hdr,
+                            op.join(metricpath, 'De_rad'))
+                    dp.writeNii(De_fa, img.hdr,
+                            op.join(metricpath, 'De_fa'))
+                    dp.writeNii(min_cost_fn, img.hdr,
+                            op.join(metricpath, 'min_cost_fn'))
+                if args.median:
+                    filters.median(
+                        input=op.join(metricpath, 'zeta.nii'),
+                        output=op.join(metricpath, 'zeta.nii'),
+                        mask=filetable['mask'].getFull())
+                    filters.median(
+                        input=op.join(metricpath, 'faa.nii'),
+                        output=op.join(metricpath, 'faa.nii'),
+                        mask=filetable['mask'].getFull())
+                    filters.median(
+                        input=op.join(metricpath, 'min_awf.nii'),
+                        output=op.join(metricpath, 'min_awf.nii'),
+                        mask=filetable['mask'].getFull())
+                    filters.median(
+                        input=op.join(metricpath, 'De_mean.nii'),
+                        output=op.join(metricpath, 'De_mean.nii'),
+                        mask=filetable['mask'].getFull())
+                    filters.median(
+                        input=op.join(metricpath, 'De_ax.nii'),
+                        output=op.join(metricpath, 'De_ax.nii'),
+                        mask=filetable['mask'].getFull())
+                    filters.median(
+                        input=op.join(metricpath, 'De_rad.nii'),
+                        output=op.join(metricpath, 'De_rad.nii'),
+                        mask=filetable['mask'].getFull())
+                    filters.median(
+                        input=op.join(metricpath, 'De_fa.nii'),
+                        output=op.join(metricpath, 'De_fa.nii'),
+                        mask=filetable['mask'].getFull())
+                    filters.median(
+                        input=op.join(metricpath, 'min_cost_fn.nii'),
+                        output=op.join(metricpath, 'min_cost_fn.nii'),
+                        mask=filetable['mask'].getFull())
+
             # reorder tensor for mrtrix3
             if 'dti' in img.tensorType():
                 tensorType = 'dti'

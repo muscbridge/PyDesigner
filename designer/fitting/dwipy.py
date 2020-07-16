@@ -1024,7 +1024,7 @@ class DWI(object):
             return np.array(SH, dtype=np.complex, order='F').T
         
         def fbi_helper(dwi, b0, B, H, Pl0, gl, rectify=True,
-            fbwm_B=None, fbwm_H=None, fbwm_B1=None, fbwm_B2=None,
+            fbwm_SH1=None, fbwm_SH2=None, fbwm_B1=None, fbwm_B2=None,
             fbwm_dt=None, fbwm_degs=None):
             """
             Computes FBI calculations for a given voxel. This function
@@ -1048,10 +1048,10 @@ class DWI(object):
             rectify : bool; optional
                 Specify whether to perform fODF rectification
                 (Default: True)
-            fbwm_B : array_like(dtype=complex); optional
-                DKI spherical harmonic expansion
-            fbwm_H : array_like(dtype=complex); optional
-                DKI ODF from spherical harmonic expansion
+            fbwm_SH1 : array_like(dtype=complex); optional
+                DKI spherical harmonic expansion for B1000
+            fbwm_SH2 : array_like(dtype=complex); optional
+                DKI spherical harmonic expansion for B2000
             fbwm_degs : array_like(dtype=int); optional
                 Harmonics used in DKI spherical harmonic expansion
             fbwm_B1 : array_like(dtype=float); optional
@@ -1071,14 +1071,14 @@ class DWI(object):
 
             """
             fbwm = False
-            if not ((fbwm_B is None) and (fbwm_H is None) and 
+            if not ((fbwm_SH1 is None) and (fbwm_SH2 is None) and 
                     (fbwm_B1 is None) and (fbwm_B2 is None) and 
                     (fbwm_dt is None)):
                 fbwm = True
             # For references to alm and clm see FBI papers, they (alm
             # and clm) are defined in all of them
             alm = np.dot(np.linalg.pinv(B),(dwi/b0)) # DWI signal SH coefficients (these are complex)
-            alm[np.isnan(alm)] = minZero
+            alm[np.isnan(alm)] = 0
             a00 = alm[0].real # the imaginary part is on the order of 10^-18 (this is for zeta)
             clm = alm*gl[0]*np.power(np.sqrt(4*np.pi)*alm[0]*Pl0*gl,-1) # fODF SH coefficients (these are complex)
             c00 = clm[0]
@@ -1087,6 +1087,7 @@ class DWI(object):
             # need to figure out how to do peak detection (on this variable and then read out odf structures like in MATLAB code)
             # only the real part would be read out but that would need to be done later on after the rectification process below
             ODF = np.matmul(H,clm)
+            AREA = dwidirs.sh_grid[:, 2]
             if rectify:
                 # fODF rectification
                 fODF = ODF.real # grab real part of the fODF
@@ -1151,18 +1152,14 @@ class DWI(object):
             iaDT = np.reshape(aDT,(3,3)).real
             if fbwm:
                 BT = np.unique(self.getBvals())[1:]
-                GT = [
-                        self.grad[self.grad[:, -1] == 1, 0:3],
-                        self.grad[self.grad[:, -1]  == 2, 0:3],
-                        self.grad[self.grad[:, -1]  == self.maxBval(), 0:3]
-                    ]
+                GT = [self.grad[self.grad[:, -1] == x, 0:3] for x in BT]
                 ndir = [len(GT[0]), len(GT[1]),len(GT[2])]
-                f_grid = np.linspace(0,1,100) # define AWF grid (100 pts evenly spaced between 0 (min) and 1 (max))
+                f_grid = np.linspace(0,1,100, dtype=int) # define AWF grid (100 pts evenly spaced between 0 (min) and 1 (max))
                 f_grid = f_grid * np.ones((1,100)) # makes it in to a proper array...weird but it works
-                int_grid = np.linspace(0,99,100) # define grid points to iterate over (100 of them)
+                int_grid = np.linspace(0,99,100, dtype=int) # define grid points to iterate over (100 of them)
                 int_grid = int_grid * np.ones((1,100)) # same as above, makes it a proper array object...?
                 # This holds the SH basis sets for each b-value shell
-                shB = [fbwm_B,fbwm_H,B] # list object: to access, shB[0] = B1 (for example)
+                shB = [fbwm_SH1,fbwm_SH2,B] # list object: to access, shB[0] = B1 (for example)
                 # This hold all DWI volumes for each b-vlaue shell
                 IMG = [fbwm_B1, fbwm_B2, dwi] # list object: to access
                 # BEGIN: DT construction (should be modified to fit with PyDesigner output)
@@ -1203,19 +1200,54 @@ class DWI(object):
                 cost_fn = np.zeros((100), order = 'F')
                 for grid in np.squeeze(int_grid.astype('int')):
                     for b in range(0,len(BT)):
-                        awf = f_grid[:,grid] # define AWF grid
+                        awf = f_grid[:, grid] # define AWF grid
                         # Se and Sa are the theoretical extra-axonal and intra-axonal signals that will be compared with IMG[:] DWI values for each voxel element
                         Se = (b0 * np.exp((-BT[b] * (1-awf)**-1) * np.diag((GT[b].dot((iDT - (awf**3 * zeta**-2) * iaDT).dot(GT[b].T)))))) * (1 - awf) # Eq. 3 FBWM paper
                         Sa = (2*np.pi*b0*zeta*np.sqrt(np.pi/BT[b])) * (shB[b].dot((Pl0 * np.squeeze(g2l_fa_R_b[b,grid,:])*clm))) # Eq. 4 FBM paper
-                        cost_fn[grid] = cost_fn[grid] + ndir[b]**-1 * np.sum((IMG[b] - Se - Sa)**2)
+                        cost_fn[grid] = (cost_fn[grid] + ndir[b]**-1 * np.sum((IMG[b] - Se - Sa)**2)).real
                     cost_fn[grid] = b0**-1 * np.sqrt(len(BT)**-1 * cost_fn[grid]) # Eq. 21 FBWM paper
                     iDT_img = iDT
                     iaDT_img = iaDT
-
-            return zeta, faa
-
+                print(cost_fn.shape)
+                min_cost_fn_idx = np.argsort(cost_fn) # find the indexes of the sorted cost_fn values
+                min_cost_fn = np.take_along_axis(cost_fn, min_cost_fn_idx, axis=0) # sort those values
+                awf_grid = np.linspace(0,1,100) # another AWF grid
+                min_awf = awf_grid[min_cost_fn_idx[0]] # grad the minimum AWF value based on the cost_fn sorting done immeidately prior to this...
+                Da = min_awf**2 / zeta**2 # Eq. 22 McKinnon (2018). intrinsic intra-axonal diffusivity
+                De = (iDT_img - (min_awf**3 * zeta**-2) * iaDT_img) / (1 - min_awf)
+                iDe = De # intermeidate De
+                iDe[np.isnan(iDe)] = minZero
+                iDe[np.isinf(iDe)] = minZero
+                L,V = np.linalg.eig(iDe) # L : eigVals and V: eigVecs
+                L = np.sort(L) # sort them (this is ascending)
+                L = L[::-1] # reverse the order so they are descending (high -> low)
+                N = 1 # initialize counter
+                while L[0] < 0 or L[1] < 0 or L[2] < 0: # find new AWF values if L's are < 0
+                    N = N + 1
+                    if N < 100:
+                        min_awf = awf_grid[min_cost_fn_idx[N]]
+                    else:
+                        min_awf = 0
+                        De = (iDT_img - (min_awf**3 * zeta**-2) * iaDT_img) / (1 - min_awf)
+                        Da = min_awf**2 / zeta**2
+                        break
+                    # update De here...
+                    De = (iDT_img - (min_awf**3 * zeta**2) * iaDT_img) / (1 - min_awf)
+                    Da = min_awf**2 / zeta**2 # recalculate Da too...
+                # Now recalculate eigVals again with correct AWF values
+                iDe = De
+                iDe[np.isnan(iDe)] = minZero
+                iDe[np.isinf(iDe)] = minZero
+                L,V = np.linalg.eig(iDe) # L : eigVals and V: eigVecs
+                L = np.sort(L) # again, ascending
+                L = L[::-1] # now, descending
+                De_ax = L[0] # Eq. 24 FBWM paper, axial extra-axonal diffusivity
+                De_rad = (L[1] + L[2])/2 # radial De
+                De_fa = np.sqrt(((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2 ) / (2 * np.sum(L ** 2))) # extra-axonal FA
+                De_mean = (1/3) * (2 * De_rad + De_ax) # average De
+            return zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost_fn
+        
         #--------------------FUNCTION SEPARATOR-----------------------
-        start = time.process_time()
         img = self.img
         bt_unique = np.unique(self.grad[:, -1])
         b0 = np.mean(img[:, :, :, self.idxb0()], axis=3)
@@ -1244,14 +1276,14 @@ class DWI(object):
         B = shbasis(degs, theta, phi)
         H = shbasis(degs, S2, S1)
         if fbwm:
-            theta1 = np.arccos(self.grad[self.idxfbi(),2])
-            phi1 =  np.arctan2(self.grad[self.idxfbi(),1],self.grad[self.idxfbi(),0])
+            theta1 = np.arccos(self.grad[self.grad[:, -1] == 1, 2])
+            phi1 =  np.arctan2(self.grad[self.grad[:, -1] == 1,1],self.grad[self.grad[:, -1] == 1,0])
 
-            theta2 = np.arccos(self.grad[self.idxfbi(),2])
-            phi2 =  np.arctan2(self.grad[self.idxfbi(),1],self.grad[self.idxfbi(),0])
-
-            fbwm_B = shbasis(degs,phi1,theta1)
-            fbwm_H = shbasis(degs,phi2,theta2)
+            theta2 = np.arccos(self.grad[self.grad[:, -1] == 2,2])
+            phi2 =  np.arctan2(self.grad[self.grad[:, -1] == 2,1],self.grad[self.grad[:, -1] == 2,0])
+            # SH basis set for the two B-values in DKI
+            fbwm_SH1 = shbasis(degs,phi1,theta1)
+            fbwm_SH2 = shbasis(degs,phi2,theta2)
         idx_Y = 0
         Pl0 = np.zeros((len(harmonics), 1), order ='F') # need Legendre polynomial Pl0
         gl = np.zeros((len(harmonics), 1), order ='F') # calculate correction factor (see original FBI paper, Jensen 2016)
@@ -1261,18 +1293,32 @@ class DWI(object):
             idx_Y = idx_Y + (2*l+1)
         Pl0 = np.squeeze(Pl0)
         gl = np.squeeze(gl)
-        # initialize the outputs
-        SH = np.zeros((len(harmonics),img.shape[1]), dtype = 'complex', order = 'F') # will hold the clm (SH coefficients)
-        zeta = np.zeros(img.shape[1],order = 'F') # zeta (see original FBI paper)
-        faa = np.zeros(img.shape[1],order = 'F') # FAA (see McKinnon 2018, Moss 2019)
-        print('Execution time: {} seconds' .format(time.process_time() - start))
+        dt = vectorize(self.tensorReorder('dti'), self.mask)
         inputs = tqdm(range(0, img.shape[1]),
                         desc='FBI Fit',
                         bar_format='{desc}: [{percentage:0.0f}%]',
                         unit='vox',
                         ncols=tqdmWidth)
-        for i in inputs:
-            zeta, faa = fbi_helper(
+        # for i in inputs:
+        #     zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost_fn = \
+        #         fbi_helper(
+        #             dwi=img[self.idxfbi(), i],
+        #             b0 = b0[i],
+        #             B = B,
+        #             H = H,
+        #             Pl0=Pl0,
+        #             gl = gl,
+        #             rectify=rectify,
+        #             fbwm_SH1 = fbwm_SH1,
+        #             fbwm_SH2 = fbwm_SH2,
+        #             fbwm_B1 = img[self.grad[:, -1] == 1, i],
+        #             fbwm_B2 = img[self.grad[:, -1] == 2, i],
+        #             fbwm_dt = self.dt[:, i],
+        #             fbwm_degs=degs
+        #             )
+        zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
+                                  prefer='processes') \
+            (delayed(fbi_helper)(
                 dwi=img[self.idxfbi(), i],
                 b0 = b0[i],
                 B = B,
@@ -1280,34 +1326,24 @@ class DWI(object):
                 Pl0=Pl0,
                 gl = gl,
                 rectify=rectify,
-                fbwm_B = fbwm_B,
-                fbwm_H = fbwm_H,
+                fbwm_SH1 = fbwm_SH1,
+                fbwm_SH2 = fbwm_SH2,
                 fbwm_B1 = img[self.grad[:, -1] == 1, i],
                 fbwm_B2 = img[self.grad[:, -1] == 2, i],
-                fbwm_dt = self.dt[:, i],
+                fbwm_dt = dt[:, i],
                 fbwm_degs=degs
-                )
-        # zeta, faa = zip(*Parallel(n_jobs=self.workers,
-        #                           prefer='processes') \
-        #     (delayed(fbi_helper)(
-        #         dwi=img[self.idxfbi(), i],
-        #         b0 = b0[i],
-        #         B = B,
-        #         H = H,
-        #         Pl0=Pl0,
-        #         gl = gl,
-        #         rectify=rectify,
-        #         fbwm_B = fbwm_B,
-        #         fbwm_H = fbwm_H,
-        #         fbwm_B1 = img[self.grad[:, -1] == 1, i],
-        #         fbwm_B2 = img[self.grad[:, -1] == 2, i],
-        #         fbwm_dt = self.dt[:, i],
-        #         fbwm_degs=degs
-        #     ) for i in inputs))
-        
-        return zeta, faa
+            ) for i in inputs))
+        zeta = vectorize(np.array(zeta), self.mask)
+        faa = vectorize(np.array(faa), self.mask)
+        min_awf = vectorize(np.array(min_awf), self.mask)
+        Da = vectorize(np.array(Da), self.mask)
+        De_mean = vectorize(np.array(De_mean), self.mask)
+        De_ax = vectorize(np.array(De_ax), self.mask)
+        De_rad = vectorize(np.array(De_rad), self.mask)
+        De_fa = vectorize(np.array(De_fa), self.mask)
+        min_cost_fn = vectorize(np.array(min_cost_fn).T, self.mask)
+        return zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost_fn
 
-            
     def extractWMTI(self):
         """
         Returns white matter tract integrity (WMTI) parameters. Warning:
