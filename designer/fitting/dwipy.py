@@ -165,15 +165,32 @@ class DWI(object):
 
         """
         return max(np.unique(self.grad[:,3])).astype(int)
-    
-    def maxDKIBval(self):
+
+    def maxDTIBval(self):
         """
-        Returns the maximum non-FBI b-value in a dataset
+        Returns the maximum DTI b-value in a dataset
 
         Returns
         -------
         float
-            maximum non-FBI B-value in DWI
+            maximum DTI B-value in DWI
+
+        Examples
+        --------
+        a = dwi.maxDKIBval(), where dwi is the DWI class object
+
+        """
+        exclude_idx = self.grad[:, 3] < th.__maxdtibval__
+        return max(np.unique(self.grad[exclude_idx,3])).astype(int)
+    
+    def maxDKIBval(self):
+        """
+        Returns the maximum DKI b-value in a dataset
+
+        Returns
+        -------
+        float
+            maximum DKI B-value in DWI
 
         Examples
         --------
@@ -195,6 +212,23 @@ class DWI(object):
 
         """
         return(self.grad[:, -1] == 0)
+
+    def idxdti(self):
+        """
+        Returns the index of all DTI/DKI B-values according to bvals
+        in record
+
+        Returns
+        -------
+        idx : bool
+            Index of DTI/DKI b-values
+
+        """
+        idx = np.ones_like(self.grad[:, -1], dtype=bool)
+        if self.isdti():
+            idx = self.grad[:, 3] <= self.maxDTIBval()
+        return idx
+    
     
     def idxdki(self):
         """
@@ -253,15 +287,17 @@ class DWI(object):
 
         Returns
         -------
-        str
-            'dti' or 'dki'
+        list of str
+            contains list of string 'dti', 'dki', or 'fbi' based on
+            the protocols the input DWI represents
 
         Examples
         --------
         a = dwi.tensorType(), where dwi is the DWI class object
         """
         type = []
-        if self.maxDKIBval() <= 1.5:
+        if self.maxDTIBval() <= 1.5 and \
+            self.maxDTIBval() > th.__mindkibval__:
             type.append('dti')
         if self.maxDKIBval() > 1.5 and \
             self.maxDKIBval() < th.__maxdkibval__:
@@ -272,6 +308,26 @@ class DWI(object):
             raise ValueError('tensortype: Error in determining maximum '
                              'BVAL')
         return type
+
+    def isdti(self):
+        """
+        Returns logical value to answer the mystical question whether
+        the input image is DTI
+
+        Returns
+        -------
+        ans : bool
+            True if DTI; false otherwise
+
+        Examples
+        --------
+        ans = dwi.isdki(), where dwi is the DWI class object
+        """
+        if 'dti' in self.tensorType():
+            ans = True
+        else:
+            ans = False
+        return ans
 
     def isdki(self):
         """
@@ -1060,19 +1116,37 @@ class DWI(object):
                 Signal across DWI at B2000 at a given voxel
             fbwm_dt : array_like(dtype=float); optional
                 Diffusion tensor at a given voxel
-            
+            fbwm_degs : array_like(dtype=int)
+                Harmonics used in expansion of FBWM shperical
+                harmonics
 
             Returns
             -------
             zeta : float
-                zeta parameter
+                Zeta parameter
             faa : float
-                intra-axonal fractional anisotropy
-
+                Intra-axonal fractional anisotropy
+            min_awf : float
+                Axonal water fraction
+            Da : float
+                Intrinsic intra-axonal diffusivity
+            De_mean : float
+                Mean extra-axonal diffusion
+            De_ax : float
+                Axial extra-axonal diffusion
+            De_rad : float
+                Radial extra-axonal diffusion
+            De_fa : float
+                Extra-axonal FA
+            min_cost : float
+                Minimum cost of the cost function (first index of 
+                min_cost_fn)
+            min_cost_fn : array_like(dtype=float)
+                Cost function vector
             """
             fbwm = False
-            if not ((fbwm_SH1 is None) and (fbwm_SH2 is None) and 
-                    (fbwm_B1 is None) and (fbwm_B2 is None) and 
+            if not ((fbwm_SH1 is None) or (fbwm_SH2 is None) or 
+                    (fbwm_B1 is None) or (fbwm_B2 is None) or 
                     (fbwm_dt is None)):
                 fbwm = True
             # For references to alm and clm see FBI papers, they (alm
@@ -1096,7 +1170,7 @@ class DWI(object):
                 lB = 0 # initial lower bound
                 uB = Fmax # initial upper bound
                 M = 1 # initialze iteration counter
-                Mmax = 1000 # max iterations (could prbably be 100 too)
+                Mmax = 1000 # max iterations (could probably be 100 too)
                 if Fmax > 0:
                     while M <= Mmax:
                         # BEGIN: bi-section algorithm
@@ -1125,8 +1199,7 @@ class DWI(object):
                         elif ODF[p] < 10**-8 and ODF[p] > 0:
                             ODF[p] = 0
                 # Re-expand the rectified fODF into SH's
-                clm_rec = np.matmul(AREA*ODF,np.conj(H))
-                clm = clm_rec
+                clm = np.matmul(AREA*ODF,np.conj(H))
                 c00 = clm[0]
                 clm = clm/c00
                 clm = clm*(1/np.sqrt(4*np.pi))
@@ -1162,8 +1235,7 @@ class DWI(object):
                 shB = [fbwm_SH1,fbwm_SH2,B] # list object: to access, shB[0] = B1 (for example)
                 # This hold all DWI volumes for each b-vlaue shell
                 IMG = [fbwm_B1, fbwm_B2, dwi] # list object: to access
-                # BEGIN: DT construction (should be modified to fit with PyDesigner output)
-                # This is based on DKE DT output as of 05/05/2020
+                # BEGIN: DT construction
                 iDT = np.array(
                     [fbwm_dt[0],
                     fbwm_dt[3],
@@ -1198,7 +1270,7 @@ class DWI(object):
                     g2l_fa_R_b[b,np.squeeze(~idx_hyper),:] = g2l_fa_R_large[:,np.squeeze(~idx_hyper)].T
                 # here is the core piece of the cost function:
                 cost_fn = np.zeros((100), order = 'F')
-                for grid in np.squeeze(int_grid.astype('int')):
+                for grid in np.squeeze(cost_fn.astype('int')):
                     for b in range(0,len(BT)):
                         awf = f_grid[:, grid] # define AWF grid
                         # Se and Sa are the theoretical extra-axonal and intra-axonal signals that will be compared with IMG[:] DWI values for each voxel element
@@ -1208,7 +1280,6 @@ class DWI(object):
                     cost_fn[grid] = b0**-1 * np.sqrt(len(BT)**-1 * cost_fn[grid]) # Eq. 21 FBWM paper
                     iDT_img = iDT
                     iaDT_img = iaDT
-                print(cost_fn.shape)
                 min_cost_fn_idx = np.argsort(cost_fn) # find the indexes of the sorted cost_fn values
                 min_cost_fn = np.take_along_axis(cost_fn, min_cost_fn_idx, axis=0) # sort those values
                 awf_grid = np.linspace(0,1,100) # another AWF grid
@@ -1245,7 +1316,18 @@ class DWI(object):
                 De_rad = (L[1] + L[2])/2 # radial De
                 De_fa = np.sqrt(((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2 ) / (2 * np.sum(L ** 2))) # extra-axonal FA
                 De_mean = (1/3) * (2 * De_rad + De_ax) # average De
-            return zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost_fn
+                min_cost = min_cost_fn[0]
+            else:
+                min_awf = None
+                Da = None
+                De_mean = None
+                De_ax = None
+                De_rad = None
+                De_fa = None
+                min_cost = None
+                min_cost_fn = None
+
+            return zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
         
         #--------------------FUNCTION SEPARATOR-----------------------
         img = self.img
@@ -1275,15 +1357,6 @@ class DWI(object):
         AREA = spherical_grid[:,2] # need the area since it is impossible to get exact isotropic (uniform) sampling
         B = shbasis(degs, theta, phi)
         H = shbasis(degs, S2, S1)
-        if fbwm:
-            theta1 = np.arccos(self.grad[self.grad[:, -1] == 1, 2])
-            phi1 =  np.arctan2(self.grad[self.grad[:, -1] == 1,1],self.grad[self.grad[:, -1] == 1,0])
-
-            theta2 = np.arccos(self.grad[self.grad[:, -1] == 2,2])
-            phi2 =  np.arctan2(self.grad[self.grad[:, -1] == 2,1],self.grad[self.grad[:, -1] == 2,0])
-            # SH basis set for the two B-values in DKI
-            fbwm_SH1 = shbasis(degs,phi1,theta1)
-            fbwm_SH2 = shbasis(degs,phi2,theta2)
         idx_Y = 0
         Pl0 = np.zeros((len(harmonics), 1), order ='F') # need Legendre polynomial Pl0
         gl = np.zeros((len(harmonics), 1), order ='F') # calculate correction factor (see original FBI paper, Jensen 2016)
@@ -1293,7 +1366,6 @@ class DWI(object):
             idx_Y = idx_Y + (2*l+1)
         Pl0 = np.squeeze(Pl0)
         gl = np.squeeze(gl)
-        dt = vectorize(self.tensorReorder('dti'), self.mask)
         inputs = tqdm(range(0, img.shape[1]),
                         desc='FBI Fit',
                         bar_format='{desc}: [{percentage:0.0f}%]',
@@ -1316,23 +1388,46 @@ class DWI(object):
         #             fbwm_dt = self.dt[:, i],
         #             fbwm_degs=degs
         #             )
-        zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
-                                  prefer='processes') \
-            (delayed(fbi_helper)(
-                dwi=img[self.idxfbi(), i],
-                b0 = b0[i],
-                B = B,
-                H = H,
-                Pl0=Pl0,
-                gl = gl,
-                rectify=rectify,
-                fbwm_SH1 = fbwm_SH1,
-                fbwm_SH2 = fbwm_SH2,
-                fbwm_B1 = img[self.grad[:, -1] == 1, i],
-                fbwm_B2 = img[self.grad[:, -1] == 2, i],
-                fbwm_dt = dt[:, i],
-                fbwm_degs=degs
-            ) for i in inputs))
+        if fbwm:
+            theta1 = np.arccos(self.grad[self.grad[:, -1] == 1, 2])
+            phi1 =  np.arctan2(self.grad[self.grad[:, -1] == 1,1],self.grad[self.grad[:, -1] == 1,0])
+
+            theta2 = np.arccos(self.grad[self.grad[:, -1] == 2,2])
+            phi2 =  np.arctan2(self.grad[self.grad[:, -1] == 2,1],self.grad[self.grad[:, -1] == 2,0])
+            # SH basis set for the two B-values in DKI
+            fbwm_SH1 = shbasis(degs,phi1,theta1)
+            fbwm_SH2 = shbasis(degs,phi2,theta2)
+            dt, kt = self.tensorReorder('dki')
+            dt = vectorize(dt, self.mask)
+            zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
+                                    prefer='processes') \
+                (delayed(fbi_helper)(
+                    dwi=img[self.idxfbi(), i],
+                    b0 = b0[i],
+                    B = B,
+                    H = H,
+                    Pl0=Pl0,
+                    gl = gl,
+                    rectify=rectify,
+                    fbwm_SH1 = fbwm_SH1,
+                    fbwm_SH2 = fbwm_SH2,
+                    fbwm_B1 = img[self.grad[:, -1] == 1, i],
+                    fbwm_B2 = img[self.grad[:, -1] == 2, i],
+                    fbwm_dt = dt[:, i],
+                    fbwm_degs=degs
+                ) for i in inputs))
+        else:
+            zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
+                                    prefer='processes') \
+                (delayed(fbi_helper)(
+                    dwi=img[self.idxfbi(), i],
+                    b0 = b0[i],
+                    B = B,
+                    H = H,
+                    Pl0=Pl0,
+                    gl = gl,
+                    rectify=rectify,
+                ) for i in inputs))
         zeta = vectorize(np.array(zeta), self.mask)
         faa = vectorize(np.array(faa), self.mask)
         min_awf = vectorize(np.array(min_awf), self.mask)
@@ -1341,8 +1436,9 @@ class DWI(object):
         De_ax = vectorize(np.array(De_ax), self.mask)
         De_rad = vectorize(np.array(De_rad), self.mask)
         De_fa = vectorize(np.array(De_fa), self.mask)
+        min_cost = vectorize(np.array(min_cost), self.mask)
         min_cost_fn = vectorize(np.array(min_cost_fn).T, self.mask)
-        return zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost_fn
+        return zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
 
     def extractWMTI(self):
         """
@@ -2280,7 +2376,7 @@ class DWI(object):
             dt[4, :] =  self.dt[2, :]       # D4
             dt[5, :] =  self.dt[4, :]       # D5
             DT = vectorize(dt[0:6, :], self.mask)
-            return DT
+            KT = None
         if dwiType == 'dki':
             dt = np.zeros(self.dt.shape)
             dt[0, :] =  self.dt[0, :]       # D0
@@ -2306,7 +2402,7 @@ class DWI(object):
             dt[20, :] = self.dt[14, :]      # K14
             DT = vectorize(dt[0:6, :], self.mask)
             KT = vectorize(dt[6:21, :], self.mask)
-            return (DT, KT)
+            return DT, KT
 
     def irllsviolmask(self, reject):
         """
