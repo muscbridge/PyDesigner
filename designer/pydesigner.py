@@ -820,7 +820,7 @@ def main():
         fn_fbi_faa = 'fbi_faa'
         fn_fbi_awf = 'fbi_awf'
         fn_fbi_Da = 'fbi_Da'
-        fn_fbi_De_mean = 'fbi_Da_mean'
+        fn_fbi_De_mean = 'fbi_De_mean'
         fn_fbi_De_ax = 'fbi_De_ax'
         fn_fbi_De_rad = 'fbi_De_rad'
         fn_fbi_fae = 'fbi_fae'
@@ -950,8 +950,8 @@ def main():
                                 output=op.join(metricpath, x + fn_ext),
                                 mask=filetable['mask'].getFull())
         if img.isfbi():
-            if img.isdki():
-                zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi()
+            if img.isfbwm():
+                zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi(fbwm=True)
                 dp.writeNii(zeta, img.hdr,
                         op.join(metricpath, fn_fbi_zeta))
                 dp.writeNii(faa, img.hdr,
@@ -978,7 +978,6 @@ def main():
                         fn_fbi_faa,
                         fn_fbi_awf,
                         fn_fbi_Da,
-                        fn_fbi_De_mean,
                         fn_fbi_De_mean,
                         fn_fbi_De_ax,
                         fn_fbi_De_rad,
