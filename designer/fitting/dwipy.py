@@ -773,8 +773,8 @@ class DWI(object):
             x = cvx.Variable(n)
             if warmup is not None:
                 x.value = warmup
-            objective = cvx.Minimize(0.5 * cvx.sum_squares(C * x - d))
-            constraints = [cons * x >= np.zeros((len(cons)))]
+            objective = cvx.Minimize(0.5 * cvx.sum_squares(C @ x - d))
+            constraints = [cons @ x >= np.zeros((len(cons)))]
             prob = cvx.Problem(objective, constraints)
             try:
                 prob.solve(solver=cvx.OSQP,
