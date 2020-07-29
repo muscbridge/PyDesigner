@@ -304,6 +304,8 @@ class DWI(object):
             type.append('dki')
         if self.maxBval() >= th.__maxdkibval__:
             type.append('fbi')
+        if 'fbi' in type and 'dki' in type:
+            type.append('fbwm')
         if not type:
             raise ValueError('tensortype: Error in determining maximum '
                              'BVAL')
@@ -363,6 +365,25 @@ class DWI(object):
         ans = dwi.isfbi(), where dwi is the DWI class object
         """
         if 'fbi' in self.tensorType():
+            ans = True
+        else:
+            ans = False
+        return ans
+    
+    def isfbwm(self):
+        """
+        Returns bool value to specify whether image input image is FBWM
+
+        Returns
+        -------
+        and : bool
+            True if FBWM; false otherwise
+        
+        Examples
+        --------
+        ans = dwi.isfbi(), where dwi is the DWI class object
+        """
+        if 'fbwm' in self.tensorType():
             ans = True
         else:
             ans = False

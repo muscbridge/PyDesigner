@@ -791,8 +791,6 @@ def main():
         else:
             img = dp.DWI(filetable['HEAD'].getFull(), args.nthreads)
         protocols = img.tensorType()
-        if ('dki' in protocols) and ('fbi' in protocols):
-            protocols.append('fbwm')
         print('Protocol(s) detected: {}' .format([x.upper() for x in protocols]))
         # Define filenames
         fn_dti_md = 'dti_md'
