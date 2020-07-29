@@ -42,15 +42,15 @@ __execdir__ = os.path.basename(
 
 # PyPi package requirements
 REQUIRES = [
-    'numpy',
-    'scipy',
-    'matplotlib',
-    'py-cpuinfo',
-    'joblib',
-    'tqdm',
-    'multiprocess',
-    'nibabel',
-    'cvxpy'
+    'numpy >= 1.19',
+    'scipy >= 1.5',
+    'matplotlib >= 3.3',
+    'py-cpuinfo >= 7.0',
+    'joblib >= 0.16',
+    'tqdm >= 4.40',
+    'multiprocess >= 0.70',
+    'nibabel >= 3.1',
+    'cvxpy >= 1.1'
 ]
 
 # Python version requirements
