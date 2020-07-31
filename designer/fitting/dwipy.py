@@ -14,7 +14,6 @@ from scipy.special import sph_harm, gamma, hyp1f1, factorial
 from tqdm import tqdm
 from . import dwidirs
 from . import thresholds as th
-import time
 
 # Define the lowest number possible before it is considered a zero
 minZero = th.__minZero__
@@ -1099,10 +1098,68 @@ class DWI(object):
                     if (n % 2) == 0:
                         SH.append(sph_harm(m, n, phi, theta))
             return np.array(SH, dtype=np.complex, order='F').T
-        
+
+        def fbi_rectify(fodf, sh_area, iter=1000):
+            """
+            Rectifies fODF values to eliminate all negative values while
+            reducing the mean square error
+
+            Parameters
+            ----------
+            fodf : array_like(dtype=float)
+                Real portion of fODF
+            iter : int
+                Number of iterations to perform
+                (Default: 1000)
+            sh_area: array_like(dtype=float)
+                Area of spherical sampling
+
+            Returns
+            -------
+            float
+                Rectified fODF
+            """
+            # fODF rectification
+            ODF = fodf
+            fODF = fodf.real # grab real part of the fODF
+            fODF[np.isnan(fODF)] = 0
+            Fmax = np.max(fODF) # get the max peak value of the ODF
+            lB = 0 # initial lower bound
+            uB = Fmax # initial upper bound
+            M = 1 # initialze iteration counter
+            Mmax = iter # max iterations (could probably be 100 too)
+            if Fmax > 0:
+                while M <= Mmax:
+                    # BEGIN: bi-section algorithm
+                    midpt = (lB + uB)/2
+                    fODF_lB = np.sum((np.abs(fODF - lB) - fODF - lB)*sh_area,0)
+                    fODF_midpt = np.sum((np.abs(fODF - midpt) - fODF - midpt)*sh_area, axis=0)
+                    if fODF_midpt == 0 or (uB - lB)/2 < minZero:
+                        EPS = midpt
+                        break
+                    else:
+                        M = M + 1
+                        if np.sign(fODF_midpt) == np.sign(fODF_lB):
+                            lB = midpt
+                        else:
+                            uB = midpt
+                    # END: bi-section algorithm
+                # Subract solution from each ODF point
+                ODF = (1/2)*(np.abs(ODF - EPS) + ODF - EPS)
+                ODF = ODF.real
+                odf_pts = np.arange(ODF.size)
+                # due to numerical error, we manually set
+                # very very very tiny peaks to zero after the fact...
+                for p in odf_pts:
+                    if ODF[p] > -minZero and ODF[p] < 0:
+                        ODF[p] = 0
+                    elif ODF[p] < minZero and ODF[p] > 0:
+                        ODF[p] = 0
+            return ODF
+
         def fbi_helper(dwi, b0, B, H, Pl0, gl, rectify=True,
             fbwm_SH1=None, fbwm_SH2=None, fbwm_B1=None, fbwm_B2=None,
-            fbwm_dt=None, fbwm_degs=None):
+            fbwm_dt=None, fbwm_degs=None, sh_area=None):
             """
             Computes FBI calculations for a given voxel. This function
             will perform FBWM only if all optional FBWM parameters are
@@ -1140,6 +1197,8 @@ class DWI(object):
             fbwm_degs : array_like(dtype=int)
                 Harmonics used in expansion of FBWM shperical
                 harmonics
+            sh_area : array_list(dtype=float)
+                Area of spherical sampling
 
             Returns
             -------
@@ -1170,6 +1229,8 @@ class DWI(object):
                     (fbwm_B1 is None) or (fbwm_B2 is None) or 
                     (fbwm_dt is None)):
                 fbwm = True
+            if sh_area is None:
+                rectify = False
             # For references to alm and clm see FBI papers, they (alm
             # and clm) are defined in all of them
             alm = np.dot(np.linalg.pinv(B),(dwi/b0)) # DWI signal SH coefficients (these are complex)
@@ -1182,45 +1243,10 @@ class DWI(object):
             # need to figure out how to do peak detection (on this variable and then read out odf structures like in MATLAB code)
             # only the real part would be read out but that would need to be done later on after the rectification process below
             ODF = np.matmul(H,clm)
-            AREA = dwidirs.sh_grid[:, 2]
             if rectify:
-                # fODF rectification
-                fODF = ODF.real # grab real part of the fODF
-                fODF[np.isnan(fODF)] = 0
-                Fmax = np.max(fODF) # get the max peak value of the ODF
-                lB = 0 # initial lower bound
-                uB = Fmax # initial upper bound
-                M = 1 # initialze iteration counter
-                Mmax = 1000 # max iterations (could probably be 100 too)
-                if Fmax > 0:
-                    while M <= Mmax:
-                        # BEGIN: bi-section algorithm
-                        midpt = (lB + uB)/2
-                        fODF_lB = np.sum((np.abs(fODF - lB) - fODF - lB)*AREA,0)
-                        fODF_midpt = np.sum((np.abs(fODF - midpt) - fODF - midpt)*AREA,0)
-                        if fODF_midpt == 0 or (uB - lB)/2 < 10**-8:
-                            EPS = midpt
-                            break
-                        else:
-                            M = M + 1
-                            if np.sign(fODF_midpt) == np.sign(fODF_lB):
-                                lB = midpt
-                            else:
-                                uB = midpt
-                        # END: bi-section algorithm
-                    # Subract solution from each ODF point
-                    ODF = (1/2)*(np.abs(ODF - EPS) + ODF - EPS)
-                    ODF = ODF.real
-                    odf_pts = np.arange(ODF.size)
-                    # due to numerical error, we manually set
-                    # very very very tiny peaks to zero afte the fact...
-                    for p in odf_pts:
-                        if ODF[p] > -10**-8 and ODF[p] < 0:
-                            ODF[p] = 0
-                        elif ODF[p] < 10**-8 and ODF[p] > 0:
-                            ODF[p] = 0
+                ODF = fbi_rectify(ODF.real, sh_area, iter=1000)
                 # Re-expand the rectified fODF into SH's
-                clm = np.matmul(AREA*ODF,np.conj(H))
+                clm = np.matmul(sh_area*ODF,np.conj(H))
                 c00 = clm[0]
                 clm = clm/c00
                 clm = clm*(1/np.sqrt(4*np.pi))
@@ -1349,7 +1375,6 @@ class DWI(object):
                 min_cost_fn = None
 
             return zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
-        
         #--------------------FUNCTION SEPARATOR-----------------------
         img = self.img
         bt_unique = np.unique(self.grad[:, -1])
@@ -1435,7 +1460,8 @@ class DWI(object):
                     fbwm_B1 = img[self.grad[:, -1] == 1, i],
                     fbwm_B2 = img[self.grad[:, -1] == 2, i],
                     fbwm_dt = dt[:, i],
-                    fbwm_degs=degs
+                    fbwm_degs=degs,
+                    sh_area=AREA
                 ) for i in inputs))
         else:
             zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
@@ -1448,6 +1474,7 @@ class DWI(object):
                     Pl0=Pl0,
                     gl = gl,
                     rectify=rectify,
+                    sh_area=AREA
                 ) for i in inputs))
         zeta = vectorize(np.array(zeta), self.mask)
         faa = vectorize(np.array(faa), self.mask)
