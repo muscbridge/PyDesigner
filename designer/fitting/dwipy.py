@@ -1116,11 +1116,11 @@ class DWI(object):
 
             Returns
             -------
-            float
+            odf : float
                 Rectified fODF
             """
             # fODF rectification
-            ODF = fodf
+            odf = fodf
             fODF = fodf.real # grab real part of the fODF
             fODF[np.isnan(fODF)] = 0
             Fmax = np.max(fODF) # get the max peak value of the ODF
@@ -1132,7 +1132,7 @@ class DWI(object):
                 while M <= Mmax:
                     # BEGIN: bi-section algorithm
                     midpt = (lB + uB)/2
-                    fODF_lB = np.sum((np.abs(fODF - lB) - fODF - lB)*sh_area,0)
+                    fODF_lB = np.sum((np.abs(fODF - lB) - fODF - lB)*sh_area, axis=0)
                     fODF_midpt = np.sum((np.abs(fODF - midpt) - fODF - midpt)*sh_area, axis=0)
                     if fODF_midpt == 0 or (uB - lB)/2 < minZero:
                         EPS = midpt
@@ -1145,17 +1145,12 @@ class DWI(object):
                             uB = midpt
                     # END: bi-section algorithm
                 # Subract solution from each ODF point
-                ODF = (1/2)*(np.abs(ODF - EPS) + ODF - EPS)
-                ODF = ODF.real
-                odf_pts = np.arange(ODF.size)
+                odf = (1/2)*(np.abs(odf - EPS) + odf - EPS)
+                odf = odf.real
                 # due to numerical error, we manually set
                 # very very very tiny peaks to zero after the fact...
-                for p in odf_pts:
-                    if ODF[p] > -minZero and ODF[p] < 0:
-                        ODF[p] = 0
-                    elif ODF[p] < minZero and ODF[p] > 0:
-                        ODF[p] = 0
-            return ODF
+                odf[np.logical_and(odf > -minZero, odf < minZero)] = 0
+            return odf
 
         def fbi_helper(dwi, b0, B, H, Pl0, gl, rectify=True,
             fbwm_SH1=None, fbwm_SH2=None, fbwm_B1=None, fbwm_B2=None,
@@ -1237,9 +1232,6 @@ class DWI(object):
             alm[np.isnan(alm)] = 0
             a00 = alm[0].real # the imaginary part is on the order of 10^-18 (this is for zeta)
             clm = alm*gl[0]*np.power(np.sqrt(4*np.pi)*alm[0]*Pl0*gl,-1) # fODF SH coefficients (these are complex)
-            c00 = clm[0]
-            clm = clm/c00
-            clm = clm*(1/np.sqrt(4*np.pi))
             # need to figure out how to do peak detection (on this variable and then read out odf structures like in MATLAB code)
             # only the real part would be read out but that would need to be done later on after the rectification process below
             ODF = np.matmul(H,clm)
@@ -1247,9 +1239,9 @@ class DWI(object):
                 ODF = fbi_rectify(ODF.real, sh_area, iter=1000)
                 # Re-expand the rectified fODF into SH's
                 clm = np.matmul(sh_area*ODF,np.conj(H))
-                c00 = clm[0]
-                clm = clm/c00
-                clm = clm*(1/np.sqrt(4*np.pi))
+            c00 = clm[0]
+            clm = clm/c00
+            clm = clm*(1/np.sqrt(4*np.pi))
             # zeta and FAA calculations
             # NOTE: zeta is not affected by the rectification, only FAA
             zeta = a00*np.sqrt(self.maxBval())/np.pi
@@ -1376,6 +1368,10 @@ class DWI(object):
 
             return zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
         #--------------------FUNCTION SEPARATOR-----------------------
+        if fbwm and not hasattr(self, 'dt'):
+            raise Exception('Cannot compute FBWM parameters '
+        'without running diffusion tensor fitting first. '
+        'Please run DWI.fit(constraints) before running DWI.fbi().')
         img = self.img
         bt_unique = np.unique(self.grad[:, -1])
         b0 = np.mean(img[:, :, :, self.idxb0()], axis=3)
@@ -1397,12 +1393,13 @@ class DWI(object):
         # gradients from the scanner
         theta = np.arccos(self.grad[self.idxfbi(), 2])
         phi = np.arctan2(self.grad[self.idxfbi() ,1], self.grad[self.idxfbi() ,0])
+        # gradients for resampling from distribution
         spherical_grid = dwidirs.sh_grid # this is only HALF-SPHERE
         S1 = spherical_grid[:,0] # theta, i think
         S2 = spherical_grid[:,1] # phi, i think
         AREA = spherical_grid[:,2] # need the area since it is impossible to get exact isotropic (uniform) sampling
         B = shbasis(degs, theta, phi)
-        H = shbasis(degs, S2, S1)
+        H = shbasis(degs, S1, S2)
         idx_Y = 0
         Pl0 = np.zeros((len(harmonics), 1), order ='F') # need Legendre polynomial Pl0
         gl = np.zeros((len(harmonics), 1), order ='F') # calculate correction factor (see original FBI paper, Jensen 2016)
@@ -1417,23 +1414,6 @@ class DWI(object):
                         bar_format='{desc}: [{percentage:0.0f}%]',
                         unit='vox',
                         ncols=tqdmWidth)
-        # for i in inputs:
-        #     zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost_fn = \
-        #         fbi_helper(
-        #             dwi=img[self.idxfbi(), i],
-        #             b0 = b0[i],
-        #             B = B,
-        #             H = H,
-        #             Pl0=Pl0,
-        #             gl = gl,
-        #             rectify=rectify,
-        #             fbwm_SH1 = fbwm_SH1,
-        #             fbwm_SH2 = fbwm_SH2,
-        #             fbwm_B1 = img[self.grad[:, -1] == 1, i],
-        #             fbwm_B2 = img[self.grad[:, -1] == 2, i],
-        #             fbwm_dt = self.dt[:, i],
-        #             fbwm_degs=degs
-        #             )
         if fbwm:
             theta1 = np.arccos(self.grad[self.grad[:, -1] == 1, 2])
             phi1 =  np.arctan2(self.grad[self.grad[:, -1] == 1,1],self.grad[self.grad[:, -1] == 1,0])
@@ -1445,6 +1425,24 @@ class DWI(object):
             fbwm_SH2 = shbasis(degs,phi2,theta2)
             dt, kt = self.tensorReorder('dki')
             dt = vectorize(dt, self.mask)
+            # for i in inputs:
+            #     zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
+            #         fbi_helper(
+            #             dwi=img[self.idxfbi(), i],
+            #             b0 = b0[i],
+            #             B = B,
+            #             H = H,
+            #             Pl0=Pl0,
+            #             gl = gl,
+            #             rectify=rectify,
+            #             fbwm_SH1 = fbwm_SH1,
+            #             fbwm_SH2 = fbwm_SH2,
+            #             fbwm_B1 = img[self.grad[:, -1] == 1, i],
+            #             fbwm_B2 = img[self.grad[:, -1] == 2, i],
+            #             fbwm_dt = dt[:, i],
+            #             fbwm_degs=degs,
+            #             sh_area=AREA
+            #             )
             zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
                                     prefer='processes') \
                 (delayed(fbi_helper)(
@@ -1464,6 +1462,18 @@ class DWI(object):
                     sh_area=AREA
                 ) for i in inputs))
         else:
+            # for i in inputs:
+            #     zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
+            #         fbi_helper(
+            #             dwi=img[self.idxfbi(), i],
+            #             b0 = b0[i],
+            #             B = B,
+            #             H = H,
+            #             Pl0=Pl0,
+            #             gl = gl,
+            #             rectify=rectify,
+            #             sh_area=AREA
+            #             )
             zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
                                     prefer='processes') \
                 (delayed(fbi_helper)(
