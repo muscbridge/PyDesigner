@@ -228,7 +228,6 @@ class DWI(object):
             idx = self.grad[:, 3] <= self.maxDTIBval()
         return idx
     
-    
     def idxdki(self):
         """
         Returns the index of all DTI/DKI B-values according to bvals
@@ -368,7 +367,7 @@ class DWI(object):
         else:
             ans = False
         return ans
-    
+
     def isfbwm(self):
         """
         Returns bool value to specify whether image input image is FBWM
@@ -441,13 +440,8 @@ class DWI(object):
             14 |   W2333
             15 |   W3333
         """
-        imType = self.tensorType()
         if order is None:
-            if imType == 'dti':
-                cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
-                ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3],
-                                [3, 3])) - 1
-            elif imType == 'dki':
+            if self.isdki():
                 cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6,
                                 4, 1],
                                dtype=int)
@@ -457,6 +451,10 @@ class DWI(object):
                                 [1, 3, 3, 3], [2, 2, 2, 2], [2, 2, 2, 3],
                                 [2, 2, 3, 3], [2, 3, 3, 3], [3, 3, 3, 3]))\
                       - 1
+            else:
+                cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
+                ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3],
+                                [3, 3])) - 1
         elif order == 2:
             cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
             ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3],
@@ -513,6 +511,7 @@ class DWI(object):
             points.append([x,y,z])
         return np.array(points)
 
+    @jit(nopython=True)
     def radialSampling(self, dir, n):
         """
         Get the radial component of a metric from a set of directions
@@ -653,13 +652,12 @@ class DWI(object):
 
         Examples
         --------
-        (rk, ak) = dwi.dkiTensorParams(v1, dt)
+        (rk, ak, kfa, mkt) = dwi.dkiTensorParams(v1, dt)
         """
         dirs = np.vstack((v1, -v1))
         akc = self.kurtosisCoeff(dt, dirs)
         ak = np.mean(akc)
         dirs = self.radialSampling(v1, dirSample)
-        akc = self.kurtosisCoeff(dt, dirs)
         rk = np.mean(akc)
         W_F = np.sqrt(dt[6]**2 + \
                       dt[16]**2 + \
@@ -700,7 +698,7 @@ class DWI(object):
             kfa = W_diff / W_F
         mkt = Wbar
         return ak, rk, kfa, mkt
-
+    
     def wlls(self, shat, dwi, b, cons=None, warmup=None):
         """
         Estimates diffusion and kurtosis tenor at voxel with
