@@ -7,20 +7,25 @@ page
 `v1.0_RC1`_
 -----------
 
-July, 2020
+Aug 19, 2020
 
 **Added**:
+
 * Methods to perform tensor only with compatible B-values. PyDesigner
   previously use all B-values in a DWI to do so. This behavior has
-  been updated to use only B-values less than 2500.
+  been updated to use only B-values less than 2500
+* FBI and FBWM calculations
+* Brief documentation on how to run PyDesigner
 
 **Changed**:
+
 * Automatically issues ``dwipreproc`` or ``dwifslpreproc`` for
   compatibility with MRtrix3 >= 3.0.1
+* Updated minimum version for required Python modules
 
 **Removed**:
 
-
+* None
 
 `v0.32`_
 --------
