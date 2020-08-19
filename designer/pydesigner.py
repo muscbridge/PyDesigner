@@ -19,7 +19,6 @@ from designer.info import __version__
 from designer.preprocessing import util, preparation, mrinfoutil, mrpreproc
 from designer.plotting import snrplot, outlierplot, motionplot
 from designer.fitting import dwipy as dp
-from designer.system import systemtools as systools
 from designer.postprocessing import filters
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
@@ -43,10 +42,6 @@ if fsl_location == None:
 
 # Extract FSL path from fsl_location
 fslpath = op.dirname(fsl_location)
-
-# Configure system for Intel MKL
-if systools.isAMD():
-    systools.setenv([('MKL_DEBUG_CPU_TYPE','5')])
 
 def main():
     #-----------------------------------------------------------------
