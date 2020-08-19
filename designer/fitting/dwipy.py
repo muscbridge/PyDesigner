@@ -1148,7 +1148,7 @@ class DWI(object):
                 # very very very tiny peaks to zero after the fact...
                 odf[np.logical_and(odf > -minZero, odf < minZero)] = 0
             return odf
-        
+
         def costCalculator(grid, BT, GT, b0, IMG, iDT, iaDT, zeta, shB, Pl0, g2l_fa_R_b, clm):
             """
             Computes the cost function at voxel for FBWM calculations.
@@ -1193,8 +1193,8 @@ class DWI(object):
             for idx, awf in np.ndenumerate(grid):
                 for b in range(0, len(BT)):
                     Se = (b0 * np.exp((-BT[b] * (1-awf)**-1) * np.diag((GT[b].dot((iDT - (awf**3 * zeta**-2) * iaDT).dot(GT[b].T)))))) * (1 - awf) # Eq. 3 FBWM paper
-                    Sa = (2*np.pi*b0*zeta*np.sqrt(np.pi/BT[b])) * (shB[b].dot((Pl0 * np.squeeze(g2l_fa_R_b[b,idx,:])*clm))) # Eq. 4 FBM paper
-                    cost_fn[idx] = cost_fn[idx] + ndir[b]**-1 * np.sum((IMG[b] - Se - Sa)**2)
+                    Sa = (2*np.pi*b0*zeta*np.sqrt(np.pi/BT[b])) * (shB[b].dot((Pl0 * g2l_fa_R_b[b,idx,:][0]*clm))) # Eq. 4 FBM paper
+                    cost_fn[idx] = cost_fn[idx] + ndir[b]**-1 * np.sum((IMG[b] - Se.real - Sa.real)**2)
                 cost_fn[idx] = b0**-1 * np.sqrt(len(BT)**-1 * cost_fn[idx]) # Eq. 21 FBWM paper
             return cost_fn
 
@@ -1469,42 +1469,42 @@ class DWI(object):
             fbwm_SH2 = shbasis(degs,theta2,phi2)
             dt, kt = self.tensorReorder('dki')
             dt = vectorize(dt, self.mask)
-            for i in inputs:
-                zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
-                    fbi_helper(
-                        dwi=img[self.idxfbi(), i],
-                        b0 = b0[i],
-                        B = B,
-                        H = H,
-                        Pl0=Pl0,
-                        gl = gl,
-                        rectify=rectify,
-                        fbwm_SH1 = fbwm_SH1,
-                        fbwm_SH2 = fbwm_SH2,
-                        fbwm_B1 = img[self.grad[:, -1] == 1, i],
-                        fbwm_B2 = img[self.grad[:, -1] == 2, i],
-                        fbwm_dt = dt[:, i],
-                        fbwm_degs=degs,
-                        sh_area=AREA
-                        )
-            # zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
-            #                         prefer='processes') \
-            #     (delayed(fbi_helper)(
-            #         dwi=img[self.idxfbi(), i],
-            #         b0 = b0[i],
-            #         B = B,
-            #         H = H,
-            #         Pl0=Pl0,
-            #         gl = gl,
-            #         rectify=rectify,
-            #         fbwm_SH1 = fbwm_SH1,
-            #         fbwm_SH2 = fbwm_SH2,
-            #         fbwm_B1 = img[self.grad[:, -1] == 1, i],
-            #         fbwm_B2 = img[self.grad[:, -1] == 2, i],
-            #         fbwm_dt = dt[:, i],
-            #         fbwm_degs=degs,
-            #         sh_area=AREA
-            #     ) for i in inputs))
+            # for i in inputs:
+            #     zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
+            #         fbi_helper(
+            #             dwi=img[self.idxfbi(), i],
+            #             b0 = b0[i],
+            #             B = B,
+            #             H = H,
+            #             Pl0=Pl0,
+            #             gl = gl,
+            #             rectify=rectify,
+            #             fbwm_SH1 = fbwm_SH1,
+            #             fbwm_SH2 = fbwm_SH2,
+            #             fbwm_B1 = img[self.grad[:, -1] == 1, i],
+            #             fbwm_B2 = img[self.grad[:, -1] == 2, i],
+            #             fbwm_dt = dt[:, i],
+            #             fbwm_degs=degs,
+            #             sh_area=AREA
+            #             )
+            zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
+                                    prefer='processes') \
+                (delayed(fbi_helper)(
+                    dwi=img[self.idxfbi(), i],
+                    b0 = b0[i],
+                    B = B,
+                    H = H,
+                    Pl0=Pl0,
+                    gl = gl,
+                    rectify=rectify,
+                    fbwm_SH1 = fbwm_SH1,
+                    fbwm_SH2 = fbwm_SH2,
+                    fbwm_B1 = img[self.grad[:, -1] == 1, i],
+                    fbwm_B2 = img[self.grad[:, -1] == 2, i],
+                    fbwm_dt = dt[:, i],
+                    fbwm_degs=degs,
+                    sh_area=AREA
+                ) for i in inputs))
         else:
             # for i in inputs:
             #     zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
