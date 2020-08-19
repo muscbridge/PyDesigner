@@ -835,20 +835,27 @@ def main():
                 # write outliers to qc folder
                 if not args.noqc:
                     outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
-                    # outlier_plot_full = op.join(qcpath,
-                    #                     'outliers.png')
-                    # dp.writeNii(outliers, img.hdr, outlier_full)
-                    # if 'mask' in filetable:
-                    #     outlierplot.plot(input=outlier_full,
-                    #                     output=outlier_plot_full,
-                    #                     bval=filetable['HEAD'].getBVAL(),
-                    #                     mask=filetable['mask'].getFull())
-                    # else:
-                    #     outlierplot.plot(input=outlier_full,
-                    #                     output=outlier_plot_full,
-                    #                     bval=filetable['HEAD'].getBVAL(),
-                    #                     mask=None)
-
+                    outlier_plot_full = op.join(qcpath,
+                                        'outliers.png')
+                    bvals_outlier_full = op.join(fitqcpath, 'outliers.bval')
+                    if img.isdki():
+                        bvals_outlier = img.getBvals()[img.idxdki()].astype(int)
+                    else:
+                        bvals_outlier = img.getBvals()[img.idxdti()].astype(int)
+                    bvals_outlier = bvals_outlier * 1000
+                    dp.writeNii(outliers, img.hdr, outlier_full)
+                    np.savetxt(bvals_outlier_full, bvals_outlier, newline=' ', fmt="%d")
+                    if 'mask' in filetable:
+                        outlierplot.plot(input=outlier_full,
+                                        output=outlier_plot_full,
+                                        bval=bvals_outlier_full,
+                                        mask=filetable['mask'].getFull())
+                    else:
+                        outlierplot.plot(input=outlier_full,
+                                        output=outlier_plot_full,
+                                        bval=bvals_outlier_full,
+                                        mask=None)
+                    os.remove(bvals_outlier_full)
                 # fit while rejecting outliers
                 img.fit(fit_constraints, reject=outliers)
             else:
