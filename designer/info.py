@@ -10,7 +10,7 @@ __execdir__ = os.path.basename(
     )
 )
 __packagename__ = 'PyDesigner'
-__version__='v0.32'
+__version__='v1.0-RC1'
 __author__ = 'PyDesigner developers'
 __copyright__ = 'Copyright 2020, PyDesigner developers, MUSC Advanced Image Analysis (MAMA)'
 __credits__ = [
@@ -27,7 +27,7 @@ __maintainer__ = 'Siddhartha Dhiman'
 __email__ = 'mama@musc.edu'
 __url__ = 'https://github.com/m-ama/PyDesigner'
 __license__='MPL 2.0'
-__description__ = ('Python Port of NYU\'s Designer pipeline for DMRI '
+__description__ = ('Python Port of NYU\'s Designer pipeline for dMRI '
                 'processing')
 # Gets folder name where this file resides
 __execdir__ = os.path.basename(
@@ -45,7 +45,6 @@ REQUIRES = [
     'numpy >= 1.19',
     'scipy >= 1.5',
     'matplotlib >= 3.3',
-    'py-cpuinfo >= 7.0',
     'joblib >= 0.16',
     'tqdm >= 4.40',
     'multiprocess >= 0.70',
