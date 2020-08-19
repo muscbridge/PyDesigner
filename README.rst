@@ -50,8 +50,9 @@ Notable Features
 - Highly flexible and **easy to use**
 - **Easy install** with `pip`
 - Input **file-format agnostic** – works with .nii, .nii.gz, .mif and dicoms
-- **Quality control metrics** to evaluate data integrity – SNR graphs and outlier voxels
-- Uses the **latest techniques** from DTI/DKI literature
+- **Quality control metrics** to evaluate data integrity – SNR graphs, outlier voxels, and head motion
+- Uses the **latest techniques** from DTI/DKI/FBI literature
+- Works with **DTI**, **DKI**, **WMTI**, **FBI**, or **FBWM** datasets
 
 We welcome all DTI/DKI researchers to evaluate this software and pass
 on their feedback or issues through the `Issues`_ page of this

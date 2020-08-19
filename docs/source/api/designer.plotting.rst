@@ -10,6 +10,7 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    designer.plotting.motionplot
    designer.plotting.outlierplot

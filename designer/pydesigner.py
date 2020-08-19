@@ -19,7 +19,6 @@ from designer.info import __version__
 from designer.preprocessing import util, preparation, mrinfoutil, mrpreproc
 from designer.plotting import snrplot, outlierplot, motionplot
 from designer.fitting import dwipy as dp
-from designer.system import systemtools as systools
 from designer.postprocessing import filters
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
@@ -43,10 +42,6 @@ if fsl_location == None:
 
 # Extract FSL path from fsl_location
 fslpath = op.dirname(fsl_location)
-
-# Configure system for Intel MKL
-if systools.isAMD():
-    systools.setenv([('MKL_DEBUG_CPU_TYPE','5')])
 
 def main():
     #-----------------------------------------------------------------
@@ -191,6 +186,9 @@ def main():
     parser.add_argument('--fit_constraints', default='0,1,0',
                         help='Constrain the WLLS fit. '
                         'Default: 0,1,0.')
+    parser.add_argument('--fbwm', default=True,
+                        help='Perform Fiber Ball White Matter '
+                        'Modeling')
     parser.add_argument('--noqc', action='store_true', default=False,
                         help='Disable QC saving of QC metrics')
     parser.add_argument('--median', action='store_true', default=False,
@@ -781,173 +779,228 @@ def main():
     #-----------------------------------------------------------------
     # Tensor Fitting
     #-----------------------------------------------------------------
-    # Define some paths
     if not args.nofit:
         # create dwi fitting object
         if not args.nthreads:
             img = dp.DWI(filetable['HEAD'].getFull())
         else:
             img = dp.DWI(filetable['HEAD'].getFull(), args.nthreads)
-        # detect outliers
-        if not args.nooutliers:
-            if not img.isdki():
-                outliers, dt_est = img.irlls(mode='DTI')
-            else:
-                outliers, dt_est = img.irlls(mode='DKI')
-            # write outliers to qc folder
-            if not args.noqc:
-                outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
-                outlier_plot_full = op.join(qcpath,
-                                    'outliers.png')
-                dp.writeNii(outliers, img.hdr, outlier_full)
-                if 'mask' in filetable:
-                    outlierplot.plot(input=outlier_full,
-                                    output=outlier_plot_full,
-                                    bval=filetable['HEAD'].getBVAL(),
-                                    mask=filetable['mask'].getFull())
+        protocols = img.tensorType()
+        print('Protocol(s) detected: {}' .format([x.upper() for x in protocols]))
+        # Define filenames
+        fn_dti_md = 'dti_md'
+        fn_dti_rd = 'dti_rd'
+        fn_dti_ad = 'dti_ad'
+        fn_dti_fa = 'dti_fa'
+        fn_dti_fe = 'dti_fe'
+        fn_dki_mk = 'dki_mk'
+        fn_dki_rk = 'dki_rk'
+        fn_dki_ak = 'dki_rk'
+        fn_dki_kfa = 'dki_kfa'
+        fn_dki_mkt = 'dki_mkt'
+        if img.isdki():
+            fn_trace = 'dki_trace'
+        else:
+            fn_trace = 'dti_trace'
+        fn_wmti_awf = 'wmti_awf'
+        fn_wmti_eas_ad = 'wmti_eas_ad'
+        fn_wmti_eas_rd = 'wmti_eas_rd'
+        fn_wmti_eas_md = 'wmti_eas_md'
+        fn_wmti_eas_tort = 'wmti_eas_tort'
+        fn_wmti_ias_ad = 'wmti_ias_ad'
+        fn_wmti_ias_rd = 'wmti_ias_rd'
+        fn_wmti_ias_da = 'wmti_ias_da'
+        fn_wmti_ias_tort = 'wmti_ias_tort'
+        fn_fbi_zeta = 'fbi_zeta'
+        fn_fbi_faa = 'fbi_faa'
+        fn_fbi_awf = 'fbi_awf'
+        fn_fbi_Da = 'fbwm_da'
+        fn_fbi_De_mean = 'fbwm_de_mean'
+        fn_fbi_De_ax = 'fbwm_de_ax'
+        fn_fbi_De_rad = 'fbwm_de_rad'
+        fn_fbi_fae = 'fbwm_fae'
+        fn_fbi_min_cost = 'fbwm_minCost'
+        fn_fbi_min_cost_fn = 'fbwm_minCost_FN'
+        fn_DT = 'DT'
+        fn_KT = 'KT'
+        fn_ext = '.nii'
+
+        if img.isdki() or img.isdti():
+            # detect outliers
+            if not args.nooutliers:
+                if img.isdki():
+                    outliers, dt_est = img.irlls(mode='DKI')
                 else:
-                    outlierplot.plot(input=outlier_full,
-                                    output=outlier_plot_full,
-                                    bval=filetable['HEAD'].getBVAL(),
-                                    mask=None)
+                    outliers, dt_est = img.irlls(mode='DTI')
+                # write outliers to qc folder
+                if not args.noqc:
+                    outlier_full = op.join(fitqcpath, 'outliers_irlls.nii')
+                    outlier_plot_full = op.join(qcpath,
+                                        'outliers.png')
+                    bvals_outlier_full = op.join(fitqcpath, 'outliers.bval')
+                    if img.isdki():
+                        bvals_outlier = img.getBvals()[img.idxdki()].astype(int)
+                    else:
+                        bvals_outlier = img.getBvals()[img.idxdti()].astype(int)
+                    bvals_outlier = bvals_outlier * 1000
+                    dp.writeNii(outliers, img.hdr, outlier_full)
+                    np.savetxt(bvals_outlier_full, bvals_outlier, newline=' ', fmt="%d")
+                    if 'mask' in filetable:
+                        outlierplot.plot(input=outlier_full,
+                                        output=outlier_plot_full,
+                                        bval=bvals_outlier_full,
+                                        mask=filetable['mask'].getFull())
+                    else:
+                        outlierplot.plot(input=outlier_full,
+                                        output=outlier_plot_full,
+                                        bval=bvals_outlier_full,
+                                        mask=None)
+                    os.remove(bvals_outlier_full)
+                # fit while rejecting outliers
+                img.fit(fit_constraints, reject=outliers)
+            else:
+                # fit without rejecting outliers
+                img.fit(fit_constraints)
+            
+            if (img.isdti() or img.isdki()) and not args.noakc:
+                akc_out = img.akcoutliers()
+                img.akccorrect(akc_out)
+                dp.writeNii(akc_out,
+                            img.hdr,
+                            op.join(fitqcpath, 'outliers_akc'))
 
-            # fit while rejecting outliers
-            img.fit(fit_constraints, reject=outliers)
-        else:
-            # fit without rejecting outliers
-            img.fit(fit_constraints)
+             # reorder tensor for mrtrix3
+            if 'dki' in img.tensorType():
+                tensorType = 'dki'
+            else:
+                tensorType = 'dti'
+            DT, KT = img.tensorReorder(tensorType)
+            if tensorType == 'dki':
+                dp.writeNii(DT, img.hdr, op.join(metricpath, fn_DT))
+                dp.writeNii(KT, img.hdr, op.join(metricpath, fn_KT))
+            else:
+                dp.writeNii(DT, img.hdr, op.join(metricpath, fn_DT))
 
-        if img.isdki() and not args.noakc:
-            akc_out = img.akcoutliers()
-            img.akccorrect(akc_out)
-            dp.writeNii(akc_out,
-                        img.hdr,
-                        op.join(fitqcpath, 'outliers_akc'))
-        md, rd, ad, fa, fe, trace = img.extractDTI()
-        dp.writeNii(md, img.hdr, op.join(metricpath, 'md'))
-        dp.writeNii(rd, img.hdr, op.join(metricpath, 'rd'))
-        dp.writeNii(ad, img.hdr, op.join(metricpath, 'ad'))
-        dp.writeNii(fa, img.hdr, op.join(metricpath, 'fa'))
-        dp.writeNii(fe, img.hdr, op.join(metricpath, 'fe'))
-        if args.median:
-            filters.median(
-                input=op.join(metricpath, 'md.nii'),
-                output=op.join(metricpath, 'md.nii'),
-                mask=filetable['mask'].getFull())
-            filters.median(
-                input=op.join(metricpath, 'rd.nii'),
-                output=op.join(metricpath, 'rd.nii'),
-                mask=filetable['mask'].getFull())
-            filters.median(
-                input=op.join(metricpath, 'ad.nii'),
-                output=op.join(metricpath, 'ad.nii'),
-                mask=filetable['mask'].getFull())
-            filters.median(
-                input=op.join(metricpath, 'fa.nii'),
-                output=op.join(metricpath, 'fa.nii'),
-                mask=filetable['mask'].getFull())
-            filters.median(
-                input=op.join(metricpath, 'fe.nii'),
-                output=op.join(metricpath, 'fe.nii'),
-                mask=filetable['mask'].getFull())
-        if not img.isdki():
-            dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
-            filters.median(
-                input=op.join(metricpath, 'trace.nii'),
-                output=op.join(metricpath, 'trace.nii'),
-                mask=filetable['mask'].getFull())
-        else:
-            mk, rk, ak, kfa, mkt, trace = img.extractDKI()
-            # naive implementation of writing these variables
-            dp.writeNii(mk, img.hdr, op.join(metricpath, 'mk'))
-            dp.writeNii(rk, img.hdr, op.join(metricpath, 'rk'))
-            dp.writeNii(ak, img.hdr, op.join(metricpath, 'ak'))
-            dp.writeNii(kfa, img.hdr, op.join(metricpath, 'kfa'))
-            dp.writeNii(mkt, img.hdr, op.join(metricpath, 'mkt'))
-            dp.writeNii(trace, img.hdr, op.join(metricpath, 'trace'))
+            md, rd, ad, fa, fe, trace = img.extractDTI()
+            dp.writeNii(md, img.hdr, op.join(metricpath, fn_dti_md))
+            dp.writeNii(rd, img.hdr, op.join(metricpath, fn_dti_rd))
+            dp.writeNii(ad, img.hdr, op.join(metricpath, fn_dti_ad))
+            dp.writeNii(fa, img.hdr, op.join(metricpath, fn_dti_fa))
+            dp.writeNii(fe, img.hdr, op.join(metricpath, fn_dti_fe))
             if args.median:
+                for x in [fn_dti_md, fn_dti_rd, fn_dti_ad, fn_dti_fa, fn_dti_fe]:
+                    filters.median(
+                        input=op.join(metricpath, x + fn_ext),
+                        output=op.join(metricpath, x + fn_ext),
+                        mask=filetable['mask'].getFull())
+            if not img.isdki():
+                dp.writeNii(trace, img.hdr, op.join(metricpath, fn_trace))
                 filters.median(
-                    input=op.join(metricpath, 'mk.nii'),
-                    output=op.join(metricpath, 'mk.nii'),
+                    input=op.join(metricpath, fn_trace + fn_ext),
+                    output=op.join(metricpath, fn_trace + fn_ext),
                     mask=filetable['mask'].getFull())
-                filters.median(
-                    input=op.join(metricpath, 'rk.nii'),
-                    output=op.join(metricpath, 'rk.nii'),
-                    mask=filetable['mask'].getFull())
-                filters.median(
-                    input=op.join(metricpath, 'ak.nii'),
-                    output=op.join(metricpath, 'ak.nii'),
-                    mask=filetable['mask'].getFull())
-                filters.median(
-                    input=op.join(metricpath, 'kfa.nii'),
-                    output=op.join(metricpath, 'kfa.nii'),
-                    mask=filetable['mask'].getFull())
-                filters.median(
-                    input=op.join(metricpath, 'mkt.nii'),
-                    output=op.join(metricpath, 'mkt.nii'),
-                    mask=filetable['mask'].getFull())
-                filters.median(
-                    input=op.join(metricpath, 'trace.nii'),
-                    output=op.join(metricpath, 'trace.nii'),
-                    mask=filetable['mask'].getFull())
-            if args.wmti:
-                awf, eas_ad, eas_rd, eas_md, eas_tort, ias_ad, ias_rd, ias_da, ias_tort = \
-                    img.extractWMTI()
-                dp.writeNii(awf, img.hdr,
-                            op.join(metricpath, 'wmti_awf'))
-                dp.writeNii(eas_ad, img.hdr,
-                            op.join(metricpath, 'wmti_eas_ad'))
-                dp.writeNii(eas_rd, img.hdr,
-                            op.join(metricpath, 'wmti_eas_rd'))
-                dp.writeNii(eas_md, img.hdr,
-                            op.join(metricpath, 'wmti_eas_md'))
-                dp.writeNii(eas_tort, img.hdr,
-                            op.join(metricpath, 'wmti_eas_tort'))
-                dp.writeNii(ias_ad, img.hdr,
-                            op.join(metricpath, 'wmti_ias_ad'))
-                dp.writeNii(ias_rd, img.hdr,
-                            op.join(metricpath, 'wmti_ias_rd'))
-                dp.writeNii(ias_da, img.hdr,
-                            op.join(metricpath, 'wmti_ias_da'))
-                dp.writeNii(ias_tort, img.hdr,
-                            op.join(metricpath, 'wmti_ias_tort'))
+            else:
+                mk, rk, ak, kfa, mkt, trace = img.extractDKI()
+                # naive implementation of writing these variables
+                dp.writeNii(mk, img.hdr, op.join(metricpath, fn_dki_mk))
+                dp.writeNii(rk, img.hdr, op.join(metricpath, fn_dki_rk))
+                dp.writeNii(ak, img.hdr, op.join(metricpath, fn_dki_ak))
+                dp.writeNii(kfa, img.hdr, op.join(metricpath, fn_dki_kfa))
+                dp.writeNii(mkt, img.hdr, op.join(metricpath, fn_dki_mkt))
+                dp.writeNii(trace, img.hdr, op.join(metricpath, fn_trace))
                 if args.median:
-                    filters.median(
-                        input=op.join(metricpath, 'wmti_awf.nii'),
-                        output=op.join(metricpath, 'wmti_awf.nii'),
-                        mask=filetable['mask'].getFull())
-                    filters.median(
-                        input=op.join(metricpath, 'wmti_eas_ad.nii'),
-                        output=op.join(metricpath, 'wmti_eas_rd.nii'),
-                        mask=filetable['mask'].getFull())
-                    filters.median(
-                        input=op.join(metricpath, 'wmti_eas_da.nii'),
-                        output=op.join(metricpath, 'wmti_eas_da.nii'),
-                        mask=filetable['mask'].getFull())
-                    filters.median(
-                        input=op.join(metricpath, 'wmti_eas_tort.nii'),
-                        output=op.join(metricpath, 'wmti_eas_tort.nii'),
-                        mask=filetable['mask'].getFull())
-                    filters.median(
-                        input=op.join(metricpath, 'wmti_ias_ad.nii'),
-                        output=op.join(metricpath, 'wmti_ias_ad.nii'),
-                        mask=filetable['mask'].getFull())
-                    filters.median(
-                        input=op.join(metricpath, 'wmti_ias_rd.nii'),
-                        output=op.join(metricpath, 'wmti_ias_rd.nii'),
-                        mask=filetable['mask'].getFull())
-                    filters.median(
-                        input=op.join(metricpath, 'wmti_ias_da.nii'),
-                        output=op.join(metricpath, 'wmti_ias_da.nii'),
-                        mask=filetable['mask'].getFull())
-                    filters.median(
-                        input=op.join(metricpath, 'wmti_ias_tort.nii'),
-                        output=op.join(metricpath, 'wmti_ias_tort.nii'),
-                        mask=filetable['mask'].getFull())
-            # reorder tensor for mrtrix3
-            DT, KT = img.tensorReorder(img.tensorType())
-            dp.writeNii(DT, img.hdr, op.join(metricpath, 'DT'))
-            dp.writeNii(KT, img.hdr, op.join(metricpath, 'KT'))
+                    for x in [fn_dki_mk, fn_dki_rk, fn_dki_ak, fn_dki_kfa, fn_dki_mkt, fn_trace]:
+                        filters.median(
+                            input=op.join(metricpath, x + fn_ext),
+                            output=op.join(metricpath, x + fn_ext),
+                            mask=filetable['mask'].getFull())
+                if args.wmti:
+                    awf, eas_ad, eas_rd, eas_md, eas_tort, ias_ad, ias_rd, ias_da, ias_tort = \
+                        img.extractWMTI()
+                    dp.writeNii(awf, img.hdr,
+                                op.join(metricpath, fn_wmti_awf))
+                    dp.writeNii(eas_ad, img.hdr,
+                                op.join(metricpath, fn_wmti_eas_ad))
+                    dp.writeNii(eas_rd, img.hdr,
+                                op.join(metricpath, fn_wmti_eas_rd))
+                    dp.writeNii(eas_md, img.hdr,
+                                op.join(metricpath, fn_wmti_eas_md))
+                    dp.writeNii(eas_tort, img.hdr,
+                                op.join(metricpath, fn_wmti_eas_tort))
+                    dp.writeNii(ias_ad, img.hdr,
+                                op.join(metricpath, fn_wmti_ias_ad))
+                    dp.writeNii(ias_rd, img.hdr,
+                                op.join(metricpath, fn_wmti_ias_rd))
+                    dp.writeNii(ias_da, img.hdr,
+                                op.join(metricpath, fn_wmti_ias_da))
+                    dp.writeNii(ias_tort, img.hdr,
+                                op.join(metricpath, fn_wmti_ias_tort))
+                    if args.median:
+                        for x in [
+                            fn_wmti_awf,
+                            fn_wmti_eas_ad,
+                            fn_wmti_eas_rd,
+                            fn_wmti_eas_md,
+                            fn_wmti_eas_tort,
+                            fn_wmti_ias_ad,
+                            fn_wmti_ias_rd,
+                            fn_wmti_ias_da,
+                            fn_wmti_ias_tort
+                        ]:
+                            filters.median(
+                                input=op.join(metricpath, x + fn_ext),
+                                output=op.join(metricpath, x + fn_ext),
+                                mask=filetable['mask'].getFull())
+        if img.isfbi():
+            if img.isfbwm():
+                zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi(fbwm=True)
+                dp.writeNii(zeta, img.hdr,
+                        op.join(metricpath, fn_fbi_zeta))
+                dp.writeNii(faa, img.hdr,
+                        op.join(metricpath, fn_fbi_faa))
+                dp.writeNii(min_awf, img.hdr,
+                        op.join(metricpath, fn_fbi_awf))
+                dp.writeNii(Da, img.hdr,
+                        op.join(metricpath, fn_fbi_Da))
+                dp.writeNii(De_mean, img.hdr,
+                        op.join(metricpath, fn_fbi_De_mean))
+                dp.writeNii(De_ax, img.hdr,
+                        op.join(metricpath, fn_fbi_De_ax))
+                dp.writeNii(De_rad, img.hdr,
+                        op.join(metricpath, fn_fbi_De_rad))
+                dp.writeNii(De_fa, img.hdr,
+                        op.join(metricpath, fn_fbi_fae))
+                dp.writeNii(min_cost, img.hdr,
+                        op.join(metricpath, fn_fbi_min_cost))
+                dp.writeNii(min_cost_fn, img.hdr,
+                        op.join(metricpath, fn_fbi_min_cost_fn))
+                if args.median:
+                    for x in [
+                        fn_fbi_zeta,
+                        fn_fbi_faa,
+                        fn_fbi_awf,
+                        fn_fbi_Da,
+                        fn_fbi_De_mean,
+                        fn_fbi_De_ax,
+                        fn_fbi_De_rad,
+                        fn_fbi_fae,
+                    ]:
+                        filters.median(
+                            input=op.join(metricpath, x + fn_ext),
+                            output=op.join(metricpath, x + fn_ext),
+                            mask=filetable['mask'].getFull())
+            else:
+                zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi(fbwm=False)
+                dp.writeNii(zeta, img.hdr,
+                    op.join(metricpath, fn_fbi_zeta))
+                dp.writeNii(faa, img.hdr,
+                        op.join(metricpath, fn_fbi_faa))
+                if args.median:
+                    for x in [fn_fbi_zeta, fn_fbi_faa]:
+                        filters.median(
+                            input=op.join(metricpath, x + fn_ext),
+                            output=op.join(metricpath, x + fn_ext),
+                            mask=filetable['mask'].getFull())
 
 if __name__ == '__main__':
     main()

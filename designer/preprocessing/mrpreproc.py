@@ -7,7 +7,7 @@ Utilities for running various MRtrix3's DWI preprocessing tools
 
 import os
 import os.path as op
-from shutil import copyfile
+from shutil import copyfile, which
 import subprocess
 import numpy as np
 from designer.preprocessing import preparation, util, smoothing, rician, mrinfoutil
@@ -289,8 +289,8 @@ def degibbs(input, output, nthreads=None, force=False, verbose=False):
 def undistort(input, output, rpe='rpe_header', epib0=1,
               qc=None, nthreads=None, force=False, verbose=False):
     """
-    Runs MRtrix3's `dwipreproc` command with optimal parameters for
-    PyDesigner.
+    Runs MRtrix3's distortion correction command with optimal
+    parameters for PyDesigner.
 
     Parameters
     ----------
@@ -363,7 +363,11 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
                         'failed during undistortion, please look '
                         'above for errors.')
     # Form main undistortion argument
-    arg = ['dwipreproc']
+    arg = []
+    if which('dwipreproc') is None:
+        arg.append('dwifslpreproc')
+    else:
+        arg.append('dwipreproc')
     if force:
         arg.append('-force')
     if not verbose:
@@ -373,7 +377,7 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
     # Determine whether half or full sphere sampling
     repol_string = '--repol '
     if util.bvec_is_fullsphere(op.join(outdir, 'dwiec.bvec')):
-        # is full, add appropriate dwipreproc option
+        # is full, add appropriate dwifslpreproc option
         repol_string += '--data_is_shelled'
     else:
         # half
@@ -404,7 +408,7 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
     arg.extend([input, output])
     completion = subprocess.run(arg, cwd=outdir)
     if completion.returncode != 0:
-        raise Exception('dwipreproc failed, please look above for '
+        raise Exception('dwifslpreproc failed, please look above for '
                         'error sources.')
     # Remove temporarily generated files
     os.remove(op.join(outdir, 'dwiec.bvec'))

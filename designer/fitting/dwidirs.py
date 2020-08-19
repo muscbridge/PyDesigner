@@ -11,3 +11,5 @@ dirs256 = np.genfromtxt(os.path.join(
    working_dir, 'dirs256.csv'), delimiter=",")
 dirs10000 = np.genfromtxt(os.path.join(
    working_dir, 'dirs10000.csv'), delimiter=",")
+sh_grid = np.genfromtxt(os.path.join(
+   working_dir, 'spherical_grid.csv'), delimiter=",")
