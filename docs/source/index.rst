@@ -52,6 +52,7 @@
 .. - Input **file-format agnostic** – works with .nii, .nii.gz, .mif and dicoms
 .. - **Quality control metrics** to evaluate data integrity – SNR graphs and outlier voxels
 .. - Uses the **latest techniques** from DTI/DKI literature
+.. - Works with DTI, DKI, WMTI, FBI, or FBWM datasets
 
 .. We welcome all DTI/DKI researchers to evaluate this software and pass
 .. on their feedback or issues through the `Issues`_ page of this
@@ -98,6 +99,13 @@
    docker/docker_configuration
    docker/docker_neurodock
    docker/docker_neurodock_run
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Processing
+
+   processing/dataset_reqs
+   processing/running_pyd
 
 .. toctree::
    :maxdepth: 1

@@ -80,39 +80,62 @@ The list of ever possible output file is given in the table below.
 +-------------------------------------+----------------------------------------------------------+
 | **DTI/DKI Metrics** :code:`root_dir/metrics`                                                   |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`ad.nii`                      | axial diffusivity map (3d nifti)                         |
+| :code:`dti_ad.nii`                  | axial diffusivity map (3d nifti)                         |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`rd.nii`                      | radial diffusivity map (3d nifti)                        |
+| :code:`dti_rd.nii`                  | radial diffusivity map (3d nifti)                        |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`md.nii`                      | mean diffusivity map (3d nifti)                          |
+| :code:`dti_md.nii`                  | mean diffusivity map (3d nifti)                          |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fa.nii`                      | fractional anisotropy map (3d nifti)                     |
+| :code:`dti_fa.nii`                  | fractional anisotropy map (3d nifti)                     |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fe.nii`                      |                                                          |
+| :code:`dti_fe.nii`                  |                                                          |
 |                                     | first eigenvalues; represents the principal direction    |
 |                                     | of water (4d nifti)                                      |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`trace.nii`                   |                                                          |
-|                                     |                                                          |
+| :code:`dti_trace.nii`               |                                                          |
 |                                     | sum of diagnols of in diffusion tensor (3d nifti);       |
 |                                     | the mean diffusivity (MD) is three times the trace       |
 |                                     | [MD 3 * trace ]                                          |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`ak.nii`                      | axial kurtosis map (3 nifti)                             |
+| :code:`dki_ak.nii`                  | axial kurtosis map (3 nifti)                             |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`rk.nii`                      | radial kurtosis map (3d nifti)                           |
+| :code:`dki_rk.nii`                  | radial kurtosis map (3d nifti)                           |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`mk.nii`                      | mean kurtosis map (3d nifti)                             |
+| :code:`dki_mk.nii`                  | mean kurtosis map (3d nifti)                             |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`kfa.nii`                     | kurtosis fractional anisotropy map (3d nifti)            |
+| :code:`dki_kfa.nii`                 | kurtosis fractional anisotropy map (3d nifti)            |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`mkt.nii`                     |                                                          |
+| :code:`dki_mkt.nii`                 |                                                          |
 |                                     | mean kurtosis tensor (3d nifti); alternative calculation |
 |                                     | for mean kurtosis                                        |
 +-------------------------------------+----------------------------------------------------------+
 | :code:`DT.nii`                      | diffusion tensor (4d nifti; 6 three-dimensional volumes) |
 +-------------------------------------+----------------------------------------------------------+
 | :code:`KT.nii`                      | kurtosis tensor (4d nifti; 15 three dimensional volumes) |
++-------------------------------------+----------------------------------------------------------+
+| **FBI/FBWM Metrics** :code:`root_dir/metrics`                                                  |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fbi_zeta.nii`                | zeta (3d nifti)                                          |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fbi_faa`                     | axonal fractional anisotropy (3d nifti)                  |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fbwm_awf`                    | axonal water fraction (3d nifti)                         |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fbwm_Da`                     | intra-axonal diffusivity (3d nifti)                      |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fbwm_De_ax`                  | axial extra-axonal diffusivity (3d nifti)                |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fbwm_De_rad`                 | radial extra-axonal diffusivity (3d nifti)               |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fbwm_De_mean`                | mean radial extra-axonal diffusivity (3d nifti)          |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fbwm_fae`                    | extra-axonal fractional anisotropy (3d nifti)            |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fbwm_minCost`                | minimum cost computed by cost function (3d nifti)        |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fbwm_minCost`                |                                                          |
+|                                     | all costs computed by cost function (4d nifti; 100 three |
+|                                     | dimensional volumes)                                     |
 +-------------------------------------+----------------------------------------------------------+
 | **WMTI Metrics** :code:`root_dir/metrics`                                                      |
 +-------------------------------------+----------------------------------------------------------+

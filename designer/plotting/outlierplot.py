@@ -15,10 +15,10 @@ def plot(input, output, bval=None, mask=None):
 
     Parameters
     ----------
-    input :  str
+    input :  ndarry(dtype=float)
         List of 4D DWI (nifti-format) paths to evaluate and plot
     output : str
-        Output path of plot in .ong format
+        Output path of plot in .png format
     bval : str
         Path to relevant .bval file
     mask : str
@@ -83,11 +83,6 @@ def plot(input, output, bval=None, mask=None):
     # Plot
     plt.style.use('seaborn')
     fig, ax = plt.subplots()
-    if bval:
-        bvals = np.loadtxt(bval, dtype=int)
-        # Plot line
-    else:
-        bvals = np.zeros(len(x))
     plt.plot(x, y, "-", lw=1, color="black", alpha=0.40)
     scat = plt.scatter(x, y, c=bvals, s=10, linewidths=0, alpha=1, cmap='Set1')
     plt.xlabel('Shell Number')

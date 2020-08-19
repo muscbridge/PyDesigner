@@ -10,6 +10,8 @@ Submodules
 ----------
 
 .. toctree::
+   :maxdepth: 4
 
    designer.fitting.dwidirs
    designer.fitting.dwipy
+   designer.fitting.thresholds

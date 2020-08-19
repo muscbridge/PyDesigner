@@ -261,8 +261,9 @@ class makesnr:
         bval_list = self.getuniquebval()
         snr = self.computesnr()
         # Get min and max values of SNR
-        minVal = np.min(snr.reshape(-1))
-        maxVal = np.max(snr.reshape(-1))
+        snr_ = snr.reshape(-1)
+        minVal = np.min(snr_[np.isfinite(snr_)])
+        maxVal = np.max(snr_[np.isfinite(snr_)])
         unibvals = np.array(np.unique(bval_list), dtype=int)
         count = np.zeros((nbins, unibvals.size, self.nDWI))
         edges = np.zeros((nbins+1, unibvals.size, self.nDWI))
@@ -340,15 +341,16 @@ class makesnr:
             bval = unibvals[i]
             ax.set_xlabel('SNR')
             ax.set_ylabel('% of voxels')
-            ax.set_ylim(count.min(), count.max())
+            ax.set_ylim(count[np.isfinite(count)].min(),
+                count[np.isfinite(count)].max())
             if bval == 0:
-                ax.set_xlim(0, 300)
-            elif bval == 1:
                 ax.set_xlim(0, 200)
+            elif bval == 1:
+                ax.set_xlim(0, 100)
             elif bval == 2:
-                ax.set_xlim(0, 150)
-            else:
                 ax.set_xlim(0, 80)
+            else:
+                ax.set_xlim(0, 60)
         # Plot Properties
         plt.legend(self.DWInames,
                          ncol=nplots,
