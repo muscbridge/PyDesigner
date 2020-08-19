@@ -511,7 +511,6 @@ class DWI(object):
             points.append([x,y,z])
         return np.array(points)
 
-    @jit(nopython=True)
     def radialSampling(self, dir, n):
         """
         Get the radial component of a metric from a set of directions
@@ -1149,6 +1148,55 @@ class DWI(object):
                 # very very very tiny peaks to zero after the fact...
                 odf[np.logical_and(odf > -minZero, odf < minZero)] = 0
             return odf
+        
+        def costCalculator(grid, BT, GT, b0, IMG, iDT, iaDT, zeta, shB, Pl0, g2l_fa_R_b, clm):
+            """
+            Computes the cost function at voxel for FBWM calculations.
+            Refer to paper for additional information.
+
+            Parameters
+            ----------
+            grid : array_like(dtype=float)
+                Vector of values at which to compute cost. Usually 0 to 1
+            BT : list of float
+                List of unique B-value shells (eg. [1, 2, 6])
+            GT : list of float
+                List of gradient tables for each B-value shell
+            b0 : float
+                Averaged B0 signal in DWI
+            IMG : list of float
+                List of DWI signal for each B-value shell
+            iDT : array_like(dtype=float)
+                FBWM diffusion tensor
+            iaDT : array_like(dtype=float)
+                FBWM axonal diffusion tensor
+            zeta : float
+                Zeta value
+            shB : list of complex
+                SH basis sets for each B-value shell
+            Pl0 : array_like(dtype=float)
+                Legendre polynomail
+            g2l_fa_R_b : array_like(dtype=complex)
+                Information not provided
+            clm : array_like(dtype=complex)
+                fODF SH coefficients
+            
+            Returns
+            -------
+            cost_fn : array_like(dype=float)
+                Cost values for input grid
+            """
+            if grid.ndim > 1:
+                raise Exception('Grid needs to be a flattened 1D vector')
+            ndir = [len(x) for x in GT]
+            cost_fn = np.zeros_like(grid)
+            for idx, awf in np.ndenumerate(grid):
+                for b in range(0, len(BT)):
+                    Se = (b0 * np.exp((-BT[b] * (1-awf)**-1) * np.diag((GT[b].dot((iDT - (awf**3 * zeta**-2) * iaDT).dot(GT[b].T)))))) * (1 - awf) # Eq. 3 FBWM paper
+                    Sa = (2*np.pi*b0*zeta*np.sqrt(np.pi/BT[b])) * (shB[b].dot((Pl0 * np.squeeze(g2l_fa_R_b[b,idx,:])*clm))) # Eq. 4 FBM paper
+                    cost_fn[idx] = cost_fn[idx] + ndir[b]**-1 * np.sum((IMG[b] - Se - Sa)**2)
+                cost_fn[idx] = b0**-1 * np.sqrt(len(BT)**-1 * cost_fn[idx]) # Eq. 21 FBWM paper
+            return cost_fn
 
         def fbi_helper(dwi, b0, B, H, Pl0, gl, rectify=True,
             fbwm_SH1=None, fbwm_SH2=None, fbwm_B1=None, fbwm_B2=None,
@@ -1237,9 +1285,7 @@ class DWI(object):
                 ODF = fbi_rectify(ODF.real, sh_area, iter=1000)
                 # Re-expand the rectified fODF into SH's
                 clm = np.matmul(sh_area*ODF,np.conj(H))
-            c00 = clm[0]
-            clm = clm/c00
-            clm = clm*(1/np.sqrt(4*np.pi))
+            clm = (clm/clm[0])*(1/np.sqrt(4*np.pi)) # normalize clm
             # zeta and FAA calculations
             # NOTE: zeta is not affected by the rectification, only FAA
             zeta = a00*np.sqrt(self.maxBval())/np.pi
@@ -1263,11 +1309,10 @@ class DWI(object):
             if fbwm:
                 BT = np.unique(self.getBvals())[1:]
                 GT = [self.grad[self.grad[:, -1] == x, 0:3] for x in BT]
-                ndir = [len(GT[0]), len(GT[1]),len(GT[2])]
-                f_grid = np.linspace(0,1,100, dtype=int) # define AWF grid (100 pts evenly spaced between 0 (min) and 1 (max))
-                f_grid = f_grid * np.ones((1,100)) # makes it in to a proper array...weird but it works
+                ndir = [len(x) for x in GT]
+                f_grid = np.linspace(0,1,100) # define AWF grid (100 pts evenly spaced between 0 (min) and 1 (max))
                 int_grid = np.linspace(0,99,100, dtype=int) # define grid points to iterate over (100 of them)
-                int_grid = int_grid * np.ones((1,100)) # same as above, makes it a proper array object...?
+                awf_grid = np.linspace(0,1,100) # another AWF grid
                 # This holds the SH basis sets for each b-value shell
                 shB = [fbwm_SH1,fbwm_SH2,B] # list object: to access, shB[0] = B1 (for example)
                 # This hold all DWI volumes for each b-vlaue shell
@@ -1287,9 +1332,9 @@ class DWI(object):
                 iDT = np.reshape(iDT,(3,3))
                 # END: DT construction
                 # initialze correction factor elements that will be looped over and filled accordingly...
-                g2l_fa_R = np.zeros((len(Pl0),f_grid.shape[1]), order = 'F')
-                g2l_fa_R_b = np.zeros((len(BT),f_grid.shape[1],len(Pl0)), order = 'F')
-                g2l_fa_R_large = np.zeros((len(Pl0),f_grid.shape[1]), order = 'F')
+                g2l_fa_R = np.zeros((len(Pl0),f_grid.shape[0]), order = 'F')
+                g2l_fa_R_b = np.zeros((len(BT),f_grid.shape[0],len(Pl0)), order = 'F')
+                g2l_fa_R_large = np.zeros((len(Pl0),f_grid.shape[0]), order = 'F')
                 # BEGIN: cost function
                 # Not many comments here, See McKinnon 2018 FBWm paper for details
                 for b in range(0,len(BT)):
@@ -1305,24 +1350,26 @@ class DWI(object):
                         g2l_fa_R_large[idx_Y:idx_Y+(2*l+1), np.squeeze(~idx_hyper)] = npm.repmat((np.exp(-l/2 * (l+1) / ((2*BT[b] * (f_grid[~idx_hyper]**2 * zeta**-2))))),(2*l+1),1) # Eq. 20 FBI paper
                         idx_Y = idx_Y + (2*l+1)
                     g2l_fa_R_b[b,np.squeeze(~idx_hyper),:] = g2l_fa_R_large[:,np.squeeze(~idx_hyper)].T
-                # here is the core piece of the cost function:
-                cost_fn = np.zeros((100), order = 'F')
-                for grid in np.squeeze(cost_fn.astype('int')):
-                    for b in range(0,len(BT)):
-                        awf = f_grid[:, grid] # define AWF grid
-                        # Se and Sa are the theoretical extra-axonal and intra-axonal signals that will be compared with IMG[:] DWI values for each voxel element
-                        Se = (b0 * np.exp((-BT[b] * (1-awf)**-1) * np.diag((GT[b].dot((iDT - (awf**3 * zeta**-2) * iaDT).dot(GT[b].T)))))) * (1 - awf) # Eq. 3 FBWM paper
-                        Sa = (2*np.pi*b0*zeta*np.sqrt(np.pi/BT[b])) * (shB[b].dot((Pl0 * np.squeeze(g2l_fa_R_b[b,grid,:])*clm))) # Eq. 4 FBM paper
-                        cost_fn[grid] = (cost_fn[grid] + ndir[b]**-1 * np.sum((IMG[b] - Se - Sa)**2)).real
-                    cost_fn[grid] = b0**-1 * np.sqrt(len(BT)**-1 * cost_fn[grid]) # Eq. 21 FBWM paper
-                    iDT_img = iDT
-                    iaDT_img = iaDT
-                min_cost_fn_idx = np.argsort(cost_fn) # find the indexes of the sorted cost_fn values
+                cost_fn = costCalculator(
+                    awf_grid,
+                    BT,
+                    GT,
+                    b0,
+                    IMG,
+                    iDT,
+                    iaDT,
+                    zeta,
+                    shB,
+                    Pl0,
+                    g2l_fa_R_b,
+                    clm
+                )
+                ## ------>>>  Everything up until here is correct
+                min_cost_fn_idx = np.argsort(cost_fn, axis=0) # find the indexes of the sorted cost_fn values
                 min_cost_fn = np.take_along_axis(cost_fn, min_cost_fn_idx, axis=0) # sort those values
-                awf_grid = np.linspace(0,1,100) # another AWF grid
-                min_awf = awf_grid[min_cost_fn_idx[0]] # grad the minimum AWF value based on the cost_fn sorting done immeidately prior to this...
-                Da = min_awf**2 / zeta**2 # Eq. 22 McKinnon (2018). intrinsic intra-axonal diffusivity
-                De = (iDT_img - (min_awf**3 * zeta**-2) * iaDT_img) / (1 - min_awf)
+                min_awf = awf_grid[min_cost_fn_idx[0]] # grad the minimum AWF value based on the cost_fn sorting done immeidately prior to this... 
+                De = (iDT - (min_awf**3 * zeta**-2) * iaDT) / (1 - min_awf)
+                Da = min_awf**2 / zeta**2
                 iDe = De # intermeidate De
                 iDe[np.isnan(iDe)] = minZero
                 iDe[np.isinf(iDe)] = minZero
@@ -1330,25 +1377,24 @@ class DWI(object):
                 L = np.sort(L) # sort them (this is ascending)
                 L = L[::-1] # reverse the order so they are descending (high -> low)
                 N = 1 # initialize counter
-                while L[0] < 0 or L[1] < 0 or L[2] < 0: # find new AWF values if L's are < 0
-                    N = N + 1
-                    if N < 100:
-                        min_awf = awf_grid[min_cost_fn_idx[N]]
-                    else:
-                        min_awf = 0
-                        De = (iDT_img - (min_awf**3 * zeta**-2) * iaDT_img) / (1 - min_awf)
-                        Da = min_awf**2 / zeta**2
-                        break
-                    # update De here...
-                    De = (iDT_img - (min_awf**3 * zeta**2) * iaDT_img) / (1 - min_awf)
-                    Da = min_awf**2 / zeta**2 # recalculate Da too...
-                # Now recalculate eigVals again with correct AWF values
-                iDe = De
-                iDe[np.isnan(iDe)] = minZero
-                iDe[np.isinf(iDe)] = minZero
-                L,V = np.linalg.eig(iDe) # L : eigVals and V: eigVecs
-                L = np.sort(L) # again, ascending
-                L = L[::-1] # now, descending
+                if L[0] < 0 or L[1] < 0 or L[2] < 0:
+                    while L[0] < 0 or L[1] < 0 or L[2] < 0: # find new AWF values if L's are < 0
+                        N = N + 1
+                        if N < 100:
+                            min_awf = awf_grid[min_cost_fn_idx[N]]
+                        else:
+                            min_awf = 0
+                            break
+                        # update De here...
+                        De = (iDT - (min_awf**3 * zeta**2) * iaDT) / (1 - min_awf)
+                        Da = min_awf**2 / zeta**2 # recalculate Da too...
+                    # Now recalculate eigVals again with correct AWF values
+                    iDe = De
+                    iDe[np.isnan(iDe)] = minZero
+                    iDe[np.isinf(iDe)] = minZero
+                    L,V = np.linalg.eig(iDe) # L : eigVals and V: eigVecs
+                    L = np.sort(L) # again, ascending
+                    L = L[::-1] # now, descending
                 De_ax = L[0] # Eq. 24 FBWM paper, axial extra-axonal diffusivity
                 De_rad = (L[1] + L[2])/2 # radial De
                 De_fa = np.sqrt(((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2 ) / (2 * np.sum(L ** 2))) # extra-axonal FA
@@ -1419,46 +1465,46 @@ class DWI(object):
             theta2 = np.arccos(self.grad[self.grad[:, -1] == 2,2])
             phi2 =  np.arctan2(self.grad[self.grad[:, -1] == 2,1],self.grad[self.grad[:, -1] == 2,0])
             # SH basis set for the two B-values in DKI
-            fbwm_SH1 = shbasis(degs,phi1,theta1)
-            fbwm_SH2 = shbasis(degs,phi2,theta2)
+            fbwm_SH1 = shbasis(degs,theta1,phi1)
+            fbwm_SH2 = shbasis(degs,theta2,phi2)
             dt, kt = self.tensorReorder('dki')
             dt = vectorize(dt, self.mask)
-            # for i in inputs:
-            #     zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
-            #         fbi_helper(
-            #             dwi=img[self.idxfbi(), i],
-            #             b0 = b0[i],
-            #             B = B,
-            #             H = H,
-            #             Pl0=Pl0,
-            #             gl = gl,
-            #             rectify=rectify,
-            #             fbwm_SH1 = fbwm_SH1,
-            #             fbwm_SH2 = fbwm_SH2,
-            #             fbwm_B1 = img[self.grad[:, -1] == 1, i],
-            #             fbwm_B2 = img[self.grad[:, -1] == 2, i],
-            #             fbwm_dt = dt[:, i],
-            #             fbwm_degs=degs,
-            #             sh_area=AREA
-            #             )
-            zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
-                                    prefer='processes') \
-                (delayed(fbi_helper)(
-                    dwi=img[self.idxfbi(), i],
-                    b0 = b0[i],
-                    B = B,
-                    H = H,
-                    Pl0=Pl0,
-                    gl = gl,
-                    rectify=rectify,
-                    fbwm_SH1 = fbwm_SH1,
-                    fbwm_SH2 = fbwm_SH2,
-                    fbwm_B1 = img[self.grad[:, -1] == 1, i],
-                    fbwm_B2 = img[self.grad[:, -1] == 2, i],
-                    fbwm_dt = dt[:, i],
-                    fbwm_degs=degs,
-                    sh_area=AREA
-                ) for i in inputs))
+            for i in inputs:
+                zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
+                    fbi_helper(
+                        dwi=img[self.idxfbi(), i],
+                        b0 = b0[i],
+                        B = B,
+                        H = H,
+                        Pl0=Pl0,
+                        gl = gl,
+                        rectify=rectify,
+                        fbwm_SH1 = fbwm_SH1,
+                        fbwm_SH2 = fbwm_SH2,
+                        fbwm_B1 = img[self.grad[:, -1] == 1, i],
+                        fbwm_B2 = img[self.grad[:, -1] == 2, i],
+                        fbwm_dt = dt[:, i],
+                        fbwm_degs=degs,
+                        sh_area=AREA
+                        )
+            # zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
+            #                         prefer='processes') \
+            #     (delayed(fbi_helper)(
+            #         dwi=img[self.idxfbi(), i],
+            #         b0 = b0[i],
+            #         B = B,
+            #         H = H,
+            #         Pl0=Pl0,
+            #         gl = gl,
+            #         rectify=rectify,
+            #         fbwm_SH1 = fbwm_SH1,
+            #         fbwm_SH2 = fbwm_SH2,
+            #         fbwm_B1 = img[self.grad[:, -1] == 1, i],
+            #         fbwm_B2 = img[self.grad[:, -1] == 2, i],
+            #         fbwm_dt = dt[:, i],
+            #         fbwm_degs=degs,
+            #         sh_area=AREA
+            #     ) for i in inputs))
         else:
             # for i in inputs:
             #     zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
