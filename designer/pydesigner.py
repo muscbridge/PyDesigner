@@ -818,7 +818,7 @@ def main():
         fn_wmti_ias_tort = 'wmti_ias_tort'
         fn_fbi_zeta = 'fbi_zeta'
         fn_fbi_faa = 'fbi_faa'
-        fn_fbi_awf = 'fbi_awf'
+        fn_fbi_awf = 'fbwm_awf'
         fn_fbi_Da = 'fbwm_da'
         fn_fbi_De_mean = 'fbwm_de_mean'
         fn_fbi_De_ax = 'fbwm_de_ax'
