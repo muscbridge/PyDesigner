@@ -639,7 +639,7 @@ def main():
         brainmask_name = 'brain_mask.nii'
         brainmask_out = op.join(outpath, 'brain_mask.nii')
         shutil.copy(args.user_mask, brainmask_out)
-        filetable['mask'] = DWIFile(brainmask_out) 
+        filetable['mask'] = DWIFile(brainmask_out)
 
     #-----------------------------------------------------------------
     # Smooth
