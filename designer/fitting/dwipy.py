@@ -257,7 +257,7 @@ class DWI(object):
         """
         idx = np.ones_like(self.grad[:, 3], dtype=bool)
         if self.isfbi():
-            idx = self.grad[:, -1] > th.__minfbibval__
+            idx = self.grad[:, -1] >= th.__minfbibval__
         else:
             raise IndexError('No valid FBI sequence found.')
         return idx

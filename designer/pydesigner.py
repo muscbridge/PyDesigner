@@ -639,7 +639,7 @@ def main():
         brainmask_name = 'brain_mask.nii'
         brainmask_out = op.join(outpath, 'brain_mask.nii')
         shutil.copy(args.user_mask, brainmask_out)
-        filetable['mask'] = DWIFile(brainmask_out) 
+        filetable['mask'] = DWIFile(brainmask_out)
 
     #-----------------------------------------------------------------
     # Smooth
@@ -782,9 +782,14 @@ def main():
     if not args.nofit:
         # create dwi fitting object
         if not args.nthreads:
-            img = dp.DWI(filetable['HEAD'].getFull())
+            img = dp.DWI(
+                imPath=filetable['HEAD'].getFull(),
+            )
         else:
-            img = dp.DWI(filetable['HEAD'].getFull(), args.nthreads)
+            img = dp.DWI(
+                imPath=filetable['HEAD'].getFull(),
+                nthreads=args.nthreads
+            )
         protocols = img.tensorType()
         print('Protocol(s) detected: {}' .format([x.upper() for x in protocols]))
         # Define filenames
