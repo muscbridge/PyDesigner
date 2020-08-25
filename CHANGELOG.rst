@@ -4,6 +4,31 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+
+`v1.0_RC2`_
+-----------
+
+Aug 25, 2020
+
+**Added**:
+
+* References to README.rst
+
+**Changed**:
+
+* The minimum B-value required for FBI (4000) is now inclusive
+  instead of exclusive. This would allow executiong of FBI/FBWM
+  for datasets with b=4000 mm/s^2
+* Convert variable ``nthreads`` to string so ``subproces.run``
+  can recognize the flag
+* Updated Slack permalink in README.rst
+
+**Removed**:
+
+* None
+
+=======
+
 `v1.0_RC1`_
 -----------
 
@@ -153,7 +178,9 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 
 .. Links
-.. _v1.0_RC1: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC1
+
+.. _v1.0_RC2: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC2
+.. _v1.0_RC1: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC1
 .. _v0.32: https://github.com/m-ama/PyDesigner/releases/tag/v0.32
 .. _v0.31: https://github.com/m-ama/PyDesigner/releases/tag/v0.31
 .. _v0.3: https://github.com/m-ama/PyDesigner/releases/tag/v0.3

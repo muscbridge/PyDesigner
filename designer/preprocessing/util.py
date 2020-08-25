@@ -261,7 +261,7 @@ class DWIFile:
 
     def getFull(self):
         """
-        Get the path and name combined for thsi dwifile
+        Get the path and name combined for this dwifile
 
         Returns
         -------

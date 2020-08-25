@@ -70,7 +70,7 @@ def miftonii(input, output, strides='1,2,3,4', nthreads=None,
     if not verbose:
         arg.append('-quiet')
     if not (nthreads is None):
-        arg.extend(['-nthreads', nthreads])
+        arg.extend(['-nthreads', str(nthreads)])
     arg.extend(['-export_grad_fsl',
                 op.splitext(output)[0] + '.bvec',
                 op.splitext(output)[0] + '.bval'])
@@ -150,7 +150,7 @@ def niitomif(input, output, strides='1,2,3,4', nthreads=None,
     if not verbose:
         arg.append('-quiet')
     if not (nthreads is None):
-        arg.extend(['-nthreads', nthreads])
+        arg.extend(['-nthreads', str(nthreads)])
     arg.extend(['-fslgrad',
                 op.splitext(input)[0] + '.bvec',
                 op.splitext(input)[0] + '.bval'])
@@ -222,7 +222,7 @@ def denoise(input, output, noisemap=True, extent='5,5,5', nthreads=None,
     if not verbose:
         arg.append('-quiet')
     if not (nthreads is None):
-        arg.extend(['-nthreads', nthreads])
+        arg.extend(['-nthreads', str(nthreads)])
     if noisemap:
         arg.extend(['-noise', noisemap_path])
     if not (extent is None):
@@ -279,7 +279,7 @@ def degibbs(input, output, nthreads=None, force=False, verbose=False):
     if not verbose:
         arg.append('-quiet')
     if not (nthreads is None):
-        arg.extend(['-nthreads', nthreads])
+        arg.extend(['-nthreads', str(nthreads)])
     arg.extend([input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
@@ -373,7 +373,7 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
     if not verbose:
         arg.append('-quiet')
     if not (nthreads is None):
-        arg.extend(['-nthreads', nthreads])
+        arg.extend(['-nthreads', str(nthreads)])
     # Determine whether half or full sphere sampling
     repol_string = '--repol '
     if util.bvec_is_fullsphere(op.join(outdir, 'dwiec.bvec')):
@@ -633,7 +633,7 @@ def extractbzero(input, output, nthreads=None, force=False,
     if not verbose:
         arg.append('-quiet')
     if not (nthreads is None):
-        arg.extend(['-nthreads', nthreads])
+        arg.extend(['-nthreads', str(nthreads)])
     arg.extend(['-bzero', input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
@@ -747,7 +747,7 @@ def extractnonbzero(input, output, nthreads=None, force=False,
     if not verbose:
         arg.append('-quiet')
     if not (nthreads is None):
-        arg.extend(['-nthreads', nthreads])
+        arg.extend(['-nthreads', str(nthreads)])
     arg.extend(['-no_bzero', input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
@@ -859,7 +859,7 @@ def epiboost(input, output, num=1, nthreads=None, force=False,
     if not verbose:
         arg_epi.append('-quiet')
     if not (nthreads is None):
-        arg_epi.extend(['-nthreads', nthreads])
+        arg_epi.extend(['-nthreads', str(nthreads)])
     arg_epi.extend(['-coord', '3', ','.join(str_extract)])
     arg_epi.extend([fname_bzero, output])
     completion = subprocess.run(arg_epi)
@@ -959,7 +959,7 @@ def reslice(input, output, size, interp='linear',
     if not verbose:
         arg.append('-quiet')
     if not (nthreads is None):
-        arg.extend(['-nthreads', nthreads])
+        arg.extend(['-nthreads', str(nthreads)])
     arg.extend([dim_str, size])
     arg.extend(['-interp', interp])
     arg.extend([input, output])
