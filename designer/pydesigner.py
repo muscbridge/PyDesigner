@@ -782,9 +782,14 @@ def main():
     if not args.nofit:
         # create dwi fitting object
         if not args.nthreads:
-            img = dp.DWI(filetable['HEAD'].getFull())
+            img = dp.DWI(
+                imPath=filetable['HEAD'].getFull(),
+            )
         else:
-            img = dp.DWI(filetable['HEAD'].getFull(), args.nthreads)
+            img = dp.DWI(
+                imPath=filetable['HEAD'].getFull(),
+                nthreads=args.nthreads
+            )
         protocols = img.tensorType()
         print('Protocol(s) detected: {}' .format([x.upper() for x in protocols]))
         # Define filenames
