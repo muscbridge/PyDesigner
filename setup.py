@@ -28,7 +28,7 @@ setup(
     maintainer=__maintainer__,
     description=__description__,
     long_description=long_description,
-    long_description_content_type='text/markdown',
+    long_description_content_type='text/x-rst',
     url=__url__,
     license=__license__,
     include_package_data=True,
