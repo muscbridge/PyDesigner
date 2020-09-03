@@ -17,7 +17,7 @@ preprocess_options.fn_nii = 'dke.nii';       		% four-dimensional nifti image fi
 
 bval = bval-changeme;                          		% diffusion weightings (b-values) in s/mm^2 units; the first element of vector must always be 0
 
-ndir = changeme;                                      	% number of gradient directions; if a scalar value is specified, the number of gradient directions for all b values is set to the scalar; otherwise, a 1-by-(nbval-1) vector should be specified, with each element of the vector corresponding to the number of gradient directions for a nonzero b-value
+ndir = ndir-changeme;                                      	% number of gradient directions; if a scalar value is specified, the number of gradient directions for all b values is set to the scalar; otherwise, a 1-by-(nbval-1) vector should be specified, with each element of the vector corresponding to the number of gradient directions for a nonzero b-value
 
 fn_gradients = 'fn-gradients-changeme';	% text file containing the gradient vectors; each row corresponds to a gradient vector; if a different gradient set was used for each b-value, a 1-by-(nbval-1) cell array of file names should be specified, with each cell specifying the gradient file name for the corresponding nonzero b-value
 

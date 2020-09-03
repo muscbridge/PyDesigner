@@ -25,14 +25,8 @@ fprintf('1: Reading Files\n');
 %   Image
 hdr = niftiinfo(dwi_Path);
 dwi = niftiread(hdr);
+dims = size(dwi);
 fprintf('\tA:...loaded image\n');
-
-hdr_b0 = niftiinfo(b0_Path);
-b0 = niftiread(hdr_b0);
-fprintf('\tA:...loaded B0\n');
-
-brainmask = logical(niftiread(mask_Path));
-fprintf('\tB:...loaded brainmask\n');
 
 %   BVEC and BVAL
 bval = load(bval_Path);
@@ -45,11 +39,30 @@ fprintf('\tD:...loaded BVEC\n');
 b0_idx = find(bval == 0);
 b1_idx = find(bval == 1000);
 b2_idx = find(bval == 2000);
+fbi_idx = find(bval >= 2500);
+rm_idx = cat(2, b0_idx, fbi_idx);
 
-%% Remove B0s from all files
-dwi(:,:,:,b0_idx) = [];
-bval(b0_idx) = [];
-bvec(:,b0_idx(2:end)) = [];
+%% Handle Brain Mask and B0
+if isfile(mask_Path)
+    brainmask = logical(niftiread(mask_Path));
+    fprintf('\tB:...loaded brainmask\n');
+else
+    brainmask = ones(dims(1:3));
+end
+    
+if isfile(b0_Path)
+    hdr_b0 = niftiinfo(b0_Path);
+    b0 = niftiread(hdr_b0);
+    fprintf('\tA:...loaded B0\n');
+else
+    b0 = nanmean(dwi(:,:,:,b0_idx),4);
+    fprintf('\tA:...computed mean B0\n');
+end
+
+%% Remove B0s and FBI from all files
+dwi(:,:,:,rm_idx) = [];
+bval(rm_idx) = [];
+bvec(:,rm_idx(2:end)) = [];
 
 %% Concatenate with Designer B0
 dwi = cat(4,b0,dwi);
@@ -95,8 +108,8 @@ fidout=fopen(fout,'w');
 while(~feof(fid))
     s=fgetl(fid);
     s=strrep(s,'dir-sub-changeme',dke_Path); %s=strrep(s,'A201', subject_list{i}) replace subject
-    s=strrep(s,'ndir = changeme',sprintf('ndir = %d',length(b1_idx_new)));
-    s=strrep(s,'bval = changeme',sprintf('bval = [%s]', num2str(unique(bval))));
+    s=strrep(s,'ndir = ndir-changeme',sprintf('ndir = %d',length(b1_idx_new)));
+    s=strrep(s,'bval = bval-changeme',sprintf('bval = [%s]', num2str(unique(bval))));
     s=strrep(s,'fn-gradients-changeme',fullfile(dke_Path,'gradient_dke.txt'));
     s=strrep(s,'fwhm_img = res-changeme',sprintf('fwhm_img = 0 * [%s]', num2str(hdr.PixelDimensions(1:3),3)));
     fprintf(fidout,'%s\n',s);
