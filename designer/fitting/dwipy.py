@@ -962,7 +962,7 @@ class DWI(object):
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
-                      desc='DTI parameters',
+                      desc='DTI Parameters',
                       bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='vox',
                       ncols=tqdmWidth)
@@ -1028,7 +1028,7 @@ class DWI(object):
         mk = np.mean(akc, 0)
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
-                      desc='DKI parameters',
+                      desc='DKI Parameters',
                       bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='vox',
                       ncols=tqdmWidth)
