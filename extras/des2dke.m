@@ -85,9 +85,9 @@ fprintf('\tA:...writing image\n');
 niftiwrite(dwi,dwi_Path,hdr);
 
 
-fprintf('B:...writing BVAL\n');
+fprintf('\tB:...writing BVAL\n');
 dlmwrite(bval_Path,bval,',');
-fprintf('C:...writing BVAL\n');
+fprintf('\tC:...writing BVAL\n');
 dlmwrite(bvec_Path,bvec,',');
 b1_idx_new = find(bval == 1000); %indices have changed, update
 
@@ -116,10 +116,9 @@ while(~feof(fid))
 end
 fclose(fid);
 fclose(fidout);
-fprintf('.....Completed.....\n');
 
 %% Create FT Parameter File
-fprintf('4: Creating FT parameter files\n');
+fprintf('5: Creating FT parameter files\n');
 fid=fopen('ft_parameters.txt'); %Original file
 fout=fullfile(dke_Path,'ft_parameters.txt');% new file
 
