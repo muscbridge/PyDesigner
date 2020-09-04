@@ -962,7 +962,7 @@ class DWI(object):
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
-                      desc='DTI parameters',
+                      desc='DTI Parameters',
                       bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='vox',
                       ncols=tqdmWidth)
@@ -1028,7 +1028,7 @@ class DWI(object):
         mk = np.mean(akc, 0)
         nvox = self.dt.shape[1]
         inputs = tqdm(range(0, nvox),
-                      desc='DKI parameters',
+                      desc='DKI Parameters',
                       bar_format='{desc}: [{percentage:0.0f}%]',
                       unit='vox',
                       ncols=tqdmWidth)
@@ -1048,6 +1048,29 @@ class DWI(object):
         mkt = vectorize(mkt, self.mask)
         return mk, rk, ak, kfa, mkt, trace
 
+    def optimal_lmax(self):
+        """
+        Computes the highest harmonic order (l_max) for
+        spherical harmonic expansion. This is adapted
+        from the information posted at
+        https://mrtrix.readthedocs.io/en/dev/concepts/sh_basis_lmax.html
+
+        Returns
+        -------
+        l_max : int
+            l_max suitable for DWI
+        """
+        bt_unique = np.unique(self.grad[:, -1])
+        min_vols = min([np.count_nonzero(self.grad[:, -1] == x) for x in bt_unique if x > 0])
+        l_max = 2
+        if min_vols <= 15:
+            l_max = 4
+        elif min_vols <= 28:
+            l_max = 6
+        else:
+            l_max = 8
+        return l_max
+
     def fbi(self, fbwm=True, rectify=True):
         """
         Perform fiber ball imaging (FBI) and FBI white matter model
@@ -1057,13 +1080,40 @@ class DWI(object):
         ----------
         fbwm : bool
             Perform FBWM parameterization if True
+            (Default: True)
         rectify : bool
             Perform fODF rectification if True
+            (Default: True)
+
         Returns
         -------
+        zeta : array_like(dtype=float)
+            Zeta parameter
+        faa : array_like(dtype=float)
+            Intra-axonal fractional anisotropy
+        fodf : array_like(dtype=float)
+            fodf from spherical harmonic expansion
+        min_awf : array_like(dtype=float)
+            Axonal water fraction
+        Da : array_like(dtype=float)
+            Intrinsic intra-axonal diffusivity
+        De_mean : array_like(dtype=float)
+            Mean extra-axonal diffusion
+        De_ax : array_like(dtype=float)
+            Axial extra-axonal diffusion
+        De_rad : array_like(dtype=float)
+            Radial extra-axonal diffusion
+        De_fa : array_like(dtype=float)
+            Extra-axonal FA
+        min_cost : array_like(dtype=float)
+            Minimum cost of the cost function (first index of 
+            min_cost_fn)
+        min_cost_fn : array_like(dtype=float)
+            Cost function
         
         """
         #--------------------FUNCTION SEPARATOR-----------------------
+        
         def shbasis(deg, theta, phi):
             """
             Computes shperical harmonic basis set for even degrees of
@@ -1247,6 +1297,8 @@ class DWI(object):
                 Zeta parameter
             faa : float
                 Intra-axonal fractional anisotropy
+            clm : float
+                Spherical harmonic coefficients
             min_awf : float
                 Axonal water fraction
             Da : float
@@ -1364,7 +1416,6 @@ class DWI(object):
                     g2l_fa_R_b,
                     clm
                 )
-                ## ------>>>  Everything up until here is correct
                 min_cost_fn_idx = np.argsort(cost_fn, axis=0) # find the indexes of the sorted cost_fn values
                 min_cost_fn = np.take_along_axis(cost_fn, min_cost_fn_idx, axis=0) # sort those values
                 min_awf = awf_grid[min_cost_fn_idx[0]] # grad the minimum AWF value based on the cost_fn sorting done immeidately prior to this... 
@@ -1410,20 +1461,23 @@ class DWI(object):
                 min_cost = None
                 min_cost_fn = None
 
-            return zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
+            return zeta, faa, clm, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
         #--------------------FUNCTION SEPARATOR-----------------------
+
+
         if fbwm and not hasattr(self, 'dt'):
             raise Exception('Cannot compute FBWM parameters '
         'without running diffusion tensor fitting first. '
         'Please run DWI.fit(constraints) before running DWI.fbi().')
         img = self.img
         bt_unique = np.unique(self.grad[:, -1])
+        order = self.optimal_lmax()
         b0 = np.mean(img[:, :, :, self.idxb0()], axis=3)
         # Vectorize images
         b0 = vectorize(b0, self.mask)
         img = vectorize(img, self.mask)
         # Create shperical harmonic (SH) base set
-        degs = np.arange(self.maxBval() + 1, dtype=int)
+        degs = np.arange(order + 1, dtype=int)
         l_tot = 2*degs + 1 # total harmonics in the degree
         l_num = 2 * degs[::2] + 1 # how many per degree (evens only)
         harmonics = []
@@ -1470,7 +1524,7 @@ class DWI(object):
             dt, kt = self.tensorReorder('dki')
             dt = vectorize(dt, self.mask)
             # for i in inputs:
-            #     zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
+            #     zeta, faa, fodf, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
             #         fbi_helper(
             #             dwi=img[self.idxfbi(), i],
             #             b0 = b0[i],
@@ -1487,7 +1541,7 @@ class DWI(object):
             #             fbwm_degs=degs,
             #             sh_area=AREA
             #             )
-            zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
+            zeta, faa, fodf, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
                                     prefer='processes') \
                 (delayed(fbi_helper)(
                     dwi=img[self.idxfbi(), i],
@@ -1507,7 +1561,7 @@ class DWI(object):
                 ) for i in inputs))
         else:
             # for i in inputs:
-            #     zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
+            #     zeta, faa, fodf, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
             #         fbi_helper(
             #             dwi=img[self.idxfbi(), i],
             #             b0 = b0[i],
@@ -1518,7 +1572,7 @@ class DWI(object):
             #             rectify=rectify,
             #             sh_area=AREA
             #             )
-            zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
+            zeta, faa, fodf, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
                                     prefer='processes') \
                 (delayed(fbi_helper)(
                     dwi=img[self.idxfbi(), i],
@@ -1532,7 +1586,8 @@ class DWI(object):
                 ) for i in inputs))
         zeta = vectorize(np.array(zeta), self.mask)
         faa = vectorize(np.array(faa), self.mask)
-        min_awf = vectorize(np.array(min_awf), self.mask)
+        fodf = vectorize(np.array(fodf).T, self.mask)
+        awf = vectorize(np.array(min_awf), self.mask)
         Da = vectorize(np.array(Da), self.mask)
         De_mean = vectorize(np.array(De_mean), self.mask)
         De_ax = vectorize(np.array(De_ax), self.mask)
@@ -1540,7 +1595,7 @@ class DWI(object):
         De_fa = vectorize(np.array(De_fa), self.mask)
         min_cost = vectorize(np.array(min_cost), self.mask)
         min_cost_fn = vectorize(np.array(min_cost_fn).T, self.mask)
-        return zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
+        return zeta, faa, fodf, awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
 
     def extractWMTI(self):
         """

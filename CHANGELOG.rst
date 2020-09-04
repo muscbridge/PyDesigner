@@ -4,6 +4,27 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+`v1.0_RC3`_
+-----------
+
+Sep 3, 2020
+
+**Added**:
+* FBI fODF map for FBI tractography. Users may use MRTrix3
+  to further process this file.
+* Variable maximum spherical harmonic degree to improve
+  robustness of FBI fit. This was fixed at 6 previous, but
+  is able to vary from 2 to 8 now. This is based on
+  information found at https://mrtrix.readthedocs.io/en/dev/concepts/sh_basis_lmax.html
+
+**Changed**:
+
+* None
+
+**Removed**:
+
+* None
+
 
 `v1.0_RC2`_
 -----------
@@ -26,8 +47,6 @@ Aug 25, 2020
 **Removed**:
 
 * None
-
-=======
 
 `v1.0_RC1`_
 -----------
@@ -179,6 +198,7 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
+.. _v1.0_RC3: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC3
 .. _v1.0_RC2: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC2
 .. _v1.0_RC1: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC1
 .. _v0.32: https://github.com/m-ama/PyDesigner/releases/tag/v0.32
