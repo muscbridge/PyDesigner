@@ -186,9 +186,6 @@ def main():
     parser.add_argument('--fit_constraints', default='0,1,0',
                         help='Constrain the WLLS fit. '
                         'Default: 0,1,0.')
-    parser.add_argument('--fbwm', default=True,
-                        help='Perform Fiber Ball White Matter '
-                        'Modeling')
     parser.add_argument('--noqc', action='store_true', default=False,
                         help='Disable QC saving of QC metrics')
     parser.add_argument('--median', action='store_true', default=False,
@@ -818,6 +815,7 @@ def main():
         fn_wmti_ias_tort = 'wmti_ias_tort'
         fn_fbi_zeta = 'fbi_zeta'
         fn_fbi_faa = 'fbi_faa'
+        fn_fbi_sph = 'fbi_fodf'
         fn_fbi_awf = 'fbwm_awf'
         fn_fbi_Da = 'fbwm_da'
         fn_fbi_De_mean = 'fbwm_de_mean'
@@ -958,11 +956,13 @@ def main():
                                 mask=filetable['mask'].getFull())
         if img.isfbi():
             if img.isfbwm():
-                zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi(fbwm=True)
+                zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi(fbwm=True)
                 dp.writeNii(zeta, img.hdr,
                         op.join(metricpath, fn_fbi_zeta))
                 dp.writeNii(faa, img.hdr,
                         op.join(metricpath, fn_fbi_faa))
+                dp.writeNii(sph, img.hdr,
+                        op.join(metricpath, fn_fbi_sph))
                 dp.writeNii(min_awf, img.hdr,
                         op.join(metricpath, fn_fbi_awf))
                 dp.writeNii(Da, img.hdr,
@@ -995,11 +995,13 @@ def main():
                             output=op.join(metricpath, x + fn_ext),
                             mask=filetable['mask'].getFull())
             else:
-                zeta, faa, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi(fbwm=False)
+                zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi(fbwm=False)
                 dp.writeNii(zeta, img.hdr,
                     op.join(metricpath, fn_fbi_zeta))
                 dp.writeNii(faa, img.hdr,
                         op.join(metricpath, fn_fbi_faa))
+                dp.writeNii(sph, img.hdr,
+                        op.join(metricpath, fn_fbi_sph))
                 if args.median:
                     for x in [fn_fbi_zeta, fn_fbi_faa]:
                         filters.median(

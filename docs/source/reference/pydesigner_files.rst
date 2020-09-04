@@ -119,6 +119,8 @@ The list of ever possible output file is given in the table below.
 +-------------------------------------+----------------------------------------------------------+
 | :code:`fbi_faa`                     | axonal fractional anisotropy (3d nifti)                  |
 +-------------------------------------+----------------------------------------------------------+
+| :code:`fbi_fodf`                    | FBI fODFs from spherical harmonic expansion (4d nifti)   |
++-------------------------------------+----------------------------------------------------------+
 | :code:`fbwm_awf`                    | axonal water fraction (3d nifti)                         |
 +-------------------------------------+----------------------------------------------------------+
 | :code:`fbwm_Da`                     | intra-axonal diffusivity (3d nifti)                      |
