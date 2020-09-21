@@ -1055,29 +1055,38 @@ class DWI(object):
         from the information posted at
         https://mrtrix.readthedocs.io/en/dev/concepts/sh_basis_lmax.html
 
+        This function runs successfully only if input
+        DWI is an FBI or HARDI acquisition.
+
         Returns
         -------
-        l_max : int
+        int
             l_max suitable for DWI
         """
+        if not self.isfbi():
+            raise Exception('Input DWI is not an '
+        'FBI or HARDI acquisiton. Cannot compute '
+        'l_max.')
         bt_unique = np.unique(self.grad[:, -1])
-        min_vols = min([np.count_nonzero(self.grad[:, -1] == x) for x in bt_unique if x > 0])
-        l_max = 2
-        if min_vols <= 15:
-            l_max = 4
-        elif min_vols <= 28:
-            l_max = 6
-        else:
-            l_max = 8
-        return l_max
+        fbi_vols = np.count_nonzero(self.grad[self.idxfbi(), -1])
+        l_max = 0
+        vols = (l_max + 1) * (l_max/2 + 1)
+        while vols <= fbi_vols:
+            l_max += 2
+            vols = (l_max + 1) * (l_max/2 + 1)
+        return l_max - 2
 
-    def fbi(self, fbwm=True, rectify=True):
+    def fbi(self, l_max=6, fbwm=True, rectify=True):
         """
         Perform fiber ball imaging (FBI) and FBI white matter model
         (FBWM) analyses
 
         Parameters
         ----------
+        l_max : int
+            Maximum spherical harmonic degree specified as an even
+            integer
+            (Default: 6)
         fbwm : bool
             Perform FBWM parameterization if True
             (Default: True)
@@ -1464,20 +1473,27 @@ class DWI(object):
             return zeta, faa, clm, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
         #--------------------FUNCTION SEPARATOR-----------------------
 
-
         if fbwm and not hasattr(self, 'dt'):
             raise Exception('Cannot compute FBWM parameters '
         'without running diffusion tensor fitting first. '
         'Please run DWI.fit(constraints) before running DWI.fbi().')
+        if l_max % 2 != 0:
+            raise Exception('Please provide l_max as a postive '
+        'and even integer')
+        if l_max > self.optimal_lmax():
+            print('[WARNING]: l_max value provided ({}) is '
+            'more than that supported by DWI ({}). Reverting '
+            'to l_max = {}'.format(l_max, self.optimal_lmax(),
+            self.optimal_lmax()))
+            l_max = self.optimal_lmax()
         img = self.img
         bt_unique = np.unique(self.grad[:, -1])
-        order = self.optimal_lmax()
         b0 = np.mean(img[:, :, :, self.idxb0()], axis=3)
         # Vectorize images
         b0 = vectorize(b0, self.mask)
         img = vectorize(img, self.mask)
         # Create shperical harmonic (SH) base set
-        degs = np.arange(order + 1, dtype=int)
+        degs = np.arange(l_max + 1, dtype=int)
         l_tot = 2*degs + 1 # total harmonics in the degree
         l_num = 2 * degs[::2] + 1 # how many per degree (evens only)
         harmonics = []
