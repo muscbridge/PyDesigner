@@ -1486,7 +1486,6 @@ class DWI(object):
             'to l_max = {}'.format(l_max, self.optimal_lmax(),
             self.optimal_lmax()))
             l_max = self.optimal_lmax()
-        print(l_max)
         img = self.img
         bt_unique = np.unique(self.grad[:, -1])
         b0 = np.mean(img[:, :, :, self.idxb0()], axis=3)
