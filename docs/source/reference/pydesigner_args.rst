@@ -70,6 +70,13 @@ with the following flags.
 
 --median            Performs post processing median filter of final DTI/DKI maps. **WARNING: Use on a case-by-case basis for bad data only. When applied, the filter alters the values of most voxels, so it should be used with caution and avoided when data quality is otherwise adequate. While maps appear visually soother with this flag on, they may nonetheless be less accurate**
 
+Fiber Ball Imaging (FBI) Control
+--------------------------------
+
+FBI parameters may be fine-tuned with the following flags.
+
+--l_max n   Maximum spherical harmonic degree used in spherical harmonic expansion for fODF calculation
+
 Pipeline Control
 ----------------
 
