@@ -120,7 +120,7 @@ def main():
                         help='Standard preprocessing, bypasses most other '
                         'options. See Appendix:Standard pipeline steps '
                         'for more information. ')
-    parser.add_argument('--denoise', action='store_true', default=False,
+    parser.add_argument('-n', '--denoise', action='store_true', default=False,
                         help='Run thermal denoising with dwidenoise.')
     parser.add_argument('--extent', metavar='n,n,n', default='5,5,5',
                         help='Denoising extent formatted n,n,n (forces '
@@ -137,11 +137,11 @@ def main():
                         help='Set the interpolation to use when '
                         'reslicing. Choices are linear (default), ' 
                         'nearest, cubic, sinc.')
-    parser.add_argument('--degibbs', action='store_true', default=False,
+    parser.add_argument('-g', '--degibbs', action='store_true', default=False,
                         help='Perform gibbs unringing. Only perform if you '
                         'have full Fourier encoding. The program will check '
                         'for you if you have a .json sidecar.')
-    parser.add_argument('--undistort', action='store_true', default=False,
+    parser.add_argument('-u', '--undistort', action='store_true', default=False,
                         help='Run FSL eddy to perform image undistortion. '
                         'NOTE: needs a --topup to run.')
     parser.add_argument('--rpe_pairs', default=0, type=int,
@@ -151,12 +151,13 @@ def main():
                         'results in faster TOPUP correction. '
                         'Specfying 0 results in using all B0 pairs.'
                         'We recommend using just one pair. Default: 0')
-    parser.add_argument('--smooth', action='store_true', default=False,
+    parser.add_argument('-z', '--smooth', action='store_true', default=False,
                         help='Perform smoothing on the DWI data.')
     parser.add_argument('--fwhm', type=float, default=1.25,
+                        metavar='n',
                         help='The FWHM to use as a multiple of voxel size. '
                         'Default 1.25')
-    parser.add_argument('--rician', action='store_true', default=False,
+    parser.add_argument('-r', '--rician', action='store_true', default=False,
                         help='Perform Rician noise correction on the data '
                         '(requires --denoise to generate a noisemap).')
     parser.add_argument('--nofit', action='store_true', default=False,
@@ -169,23 +170,25 @@ def main():
     parser.add_argument('-w', '--wmti', action='store_true', default=False,
                         help='Include DKI WMTI parameters (forces DKI): '
                         'AWF, IAS_params, EAS_params. ')
-    parser.add_argument('--kcumulants', action='store_true', default=False,
-                        help='output the kurtosis tensor with W cumulant '
-                        'rather than K. ')
-    parser.add_argument('--mask', action='store_true', default=False,
+    parser.add_argument('-m', '--mask', action='store_true', default=False,
                         help='Compute a brain mask prior to tensor fitting '
                         'to strip skull and improve efficiency. Optionally, '
                         'use --maskthr to specify a threshold manually.')
-    parser.add_argument('--maskthr', metavar='threshold',
+    parser.add_argument('--maskthr', metavar='n',
                         default=0.25,
                         help='FSL bet threshold used for brain masking. '
                         'Default: 0.25')
-    parser.add_argument('--user_mask', metavar='<brain mask path>',
+    parser.add_argument('--user_mask', metavar='path',
                         help='Path to user-supplied brain mask.',
                         type=str)
     parser.add_argument('--fit_constraints', default='0,1,0',
+                        metavar='D>0,K>0,K < 3/(b*D)',
                         help='Constrain the WLLS fit. '
                         'Default: 0,1,0.')
+    parser.add_argument('--l_max', default=6, type=int,
+                        metavar='n',
+                        help='Maximum spherical harmonic degree for '
+                        'FBI spherical harmonic expansion')
     parser.add_argument('--noqc', action='store_true', default=False,
                         help='Disable QC saving of QC metrics')
     parser.add_argument('--median', action='store_true', default=False,
@@ -333,6 +336,10 @@ def main():
         if i < 0 or i > 1:
             errmsg+='Invalid --fit_constraints value, should be 0 or 1\n'
             break
+
+    # Ensure l_max is an even integer
+    if args.l_max % 2 != 0:
+        errmsg+='User provided l_max = {} is not an even integer.'.format(args.l_max)
 
     # --force and --resume given
     if args.resume and args.force:
@@ -956,7 +963,7 @@ def main():
                                 mask=filetable['mask'].getFull())
         if img.isfbi():
             if img.isfbwm():
-                zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi(fbwm=True)
+                zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi(l_max=args.l_max, fbwm=True)
                 dp.writeNii(zeta, img.hdr,
                         op.join(metricpath, fn_fbi_zeta))
                 dp.writeNii(faa, img.hdr,
@@ -995,7 +1002,7 @@ def main():
                             output=op.join(metricpath, x + fn_ext),
                             mask=filetable['mask'].getFull())
             else:
-                zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi(fbwm=False)
+                zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi(l_max=args.l_max, fbwm=False)
                 dp.writeNii(zeta, img.hdr,
                     op.join(metricpath, fn_fbi_zeta))
                 dp.writeNii(faa, img.hdr,

@@ -7,14 +7,15 @@ page
 `v1.0_RC3`_
 -----------
 
-Sep 3, 2020
+Sep 21, 2020
 
 **Added**:
 * FBI fODF map for FBI tractography. Users may use MRTrix3
   to further process this file.
 * Variable maximum spherical harmonic degree to improve
-  robustness of FBI fit. This was fixed at 6 previous, but
-  is able to vary from 2 to 8 now. This is based on
+  robustness of FBI fit. This was fixed at 6 previous, but has
+  been defaulted to 6 now. Users may change l_max with the
+  ``-l_max n`` flag. This is based on
   information found at https://mrtrix.readthedocs.io/en/dev/concepts/sh_basis_lmax.html
 
 **Changed**:

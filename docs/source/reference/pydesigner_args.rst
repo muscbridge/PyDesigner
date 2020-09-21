@@ -24,7 +24,7 @@ preprocessing pipeline, to accomodate all types of datasets.
 
 -s, --standard  Runs the recommended preprocessing pipeline in order: denoise, degibbs, undistort, brain mask, smooth, rician
 
---denoise       Denoises input DWI
+-n, --denoise       Denoises input DWI
 
 --extent        Shape of denoising extent matrix, defaults to 5,5,5
 
@@ -32,11 +32,11 @@ preprocessing pipeline, to accomodate all types of datasets.
 
 --interp        The interpolation method to use when resizing
 
---degibbs       Corrects Gibb’s ringing
+-g, --degibbs       Corrects Gibb’s ringing
 
---undistort     Undistorts image using a suite of EPI distortion correction, eddy current correction, and co-registration. Does not run EPI correction if reverse phase encoding DWI is absent.
+-u, --undistort     Undistorts image using a suite of EPI distortion correction, eddy current correction, and co-registration. Does not run EPI correction if reverse phase encoding DWI is absent.
 
---rpe_pairs N   Speeds up topup if a reverse PE is present; specify the number (integer) of reverse PE direction B0 pairs to use
+--rpe_pairs n   Speeds up topup if a reverse PE is present; specify the number (integer) of reverse PE direction B0 pairs to use
 
 --mask          Computes a brain mask at 0.20 threshold by default
 
@@ -44,11 +44,11 @@ preprocessing pipeline, to accomodate all types of datasets.
 
 --user_mask     Provide path to user-generated brain mask in NifTi (.nii) format
 
---smooth        Smooths DWI data at a default FWHM of 1.25
+-z, --smooth        Smooths DWI data at a default FWHM of 1.25
 
 --fwhm          Specify the FWHM at which to smooth, defaults to 1.25
 
---rician        Corrects Rician bias
+-r, --rician        Corrects Rician bias
 
 Diffusion Tensor Control
 ------------------------
@@ -70,13 +70,20 @@ with the following flags.
 
 --median            Performs post processing median filter of final DTI/DKI maps. **WARNING: Use on a case-by-case basis for bad data only. When applied, the filter alters the values of most voxels, so it should be used with caution and avoided when data quality is otherwise adequate. While maps appear visually soother with this flag on, they may nonetheless be less accurate**
 
+Fiber Ball Imaging (FBI) Control
+--------------------------------
+
+FBI parameters may be fine-tuned with the following flags.
+
+--l_max n   Maximum spherical harmonic degree used in spherical harmonic expansion for fODF calculation
+
 Pipeline Control
 ----------------
 
 These are more general pipeline flags that interface directly with the
 user or machine.
 
---nthreads N    Specify number of CPU workers to use in processing, defaults to all physically available workers
+--nthreads n    Specify number of CPU workers to use in processing, defaults to all physically available workers
 
 --resume        Resumes preprocessing from an aborted or partial previous run
 
