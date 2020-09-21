@@ -1488,6 +1488,7 @@ class DWI(object):
             l_max = self.optimal_lmax()
         img = self.img
         bt_unique = np.unique(self.grad[:, -1])
+        order = self.optimal_lmax()
         b0 = np.mean(img[:, :, :, self.idxb0()], axis=3)
         # Vectorize images
         b0 = vectorize(b0, self.mask)
