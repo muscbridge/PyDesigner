@@ -953,16 +953,33 @@ def reslice(input, output, size, interp='linear',
             'reslicing'.format(specified_size, current_size))
         copyfile(input, output)
         return
-    arg = ['mrresize']
+    arg = []
+    if which('mrresize') is None:
+        arg.extend(
+            [
+                'mrgrid',
+                input,
+                'regrid',
+                dim_str, size,
+                '-interp', interp,
+                output
+            ]
+        )
+    else:
+        arg.extend(
+            [
+                'mrresize',
+                dim_str, size,
+                '-interp', interp,
+                input, output
+            ]
+        )
     if force:
         arg.append('-force')
     if not verbose:
         arg.append('-quiet')
     if not (nthreads is None):
         arg.extend(['-nthreads', str(nthreads)])
-    arg.extend([dim_str, size])
-    arg.extend(['-interp', interp])
-    arg.extend([input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
         raise Exception('Failed to reslice. See above for errors.')

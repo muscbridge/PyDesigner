@@ -4,6 +4,26 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+`v1.0_RC4`_
+-----------
+
+Sep 22, 2020
+
+**Added**:
+
+* Reslicing compatibility udpated for new MRTrix3 version
+  where ``mrrelice`` has been changed to ``mrgrid``.
+  PyDesigner will work with either versions.
+
+**Changed**:
+
+* Fixed a bad indent in tensor reordering function
+  that produced an error in DTI protocols.
+
+**Removed**:
+
+* None
+
 `v1.0_RC3`_
 -----------
 
@@ -198,6 +218,7 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
+.. _v1.0_RC4: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC4
 .. _v1.0_RC3: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC3
 .. _v1.0_RC2: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC2
 .. _v1.0_RC1: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC1
