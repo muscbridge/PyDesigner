@@ -2576,7 +2576,7 @@ class DWI(object):
             dt[20, :] = self.dt[14, :]      # K14
             DT = vectorize(dt[0:6, :], self.mask)
             KT = vectorize(dt[6:21, :], self.mask)
-            return DT, KT
+        return DT, KT
 
     def irllsviolmask(self, reject):
         """
