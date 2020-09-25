@@ -47,7 +47,7 @@ class DWI(object):
     workers : int
         Number of CPU workers to use in processing
     """
-    def __init__(self, imPath, mask=None, nthreads=-1):
+    def __init__(self, imPath, bvecPath=None, bvalPath=None, mask=None, nthreads=-1):
         """
         DWI class initializer
 
@@ -71,20 +71,37 @@ class DWI(object):
         (path, file) = os.path.split(imPath)
         # Remove extension from NIFTI filename
         fName = os.path.splitext(file)[0]
-        # Add .bval to NIFTI filename
-        bvalPath = os.path.join(path, fName + '.bval')
-        # Add .bvec to NIFTI filename
-        bvecPath = os.path.join(path, fName + '.bvec')
+        if bvecPath:
+            if not isinstance(bvecPath, str):
+                raise TypeError('Path to .bvec is not specified '
+                'as a string')
+            if not os.path.exists(bvecPath):
+                raise OSError('Path to .bvec does not exist: '
+                '{}'.format(bvecPath))
+        else:
+            bvecPath = os.path.join(path, fName + '.bvec')
+        if bvalPath:
+            if not isinstance(bvalPath, str):
+                raise TypeError('Path to .bval is not specified '
+                'as a string')
+            if not os.path.exists(bvalPath):
+                raise OSError('Path to .bvec does not exist: '
+                '{}'.format(bvalPath))
+        else:
+            bvalPath = os.path.join(path, fName + '.bval')
         if os.path.exists(bvalPath) and os.path.exists(bvecPath):
             # Load bvecs
             bvecs = np.loadtxt(bvecPath)
             # Load bvals
-            bvals = np.rint(np.loadtxt(bvalPath) / 1000)
+            bvals = np.rint(np.loadtxt(bvalPath))
+            # Scale bvals by checking for number of digits in max bval
+            if int(np.log10(np.max(bvals)))+1 >= 3: # if no. of digits >= 3
+                bvals = bvals / 1000
             # Combine bvecs and bvals into [n x 4] array where n is
             # number of DWI volumes. [Gx Gy Gz Bval]
             self.grad = np.c_[np.transpose(bvecs), bvals]
         else:
-            raise NameError('Unable to locate BVAL or BVEC files')
+            raise OSError('Unable to locate BVAL or BVEC files')
         if mask is None:
             maskPath = os.path.join(path,'brain_mask.nii')
         else:
