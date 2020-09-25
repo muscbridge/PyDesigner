@@ -4,6 +4,26 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+`v1.0_RC5`_
+-----------
+
+TBA
+
+**Added**:
+
+* Check for b-value scaling so .bval file so values
+  specified as either 2.0 or 2000 can be processed.
+* ``fitting.dwipy()`` can now be pointed to user-defined
+  bvec and bval paths. It previously required bvec and
+  bval files to have the same name and path as DWI.
+
+**Changed**:
+
+
+**Removed**:
+
+* None
+
 `v1.0_RC4`_
 -----------
 
@@ -218,6 +238,7 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
+.. _v1.0_RC5: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC5
 .. _v1.0_RC4: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC4
 .. _v1.0_RC3: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC3
 .. _v1.0_RC2: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC2
