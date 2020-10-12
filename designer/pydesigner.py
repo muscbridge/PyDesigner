@@ -764,15 +764,19 @@ def main():
         files = []
         files.append(init_nii)
         files.append(filetable['HEAD'].getFull())
-        if 'mask' in filetable:
-            snr = snrplot.makesnr(dwilist=files,
-                                  noisepath=nii_noisemap,
-                                  maskpath=filetable['mask'].getFull())
-        else:
-            snr = snrplot.makesnr(dwilist=files,
-                                  noisepath=filetable['noisemap'].getFull(),
-                                  maskpath=None)
-        snr.makeplot(path=qcpath, smooth=True, smoothfactor=3)
+        try:
+            if 'mask' in filetable:
+                snr = snrplot.makesnr(dwilist=files,
+                                    noisepath=nii_noisemap,
+                                    maskpath=filetable['mask'].getFull())
+            else:
+                snr = snrplot.makesnr(dwilist=files,
+                                    noisepath=filetable['noisemap'].getFull(),
+                                    maskpath=None)
+            snr.makeplot(path=qcpath, smooth=True, smoothfactor=3)
+        except:
+            print('[WARNING] SNR plotting failed, see above. '
+            'Proceeding with processing.')
     
     #-----------------------------------------------------------------
     # Write logs
