@@ -591,6 +591,8 @@ def main():
         undistorted_name_full = str(step_count)+ '_' + undistorted_name
         nii_undistorted = op.join(intermediatepath, undistorted_name_full + '.nii')
         mif_undistorted = op.join(outpath, undistorted_name_full + '.mif')
+        if args.noqc:
+            eddyqcpath = None
         # check to see if this already exists
         if not (args.resume and op.exists(nii_undistorted)):
             # run undistort function
