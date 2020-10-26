@@ -881,9 +881,10 @@ def main():
             if (img.isdti() or img.isdki()) and not args.noakc:
                 akc_out = img.akcoutliers()
                 img.akccorrect(akc_out)
-                dp.writeNii(akc_out,
-                            img.hdr,
-                            op.join(fitqcpath, 'outliers_akc'))
+                if not args.noqc:
+                    dp.writeNii(akc_out,
+                                img.hdr,
+                                op.join(fitqcpath, 'outliers_akc'))
 
              # reorder tensor for mrtrix3
             if 'dki' in img.tensorType():
