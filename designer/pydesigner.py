@@ -591,6 +591,8 @@ def main():
         undistorted_name_full = str(step_count)+ '_' + undistorted_name
         nii_undistorted = op.join(intermediatepath, undistorted_name_full + '.nii')
         mif_undistorted = op.join(outpath, undistorted_name_full + '.mif')
+        if args.noqc:
+            eddyqcpath = None
         # check to see if this already exists
         if not (args.resume and op.exists(nii_undistorted)):
             # run undistort function
@@ -764,15 +766,19 @@ def main():
         files = []
         files.append(init_nii)
         files.append(filetable['HEAD'].getFull())
-        if 'mask' in filetable:
-            snr = snrplot.makesnr(dwilist=files,
-                                  noisepath=nii_noisemap,
-                                  maskpath=filetable['mask'].getFull())
-        else:
-            snr = snrplot.makesnr(dwilist=files,
-                                  noisepath=filetable['noisemap'].getFull(),
-                                  maskpath=None)
-        snr.makeplot(path=qcpath, smooth=True, smoothfactor=3)
+        try:
+            if 'mask' in filetable:
+                snr = snrplot.makesnr(dwilist=files,
+                                    noisepath=nii_noisemap,
+                                    maskpath=filetable['mask'].getFull())
+            else:
+                snr = snrplot.makesnr(dwilist=files,
+                                    noisepath=filetable['noisemap'].getFull(),
+                                    maskpath=None)
+            snr.makeplot(path=qcpath, smooth=True, smoothfactor=3)
+        except:
+            print('[WARNING] SNR plotting failed, see above. '
+            'Proceeding with processing.')
     
     #-----------------------------------------------------------------
     # Write logs
@@ -875,9 +881,10 @@ def main():
             if (img.isdti() or img.isdki()) and not args.noakc:
                 akc_out = img.akcoutliers()
                 img.akccorrect(akc_out)
-                dp.writeNii(akc_out,
-                            img.hdr,
-                            op.join(fitqcpath, 'outliers_akc'))
+                if not args.noqc:
+                    dp.writeNii(akc_out,
+                                img.hdr,
+                                op.join(fitqcpath, 'outliers_akc'))
 
              # reorder tensor for mrtrix3
             if 'dki' in img.tensorType():
