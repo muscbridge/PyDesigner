@@ -19,6 +19,12 @@ TBA
 
 **Changed**:
 
+* Fixed issue where eddy correction would attempt
+ to QC and fail despite parsing the ``--noqc`` flag.
+* SNR plotting works in very specific scenarious when
+  input DWIs are of the same same dimensions. A try/except
+  loop now ensure that the entire pipeline doesn't halt
+  due to errors in plotting.
 
 **Removed**:
 
