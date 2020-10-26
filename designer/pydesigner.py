@@ -20,6 +20,7 @@ from designer.preprocessing import util, preparation, mrinfoutil, mrpreproc
 from designer.plotting import snrplot, outlierplot, motionplot
 from designer.fitting import dwipy as dp
 from designer.postprocessing import filters
+from designer.tractography import dsistudio as ds
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
 
@@ -829,6 +830,7 @@ def main():
         fn_fbi_zeta = 'fbi_zeta'
         fn_fbi_faa = 'fbi_faa'
         fn_fbi_sph = 'fbi_fodf'
+        fn_fbi_tract = 'fbi_tractography_dsi'
         fn_fbi_awf = 'fbwm_awf'
         fn_fbi_Da = 'fbwm_da'
         fn_fbi_De_mean = 'fbwm_de_mean'
@@ -1022,6 +1024,17 @@ def main():
                             input=op.join(metricpath, x + fn_ext),
                             output=op.join(metricpath, x + fn_ext),
                             mask=filetable['mask'].getFull())
-
+            if 'mask' in filetable:
+                ds.makefib(
+                    input=op.join(metricpath, fn_fbi_sph + fn_ext),
+                    output=op.join(metricpath, fn_fbi_tract + '.fib'),
+                    mask=filetable['mask'].getFull()
+                )
+            else:
+                ds.makefib(
+                    input=op.join(metricpath, fn_fbi_sph + fn_ext),
+                    output=op.join(metricpath, fn_fbi_tract + '.fib'),
+                    mask=None
+                )
 if __name__ == '__main__':
     main()

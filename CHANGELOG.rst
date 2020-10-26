@@ -7,7 +7,7 @@ page
 `v1.0_RC5`_
 -----------
 
-TBA
+Oct 26, 2020
 
 **Added**:
 
@@ -16,6 +16,9 @@ TBA
 * ``fitting.dwipy()`` can now be pointed to user-defined
   bvec and bval paths. It previously required bvec and
   bval files to have the same name and path as DWI.
+* **DSI Studio tractography** for FBI. Processing FBI dataset now
+  produces an ``fbi_tractography_dsi.fib`` file that can be loaded
+  into DSI Studio to perform tractography.
 
 **Changed**:
 
