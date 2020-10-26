@@ -1,2 +1,3 @@
 include designer/fitting/*.csv
+include desiger/tractography/*.mat
 global-exclude *.py[cod] __pycache__ *.so

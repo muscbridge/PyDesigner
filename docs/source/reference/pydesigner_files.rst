@@ -117,25 +117,27 @@ The list of ever possible output file is given in the table below.
 +-------------------------------------+----------------------------------------------------------+
 | :code:`fbi_zeta.nii`                | zeta (3d nifti)                                          |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbi_faa`                     | axonal fractional anisotropy (3d nifti)                  |
+| :code:`fbi_faa.nii`                 | axonal fractional anisotropy (3d nifti)                  |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbi_fodf`                    | FBI fODFs from spherical harmonic expansion (4d nifti)   |
+| :code:`fbi_fodf.nii`                | FBI fODFs from spherical harmonic expansion (4d nifti)   |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbwm_awf`                    | axonal water fraction (3d nifti)                         |
+| :code:`fbi_tractography_dsi.fib`    | FBI fODFs prepared for DSI Studio's tractography (fib)   |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbwm_Da`                     | intra-axonal diffusivity (3d nifti)                      |
+| :code:`fbwm_awf.nii`                | axonal water fraction (3d nifti)                         |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbwm_De_ax`                  | axial extra-axonal diffusivity (3d nifti)                |
+| :code:`fbwm_Da.nii`                 | intra-axonal diffusivity (3d nifti)                      |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbwm_De_rad`                 | radial extra-axonal diffusivity (3d nifti)               |
+| :code:`fbwm_De_ax.nii`              | axial extra-axonal diffusivity (3d nifti)                |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbwm_De_mean`                | mean radial extra-axonal diffusivity (3d nifti)          |
+| :code:`fbwm_De_rad.nii`             | radial extra-axonal diffusivity (3d nifti)               |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbwm_fae`                    | extra-axonal fractional anisotropy (3d nifti)            |
+| :code:`fbwm_De_mean.nii`            | mean radial extra-axonal diffusivity (3d nifti)          |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbwm_minCost`                | minimum cost computed by cost function (3d nifti)        |
+| :code:`fbwm_fae.nii`                | extra-axonal fractional anisotropy (3d nifti)            |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbwm_minCost`                |                                                          |
+| :code:`fbwm_minCost.nii`            | minimum cost computed by cost function (3d nifti)        |
++-------------------------------------+----------------------------------------------------------+
+| :code:`fbwm_minCost.nii`            |                                                          |
 |                                     | all costs computed by cost function (4d nifti; 100 three |
 |                                     | dimensional volumes)                                     |
 +-------------------------------------+----------------------------------------------------------+
@@ -143,21 +145,21 @@ The list of ever possible output file is given in the table below.
 +-------------------------------------+----------------------------------------------------------+
 | :code:`wmti_awf.nii`                | axonal water fraction (3d nifti)                         |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_eas_ad`                 | extra-axonal axial diffusivity (3d nifti)                |
+| :code:`wmti_eas_ad.nii`             | extra-axonal axial diffusivity (3d nifti)                |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_eas_rd`                 | extra-axonal radial diffusivity (3d nifti)               |
+| :code:`wmti_eas_rd.nii`             | extra-axonal radial diffusivity (3d nifti)               |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_eas_md`                 | extra-axonal mean diffusivity (3d nifti)                 |
+| :code:`wmti_eas_md.nii`             | extra-axonal mean diffusivity (3d nifti)                 |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_eas_tort`               | extra-axonal tortuosity (3d nifti)                       |
+| :code:`wmti_eas_tort.nii`           | extra-axonal tortuosity (3d nifti)                       |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_ias_ad`                 | intra-axonal axial diffusivity (3d nifti)                |
+| :code:`wmti_ias_ad.nii`             | intra-axonal axial diffusivity (3d nifti)                |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_ias_rd`                 | intra-axonal radial diffusivity (3d nifti)               |
+| :code:`wmti_ias_rd.nii`             | intra-axonal radial diffusivity (3d nifti)               |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_ias_da`                 | intra-axonal intrinsic diffusivity  (3d nifti)           |
+| :code:`wmti_ias_da.nii`             | intra-axonal intrinsic diffusivity  (3d nifti)           |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_ias_tort`               | intra-axonal tortuosity (3d nifti)                       |
+| :code:`wmti_ias_tort.nii`           | intra-axonal tortuosity (3d nifti)                       |
 +-------------------------------------+----------------------------------------------------------+
 
 All other files in folder :code:`/intermediate_nifti` are used by

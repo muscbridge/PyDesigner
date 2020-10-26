@@ -4,6 +4,35 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+`v1.0_RC5`_
+-----------
+
+Oct 26, 2020
+
+**Added**:
+
+* Check for b-value scaling so .bval file so values
+  specified as either 2.0 or 2000 can be processed.
+* ``fitting.dwipy()`` can now be pointed to user-defined
+  bvec and bval paths. It previously required bvec and
+  bval files to have the same name and path as DWI.
+* **DSI Studio tractography** for FBI. Processing FBI dataset now
+  produces an ``fbi_tractography_dsi.fib`` file that can be loaded
+  into DSI Studio to perform tractography.
+
+**Changed**:
+
+* Fixed issue where eddy correction would attempt
+ to QC and fail despite parsing the ``--noqc`` flag.
+* SNR plotting works in very specific scenarious when
+  input DWIs are of the same same dimensions. A try/except
+  loop now ensure that the entire pipeline doesn't halt
+  due to errors in plotting.
+
+**Removed**:
+
+* None
+
 `v1.0_RC4`_
 -----------
 
@@ -218,6 +247,7 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
+.. _v1.0_RC5: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC5
 .. _v1.0_RC4: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC4
 .. _v1.0_RC3: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC3
 .. _v1.0_RC2: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC2

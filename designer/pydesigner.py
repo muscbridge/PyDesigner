@@ -20,6 +20,7 @@ from designer.preprocessing import util, preparation, mrinfoutil, mrpreproc
 from designer.plotting import snrplot, outlierplot, motionplot
 from designer.fitting import dwipy as dp
 from designer.postprocessing import filters
+from designer.tractography import dsistudio as ds
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
 
@@ -591,6 +592,8 @@ def main():
         undistorted_name_full = str(step_count)+ '_' + undistorted_name
         nii_undistorted = op.join(intermediatepath, undistorted_name_full + '.nii')
         mif_undistorted = op.join(outpath, undistorted_name_full + '.mif')
+        if args.noqc:
+            eddyqcpath = None
         # check to see if this already exists
         if not (args.resume and op.exists(nii_undistorted)):
             # run undistort function
@@ -764,15 +767,19 @@ def main():
         files = []
         files.append(init_nii)
         files.append(filetable['HEAD'].getFull())
-        if 'mask' in filetable:
-            snr = snrplot.makesnr(dwilist=files,
-                                  noisepath=nii_noisemap,
-                                  maskpath=filetable['mask'].getFull())
-        else:
-            snr = snrplot.makesnr(dwilist=files,
-                                  noisepath=filetable['noisemap'].getFull(),
-                                  maskpath=None)
-        snr.makeplot(path=qcpath, smooth=True, smoothfactor=3)
+        try:
+            if 'mask' in filetable:
+                snr = snrplot.makesnr(dwilist=files,
+                                    noisepath=nii_noisemap,
+                                    maskpath=filetable['mask'].getFull())
+            else:
+                snr = snrplot.makesnr(dwilist=files,
+                                    noisepath=filetable['noisemap'].getFull(),
+                                    maskpath=None)
+            snr.makeplot(path=qcpath, smooth=True, smoothfactor=3)
+        except:
+            print('[WARNING] SNR plotting failed, see above. '
+            'Proceeding with processing.')
     
     #-----------------------------------------------------------------
     # Write logs
@@ -823,6 +830,7 @@ def main():
         fn_fbi_zeta = 'fbi_zeta'
         fn_fbi_faa = 'fbi_faa'
         fn_fbi_sph = 'fbi_fodf'
+        fn_fbi_tract = 'fbi_tractography_dsi'
         fn_fbi_awf = 'fbwm_awf'
         fn_fbi_Da = 'fbwm_da'
         fn_fbi_De_mean = 'fbwm_de_mean'
@@ -875,9 +883,10 @@ def main():
             if (img.isdti() or img.isdki()) and not args.noakc:
                 akc_out = img.akcoutliers()
                 img.akccorrect(akc_out)
-                dp.writeNii(akc_out,
-                            img.hdr,
-                            op.join(fitqcpath, 'outliers_akc'))
+                if not args.noqc:
+                    dp.writeNii(akc_out,
+                                img.hdr,
+                                op.join(fitqcpath, 'outliers_akc'))
 
              # reorder tensor for mrtrix3
             if 'dki' in img.tensorType():
@@ -1015,6 +1024,17 @@ def main():
                             input=op.join(metricpath, x + fn_ext),
                             output=op.join(metricpath, x + fn_ext),
                             mask=filetable['mask'].getFull())
-
+            if 'mask' in filetable:
+                ds.makefib(
+                    input=op.join(metricpath, fn_fbi_sph + fn_ext),
+                    output=op.join(metricpath, fn_fbi_tract + '.fib'),
+                    mask=filetable['mask'].getFull()
+                )
+            else:
+                ds.makefib(
+                    input=op.join(metricpath, fn_fbi_sph + fn_ext),
+                    output=op.join(metricpath, fn_fbi_tract + '.fib'),
+                    mask=None
+                )
 if __name__ == '__main__':
     main()

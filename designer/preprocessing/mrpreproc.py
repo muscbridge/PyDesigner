@@ -303,8 +303,8 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
     epib0 : int
         Number of reverse PE dir B0 pairs to use in TOPUP correction
         (Default: 1)
-    qc : bool
-        Specify whether to generate eddy QC metrics (Default: True)
+    qc : str
+        Specify path to QC directior. No QC metrics generated if None
     nthreads : int, optional
         Specify the number of threads to use in processing
         (Default: all available threads)
