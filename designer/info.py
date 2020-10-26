@@ -10,7 +10,7 @@ __execdir__ = os.path.basename(
     )
 )
 __packagename__ = 'PyDesigner'
-__version__='v1.0-RC4'
+__version__='v1.0-RC5'
 __author__ = 'PyDesigner developers'
 __copyright__ = 'Copyright 2020, PyDesigner developers, MUSC Advanced Image Analysis (MAMA)'
 __credits__ = [
@@ -48,7 +48,8 @@ REQUIRES = [
     'joblib >= 0.16',
     'tqdm >= 4.40',
     'multiprocess >= 0.70',
-    'nibabel >= 3.1',
+    'nibabel >= 3.2',
+    'dipy >= 1.2',
     'cvxpy >= 1.1'
 ]
 
