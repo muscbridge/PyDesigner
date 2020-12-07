@@ -811,7 +811,7 @@ def main():
         fn_dti_fe = 'dti_fe'
         fn_dki_mk = 'dki_mk'
         fn_dki_rk = 'dki_rk'
-        fn_dki_ak = 'dki_rk'
+        fn_dki_ak = 'dki_ak'
         fn_dki_kfa = 'dki_kfa'
         fn_dki_mkt = 'dki_mkt'
         if img.isdki():
