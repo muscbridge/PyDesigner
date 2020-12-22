@@ -376,7 +376,7 @@ def undistort(input, output, rpe='rpe_header', epib0=1,
         arg.extend(['-nthreads', str(nthreads)])
     # Determine whether half or full sphere sampling
     repol_string = '--repol '
-    if util.bvec_is_fullsphere(op.join(outdir, 'dwiec.bvec')):
+    if mrinfoutil.is_fullsphere(input):
         # is full, add appropriate dwifslpreproc option
         repol_string += '--data_is_shelled'
     else:
