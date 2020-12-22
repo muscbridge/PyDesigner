@@ -398,6 +398,51 @@ def num_shells(path):
     console = list(filter(None, console))
     return len(console)
 
+def max_shell(path):
+    """
+    Returns the maximum b-value shell in DWI
+
+    Parameters
+    ----------
+    path : str
+        Path to input image or directory
+
+    Returns
+    -------
+    int
+        Max b-value
+    """
+    if not op.exists(path):
+        raise OSError('Input path does not exist. Please ensure that the '
+                      'folder or file specified exists.')
+    ftype = format(path)
+    if ftype != 'MRtrix':
+        raise IOError('This function only works with MRtrix (.mif) '
+                      'formatted filetypes. Please ensure that the input '
+                      'filetype meets this requirement')
+    arg = ['mrinfo', '-shell_bvalues']
+    arg.append(path)
+    completion = subprocess.run(arg, stdout=subprocess.PIPE)
+    if completion.returncode != 0:
+        raise IOError('Input {} is not currently supported by '
+                      'PyDesigner.'.format(path))
+    # Remove new line delimiter
+    console = str(completion.stdout).split('\\n')
+    # Remove 'b'
+    console[0] = console[0][1:]
+    # Remove quotes
+    console = [s.replace("'", "") for s in console]
+    # Condense empty strings
+    console = [s.replace('"', '') for s in console]
+    # Remove empty strings form list
+    console.remove('')
+    # Split spaces
+    console = [s.split(' ') for s in console]
+    console = [item for sublist in console for item in sublist]
+    console = list(filter(None, console))
+    console = [round(int(s)) for s in console]
+    print(console)
+    return max(console)
 
 def is_fullsphere(path):
     """
@@ -447,13 +492,13 @@ def is_fullsphere(path):
     # the case, we just assume that data is fully shelled. This
     # disables heuristics testing performed by eddy correction. A DWI
     # will return half-shelled if and only if the norm of mean
-    # direction vector is greater that 0.3 AND has less or equal to
-    # three shells
+    # direction vector is greater that 0.3 AND has max b-value less
+    # than or equal to 3000. The linear model breaks down for high
+    # b-values.
     if mean_dir < 0.3:
         return True
     else:
-        if num_shells(path) > 3:
+        if max_shell(path) > 3000:
             return True
         else:
             return False
-
