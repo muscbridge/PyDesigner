@@ -4,6 +4,31 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+`v1.0_RC6`_
+-----------
+
+Dec 22, 2020
+
+**Added**:
+
+* None
+
+**Changed**
+
+* Replaced ``preprocessing.util.bvec_is_fullsphere()`` and 
+  ``preprocessing.util.vecs_are_fullsphere()`` with 
+  ``preprocessing.mrinfoutil.is_fullsphere()``. Even though datasets
+  may be half-shelled, it is inaccurate to label them as such because
+  distortion relative to b-value is not linear. As such, the
+  ``slm=linear`` makes no sense. This new method performs the proper
+  checks required before labelling a DWI as fully-shelled. A DWI is
+  half-shelled iff max B-value is less than 3000 AND the norm of the
+  mean direction vector is more than 0.3.
+
+**Removed**
+
+* See above
+
 `v1.0_RC5`_
 -----------
 
@@ -247,6 +272,7 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
+.. _v1.0_RC6: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC6
 .. _v1.0_RC5: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC5
 .. _v1.0_RC4: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC4
 .. _v1.0_RC3: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC3
