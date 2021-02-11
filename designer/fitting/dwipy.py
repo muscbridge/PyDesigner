@@ -674,6 +674,7 @@ class DWI(object):
         akc = self.kurtosisCoeff(dt, dirs)
         ak = np.mean(akc)
         dirs = self.radialSampling(v1, dirSample)
+        akc = self.kurtosisCoeff(dt, dirs)
         rk = np.mean(akc)
         W_F = np.sqrt(dt[6]**2 + \
                       dt[16]**2 + \
