@@ -4,7 +4,29 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
-`v1.0_RC6`_
+`v1.0-RC7`_
+-----------
+
+Feb 11, 2021
+
+**Added**:
+
+* Missing Docker figures in RTD documentation
+
+* None
+
+**Changed**
+
+* Added error mitigation when FBI cost function fails to converge to
+  a minimum cost
+* Updated WMTI calculation to follow DKE outputs
+
+**Removed**
+
+* Unnecessary WMTI calculations
+
+
+`v1.0-RC6`_
 -----------
 
 Dec 22, 2020
@@ -29,7 +51,8 @@ Dec 22, 2020
 
 * See above
 
-`v1.0_RC5`_
+
+`v1.0-RC5`_
 -----------
 
 Oct 26, 2020
@@ -58,7 +81,7 @@ Oct 26, 2020
 
 * None
 
-`v1.0_RC4`_
+`v1.0-RC4`_
 -----------
 
 Sep 22, 2020
@@ -78,7 +101,7 @@ Sep 22, 2020
 
 * None
 
-`v1.0_RC3`_
+`v1.0-RC3`_
 -----------
 
 Sep 21, 2020
@@ -100,7 +123,7 @@ Sep 21, 2020
 
 * None
 
-`v1.0_RC2`_
+`v1.0-RC2`_
 -----------
 
 Aug 25, 2020
@@ -122,7 +145,7 @@ Aug 25, 2020
 
 * None
 
-`v1.0_RC1`_
+`v1.0-RC1`_
 -----------
 
 Aug 19, 2020
@@ -243,7 +266,7 @@ Feb 26, 2020
 
 * CSF masking; feature failed to work consistently
 
-`v0.11-dev`_
+`dev-0.11`_
 ------------
 
 Dec 2, 2019
@@ -262,7 +285,7 @@ Dec 2, 2019
 
 * None
 
-`v0.1-dev`_
+`0.1-dev`_
 -----------
 
 Oct 22, 2019
@@ -272,15 +295,16 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
-.. _v1.0_RC6: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC6
-.. _v1.0_RC5: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC5
-.. _v1.0_RC4: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC4
-.. _v1.0_RC3: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC3
-.. _v1.0_RC2: https://github.com/m-ama/PyDesigner/releases/tag/v1.0_RC2
-.. _v1.0_RC1: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC1
+.. _v1.0-RC7: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC7
+.. _v1.0-RC6: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC6
+.. _v1.0-RC5: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC5
+.. _v1.0-RC4: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC4
+.. _v1.0-RC3: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC3
+.. _v1.0-RC2: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC2
+.. _v1.0-RC1: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC1
 .. _v0.32: https://github.com/m-ama/PyDesigner/releases/tag/v0.32
 .. _v0.31: https://github.com/m-ama/PyDesigner/releases/tag/v0.31
 .. _v0.3: https://github.com/m-ama/PyDesigner/releases/tag/v0.3
 .. _v0.2 [The Cupid Release]: https://github.com/m-ama/PyDesigner/releases/tag/v0.2
-.. _v0.11-dev: https://github.com/m-ama/PyDesigner/releases/tag/dev-0.11
-.. _v0.2-dev: https://github.com/m-ama/PyDesigner/releases/tag/0.1-dev
+.. _dev-0.11: https://github.com/m-ama/PyDesigner/releases/tag/dev-0.11
+.. _0.1-dev: https://github.com/m-ama/PyDesigner/releases/tag/0.1-dev
