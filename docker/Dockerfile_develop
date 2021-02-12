@@ -61,6 +61,7 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 # Clone PyDesigner
 RUN mkdir -p /tmp/PyDesigner
+RUN pip3 install cmake
 RUN git clone -b develop --single-branch https://github.com/m-ama/PyDesigner.git /tmp/PyDesigner
 RUN pip3 install /tmp/PyDesigner
 RUN echo "alias python=python3" >> ~/.bashrc && source ~/.bashrc
