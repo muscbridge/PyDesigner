@@ -1267,12 +1267,13 @@ class DWI(object):
                 raise Exception('Grid needs to be a flattened 1D vector')
             ndir = [len(x) for x in GT]
             cost_fn = np.zeros_like(grid)
-            for idx, awf in np.ndenumerate(grid):
-                for b in range(0, len(BT)):
-                    Se = (b0 * np.exp((-BT[b] * (1-awf)**-1) * np.diag((GT[b].dot((iDT - (awf**3 * zeta**-2) * iaDT).dot(GT[b].T)))))) * (1 - awf) # Eq. 3 FBWM paper
-                    Sa = (2*np.pi*b0*zeta*np.sqrt(np.pi/BT[b])) * (shB[b].dot((Pl0 * g2l_fa_R_b[b,idx,:][0]*clm))) # Eq. 4 FBM paper
-                    cost_fn[idx] = cost_fn[idx] + ndir[b]**-1 * np.sum((IMG[b] - Se.real - Sa.real)**2)
-                cost_fn[idx] = b0**-1 * np.sqrt(len(BT)**-1 * cost_fn[idx]) # Eq. 21 FBWM paper
+            with np.errstate(all='ignore'):
+                for idx, awf in np.ndenumerate(grid):
+                    for b in range(0, len(BT)):
+                        Se = (b0 * np.exp((-BT[b] * (1-awf)**-1) * np.diag((GT[b].dot((iDT - (awf**3 * zeta**-2) * iaDT).dot(GT[b].T)))))) * (1 - awf) # Eq. 3 FBWM paper
+                        Sa = (2*np.pi*b0*zeta*np.sqrt(np.pi/BT[b])) * (shB[b].dot((Pl0 * g2l_fa_R_b[b,idx,:][0]*clm))) # Eq. 4 FBM paper
+                        cost_fn[idx] = cost_fn[idx] + ndir[b]**-1 * np.sum((IMG[b] - Se.real - Sa.real)**2)
+                    cost_fn[idx] = b0**-1 * np.sqrt(len(BT)**-1 * cost_fn[idx]) # Eq. 21 FBWM paper
             return cost_fn
 
         def fbi_helper(dwi, b0, B, H, Pl0, gl, rectify=True,
