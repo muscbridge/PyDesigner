@@ -62,8 +62,6 @@ with the following flags.
 
 --nooutliers        Disables IRLLS outlier detection
 
--w, --wmti          Enables IRLLS outlier detection, disable by default because calculations are experimental
-
 --fit_constraints   Specify fitting constraints to use, defaults to 0,1,0
 
 --noqc              Disables saving of quality control (QC) metrics
