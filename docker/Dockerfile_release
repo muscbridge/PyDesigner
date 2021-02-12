@@ -42,8 +42,7 @@ RUN apt-get update && \
       nano \
       software-properties-common \
       python2.7 python-pip \
-      python3-pip \
-      jq
+      python3-pip
 
 # Install MRTRIX3 dependencies
 RUN apt-get install -y --no-install-recommends \
@@ -62,7 +61,9 @@ RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
 # Clone PyDesigner
 ADD install_pydesigner_release /tmp/install_pydesigner_release
+RUN sed -i 's/\r//g' /tmp/install_pydesigner_release
 RUN chmod +x /tmp/install_pydesigner_release && bash /tmp/install_pydesigner_release
+RUN pip3 install cmake
 RUN cd /tmp/PyDesigner && pip3 install .
 RUN echo "alias python=python3" >> ~/.bashrc && source ~/.bashrc
 RUN echo "alias pip=pip3" >> ~/.bashrc && source ~/.bashrc
