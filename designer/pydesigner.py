@@ -168,9 +168,6 @@ def main():
     parser.add_argument('--nooutliers', action='store_true', default=False,
                         help='Do not perform outlier correction on kurtosis '
                         'fitting metrics.')
-    parser.add_argument('-w', '--wmti', action='store_true', default=False,
-                        help='Include DKI WMTI parameters (forces DKI): '
-                        'AWF, IAS_params, EAS_params. ')
     parser.add_argument('-m', '--mask', action='store_true', default=False,
                         help='Compute a brain mask prior to tensor fitting '
                         'to strip skull and improve efficiency. Optionally, '
@@ -287,9 +284,6 @@ def main():
     # Can't do WMTI if no fit
     if args.nofit:
         stdmsg='--nofit given but '
-        if args.wmti:
-            warningmsg+=msgstart+stdmsg+'--wmti'+override+'tensor fitting.\n'
-            args.nofit = False
         if args.noakc:
             warningmsg+=msgstart+stdmsg+'--noakc'+override+'tensor fitting.\n'
             args.nofit = False
@@ -802,7 +796,7 @@ def main():
                 nthreads=args.nthreads
             )
         protocols = img.tensorType()
-        print('Protocol(s) detected: {}' .format([x.upper() for x in protocols]))
+        print('Protocol(s) detected: {}' .format(', '.join([x.upper() for x in protocols])))
         # Define filenames
         fn_dti_md = 'dti_md'
         fn_dti_rd = 'dti_rd'
@@ -821,12 +815,8 @@ def main():
         fn_wmti_awf = 'wmti_awf'
         fn_wmti_eas_ad = 'wmti_eas_ad'
         fn_wmti_eas_rd = 'wmti_eas_rd'
-        fn_wmti_eas_md = 'wmti_eas_md'
         fn_wmti_eas_tort = 'wmti_eas_tort'
-        fn_wmti_ias_ad = 'wmti_ias_ad'
-        fn_wmti_ias_rd = 'wmti_ias_rd'
         fn_wmti_ias_da = 'wmti_ias_da'
-        fn_wmti_ias_tort = 'wmti_ias_tort'
         fn_fbi_zeta = 'fbi_zeta'
         fn_fbi_faa = 'fbi_faa'
         fn_fbi_sph = 'fbi_fodf'
@@ -933,43 +923,31 @@ def main():
                             input=op.join(metricpath, x + fn_ext),
                             output=op.join(metricpath, x + fn_ext),
                             mask=filetable['mask'].getFull())
-                if args.wmti:
-                    awf, eas_ad, eas_rd, eas_md, eas_tort, ias_ad, ias_rd, ias_da, ias_tort = \
-                        img.extractWMTI()
-                    dp.writeNii(awf, img.hdr,
-                                op.join(metricpath, fn_wmti_awf))
-                    dp.writeNii(eas_ad, img.hdr,
-                                op.join(metricpath, fn_wmti_eas_ad))
-                    dp.writeNii(eas_rd, img.hdr,
-                                op.join(metricpath, fn_wmti_eas_rd))
-                    dp.writeNii(eas_md, img.hdr,
-                                op.join(metricpath, fn_wmti_eas_md))
-                    dp.writeNii(eas_tort, img.hdr,
-                                op.join(metricpath, fn_wmti_eas_tort))
-                    dp.writeNii(ias_ad, img.hdr,
-                                op.join(metricpath, fn_wmti_ias_ad))
-                    dp.writeNii(ias_rd, img.hdr,
-                                op.join(metricpath, fn_wmti_ias_rd))
-                    dp.writeNii(ias_da, img.hdr,
-                                op.join(metricpath, fn_wmti_ias_da))
-                    dp.writeNii(ias_tort, img.hdr,
-                                op.join(metricpath, fn_wmti_ias_tort))
-                    if args.median:
-                        for x in [
-                            fn_wmti_awf,
-                            fn_wmti_eas_ad,
-                            fn_wmti_eas_rd,
-                            fn_wmti_eas_md,
-                            fn_wmti_eas_tort,
-                            fn_wmti_ias_ad,
-                            fn_wmti_ias_rd,
-                            fn_wmti_ias_da,
-                            fn_wmti_ias_tort
-                        ]:
-                            filters.median(
-                                input=op.join(metricpath, x + fn_ext),
-                                output=op.join(metricpath, x + fn_ext),
-                                mask=filetable['mask'].getFull())
+                # Perform WMTI calcualtions           
+                awf, eas_ad, eas_rd, eas_tort, ias_da = \
+                    img.extractWMTI()
+                dp.writeNii(awf, img.hdr,
+                            op.join(metricpath, fn_wmti_awf))
+                dp.writeNii(eas_ad, img.hdr,
+                            op.join(metricpath, fn_wmti_eas_ad))
+                dp.writeNii(eas_rd, img.hdr,
+                            op.join(metricpath, fn_wmti_eas_rd))
+                dp.writeNii(eas_tort, img.hdr,
+                            op.join(metricpath, fn_wmti_eas_tort))
+                dp.writeNii(ias_da, img.hdr,
+                            op.join(metricpath, fn_wmti_ias_da))
+                if args.median:
+                    for x in [
+                        fn_wmti_awf,
+                        fn_wmti_eas_ad,
+                        fn_wmti_eas_rd,
+                        fn_wmti_eas_tort,
+                        fn_wmti_ias_da
+                    ]:
+                        filters.median(
+                            input=op.join(metricpath, x + fn_ext),
+                            output=op.join(metricpath, x + fn_ext),
+                            mask=filetable['mask'].getFull())
         if img.isfbi():
             if img.isfbwm():
                 zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = img.fbi(l_max=args.l_max, fbwm=True)

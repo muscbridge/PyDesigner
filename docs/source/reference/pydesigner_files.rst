@@ -149,17 +149,9 @@ The list of ever possible output file is given in the table below.
 +-------------------------------------+----------------------------------------------------------+
 | :code:`wmti_eas_rd.nii`             | extra-axonal radial diffusivity (3d nifti)               |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_eas_md.nii`             | extra-axonal mean diffusivity (3d nifti)                 |
-+-------------------------------------+----------------------------------------------------------+
 | :code:`wmti_eas_tort.nii`           | extra-axonal tortuosity (3d nifti)                       |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_ias_ad.nii`             | intra-axonal axial diffusivity (3d nifti)                |
-+-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_ias_rd.nii`             | intra-axonal radial diffusivity (3d nifti)               |
-+-------------------------------------+----------------------------------------------------------+
 | :code:`wmti_ias_da.nii`             | intra-axonal intrinsic diffusivity  (3d nifti)           |
-+-------------------------------------+----------------------------------------------------------+
-| :code:`wmti_ias_tort.nii`           | intra-axonal tortuosity (3d nifti)                       |
 +-------------------------------------+----------------------------------------------------------+
 
 All other files in folder :code:`/intermediate_nifti` are used by
