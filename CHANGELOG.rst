@@ -4,6 +4,25 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+`v1.0-RC8`_
+-----------
+
+Feb 15, 2021
+
+**Added**:
+
+* Added missing Rician preprocessing to `-s, --standard`
+  preprocessing
+
+**Changed**
+
+* Potential sources of errors in FBWM have been mitigated
+  with error-handling
+
+**Removed**
+
+* None
+
 `v1.0-RC7`_
 -----------
 
@@ -12,8 +31,6 @@ Feb 11, 2021
 **Added**:
 
 * Missing Docker figures in RTD documentation
-
-* None
 
 **Changed**
 
@@ -295,6 +312,7 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
+.. _v1.0-RC8: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC8
 .. _v1.0-RC7: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC7
 .. _v1.0-RC6: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC6
 .. _v1.0-RC5: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC5
