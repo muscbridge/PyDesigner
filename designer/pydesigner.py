@@ -280,6 +280,7 @@ def main():
         #--extra options--
         args.mask = True
         args.degibbs = True
+        args.rician = True
 
     # Can't do WMTI if no fit
     if args.nofit:

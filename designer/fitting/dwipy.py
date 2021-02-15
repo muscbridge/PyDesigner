@@ -1474,11 +1474,12 @@ class DWI(object):
                     L,V = np.linalg.eig(iDe) # L : eigVals and V: eigVecs
                     L = np.sort(L) # again, ascending
                     L = L[::-1] # now, descending
-                De_ax = L[0] # Eq. 24 FBWM paper, axial extra-axonal diffusivity
-                De_rad = (L[1] + L[2])/2 # radial De
-                De_fa = np.sqrt(((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2 ) / (2 * np.sum(L ** 2))) # extra-axonal FA
-                De_mean = (1/3) * (2 * De_rad + De_ax) # average De
-                min_cost = min_cost_fn[0]
+                with np.errstate(invalid='ignore'):
+                    De_ax = L[0] # Eq. 24 FBWM paper, axial extra-axonal diffusivity
+                    De_rad = (L[1] + L[2])/2 # radial De
+                    De_fa = np.sqrt(((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2 ) / (2 * np.sum(L ** 2))) # extra-axonal FA
+                    De_mean = (1/3) * (2 * De_rad + De_ax) # average De
+                    min_cost = min_cost_fn[0]
             else:
                 min_awf = None
                 Da = None
