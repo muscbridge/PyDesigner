@@ -4,6 +4,24 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+`v1.0-RC9`_
+-----------
+
+Mar 16, 2021
+
+**Added**:
+
+* None
+
+**Changed**
+
+* B-values are first rounded to a float insted of integer directly to
+  prevent errors in preprocessing
+
+**Removed**
+
+* None
+
 `v1.0-RC8`_
 -----------
 
@@ -124,6 +142,7 @@ Sep 22, 2020
 Sep 21, 2020
 
 **Added**:
+
 * FBI fODF map for FBI tractography. Users may use MRTrix3
   to further process this file.
 * Variable maximum spherical harmonic degree to improve
@@ -312,6 +331,7 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
+.. _v1.0-RC9: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC9
 .. _v1.0-RC8: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC8
 .. _v1.0-RC7: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC7
 .. _v1.0-RC6: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC6

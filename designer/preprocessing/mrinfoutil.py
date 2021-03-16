@@ -440,8 +440,7 @@ def max_shell(path):
     console = [s.split(' ') for s in console]
     console = [item for sublist in console for item in sublist]
     console = list(filter(None, console))
-    console = [round(int(s)) for s in console]
-    print(console)
+    console = [int(round(float(s))) for s in console]
     return max(console)
 
 def is_fullsphere(path):
