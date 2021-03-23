@@ -330,7 +330,11 @@ class DWIParser:
     JSONlist : list of str
         Contains paths to all JSON files
     nDWI : int
-        Number of DWIs entered   
+        Number of DWIs entered
+    echotime : list of int
+        Echo time in miliseconds of each input DWI
+    vols : list of ints
+        Number of volumes in each input DWI
     """
     def __init__(self, path):
         """
@@ -423,6 +427,7 @@ class DWIParser:
         if not (resume and op.exists(op.join(path, 'working' + ext))):
             miflist = []
             # The following loop converts input file into .mif
+            echotime = []
             for (idx, i) in enumerate(self.DWIlist):
                 if 'nifti' in self.InputType and \
                         (not (op.exists(self.BVEClist[idx])) or \
@@ -528,8 +533,14 @@ class DWIParser:
                                     'and .json. If this is not possible, '
                                     'please provide manually concatenated '
                                     'DWIs or run with single series input.')
+            echotime = []
+            vols = []
             for i, fname in enumerate(miflist):
+                echotime.append(mrinfoutil.echotime(fname))
+                vols.append(mrinfoutil.size(fname)[-1])
                 os.remove(fname)
+            self.echotime = echotime
+            self.vols = vols
 
     def getPath(self):
         """
