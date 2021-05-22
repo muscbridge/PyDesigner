@@ -213,7 +213,24 @@ class DWI(object):
         a = dwi.maxDKIBval(), where dwi is the DWI class object
 
         """
-        exclude_idx = self.grad[:, 3] < th.__maxdkibval__
+        exclude_idx = self.grad[:, 3] <= th.__maxdkibval__
+        return max(np.unique(self.grad[exclude_idx,3])).astype(int)
+
+    def maxFBIBval(self):
+        """
+        Returns the maximum FBI b-value in a dataset
+
+        Returns
+        -------
+        float
+            maximum DKI B-value in DWI
+
+        Examples
+        --------
+        a = dwi.maxDKIBval(), where dwi is the DWI class object
+
+        """
+        exclude_idx = self.grad[:, 3] <= th.__maxfbibval__
         return max(np.unique(self.grad[exclude_idx,3])).astype(int)
 
     def idxb0(self):
