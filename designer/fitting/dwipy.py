@@ -311,13 +311,13 @@ class DWI(object):
         a = dwi.tensorType(), where dwi is the DWI class object
         """
         type = []
-        if self.maxDTIBval() <= 1.5 and \
-            self.maxDTIBval() > th.__mindkibval__:
+        if self.maxDTIBval() <= th.__maxdtibval__ and \
+            self.maxDTIBval() >= th.__mindkibval__:
             type.append('dti')
-        if self.maxDKIBval() > 1.5 and \
-            self.maxDKIBval() < th.__maxdkibval__:
+        if self.maxDKIBval() >= th.__maxdtibval__ and \
+            self.maxDKIBval() <= th.__maxdkibval__:
             type.append('dki')
-        if self.maxBval() >= th.__maxdkibval__:
+        if self.maxBval() >= th.__minfbibval__:
             type.append('fbi')
         if 'fbi' in type and 'dki' in type:
             type.append('fbwm')
