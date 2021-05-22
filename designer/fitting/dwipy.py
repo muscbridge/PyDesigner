@@ -196,7 +196,7 @@ class DWI(object):
         a = dwi.maxDKIBval(), where dwi is the DWI class object
 
         """
-        exclude_idx = self.grad[:, 3] < th.__maxdtibval__
+        exclude_idx = self.grad[:, 3] <= th.__maxdtibval__
         return max(np.unique(self.grad[exclude_idx,3])).astype(int)
     
     def maxDKIBval(self):
@@ -291,7 +291,7 @@ class DWI(object):
         """
         idx = np.ones_like(self.grad[:, 3], dtype=bool)
         if self.isfbi():
-            idx = self.grad[:, -1] >= th.__minfbibval__
+            idx = np.rint(self.grad[:, -1]) == np.rint(self.maxFBIBval())
         else:
             raise IndexError('No valid FBI sequence found.')
         return idx
