@@ -2634,6 +2634,186 @@ class DWI(object):
         propViol = vectorize(propViol, self.mask)
         return propViol
 
+def fit_regime(input, output,
+                prefix=None, suffix=None, ext=None,
+                irlls=True, akc=True, qcpath=None,
+                fit_constraints=[0,1,0],
+                l_max=None,
+                mask=None,
+                nthreads=None):
+    """
+    Performs the entire tensor fitting regime and writes out maps.
+    Uses auto-detections methods to determine the types of protocols
+    encoded by DWI and extract their metrics.
+
+    Parameters
+    ----------
+    input : str
+        Path to DWI
+    output : str
+        Output directory to write all outputs
+    prefix : str
+        Prefix to append to output file names.
+        (Default: None)
+    suffix : str
+        Suffix to append to output file names.
+        (Default: None)
+    ext : str
+        Specify output image extension type.
+        (Default: None)
+    irlls : bool
+        Specify whether to perform IRLLS outlier detection.
+        (Default: True)
+    akc : bool
+        Specify whether to perform brute-forced AKC correction.
+        (Default: True)
+    qcpath : str
+        Specify output directory to write QC metrics.
+        (Default: None)
+    fit_constraints : list
+        List of 3 bool elements specifying which fit contraints to
+        use. See DWI.createConstraints() on usage.
+        (Default: [0, 1, 0])
+    l_max : int
+        Maximum spherical harminic degree for FBI/FBWM fit.
+        (Default: None)
+    mask : str
+        Path to brain mask
+        (Default: None)
+    nthreads : int
+        Number of workers to use in processing. Default value uses all
+        available workers.
+        (Default: None)
+    """
+    if prefix is None:
+        prefix = ''
+    if suffix is None:
+        suffix = ''
+    if ext is None:
+        ext = '.nii'
+    img = DWI(input, mask=mask, nthreads=nthreads)
+    protocols = img.tensorType()
+    print('Protocol(s) detected: {}' .format(', '.join([x.upper() for x in protocols])))
+    from . import dwi_fnames
+    fname_dti = dwi_fnames._dti_
+    fname_dki = dwi_fnames._dki_
+    fname_wmti = dwi_fnames._wmti_
+    fname_fbi = dwi_fnames._fbi_
+    fname_tensor = dwi_fnames._tensor_
+    fname_outliers = dwi_fnames._outliers_
+    for key, value in fname_dti.copy().items():
+        fname_dti[key] = prefix + value + suffix + ext
+    for key, value in fname_dki.copy().items():
+        fname_dki[key] = prefix + value + suffix + ext
+    for key, value in fname_wmti.copy().items():
+        fname_wmti[key] = prefix + value + suffix + ext
+    for key, value in fname_fbi.copy().items():
+        fname_fbi[key] = prefix + value + suffix + ext
+    for key, value in fname_tensor.copy().items():
+        fname_tensor[key] = prefix + value + suffix + ext
+    for key, value in fname_outliers.copy().items():
+        fname_outliers[key] = prefix + value + suffix + ext
+    if irlls:
+        if img.isdki():
+            outliers, dt_est = img.irlls(mode='DKI')
+        else:
+            outliers, dt_est = img.irlls(mode='DTI')
+        if qcpath:
+            if op.exists(qcpath):
+                outlier_full = op.join(qcpath, fname_outliers['IRLLS'])
+                print(outlier_full)
+                outlier_plot_full = op.join(qcpath,
+                    prefix + 'irlls_outliers_plot' + suffix + '.png')
+                bvals_outlier_full = op.join(qcpath,
+                    prefix + 'irlls_outliers_shells' + suffix + '.bval')
+                if img.isdki():
+                    bvals_outlier = img.getBvals()[img.idxdki()].astype(int)
+                else:
+                    bvals_outlier = img.getBvals()[img.idxdti()].astype(int)
+                bvals_outlier = bvals_outlier * 1000
+                writeNii(outliers, img.hdr, outlier_full)
+                np.savetxt(bvals_outlier_full, bvals_outlier, newline=' ', fmt="%d")
+                if mask:
+                    outlierplot.plot(input=outlier_full,
+                                    output=outlier_plot_full,
+                                    bval=bvals_outlier_full,
+                                    mask=mask)
+                else:
+                    outlierplot.plot(input=outlier_full,
+                                    output=outlier_plot_full,
+                                    bval=bvals_outlier_full,
+                                    mask=None)
+                os.remove(bvals_outlier_full)
+    if irlls:
+        img.fit(fit_constraints, reject=outliers)
+    else:
+        img.fit(fit_constraints)
+    if akc and img.isdki():
+        akc_out = img.akcoutliers()
+        img.akccorrect(akc_out)
+        if qcpath:
+            writeNii(akc_out,
+                        img.hdr,
+                        op.join(qcpath, fname_outliers['AKC']))
+    if 'dki' in img.tensorType():
+        tensorType = 'dki'
+    else:
+        tensorType = 'dti'
+    DT, KT = img.tensorReorder(tensorType)
+    if tensorType == 'dki':
+        writeNii(DT, img.hdr, op.join(output, fname_tensor['DT']))
+        writeNii(KT, img.hdr, op.join(output, fname_tensor['KT']))
+    else:
+        writeNii(DT, img.hdr, op.join(output, fname_tensor['DT']))
+    # DTI Parameters
+    if img.isdti():
+        md, rd, ad, fa, fe, trace = img.extractDTI()
+        writeNii(md, img.hdr, op.join(output, fname_dti['md']))
+        writeNii(rd, img.hdr, op.join(output, fname_dti['rd']))
+        writeNii(ad, img.hdr, op.join(output, fname_dti['ad']))
+        writeNii(fa, img.hdr, op.join(output, fname_dti['fa']))
+        writeNii(fe, img.hdr, op.join(output, fname_dti['fe']))
+        writeNii(trace, img.hdr, op.join(output, fname_dti['trace']))
+    if img.isdki():
+    # DKI Parameters 
+        mk, rk, ak, kfa, mkt, trace = img.extractDKI()
+        writeNii(mk, img.hdr, op.join(output, fname_dki['mk']))
+        writeNii(rk, img.hdr, op.join(output, fname_dki['rk']))
+        writeNii(ak, img.hdr, op.join(output, fname_dki['ak']))
+        writeNii(kfa, img.hdr, op.join(output, fname_dki['kfa']))
+        writeNii(mkt, img.hdr, op.join(output, fname_dki['mkt']))
+        writeNii(trace, img.hdr, op.join(output, fname_dki['trace']))
+    # WMTI Parameters
+        awf, eas_ad, eas_rd, eas_tort, ias_da = img.extractWMTI()
+        writeNii(awf, img.hdr, op.join(output, fname_wmti['awf']))
+        writeNii(eas_ad, img.hdr, op.join(output, fname_wmti['eas_ad']))
+        writeNii(eas_rd, img.hdr, op.join(output, fname_wmti['eas_rd']))
+        writeNii(eas_tort, img.hdr, op.join(output, fname_wmti['eas_tort']))
+        writeNii(ias_da, img.hdr, op.join(output, fname_wmti['ias_da']))
+    if img.isfbi():
+        if img.isfbwm():
+            zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, \
+                De_fa, min_cost, min_cost_fn = \
+                    img.fbi(l_max=l_max, fbwm=True)
+            writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
+            writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
+            writeNii(sph, img.hdr, op.join(output, fname_fbi['sph']))
+            writeNii(min_awf, img.hdr, op.join(output, fname_fbi['awf']))
+            writeNii(Da, img.hdr, op.join(output, fname_fbi['Da']))
+            writeNii(De_mean, img.hdr, op.join(output, fname_fbi['De_mean']))
+            writeNii(De_ax, img.hdr, op.join(output, fname_fbi['De_ax']))
+            writeNii(De_rad, img.hdr, op.join(output, fname_fbi['De_rad']))
+            writeNii(De_fa, img.hdr, op.join(output, fname_fbi['fae']))
+            writeNii(min_cost, img.hdr, op.join(output, fname_fbi['min_cost']))
+            writeNii(min_cost_fn, img.hdr, op.join(output, fname_fbi['min_cost_fn']))
+        else:
+            zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, \
+                De_fa, min_cost, min_cost_fn = \
+                    img.fbi(l_max=l_max, fbwm=False)
+            writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
+            writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
+            writeNii(sph, img.hdr, op.join(output, fname_fbi['sph']))
+
 def vectorize(img, mask):
     """
     Returns vectorized image based on brain mask, requires no input
