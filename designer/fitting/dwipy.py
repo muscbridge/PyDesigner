@@ -1374,7 +1374,7 @@ class DWI(object):
             alm = np.dot(np.linalg.pinv(B),(dwi/b0)) # DWI signal SH coefficients (these are complex)
             alm[np.isnan(alm)] = 0
             a00 = alm[0].real # the imaginary part is on the order of 10^-18 (this is for zeta)
-            clm = alm*gl[0]*highprecisionpower(np.sqrt(4*np.pi)*alm[0]*Pl0*gl,-1) # fODF SH coefficients (these are complex)
+            clm = alm*gl[0]*np.power(np.sqrt(4*np.pi)*alm[0]*Pl0*gl,-1) # fODF SH coefficients (these are complex)
             # need to figure out how to do peak detection (on this variable and then read out odf structures like in MATLAB code)
             # only the real part would be read out but that would need to be done later on after the rectification process below
             ODF = np.matmul(H,clm)
@@ -2960,39 +2960,5 @@ def highprecisionexp(array, maxp=1e32):
         ans = np.exp(array)
     except:
         ans = np.full(array.shape, maxp)
-    np.seterr(**defaultErrorState)
-    return ans
-
-def highprecisionpower(x1, x2, maxp=1e32):
-    """
-    Prevents overflow warning with numpy.power by assigning overflows
-    to a maxumum precision value. Raise each base in x1 to the
-    positionally-corresponding power in x2.
-    Classification: Function
-
-    Parameters
-    ----------
-    x1 : ndarray
-        Array or scalar of bases
-    x2: ndarray
-        Array or scalar of exponents
-    maxp : float, optional
-        Maximum preicison to assign if overflow (Default: 1e32)
-
-    Returns
-    -------
-    exponent or max-precision
-
-    Examples
-    --------
-    a = highprecisionexp(array)
-    """
-    np.seterr(all='ignore')
-    defaultErrorState = np.geterr()
-    np.seterr(over='raise', invalid='raise')
-    try:
-        ans = np.power(x1, x2)
-    except:
-        ans = np.full(x1.shape, maxp)
     np.seterr(**defaultErrorState)
     return ans
