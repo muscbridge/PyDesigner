@@ -1308,7 +1308,7 @@ class DWI(object):
             b0 : float
                 Averaged B0 signal at a given voxel
             B : array_like(dtype=complex)
-                dMRI spherical harmonic expansion
+                FBI spherical harmonic expansion
             H : array_like(dtype=complex)
                 ODF from spherical harmonic expansion
             Pl0 : array_like(dtype=float)
@@ -1404,8 +1404,10 @@ class DWI(object):
             aDT = 1/(c00*np.sqrt(30))*aDT
             iaDT = np.reshape(aDT,(3,3)).real
             if fbwm:
-                BT = np.unique(self.getBvals())[1:]
-                GT = [self.grad[self.grad[:, -1] == x, 0:3] for x in BT]
+                bval = np.rint(self.grad[:, -1])
+                BT = np.unique(bval)
+                BT = BT[BT != 0] # Exclude B0s
+                GT = [self.grad[bval == x, 0:3] for x in BT]
                 ndir = [len(x) for x in GT]
                 f_grid = np.linspace(0,1,100) # define AWF grid (100 pts evenly spaced between 0 (min) and 1 (max))
                 int_grid = np.linspace(0,99,100, dtype=int) # define grid points to iterate over (100 of them)
@@ -1526,7 +1528,8 @@ class DWI(object):
         img = self.img
         bt_unique = np.unique(self.grad[:, -1])
         order = self.optimal_lmax()
-        b0 = np.mean(img[:, :, :, self.idxb0()], axis=3)
+        b0 = np.nanmean(img[:, :, :, self.idxb0()], axis=3)
+        b0 = np.nan_to_num(b0, nan=0, posinf=0, neginf=0)
         # Vectorize images
         b0 = vectorize(b0, self.mask)
         img = vectorize(img, self.mask)
@@ -1567,11 +1570,13 @@ class DWI(object):
                         unit='vox',
                         ncols=tqdmWidth)
         if fbwm:
-            theta1 = np.arccos(self.grad[self.grad[:, -1] == 1, 2])
-            phi1 =  np.arctan2(self.grad[self.grad[:, -1] == 1,1],self.grad[self.grad[:, -1] == 1,0])
+            # Index gradients based on b1000 and b2000 shells
+            bval = np.rint(self.grad[:, -1])
+            theta1 = np.arccos(self.grad[bval == 1, 2])
+            phi1 =  np.arctan2(self.grad[bval == 1, 1],self.grad[bval == 1,0])
 
-            theta2 = np.arccos(self.grad[self.grad[:, -1] == 2,2])
-            phi2 =  np.arctan2(self.grad[self.grad[:, -1] == 2,1],self.grad[self.grad[:, -1] == 2,0])
+            theta2 = np.arccos(self.grad[bval == 2, 2])
+            phi2 =  np.arctan2(self.grad[bval == 2, 1], self.grad[bval == 2,0])
             # SH basis set for the two B-values in DKI
             fbwm_SH1 = shbasis(degs,theta1,phi1)
             fbwm_SH2 = shbasis(degs,theta2,phi2)
@@ -1607,8 +1612,8 @@ class DWI(object):
                     rectify=rectify,
                     fbwm_SH1 = fbwm_SH1,
                     fbwm_SH2 = fbwm_SH2,
-                    fbwm_B1 = img[self.grad[:, -1] == 1, i],
-                    fbwm_B2 = img[self.grad[:, -1] == 2, i],
+                    fbwm_B1 = img[bval == 1, i],
+                    fbwm_B2 = img[bval == 2, i],
                     fbwm_dt = dt[:, i],
                     fbwm_degs=degs,
                     sh_area=AREA
