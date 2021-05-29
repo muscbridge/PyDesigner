@@ -3,6 +3,7 @@
 
 import multiprocessing
 import os
+import os.path as op
 import random
 import cvxpy as cvx
 import nibabel as nib
@@ -14,6 +15,7 @@ from scipy.special import sph_harm, gamma, hyp1f1, factorial
 from tqdm import tqdm
 from . import dwidirs
 from . import thresholds as th
+from designer.plotting import outlierplot
 
 # Define the lowest number possible before it is considered a zero
 minZero = th.__minZero__
@@ -93,8 +95,9 @@ class DWI(object):
             # Load bvecs
             bvecs = np.loadtxt(bvecPath)
             # Load bvals
-            bvals = np.rint(np.loadtxt(bvalPath))
-            # Scale bvals by checking for number of digits in max bval
+            bvals = np.loadtxt(bvalPath)
+            # Scale bvals to ms/um2 by checking for number of digits
+            # in max bval
             if int(np.log10(np.max(bvals)))+1 >= 3: # if no. of digits >= 3
                 bvals = bvals / 1000
             # Combine bvecs and bvals into [n x 4] array where n is
@@ -116,11 +119,12 @@ class DWI(object):
             self.maskStatus = False
             print('No brain mask supplied')
         tqdm.write('Image ' + fName + '.nii loaded successfully')
-        if not isinstance(nthreads, int):
-            raise Exception('Variable nthreads need to be an integer')
-        if nthreads < -1 or nthreads == 0:
-            raise Exception('Variable nthreads is a positive integer or '
-                            '-1')
+        if not nthreads is None:
+            if not isinstance(nthreads, int):
+                raise Exception('Variable nthreads need to be an integer')
+            if nthreads < -1 or nthreads == 0:
+                raise Exception('Variable nthreads is a positive integer or '
+                                '-1')      
         if nthreads is None:
             self.workers = -1
         else:
@@ -244,7 +248,7 @@ class DWI(object):
             Index of DTI/DKI b-values
 
         """
-        return(self.grad[:, -1] == 0)
+        return(np.rint(self.grad[:, 3]) == 0)
 
     def idxdti(self):
         """
