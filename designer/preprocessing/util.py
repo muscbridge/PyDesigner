@@ -301,6 +301,11 @@ class DWIFile:
                         return False
                     else:
                         return True
+                else:
+                    print('Insufficient information in .json file to '
+                    'determine Fourier status. Assuming DWI is '
+                    'partial Fourier')
+                    return True
 
     def print(self, json=False):
         print('Path: ' + self.path)

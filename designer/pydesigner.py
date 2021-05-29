@@ -206,7 +206,7 @@ def main():
                         'While maps appear visually soother with '
                         'this flag on, they may nonetheless be less '
                         'accurate.')
-    parser.add_argument('--nthreads', type=int,
+    parser.add_argument('--nthreads', type=int, default=None,
                         help='Number of threads to use for computation. '
                         'Note that using too many threads will cause a slow-'
                         'down.')
@@ -272,11 +272,10 @@ def main():
                         nthreads=args.nthreads,
                         force=args.force,
                         verbose=args.verbose)
-
+                        
     #-----------------------------------------------------------------
     # Validate Arguments
     #-----------------------------------------------------------------
-
     errmsg = ''
     warningmsg = ''
     msgstart = 'Incompatible arguments: '
@@ -770,8 +769,6 @@ def main():
                             verbose=False)
     filetable['preprocessed'] = DWIFile(preprocessed)
     filetable['HEAD'] = filetable['preprocessed']
-    # Remove working.mif
-    os.remove(working_path)
 
     #-----------------------------------------------------------------
     # Compute SNR

@@ -7,7 +7,7 @@ _dti_ = {
     'ad': 'dti_ad',
     'fa': 'dti_fa',
     'fe': 'dti_fe',
-    'trace': 'dti_tract'
+    'trace': 'dti_trace'
 }
 
 _dki_ = {
@@ -45,4 +45,9 @@ _fbi_ = {
 _tensor_ = {
     'DT': 'DT',
     'KT': 'KT'
+}
+
+_outliers_ = {
+    'IRLLS': 'outliers_irlls',
+    'AKC': 'outliers_akc'
 }
