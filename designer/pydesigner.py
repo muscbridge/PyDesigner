@@ -128,17 +128,6 @@ def main():
                         help='Denoising extent formatted n,n,n (forces '
                         ' denoising. '
                         'Default: 5,5,5.')
-    parser.add_argument('--reslice', metavar='x,y,z',
-                        help='Relices DWI to voxel resolution '
-                        'specified in millimeters (mm) or output '
-                        'dimensions. Performing reslicing will skip '
-                        'plotting of SNR curves. Providing dimensions '
-                        'greater than 9 will swtich from mm voxel '
-                        'reslicing to output image reslicing.')
-    parser.add_argument('--interp', action='store_true', default='linear',
-                        help='Set the interpolation to use when '
-                        'reslicing. Choices are linear (default), ' 
-                        'nearest, cubic, sinc.')
     parser.add_argument('-g', '--degibbs', action='store_true', default=False,
                         help='Perform gibbs unringing. Only perform if you '
                         'have full Fourier encoding. The program will check '
@@ -180,6 +169,23 @@ def main():
     parser.add_argument('--user_mask', metavar='path',
                         help='Path to user-supplied brain mask.',
                         type=str)
+    parser.add_argument('--reslice', metavar='x,y,z',
+                        help='Relices DWI to voxel resolution '
+                        'specified in millimeters (mm) or output '
+                        'dimensions. Performing reslicing will skip '
+                        'plotting of SNR curves. Providing dimensions '
+                        'greater than 9 will swtich from mm voxel '
+                        'reslicing to output image reslicing.')
+    parser.add_argument('--interp', action='store_true', default='linear',
+                        help='Set the interpolation to use when '
+                        'reslicing. Choices are linear (default), ' 
+                        'nearest, cubic, sinc.')
+    parser.add_argument('-te', '--multite', action='store_true',
+                        default=False,
+                        help='Specify whether input DWI consists of '
+                        'multiple TEs. PyDesigner will preprocess all '
+                        'TEs together, then extract metric values of '
+                        'each TE separately.')          
     parser.add_argument('--fit_constraints', default='0,1,0',
                         metavar='D>0,K>0,K < 3/(b*D)',
                         help='Constrain the WLLS fit. '
@@ -235,6 +241,7 @@ def main():
     # place of known dMRI file extensions (.mif, .nii, .nii.gz). This allows
     # easy switching based on any scenario for testing.
     fType = '.mif'
+    multi_echo = False
     if not args.output:
         outpath = image.getPath()
     else:
@@ -245,7 +252,17 @@ def main():
             force=args.force,
             resume=args.resume)
     working_path = op.join(outpath, 'working' + fType)
-
+    # Create index of DWI volumes with different TEs
+    if np.unique(image.echotime).size > 1:
+        multi_echo = True
+        multi_echo_start = [0]
+        multi_echo_end = [image.vols[0] - 1]
+        for idx, vols in enumerate(image.vols[1:]):
+            multi_echo_start.append(multi_echo_start[-1] + vols)
+            multi_echo_end.append(multi_echo_end[-1] + vols)
+        multi_echo_start = [int(x) for x in multi_echo_start]
+        multi_echo_end = [int(x) for x in multi_echo_end]
+            
     # Make an initial conversion to nifti
     init_nii = op.join(outpath, 'dwi_raw.nii')
     if not (args.resume and op.exists(init_nii)):
@@ -782,6 +799,26 @@ def main():
     #-----------------------------------------------------------------
     with open(op.join(outpath, 'log_command.json'), 'w') as fp:
         json.dump(cmdtable, fp, indent=2)
+
+    #-----------------------------------------------------------------
+    # Handle multi-echo data
+    #-----------------------------------------------------------------
+    imPath = filetable['HEAD'].getFull()
+    if multi_echo:
+        imPath = []
+        for i in range(len(image.echotime)):
+            echo_out = op.join(outpath, 'TE' + str(image.echotime[i]) + '_dwi_preprocessed.nii')
+            mrpreproc.dwiextract(working_path,
+                                echo_out,
+                                start=multi_echo_start[i],
+                                end=multi_echo_end[i],
+                                nthreads=args.nthreads,
+                                force=args.force,
+                                verbose=False)
+            imPath.append(echo_out)
+
+    # Remove working.mif
+    os.remove(working_path)
 
     #-----------------------------------------------------------------
     # Tensor Fitting
