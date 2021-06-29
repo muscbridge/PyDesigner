@@ -983,3 +983,70 @@ def reslice(input, output, size, interp='linear',
     completion = subprocess.run(arg)
     if completion.returncode != 0:
         raise Exception('Failed to reslice. See above for errors.')
+
+def dwiextract(input, output, start, end,
+                nthreads=None, force=False, verbose=False):
+    """
+    Extracts a range of volumes from input .mif file in the start:end
+    range. Take note that the first volume starts with 0.
+
+    Parameters
+    ----------
+    input : str
+        Path to input .mif file
+    output : str
+        Path to output file, usually .mif or .nii
+    start : int
+        Starting index, inclusive
+    end : int
+        Ending index, inclusive
+    nthreads : int, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force : bool, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose : bool, optional
+        Specify whether to print console output (Default: False)
+
+    Returns
+    -------
+    None; writes out file
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not isinstance(start, int):
+        raise Exception('Starting index is needs to be an integer.')
+    if not isinstance(end, int):
+        raise Exception('Ending index is needs to be an integer.')
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    fname, ext = op.splitext(output)
+    if ext == '.gz':
+        fname, ext = op.splitext(fname)
+        ext = ext + '.gz'
+    arg = ['mrconvert']
+    if force:
+        arg.append('-force')
+    if not verbose:
+        arg.append('-quiet')
+    if not (nthreads is None):
+        arg.extend(['-nthreads', str(nthreads)])
+    arg.extend([input, output,
+                '-coord', '3',
+                str(start) + ':' + str(end)])
+    if not '.mif' in ext:
+        arg.extend(['-json_export', fname + '.json',
+                    '-export_grad_fsl', fname + '.bvec', fname + '.bval'])
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('Failed to extract indexed DWI volumes. See '
+        'above for errors.')

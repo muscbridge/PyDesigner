@@ -3,6 +3,7 @@
 
 import multiprocessing
 import os
+import os.path as op
 import random
 import cvxpy as cvx
 import nibabel as nib
@@ -14,6 +15,8 @@ from scipy.special import sph_harm, gamma, hyp1f1, factorial
 from tqdm import tqdm
 from . import dwidirs
 from . import thresholds as th
+from . import dwi_fnames
+from designer.plotting import outlierplot
 
 # Define the lowest number possible before it is considered a zero
 minZero = th.__minZero__
@@ -93,8 +96,9 @@ class DWI(object):
             # Load bvecs
             bvecs = np.loadtxt(bvecPath)
             # Load bvals
-            bvals = np.rint(np.loadtxt(bvalPath))
-            # Scale bvals by checking for number of digits in max bval
+            bvals = np.loadtxt(bvalPath)
+            # Scale bvals to ms/um2 by checking for number of digits
+            # in max bval
             if int(np.log10(np.max(bvals)))+1 >= 3: # if no. of digits >= 3
                 bvals = bvals / 1000
             # Combine bvecs and bvals into [n x 4] array where n is
@@ -116,11 +120,12 @@ class DWI(object):
             self.maskStatus = False
             print('No brain mask supplied')
         tqdm.write('Image ' + fName + '.nii loaded successfully')
-        if not isinstance(nthreads, int):
-            raise Exception('Variable nthreads need to be an integer')
-        if nthreads < -1 or nthreads == 0:
-            raise Exception('Variable nthreads is a positive integer or '
-                            '-1')
+        if not nthreads is None:
+            if not isinstance(nthreads, int):
+                raise Exception('Variable nthreads need to be an integer')
+            if nthreads < -1 or nthreads == 0:
+                raise Exception('Variable nthreads is a positive integer or '
+                                '-1')      
         if nthreads is None:
             self.workers = -1
         else:
@@ -196,7 +201,7 @@ class DWI(object):
         a = dwi.maxDKIBval(), where dwi is the DWI class object
 
         """
-        exclude_idx = self.grad[:, 3] < th.__maxdtibval__
+        exclude_idx = self.grad[:, 3] <= th.__maxdtibval__
         return max(np.unique(self.grad[exclude_idx,3])).astype(int)
     
     def maxDKIBval(self):
@@ -213,7 +218,24 @@ class DWI(object):
         a = dwi.maxDKIBval(), where dwi is the DWI class object
 
         """
-        exclude_idx = self.grad[:, 3] < th.__maxdkibval__
+        exclude_idx = self.grad[:, 3] <= th.__maxdkibval__
+        return max(np.unique(self.grad[exclude_idx,3])).astype(int)
+
+    def maxFBIBval(self):
+        """
+        Returns the maximum FBI b-value in a dataset
+
+        Returns
+        -------
+        float
+            maximum DKI B-value in DWI
+
+        Examples
+        --------
+        a = dwi.maxDKIBval(), where dwi is the DWI class object
+
+        """
+        exclude_idx = self.grad[:, 3] <= th.__maxfbibval__
         return max(np.unique(self.grad[exclude_idx,3])).astype(int)
 
     def idxb0(self):
@@ -227,7 +249,7 @@ class DWI(object):
             Index of DTI/DKI b-values
 
         """
-        return(self.grad[:, -1] == 0)
+        return(np.rint(self.grad[:, 3]) == 0)
 
     def idxdti(self):
         """
@@ -274,7 +296,7 @@ class DWI(object):
         """
         idx = np.ones_like(self.grad[:, 3], dtype=bool)
         if self.isfbi():
-            idx = self.grad[:, -1] >= th.__minfbibval__
+            idx = np.rint(self.grad[:, -1]) == np.rint(self.maxFBIBval())
         else:
             raise IndexError('No valid FBI sequence found.')
         return idx
@@ -311,13 +333,13 @@ class DWI(object):
         a = dwi.tensorType(), where dwi is the DWI class object
         """
         type = []
-        if self.maxDTIBval() <= 1.5 and \
-            self.maxDTIBval() > th.__mindkibval__:
+        if self.maxDTIBval() <= th.__maxdtibval__ and \
+            self.maxDTIBval() >= th.__mindkibval__:
             type.append('dti')
-        if self.maxDKIBval() > 1.5 and \
-            self.maxDKIBval() < th.__maxdkibval__:
+        if self.maxDKIBval() >= th.__maxdtibval__ and \
+            self.maxDKIBval() <= th.__maxdkibval__:
             type.append('dki')
-        if self.maxBval() >= th.__maxdkibval__:
+        if self.maxBval() >= th.__minfbibval__:
             type.append('fbi')
         if 'fbi' in type and 'dki' in type:
             type.append('fbwm')
@@ -1291,7 +1313,7 @@ class DWI(object):
             b0 : float
                 Averaged B0 signal at a given voxel
             B : array_like(dtype=complex)
-                dMRI spherical harmonic expansion
+                FBI spherical harmonic expansion
             H : array_like(dtype=complex)
                 ODF from spherical harmonic expansion
             Pl0 : array_like(dtype=float)
@@ -1357,7 +1379,7 @@ class DWI(object):
             alm = np.dot(np.linalg.pinv(B),(dwi/b0)) # DWI signal SH coefficients (these are complex)
             alm[np.isnan(alm)] = 0
             a00 = alm[0].real # the imaginary part is on the order of 10^-18 (this is for zeta)
-            clm = alm*gl[0]*np.power(np.sqrt(4*np.pi)*alm[0]*Pl0*gl,-1) # fODF SH coefficients (these are complex)
+            clm = alm*gl[0]*highprecisionpower(np.sqrt(4*np.pi)*alm[0]*Pl0*gl,-1) # fODF SH coefficients (these are complex)
             # need to figure out how to do peak detection (on this variable and then read out odf structures like in MATLAB code)
             # only the real part would be read out but that would need to be done later on after the rectification process below
             ODF = np.matmul(H,clm)
@@ -1387,8 +1409,10 @@ class DWI(object):
             aDT = 1/(c00*np.sqrt(30))*aDT
             iaDT = np.reshape(aDT,(3,3)).real
             if fbwm:
-                BT = np.unique(self.getBvals())[1:]
-                GT = [self.grad[self.grad[:, -1] == x, 0:3] for x in BT]
+                bval = np.rint(self.grad[:, -1])
+                BT = np.unique(bval)
+                BT = BT[BT != 0] # Exclude B0s
+                GT = [self.grad[bval == x, 0:3] for x in BT]
                 ndir = [len(x) for x in GT]
                 f_grid = np.linspace(0,1,100) # define AWF grid (100 pts evenly spaced between 0 (min) and 1 (max))
                 int_grid = np.linspace(0,99,100, dtype=int) # define grid points to iterate over (100 of them)
@@ -1509,7 +1533,8 @@ class DWI(object):
         img = self.img
         bt_unique = np.unique(self.grad[:, -1])
         order = self.optimal_lmax()
-        b0 = np.mean(img[:, :, :, self.idxb0()], axis=3)
+        b0 = np.nanmean(img[:, :, :, self.idxb0()], axis=3)
+        b0 = np.nan_to_num(b0, nan=0, posinf=0, neginf=0)
         # Vectorize images
         b0 = vectorize(b0, self.mask)
         img = vectorize(img, self.mask)
@@ -1550,11 +1575,13 @@ class DWI(object):
                         unit='vox',
                         ncols=tqdmWidth)
         if fbwm:
-            theta1 = np.arccos(self.grad[self.grad[:, -1] == 1, 2])
-            phi1 =  np.arctan2(self.grad[self.grad[:, -1] == 1,1],self.grad[self.grad[:, -1] == 1,0])
+            # Index gradients based on b1000 and b2000 shells
+            bval = np.rint(self.grad[:, -1])
+            theta1 = np.arccos(self.grad[bval == 1, 2])
+            phi1 =  np.arctan2(self.grad[bval == 1, 1],self.grad[bval == 1,0])
 
-            theta2 = np.arccos(self.grad[self.grad[:, -1] == 2,2])
-            phi2 =  np.arctan2(self.grad[self.grad[:, -1] == 2,1],self.grad[self.grad[:, -1] == 2,0])
+            theta2 = np.arccos(self.grad[bval == 2, 2])
+            phi2 =  np.arctan2(self.grad[bval == 2, 1], self.grad[bval == 2,0])
             # SH basis set for the two B-values in DKI
             fbwm_SH1 = shbasis(degs,theta1,phi1)
             fbwm_SH2 = shbasis(degs,theta2,phi2)
@@ -1590,8 +1617,8 @@ class DWI(object):
                     rectify=rectify,
                     fbwm_SH1 = fbwm_SH1,
                     fbwm_SH2 = fbwm_SH2,
-                    fbwm_B1 = img[self.grad[:, -1] == 1, i],
-                    fbwm_B2 = img[self.grad[:, -1] == 2, i],
+                    fbwm_B1 = img[bval == 1, i],
+                    fbwm_B2 = img[bval == 2, i],
                     fbwm_dt = dt[:, i],
                     fbwm_degs=degs,
                     sh_area=AREA
@@ -2617,6 +2644,186 @@ class DWI(object):
         propViol = vectorize(propViol, self.mask)
         return propViol
 
+def fit_regime(input, output,
+                prefix=None, suffix=None, ext=None,
+                irlls=True, akc=True, qcpath=None,
+                fit_constraints=[0,1,0],
+                l_max=None,
+                mask=None,
+                nthreads=None):
+    """
+    Performs the entire tensor fitting regime and writes out maps.
+    Uses auto-detections methods to determine the types of protocols
+    encoded by DWI and extract their metrics.
+
+    Parameters
+    ----------
+    input : str
+        Path to DWI
+    output : str
+        Output directory to write all outputs
+    prefix : str
+        Prefix to append to output file names.
+        (Default: None)
+    suffix : str
+        Suffix to append to output file names.
+        (Default: None)
+    ext : str
+        Specify output image extension type.
+        (Default: None)
+    irlls : bool
+        Specify whether to perform IRLLS outlier detection.
+        (Default: True)
+    akc : bool
+        Specify whether to perform brute-forced AKC correction.
+        (Default: True)
+    qcpath : str
+        Specify output directory to write QC metrics.
+        (Default: None)
+    fit_constraints : list
+        List of 3 bool elements specifying which fit contraints to
+        use. See DWI.createConstraints() on usage.
+        (Default: [0, 1, 0])
+    l_max : int
+        Maximum spherical harminic degree for FBI/FBWM fit.
+        (Default: None)
+    mask : str
+        Path to brain mask
+        (Default: None)
+    nthreads : int
+        Number of workers to use in processing. Default value uses all
+        available workers.
+        (Default: None)
+    """
+    if prefix is None:
+        prefix = ''
+    if suffix is None:
+        suffix = ''
+    if ext is None:
+        ext = '.nii'
+    img = DWI(input, mask=mask, nthreads=nthreads)
+    protocols = img.tensorType()
+    print('Protocol(s) detected: {}' .format(', '.join([x.upper() for x in protocols])))
+    fname_dti = {}
+    fname_dki = {}
+    fname_wmti = {}
+    fname_fbi = {}
+    fname_tensor = {} 
+    fname_outliers = {}
+    for key, value in dwi_fnames._dti_.items():
+        fname_dti[key] = prefix + value + suffix + ext
+    for key, value in dwi_fnames._dki_.items():
+        fname_dki[key] = prefix + value + suffix + ext
+    for key, value in dwi_fnames._wmti_.items():
+        fname_wmti[key] = prefix + value + suffix + ext
+    for key, value in dwi_fnames._fbi_.items():
+        fname_fbi[key] = prefix + value + suffix + ext
+    for key, value in dwi_fnames._tensor_.items():
+        fname_tensor[key] = prefix + value + suffix + ext
+    for key, value in dwi_fnames._outliers_.items():
+        fname_outliers[key] = prefix + value + suffix + ext
+    print(fname_dki)
+    if irlls:
+        if img.isdki():
+            outliers, dt_est = img.irlls(mode='DKI', excludeb0=False)
+        else:
+            outliers, dt_est = img.irlls(mode='DTI', excludeb0=False)
+        if qcpath:
+            if op.exists(qcpath):
+                outlier_full = op.join(qcpath, fname_outliers['IRLLS'])
+                print(outlier_full)
+                outlier_plot_full = op.join(qcpath,
+                    prefix + 'irlls_outliers_plot' + suffix + '.png')
+                bvals_outlier_full = op.join(qcpath,
+                    prefix + 'irlls_outliers_shells' + suffix + '.bval')
+                if img.isdki():
+                    bvals_outlier = img.getBvals()[img.idxdki()].astype(int)
+                else:
+                    bvals_outlier = img.getBvals()[img.idxdti()].astype(int)
+                bvals_outlier = bvals_outlier * 1000
+                writeNii(outliers, img.hdr, outlier_full)
+                np.savetxt(bvals_outlier_full, bvals_outlier, newline=' ', fmt="%d")
+                if mask:
+                    outlierplot.plot(input=outlier_full,
+                                    output=outlier_plot_full,
+                                    bval=bvals_outlier_full,
+                                    mask=mask)
+                else:
+                    outlierplot.plot(input=outlier_full,
+                                    output=outlier_plot_full,
+                                    bval=bvals_outlier_full,
+                                    mask=None)
+                os.remove(bvals_outlier_full)
+    if irlls:
+        img.fit(fit_constraints, reject=outliers)
+    else:
+        img.fit(fit_constraints)
+    if akc and img.isdki():
+        akc_out = img.akcoutliers()
+        img.akccorrect(akc_out)
+        if qcpath:
+            writeNii(akc_out,
+                        img.hdr,
+                        op.join(qcpath, fname_outliers['AKC']))
+    if 'dki' in img.tensorType():
+        tensorType = 'dki'
+    else:
+        tensorType = 'dti'
+    DT, KT = img.tensorReorder(tensorType)
+    if tensorType == 'dki':
+        writeNii(DT, img.hdr, op.join(output, fname_tensor['DT']))
+        writeNii(KT, img.hdr, op.join(output, fname_tensor['KT']))
+    else:
+        writeNii(DT, img.hdr, op.join(output, fname_tensor['DT']))
+    # DTI Parameters
+    if img.isdti():
+        md, rd, ad, fa, fe, trace = img.extractDTI()
+        writeNii(md, img.hdr, op.join(output, fname_dti['md']))
+        writeNii(rd, img.hdr, op.join(output, fname_dti['rd']))
+        writeNii(ad, img.hdr, op.join(output, fname_dti['ad']))
+        writeNii(fa, img.hdr, op.join(output, fname_dti['fa']))
+        writeNii(fe, img.hdr, op.join(output, fname_dti['fe']))
+        writeNii(trace, img.hdr, op.join(output, fname_dti['trace']))
+    if img.isdki():
+    # DKI Parameters 
+        mk, rk, ak, kfa, mkt, trace = img.extractDKI()
+        writeNii(mk, img.hdr, op.join(output, fname_dki['mk']))
+        writeNii(rk, img.hdr, op.join(output, fname_dki['rk']))
+        writeNii(ak, img.hdr, op.join(output, fname_dki['ak']))
+        writeNii(kfa, img.hdr, op.join(output, fname_dki['kfa']))
+        writeNii(mkt, img.hdr, op.join(output, fname_dki['mkt']))
+        writeNii(trace, img.hdr, op.join(output, fname_dki['trace']))
+    # WMTI Parameters
+        awf, eas_ad, eas_rd, eas_tort, ias_da = img.extractWMTI()
+        writeNii(awf, img.hdr, op.join(output, fname_wmti['awf']))
+        writeNii(eas_ad, img.hdr, op.join(output, fname_wmti['eas_ad']))
+        writeNii(eas_rd, img.hdr, op.join(output, fname_wmti['eas_rd']))
+        writeNii(eas_tort, img.hdr, op.join(output, fname_wmti['eas_tort']))
+        writeNii(ias_da, img.hdr, op.join(output, fname_wmti['ias_da']))
+    if img.isfbi():
+        if img.isfbwm():
+            zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, \
+                De_fa, min_cost, min_cost_fn = \
+                    img.fbi(l_max=l_max, fbwm=True)
+            writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
+            writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
+            writeNii(sph, img.hdr, op.join(output, fname_fbi['sph']))
+            writeNii(min_awf, img.hdr, op.join(output, fname_fbi['awf']))
+            writeNii(Da, img.hdr, op.join(output, fname_fbi['Da']))
+            writeNii(De_mean, img.hdr, op.join(output, fname_fbi['De_mean']))
+            writeNii(De_ax, img.hdr, op.join(output, fname_fbi['De_ax']))
+            writeNii(De_rad, img.hdr, op.join(output, fname_fbi['De_rad']))
+            writeNii(De_fa, img.hdr, op.join(output, fname_fbi['fae']))
+            writeNii(min_cost, img.hdr, op.join(output, fname_fbi['min_cost']))
+            writeNii(min_cost_fn, img.hdr, op.join(output, fname_fbi['min_cost_fn']))
+        else:
+            zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, \
+                De_fa, min_cost, min_cost_fn = \
+                    img.fbi(l_max=l_max, fbwm=False)
+            writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
+            writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
+            writeNii(sph, img.hdr, op.join(output, fname_fbi['sph']))
+
 def vectorize(img, mask):
     """
     Returns vectorized image based on brain mask, requires no input
@@ -2763,5 +2970,38 @@ def highprecisionexp(array, maxp=1e32):
         ans = np.exp(array)
     except:
         ans = np.full(array.shape, maxp)
+    np.seterr(**defaultErrorState)
+    return ans
+
+def highprecisionpower(x1, x2, maxp=1e32):
+    """
+    Prevents overflow warning with numpy.powerr by assigning overflows
+    to a maxumum precision value
+    Classification: Function
+
+    Parameters
+    ----------
+    x1 : array_like
+        The bases
+    x2 : array_like
+        The exponents
+    maxp : float, optional
+        Maximum preicison to assign if overflow (Default: 1e32)
+
+    Returns
+    -------
+    x1 raised to x2 power, or max precision defined by maxp
+
+    Examples
+    --------
+    a = highprecisionexp(array)
+    """
+    np.seterr(all='ignore')
+    defaultErrorState = np.geterr()
+    np.seterr(over='raise', invalid='raise')
+    try:
+        ans = np.power(x1, x2)
+    except:
+        ans = np.full(x1.shape, maxp)
     np.seterr(**defaultErrorState)
     return ans

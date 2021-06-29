@@ -501,3 +501,43 @@ def is_fullsphere(path):
             return True
         else:
             return False
+
+def echotime(path):
+    """
+    Returns the echo time(s) of DWI in miliseconds
+
+    Parameters
+    ----------
+    path : str
+        Path to input image or directory
+
+    Returns
+    -------
+    int if all DWIs have the same echo time
+        Echo time in miliseconds
+    str if all DWIs have different echo time
+        'variable'
+    """
+    if not op.exists(path):
+        raise OSError('Input path does not exist. Please ensure that the '
+                      'folder or file specified exists.')
+    ftype = format(path)
+    if ftype != 'MRtrix':
+        raise IOError('This function only works with MRtrix (.mif) '
+                      'formatted filetypes. Please ensure that the input '
+                      'filetype meets this requirement')
+    arg = ['mrinfo', '-property', 'EchoTime']
+    arg.append(path)
+    completion = subprocess.run(arg, stdout=subprocess.PIPE)
+    if completion.returncode != 0:
+        raise IOError('Input {} is not currently supported by '
+                      'PyDesigner.'.format(path))
+    console = str(completion.stdout).split('\\n')[0]
+    console = console.split('b')[-1]
+    console = console.replace("'", "")
+    try:
+        console = float(console)
+        console = int(round(console * 1000, 0))
+    except:
+        console = 'variable'
+    return console
