@@ -194,6 +194,12 @@ def main():
                         metavar='n',
                         help='Maximum spherical harmonic degree for '
                         'FBI spherical harmonic expansion')
+    parser.add_argument('--no_rectify', action='store_true',
+                        default=False,
+                        help='Disable rectification of FBI fODF. Use '
+                        'only when rectification of excellent '
+                        'acquisitions results in degradation of FBI '
+                        'or FBWM metric maps')
     parser.add_argument('--noqc', action='store_true', default=False,
                         help='Disable QC saving of QC metrics')
     parser.add_argument('--median', action='store_true', default=False,
@@ -393,6 +399,11 @@ def main():
                 'avoid artifacts.Use the "--adv" flag to run forced '
                 'corrections.')
             args.degibbs = False
+    
+    # Handle FBI rectification
+    fbi_rectify = True
+    if args.no_rectify:
+        fbi_rectify = False
 
     #-----------------------------------------------------------------
     # Path Handling
@@ -839,6 +850,7 @@ def main():
                     irlls=not args.nooutliers,
                     akc=not args.noakc,
                     l_max=args.l_max,
+                    rectify = fbi_rectify,
                     qcpath=fitqcpath,
                     fit_constraints=fit_constraints,
                     mask=fit_mask,
@@ -854,6 +866,7 @@ def main():
                 irlls=not args.nooutliers,
                 akc=not args.noakc,
                 l_max=args.l_max,
+                rectify = fbi_rectify,
                 qcpath=fitqcpath,
                 fit_constraints=fit_constraints,
                 mask=fit_mask,
