@@ -4,6 +4,39 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+`v1.0-RC10`_
+-----------
+
+Jun 16, 2021
+
+**Added**:
+
+* Support for multi echo time (TE) datasets. PyDesigner will now
+  preprocess DWIs with multiple TEs together, but extract diffusion
+  metrics for each TE separately. Users need to parse :code:`-te`
+  flag to enable this feature.
+* Added :code:`dwiextract` function to *mrpreproc.py* to allowing
+  splitting of *.mif* files.
+* Added function :code:`fit_regime` to *dwipy.py* to automatically run
+  all tensor fitting steps in an appropriate manner.
+* Added :code:`highprecisionpower` to *dwipy.py* to mitigate integer
+  overflow error when performing FBI fODF calculation.
+
+
+**Changed**
+
+* Maximum DKI b-value threshold has been raised to 3,000 mm/s^2,
+  thereby enabling DKI support for researchers using b-values higher
+  than 2,000 mm/s^2 but less than 3,000 mm/s^2.
+* IRLLS now also includes B0 volumes when evaluating goodness-of-fit
+  to make outlier detection more robust and accurate.
+* Various stability patches for FBI and FBWM to ensure error-free
+  extraction of FBI/FBWM metrics.
+
+**Removed**
+
+* None
+
 `v1.0-RC9`_
 -----------
 
@@ -29,7 +62,7 @@ Feb 15, 2021
 
 **Added**:
 
-* Added missing Rician preprocessing to `-s, --standard`
+* Added missing Rician preprocessing to :code:`-s, --standard`
   preprocessing
 
 **Changed**
@@ -331,6 +364,7 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
+.. _v1.0-RC10: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC10
 .. _v1.0-RC9: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC9
 .. _v1.0-RC8: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC8
 .. _v1.0-RC7: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC7
