@@ -2724,9 +2724,9 @@ def fit_regime(input, output,
         fname_outliers[key] = prefix + value + suffix + ext
     if irlls:
         if img.isdki():
-            outliers, dt_est = img.irlls(mode='DKI')
+            outliers, dt_est = img.irlls(mode='DKI', excludeb0=False)
         else:
-            outliers, dt_est = img.irlls(mode='DTI')
+            outliers, dt_est = img.irlls(mode='DTI', excludeb0=False)
         if qcpath:
             if op.exists(qcpath):
                 outlier_full = op.join(qcpath, fname_outliers['IRLLS'])
