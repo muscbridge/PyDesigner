@@ -2722,7 +2722,6 @@ def fit_regime(input, output,
         fname_tensor[key] = prefix + value + suffix + ext
     for key, value in dwi_fnames._outliers_.items():
         fname_outliers[key] = prefix + value + suffix + ext
-    print(fname_dki)
     if irlls:
         if img.isdki():
             outliers, dt_est = img.irlls(mode='DKI', excludeb0=False)
