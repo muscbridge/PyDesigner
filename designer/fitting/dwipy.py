@@ -15,6 +15,7 @@ from scipy.special import sph_harm, gamma, hyp1f1, factorial
 from tqdm import tqdm
 from . import dwidirs
 from . import thresholds as th
+from . import dwi_fnames
 from designer.plotting import outlierplot
 
 # Define the lowest number possible before it is considered a zero
@@ -2703,25 +2704,25 @@ def fit_regime(input, output,
     img = DWI(input, mask=mask, nthreads=nthreads)
     protocols = img.tensorType()
     print('Protocol(s) detected: {}' .format(', '.join([x.upper() for x in protocols])))
-    from . import dwi_fnames
-    fname_dti = dwi_fnames._dti_
-    fname_dki = dwi_fnames._dki_
-    fname_wmti = dwi_fnames._wmti_
-    fname_fbi = dwi_fnames._fbi_
-    fname_tensor = dwi_fnames._tensor_
-    fname_outliers = dwi_fnames._outliers_
-    for key, value in fname_dti.copy().items():
+    fname_dti = {}
+    fname_dki = {}
+    fname_wmti = {}
+    fname_fbi = {}
+    fname_tensor = {} 
+    fname_outliers = {}
+    for key, value in dwi_fnames._dti_.items():
         fname_dti[key] = prefix + value + suffix + ext
-    for key, value in fname_dki.copy().items():
+    for key, value in dwi_fnames._dki_.items():
         fname_dki[key] = prefix + value + suffix + ext
-    for key, value in fname_wmti.copy().items():
+    for key, value in dwi_fnames._wmti_.items():
         fname_wmti[key] = prefix + value + suffix + ext
-    for key, value in fname_fbi.copy().items():
+    for key, value in dwi_fnames._fbi_.items():
         fname_fbi[key] = prefix + value + suffix + ext
-    for key, value in fname_tensor.copy().items():
+    for key, value in dwi_fnames._tensor_.items():
         fname_tensor[key] = prefix + value + suffix + ext
-    for key, value in fname_outliers.copy().items():
+    for key, value in dwi_fnames._outliers_.items():
         fname_outliers[key] = prefix + value + suffix + ext
+    print(fname_dki)
     if irlls:
         if img.isdki():
             outliers, dt_est = img.irlls(mode='DKI', excludeb0=False)
