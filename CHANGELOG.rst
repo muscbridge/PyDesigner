@@ -7,7 +7,7 @@ page
 `v1.0-RC10`_
 -----------
 
-Jun 16, 2021
+Jun 29, 2021
 
 **Added**:
 
@@ -21,6 +21,10 @@ Jun 16, 2021
   all tensor fitting steps in an appropriate manner.
 * Added :code:`highprecisionpower` to *dwipy.py* to mitigate integer
   overflow error when performing FBI fODF calculation.
+* Flag :code:`--no_rectify` to disable rectification of FBI fODFs. In
+  some cases where FBI acquistion is excellent, rectification can
+  degrade fODFs instead. This flag is intended to disable
+  rectification of such datasets.
 
 
 **Changed**
