@@ -2649,6 +2649,7 @@ def fit_regime(input, output,
                 irlls=True, akc=True, qcpath=None,
                 fit_constraints=[0,1,0],
                 l_max=None,
+                rectify=True,
                 mask=None,
                 nthreads=None):
     """
@@ -2687,6 +2688,9 @@ def fit_regime(input, output,
     l_max : int
         Maximum spherical harminic degree for FBI/FBWM fit.
         (Default: None)
+    rectify : bool
+        Specify whether to rectify FBI fODF
+        (Default: True)
     mask : str
         Path to brain mask
         (Default: None)
@@ -2722,7 +2726,6 @@ def fit_regime(input, output,
         fname_tensor[key] = prefix + value + suffix + ext
     for key, value in dwi_fnames._outliers_.items():
         fname_outliers[key] = prefix + value + suffix + ext
-    print(fname_dki)
     if irlls:
         if img.isdki():
             outliers, dt_est = img.irlls(mode='DKI', excludeb0=False)
@@ -2804,7 +2807,7 @@ def fit_regime(input, output,
         if img.isfbwm():
             zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, \
                 De_fa, min_cost, min_cost_fn = \
-                    img.fbi(l_max=l_max, fbwm=True)
+                    img.fbi(l_max=l_max, fbwm=True, rectify=rectify)
             writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
             writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
             writeNii(sph, img.hdr, op.join(output, fname_fbi['sph']))
@@ -2819,7 +2822,7 @@ def fit_regime(input, output,
         else:
             zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, \
                 De_fa, min_cost, min_cost_fn = \
-                    img.fbi(l_max=l_max, fbwm=False)
+                    img.fbi(l_max=l_max, fbwm=False, rectify=rectify)
             writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
             writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
             writeNii(sph, img.hdr, op.join(output, fname_fbi['sph']))

@@ -50,6 +50,8 @@ preprocessing pipeline, to accomodate all types of datasets.
 
 -r, --rician        Corrects Rician bias
 
+-te             Enable multi-TE support. This mode preprocesses all concatenated DWIs together, but performs tensor fitting separately.
+
 Diffusion Tensor Control
 ------------------------
 
@@ -74,6 +76,8 @@ Fiber Ball Imaging (FBI) Control
 FBI parameters may be fine-tuned with the following flags.
 
 --l_max n   Maximum spherical harmonic degree used in spherical harmonic expansion for fODF calculation
+
+--no_rectify  Disable rectification of FBI fODFs in instances where it does more harm than good. In rare instances, fODFs computed from FBI acquisitions can be degraded from rectification - this flag disables rectification for such datasets.
 
 Pipeline Control
 ----------------
