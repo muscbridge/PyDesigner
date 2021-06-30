@@ -55,7 +55,8 @@ RUN apt-get install -y --no-install-recommends \
       libgl1-mesa-dev \
       libfftw3-dev \
       libtiff5-dev \
-      libomp-dev
+      libomp-dev \
+      libhdf5-serial-dev
 
 RUN rm /bin/sh && ln -s /bin/bash /bin/sh
 
