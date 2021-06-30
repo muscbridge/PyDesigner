@@ -15,16 +15,17 @@ import sphinx_rtd_theme
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# sys.path.insert(0, os.path.abspath('.'))
+# sys.path.insert(0, os.path.abspath('../'))
+# sys.path.insert(0, os.path.abspath('../../'))
 
 # -- Project information -----------------------------------------------------
 
 project = 'PyDesigner'
-copyright = '2020, MUSC Advanced MRI Analysis (MAMA)'
+copyright = '2021, MUSC Advanced MRI Analysis (MAMA)'
 author = 'Siddhartha Dhiman, Joshua Teves, Kayti Keith'
 
 # The full version, including alpha/beta/rc tags
-release = 'v1.0-RC1'
+release = 'v1.0-RC10'
 
 
 # -- General configuration ---------------------------------------------------
