@@ -35,8 +35,8 @@
 
 .. .. _NYU's DESIGNER: https://github.com/NYU-DiffusionMRI/DESIGNER
 
-.. .. image:: images/PyDesigner-Logo.png
-..    :width: 384pt
+.. .. image:: https://i.imgur.com/YeCvz8s.png
+..    :width: 512pt
 
 .. Notable Features
 .. ================

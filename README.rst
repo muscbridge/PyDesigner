@@ -33,8 +33,8 @@ PyDesigner makes this easy, and you will love it!
 
 .. _NYU's DESIGNER: https://github.com/NYU-DiffusionMRI/DESIGNER
 
-.. image:: https://imgur.com/Anc33XI.png
-   :width: 256pt
+.. image:: https://i.imgur.com/YeCvz8s.png
+   :width: 512pt
    :target: https://pydesigner.readthedocs.io/en/latest/
    :alt: Click here to view documentation
 
@@ -54,6 +54,7 @@ Notable Features
 - **Quality control metrics** to evaluate data integrity – SNR graphs, outlier voxels, and head motion
 - Uses the **latest techniques** from DTI/DKI/FBI literature
 - Works with **DTI**, **DKI**, **WMTI**, **FBI**, or **FBWM** datasets
+- Supports **multi-TE** dataset processing
 
 We welcome all DTI/DKI researchers to evaluate this software and pass
 on their feedback or issues through the `Issues`_ page of this
