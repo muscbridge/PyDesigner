@@ -33,8 +33,8 @@ PyDesigner makes this easy, and you will love it!
 
 .. _NYU's DESIGNER: https://github.com/NYU-DiffusionMRI/DESIGNER
 
-.. image:: https://imgur.com/Anc33XI.png
-   :width: 256pt
+.. image:: https://i.imgur.com/YeCvz8s.png
+   :width: 512pt
    :target: https://pydesigner.readthedocs.io/en/latest/
    :alt: Click here to view documentation
 
