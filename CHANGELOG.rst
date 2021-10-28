@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file or
 page
 
 `v1.0-RC10`_
------------
+------------
 
 Jun 29, 2021
 
@@ -143,7 +143,7 @@ Oct 26, 2020
 **Changed**:
 
 * Fixed issue where eddy correction would attempt
- to QC and fail despite parsing the ``--noqc`` flag.
+  to QC and fail despite parsing the ``--noqc`` flag.
 * SNR plotting works in very specific scenarious when
   input DWIs are of the same same dimensions. A try/except
   loop now ensure that the entire pipeline doesn't halt
