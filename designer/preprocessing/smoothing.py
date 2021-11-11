@@ -3,10 +3,10 @@
 
 import numpy as np
 import nibabel as nib
-import scipy as sc
-from scipy import ndimage
+# import scipy as sc
+from scipy.ndimage import gaussian_filter
 
-def smooth_image(dwiname, csfname=None, outname='dwism.nii', width=1.2):
+def smooth_image(dwiname, csfname=None, outname='dwism.nii', width=1.25, size=5):
     """
     Smooths a DWI dataset
 
@@ -14,12 +14,14 @@ def smooth_image(dwiname, csfname=None, outname='dwism.nii', width=1.2):
     ----------
     dwiname : str
         Filename of image to be smoothed
-    csfname : str
+    csfname : str, optional
         Filename of CSF mask
     outname : str
         Filename to be written out
-    width : float
+    width : float, optional
         The full width half max in voxels to be smoothed. Default: 1.25
+    size : int
+        The size of 2D Gaussian kernel [size, size]. Default: 5
 
     Returns
     -------
@@ -29,8 +31,10 @@ def smooth_image(dwiname, csfname=None, outname='dwism.nii', width=1.2):
     --------
     smooth(dwi, csfmask=None, width=1.25) is wrapped by this function
     """
-
-    print('Running smoothing at FWHM = {}...'.format(width))
+    if csfname is None:
+        print('Running smoothing at FWHM = {}...'.format(width))
+    else:
+        print('Running CSF-excluded smoothing at FWHM = {}...'.format(width))
 
     dwiimg = nib.load(dwiname)
 
@@ -38,14 +42,14 @@ def smooth_image(dwiname, csfname=None, outname='dwism.nii', width=1.2):
         csfimg = nib.load(csfname)
         smoothed = smooth(dwiimg, csfmask=csfimg, width=width)
     else:
-        smoothed = smooth(dwiimg, width=width)
+        smoothed = smooth(dwiimg, width=width, size=size)
 
     newimg = nib.Nifti1Image(smoothed, dwiimg.affine, dwiimg.header)
     nib.save(newimg, outname)
 
     return
 
-def smooth(dwi, csfmask=None, width=1.25):
+def smooth(dwi, csfmask=None, width=1.25, size=5):
     """
     Smooths a DWI dataset
 
@@ -58,6 +62,8 @@ def smooth(dwi, csfmask=None, width=1.25):
         The mask of CSF that will be applied to each volume in DWI
     width : float, optional
         The full width half max in voxels to be smoothed. Default: 1.25
+    size : int, optional
+        The size of 2D Gaussian kernel [size, size]. Default: 5
        
     Returns
     -------
@@ -79,25 +85,34 @@ def smooth(dwi, csfmask=None, width=1.25):
 
     dwidata = dwi.get_fdata()
     if csfmask:
-        csfdata = csfmask.get_fdata()
+        csfdata = csfmask.get_fdata().astype('bool')
 
-    if csfmask is not None:
+    if csfmask is None:
+        smoothed = dwidata.copy()
         for i in range(dwi.shape[-1]):
-            newvol = dwidata[:,:,:,i]
-            newvol[csfdata > 0] = np.nan
-            dwidata[:,:,:,i] = newvol
-
-    smoothed = dwidata
-    for i in range(dwi.shape[-1]):
-        for z in range(dwi.shape[-2]):
-            currslice = dwidata[:,:,z,i]
-            smoothed[:,:,z,i] = nansmooth(currslice, width)
-
+            for z in range(dwi.shape[-2]):
+                currslice = dwidata[:,:,z,i]
+                smoothed[:,:,z,i] = nansmooth(currslice, width, size=size)
+    else:
+        bgmask = np.isnan(dwidata)
+        smoothed = dwidata.copy()
+        for i in range(dwi.shape[-1]):
+            for z in range(dwi.shape[-2]):
+                currslice = dwidata[:,:,z,i]
+                currcsf = csfdata[:,:,z]
+                wmgm = currslice.copy()
+                wmgm[currcsf] = np.nan
+                wmgm_ = nansmooth(wmgm, width, size=size)
+                csf = currslice.copy()
+                csf[np.logical_not(currcsf)] = np.nan
+                csf_ = nansmooth(csf, width, size=size)
+                total = np.nansum(np.dstack((wmgm_, csf_)), 2)
+                smoothed[:,:,z,i] = total
+        smoothed[bgmask] = np.nan
     return smoothed
 
-def nansmooth(imgslice, fwhm):
-    """
-    Smooths an image slice while ignoring NaNs
+def nansmooth(imgslice, fwhm, size=5):
+    """Smooths an image slice while ignoring NaNs
 
     Parameters
     ----------
@@ -105,35 +120,48 @@ def nansmooth(imgslice, fwhm):
         2D image to be smoothed
     fwhm : float
         The full width half max to be used for smoothing
+    size : int, optional
+        The size of 2D Gaussian kernel [size, size]. Default: 5
 
     Returns
     -------
-    smoothslice : (X x Y) array_like object
+    gauss : (X x Y) array_like object
         2D smoothed image
 
     Notes
     -----
-    This is done because a masked dataset will contain NaNs. In typical
-    operations and filtering, the NaNs will propagate instead of being
-    ignored (which is the desired behavior). During runtime, divide by 0
-    warnings are suppressed due to the high probability of its occuring.
-    The operation to avoid this is as follows:
-    """
+    Intensity is only shifted between not-nan pixels and is hence
+    conserved. The intensity redistribution with respect to each
+    single point is done by the weights of available pixels according
+    to a gaussian distribution. All nans in imgslice, stay nans in gauss.
+    This approach is to spead the intesity of each point by a gaussian
+    filter. The intensity, which is mapped to nan-pixels is reshifted
+    back to the origin. If this maskes sense, depends on the
+    application. I have a closed area surronded by nans and want to
+    preseve the total intensity + avoid distortions at the boundaries.
 
+    Solution adapted from https://stackoverflow.com/a/61481246
+    """
     # Scipy requires standard deviation rather than FWHM
     stddev = fwhm / np.sqrt(8 * np.log(2))
 
-    # Auxilary matrices
-    V = imgslice.copy()
-    V[np.isnan(imgslice)] = 0
-    VV = sc.ndimage.gaussian_filter(V, sigma=stddev)
+    # Scipy required truncate instead of size
+    truncate = (((size - 1)/2)-0.5)/stddev
 
-    W = 0*imgslice.copy()+1
-    W[np.isnan(imgslice)] = 0
-    WW = sc.ndimage.gaussian_filter(W, sigma=stddev)
+    nan_msk = np.isnan(imgslice)
 
-    # Temporarily ignore divide by 0 errors while doing the math
-    with np.errstate(divide='ignore', invalid='ignore'):
-        smoothedslice = VV / WW
+    loss = np.zeros(imgslice.shape)
+    loss[nan_msk] = 1
+    loss = gaussian_filter(
+            loss, sigma=stddev, mode='constant', truncate=truncate)
 
-    return smoothedslice
+    gauss = imgslice.copy()
+    gauss[nan_msk] = 0
+    gauss = gaussian_filter(
+            gauss, sigma=stddev, mode='constant', truncate=truncate)
+    gauss[nan_msk] = np.nan
+
+    gauss += loss * imgslice
+
+    return gauss
+    
