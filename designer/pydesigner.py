@@ -169,6 +169,9 @@ def main():
     parser.add_argument('--user_mask', metavar='path',
                         help='Path to user-supplied brain mask.',
                         type=str)
+    parser.add_argument('-c', '--csf', action='store_true', default=False,
+                        help='Compute a CSF mask for CSF-excluded '
+                        'smoothing to minimize partial volume effects.')
     parser.add_argument('--reslice', metavar='x,y,z',
                         help='Relices DWI to voxel resolution '
                         'specified in millimeters (mm) or output '
@@ -302,6 +305,7 @@ def main():
         args.smooth = True
         #--extra options--
         args.mask = True
+        args.csf = True
         args.degibbs = True
         args.rician = True
 
@@ -652,6 +656,20 @@ def main():
                             voxel=mrinfoutil.spacing(working_path))
 
     #-----------------------------------------------------------------
+    # Create CSF Mask
+    #-----------------------------------------------------------------
+    if args.csf:
+        csfmask_name = 'csf_mask.nii'
+        csfmask_out = op.join(outpath, csfmask_name)
+        mrpreproc.csfmask(input=working_path,
+                            output=csfmask_out,
+                            thresh=args.maskthr,
+                            nthreads=args.nthreads,
+                            force=args.force,
+                            verbose=args.verbose)
+        filetable['csfmask'] = DWIFile(csfmask_out)
+
+    #-----------------------------------------------------------------
     # Create Brain Mask
     #-----------------------------------------------------------------
     if args.mask:
@@ -675,6 +693,9 @@ def main():
     # Smooth
     #-----------------------------------------------------------------
     if args.smooth:
+        csfname = None
+        if 'csfmask' in filetable:
+            csfname = filetable['csfmask'].getFull()
         step_count += 1
         smoothing_name = 'dwi_smoothed'
         # file names
@@ -684,8 +705,10 @@ def main():
         # check to see if this already exists
         if not (args.resume and op.exists(nii_smoothing)):
             mrpreproc.smooth(input=working_path,
-                             output=mif_smoothing,
-                             fwhm=args.fwhm)
+                            csfname=csfname,
+                            output=mif_smoothing,
+                            fwhm=args.fwhm)
+
             mrpreproc.miftonii(input=mif_smoothing,
                                 output=nii_smoothing,
                                 strides='1,2,3,4',
