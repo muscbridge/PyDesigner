@@ -504,7 +504,7 @@ def csfmask(input, output, thresh=0.25, nthreads=None, force=False,
     input : str
         Path to input .mif file
     output : str
-        Path to output .nii brainmask file
+        Path to output .nii CSF mask file
     thresh : float
         BET threshold ranging from 0 to 1 (Default: 0.25)
     nthreads : int, optional
@@ -624,18 +624,17 @@ def csfmask(input, output, thresh=0.25, nthreads=None, force=False,
     if completion.returncode != 0:
         raise Exception('Unable to create CSF mask. '
                         'See above for errors.')
-    # Remove intermediary file
-    # os.remove(B0_nan)
-    # os.remove(op.join(outdir, path_brain + f_suffix))
-    # os.rename(op.join(outdir, path_brain + '_mask' + f_suffix), output)
-    # for i in range(4):
-    #     os.remove(path_tissue + '_pve_' + str(i) + f_suffix)
-    #     os.remove(path_tissue + '_pve_thr_' + str(i) + f_suffix)
-    # os.remove(path_tissue + '_mixeltype' + f_suffix)
-    # os.remove(path_tissue + '_pveseg' + f_suffix)
-    # os.remove(path_tissue + '_seg' + f_suffix)
+    # Remove intermediate files
+    os.remove(B0_nan)
+    os.remove(op.join(outdir, path_brain + f_suffix))
+    for i in range(4):
+        os.remove(path_tissue + '_pve_' + str(i) + f_suffix)
+        os.remove(path_tissue + '_pve_thr_' + str(i) + f_suffix)
+    os.remove(path_tissue + '_mixeltype' + f_suffix)
+    os.remove(path_tissue + '_pveseg' + f_suffix)
+    os.remove(path_tissue + '_seg' + f_suffix)
 
-def smooth(input, output, fwhm=1.25):
+def smooth(input, output, csfname=None, fwhm=1.25, size=5):
     """
     Performs Gaussian smoothing on input .mif image
 
@@ -645,6 +644,8 @@ def smooth(input, output, fwhm=1.25):
         Path to input .mif file
     output : str
         Path to output .mif file
+    csfname : str
+        Path to CSF mask file in .nii format
     fwhm : float
         The full width half max in voxels to be smoothed
         (Default: 1.25)
@@ -660,15 +661,22 @@ def smooth(input, output, fwhm=1.25):
         raise OSError('Specifed directory for output file {} does not '
                       'exist. Please ensure that this is a valid '
                       'directory.'.format(op.dirname(output)))
+    if not (csfname is None):
+        if not op.exists(csfname):
+            raise OSError('Path to CSF mask does not exist. Please '
+                          'ensure that the file specified exists.')
     if fwhm < 0:
         raise Exception('FWHM cannot be less than zero.')
+    if size < 0:
+        raise Exception('Size cannot be less than zero. Please '
+                        'specify size as a positive integer.')
     # Convert input .mif to .nii
     outdir = op.dirname(output)
     nii_path = op.join(outdir, 'dwism.nii')
     miftonii(input=input, output=nii_path, strides='1,2,3,4')
     # Perform smoothing
     smoothing.smooth_image(nii_path,
-                           csfname=None,
+                           csfname=csfname,
                            outname=nii_path,
                            width=fwhm)
     # Convert .nii to .mif
