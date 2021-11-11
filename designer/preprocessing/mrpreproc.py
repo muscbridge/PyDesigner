@@ -494,6 +494,147 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
     os.remove(tmp_brain)
     os.rename(op.join(outdir, mask + '_mask.nii'), output)
 
+def csfmask(input, output, thresh=0.25, nthreads=None, force=False,
+              verbose=False):
+    """
+    Creates a cerebral spinal fluid (CSF) mask from FSL's FAST tool.
+
+    Parameters
+    ----------
+    input : str
+        Path to input .mif file
+    output : str
+        Path to output .nii brainmask file
+    thresh : float
+        BET threshold ranging from 0 to 1 (Default: 0.25)
+    nthreads : int, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force : bool, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose : bool, optional
+        Specify whether to print console output (Default: False)
+
+    Returns
+    -------
+    None; writes out file
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if (op.splitext(output))[-1] != '.nii':
+        raise IOError('Output filename {} must be specified as a '
+                      'NifTi (.nii) file.')
+    if (thresh < 0) or (thresh > 1):
+        raise ValueError('BET Threshold needs to be within 0 to 1 range.')
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    # Read FSL NifTi output format and change it if not '.nii'
+    fsl_suffix = os.getenv('FSLOUTPUTTYPE')
+    if fsl_suffix is None:
+        raise OSError('Unable to determine system environment variable '
+                      'FSF_OUTPUT_FORMAT. Ensure that FSL is installed '
+                      'correctly.')
+    if fsl_suffix == 'NIFTI_GZ':
+        os.environ['FSLOUTPUTTYPE'] = 'NIFTI'
+    f_suffix = '.nii'
+    outdir = op.dirname(output)
+    B0_nan = op.join(outdir, 'B0_nan' + f_suffix)
+    path_brain = op.join(outdir, 'brain')
+    path_tissue = op.join(outdir, 'tissue')
+
+    # Extract averaged B0 from DWI
+    extractmeanbzero(input=input,
+                        output=B0_nan,
+                        nthreads=nthreads,
+                        force=force,
+                        verbose=verbose)
+    # Compute brain mask
+    arg_mask = ['bet', B0_nan, path_brain, '-m', '-f', str(thresh)]
+    completion = subprocess.run(arg_mask)
+    if completion.returncode != 0:
+        raise Exception('Unable to compute brain mask from B0. See above '
+                        'for errors')
+    arg = [
+        'fast'
+    ]
+    if verbose:
+        arg.append('-v')
+    arg.extend([
+        '-n', '4',
+        '-t', '2',
+        '-o', path_tissue,
+        path_brain + f_suffix
+    ])
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('FSL FAST segmentation of brain tissue failed. '
+                        'See above for errors.')
+    csfclass = []
+    for i in range(4):
+        arg = [
+            'fslmaths',
+            path_tissue + '_pve_' + str(i) + f_suffix,
+            '-thr', '0.95',
+            '-bin', path_tissue + '_pve_thr_' + str(i) + f_suffix
+        ]
+        completion = subprocess.run(arg)
+        if completion.returncode != 0:
+            raise Exception('FSLMATHS tissue thresholding failed. '
+                            'See above for errors.')
+        arg = [
+            'fslstats',
+            path_brain + '.nii',
+            '-k', path_tissue + '_pve_thr_' + str(i) + f_suffix,
+            '-P', '95'
+        ]
+        completion = subprocess.run(arg, stdout=subprocess.PIPE)
+        if completion.returncode != 0:
+            raise Exception('FSLSTATS tissue thresholding failed. '
+                            'See above for errors.')
+        console = str(completion.stdout).split('\\n')[0]
+        console = console.split('b')[-1]
+        console = console.replace("'", "")
+        csfclass.append(float(console))
+    csfind = np.argmax(csfclass)
+    arg = [
+        'fslmaths',
+        path_tissue + '_pve_' + str(csfind) + f_suffix,
+        '-thr', '0.7',
+        '-bin',
+        '-mul', '-1',
+        '-add', '1',
+        '-mul',
+        path_brain + '_mask' + f_suffix,
+        output
+    ]
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('Unable to create CSF mask. '
+                        'See above for errors.')
+    # Remove intermediary file
+    # os.remove(B0_nan)
+    # os.remove(op.join(outdir, path_brain + f_suffix))
+    # os.rename(op.join(outdir, path_brain + '_mask' + f_suffix), output)
+    # for i in range(4):
+    #     os.remove(path_tissue + '_pve_' + str(i) + f_suffix)
+    #     os.remove(path_tissue + '_pve_thr_' + str(i) + f_suffix)
+    # os.remove(path_tissue + '_mixeltype' + f_suffix)
+    # os.remove(path_tissue + '_pveseg' + f_suffix)
+    # os.remove(path_tissue + '_seg' + f_suffix)
+
 def smooth(input, output, fwhm=1.25):
     """
     Performs Gaussian smoothing on input .mif image
@@ -695,7 +836,7 @@ def extractmeanbzero(input, output, nthreads=None, force=False,
                 '0', '-if', output]
     completion = subprocess.run(arg_nan)
     if completion.returncode != 0:
-        raise Exception('Unable to remove NaNs from averaged B0. See'
+        raise Exception('Unable to remove NaNs from averaged B0. See '
                         'above for errors.')
     # Remove non-essential files
     os.remove(fname_bzero)
