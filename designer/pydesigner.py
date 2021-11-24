@@ -169,9 +169,10 @@ def main():
     parser.add_argument('--user_mask', metavar='path',
                         help='Path to user-supplied brain mask.',
                         type=str)
-    parser.add_argument('-c', '--csf', action='store_true', default=False,
+    parser.add_argument('-cf', '--csf_fsl', action='store_true', default=False,
                         help='Compute a CSF mask for CSF-excluded '
-                        'smoothing to minimize partial volume effects.')
+                        'smoothing to minimize partial volume '
+                        'effects using FSL FAST.')
     parser.add_argument('--reslice', metavar='x,y,z',
                         help='Relices DWI to voxel resolution '
                         'specified in millimeters (mm) or output '
@@ -305,7 +306,6 @@ def main():
         args.smooth = True
         #--extra options--
         args.mask = True
-        args.csf = True
         args.degibbs = True
         args.rician = True
 
@@ -658,7 +658,7 @@ def main():
     #-----------------------------------------------------------------
     # Create CSF Mask
     #-----------------------------------------------------------------
-    if args.csf:
+    if args.csf_fsl:
         csfmask_name = 'csf_mask.nii'
         csfmask_out = op.join(outpath, csfmask_name)
         mrpreproc.csfmask(input=working_path,
