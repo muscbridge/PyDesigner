@@ -354,7 +354,7 @@ def pescheme(path):
         pe_scheme.append(nums)
     return pe_scheme
 
-def num_shells(path):
+def shells(path):
     """
     Returns the number of b-value shells detected in input file
 
@@ -396,6 +396,32 @@ def num_shells(path):
     console = [s.split(' ') for s in console]
     console = [item for sublist in console for item in sublist]
     console = list(filter(None, console))
+    console = [int(x) for x in console]
+    return console
+
+def num_shells(path):
+    """
+    Returns the number of b-value shells detected in input file
+
+    Parameters
+    ----------
+    path : str
+        Path to input image or directory
+
+    Returns
+    -------
+    int
+        Number of shells
+    """
+    if not op.exists(path):
+        raise OSError('Input path does not exist. Please ensure that the '
+                      'folder or file specified exists.')
+    ftype = format(path)
+    if ftype != 'MRtrix':
+        raise IOError('This function only works with MRtrix (.mif) '
+                      'formatted filetypes. Please ensure that the input '
+                      'filetype meets this requirement')
+    console = shells(path)
     return len(console)
 
 def max_shell(path):
