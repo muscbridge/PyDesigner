@@ -7,7 +7,7 @@ page
 `v1.0-RC11`_
 ------------
 
-TBA
+Nov 30, 2021
 
 **Added**:
 
@@ -15,14 +15,18 @@ TBA
   Two methods to do this have been implemented - (1) `-cf or --csf_fsl`
   using FSL FAST segmentation, and (2) `-cd or --csf_adc n` using
   pseudo-ADC threshold of more than 2 (ADC > 2).
-
 * Various other support functions such as `mrpreproc.csfmask()` and
   `mrinfoutil.shells()` to support CSF masking. These functions can
   also be used for other applications
+* User provided brain mask is now rotated to the same orientation as
+  input DWI to prevent fitting errors from incorrect masking.
 
 **Changed**
 
 * Overhaul of preprocessing.smoothing to enable NaN-smoothing
+* B0 volumes are now excluded from IRLLS outlier detection to ensure
+  there are some minimum volumes present in tensor fitting. This
+  prevents various fitting errors.
 
 **Removed**
 
@@ -392,6 +396,7 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
+.. _v1.0-RC11: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC11
 .. _v1.0-RC10: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC10
 .. _v1.0-RC9: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC9
 .. _v1.0-RC8: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC8

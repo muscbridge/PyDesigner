@@ -83,7 +83,7 @@ Cite PyDesigner
 Please include the following citation if you used PyDesigner in your
 work or publication:
 
-Siddhartha Dhiman, Joshua B Teves, Kathryn E Thorn, Emilie T McKinnon, Hunter G Moss, Vitria Adisetiyo, Benjamin Ades-Aron, Jelle Veraart, Jenny Chen, Els Fieremans, Andreana Benitez, Joseph A Helpern, Jens H Jensen. PyDesigner: A Pythonic Implementation of the DESIGNER Pipeline for Diffusion Tensor and Diffusional Kurtosis Imaging. bioRxiv 2021.10.20.465189. doi: https://doi.org/10.1101/2021.10.20.465189
+1. Siddhartha Dhiman, Joshua B Teves, Kathryn E Thorn, Emilie T McKinnon, Hunter G Moss, Vitria Adisetiyo, Benjamin Ades-Aron, Jelle Veraart, Jenny Chen, Els Fieremans, Andreana Benitez, Joseph A Helpern, Jens H Jensen. PyDesigner: A Pythonic Implementation of the DESIGNER Pipeline for Diffusion Tensor and Diffusional Kurtosis Imaging. bioRxiv 2021.10.20.465189. doi: 10.1101/2021.10.20.465189
 
 References
 ==========
