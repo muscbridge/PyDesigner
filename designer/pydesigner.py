@@ -706,15 +706,24 @@ def main():
         filetable['mask'] = DWIFile(brainmask_out)
     
     if args.user_mask:
+        # Rotates user mask to same orientation as PyDesigner's working
+        # file to prevent incorrect masking
         brainmask_name = 'brain_mask.nii'
         brainmask_out = op.join(outpath, 'brain_mask.nii')
-        shutil.copy(args.user_mask, brainmask_out)
+        mrpreproc.stride_match(
+            target=working_path,
+            moving=args.user_mask,
+            output=brainmask_out,
+            nthreads=args.nthreads,
+            force=args.force,
+            verbose=args.verbose
+        )
         filetable['mask'] = DWIFile(brainmask_out)
 
     #-----------------------------------------------------------------
     # Multiply Brain Mask with CSF Mask if both present
     #-----------------------------------------------------------------
-    if args.mask and (args.csf_fsl or args.csf_adc):
+    if (args.mask or args.user_mask) and (args.csf_fsl or args.csf_adc):
         cmd = [
             'mrcalc',
             '-force',
