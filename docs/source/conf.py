@@ -25,7 +25,7 @@ copyright = '2021, MUSC Advanced MRI Analysis (MAMA)'
 author = 'Siddhartha Dhiman, Joshua Teves, Kayti Keith'
 
 # The full version, including alpha/beta/rc tags
-release = 'v1.0-RC10'
+release = 'v1.0-RC11'
 
 
 # -- General configuration ---------------------------------------------------

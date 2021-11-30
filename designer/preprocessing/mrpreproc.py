@@ -494,7 +494,208 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False,
     os.remove(tmp_brain)
     os.rename(op.join(outdir, mask + '_mask.nii'), output)
 
-def smooth(input, output, fwhm=1.25):
+def csfmask(input, output, method='fsl', coeff=2, thresh=0.25,
+            nthreads=None, force=False, verbose=False):
+    """
+    Creates a cerebral spinal fluid (CSF) mask from FSL's FAST tool.
+
+    Parameters
+    ----------
+    input : str
+        Path to input .mif file
+    output : str
+        Path to output .nii CSF mask file
+    method : str, optional
+        Define method to use for computing a CSF mask. `'fsl'` relies
+        on FSL FAST segmentation, and `adc` uses pseudo-diffusion
+        coefficient more than 2 (default) to compute a mask
+    coeff : float, optional
+        Diffusion coefficient to use in thresholding a pseudo-diffusion
+        map to estimate CSF (Default: 2)
+    thresh : float, optional
+        BET threshold ranging from 0 to 1 (Default: 0.25)
+    nthreads : int, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force : bool, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose : bool, optional
+        Specify whether to print console output (Default: False)
+
+    Returns
+    -------
+    None; writes out file
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if (op.splitext(output))[-1] != '.nii':
+        raise IOError('Output filename {} must be specified as a '
+                      'NifTi (.nii) file.')
+    if (thresh < 0) or (thresh > 1):
+        raise ValueError('BET Threshold needs to be within 0 to 1 range.')
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    outdir = op.dirname(output)
+    if 'fsl' in method:
+        # Read FSL NifTi output format and change it if not '.nii'
+        fsl_suffix = os.getenv('FSLOUTPUTTYPE')
+        if fsl_suffix is None:
+            raise OSError('Unable to determine system environment variable '
+                        'FSF_OUTPUT_FORMAT. Ensure that FSL is installed '
+                        'correctly.')
+        if fsl_suffix == 'NIFTI_GZ':
+            os.environ['FSLOUTPUTTYPE'] = 'NIFTI'
+        f_suffix = '.nii'
+        B0_nan = op.join(outdir, 'B0_nan' + f_suffix)
+        path_brain = op.join(outdir, 'brain')
+        path_tissue = op.join(outdir, 'tissue')
+
+        # Extract averaged B0 from DWI
+        extractmeanbzero(input=input,
+                            output=B0_nan,
+                            nthreads=nthreads,
+                            force=force,
+                            verbose=verbose)
+        # Compute brain mask
+        arg_mask = ['bet', B0_nan, path_brain, '-m', '-f', str(thresh)]
+        completion = subprocess.run(arg_mask)
+        if completion.returncode != 0:
+            raise Exception('Unable to compute brain mask from B0. See above '
+                            'for errors')
+        arg = [
+            'fast'
+        ]
+        if verbose:
+            arg.append('-v')
+        arg.extend([
+            '-n', '4',
+            '-t', '2',
+            '-o', path_tissue,
+            path_brain + f_suffix
+        ])
+        completion = subprocess.run(arg)
+        if completion.returncode != 0:
+            raise Exception('FSL FAST segmentation of brain tissue failed. '
+                            'See above for errors.')
+        csfclass = []
+        for i in range(4):
+            arg = [
+                'fslmaths',
+                path_tissue + '_pve_' + str(i) + f_suffix,
+                '-thr', '0.95',
+                '-bin', path_tissue + '_pve_thr_' + str(i) + f_suffix
+            ]
+            completion = subprocess.run(arg)
+            if completion.returncode != 0:
+                raise Exception('FSLMATHS tissue thresholding failed. '
+                                'See above for errors.')
+            arg = [
+                'fslstats',
+                path_brain + '.nii',
+                '-k', path_tissue + '_pve_thr_' + str(i) + f_suffix,
+                '-P', '95'
+            ]
+            completion = subprocess.run(arg, stdout=subprocess.PIPE)
+            if completion.returncode != 0:
+                raise Exception('FSLSTATS tissue thresholding failed. '
+                                'See above for errors.')
+            console = str(completion.stdout).split('\\n')[0]
+            console = console.split('b')[-1]
+            console = console.replace("'", "")
+            csfclass.append(float(console))
+        csfind = np.argmax(csfclass)
+        arg = [
+            'fslmaths',
+            path_tissue + '_pve_' + str(csfind) + f_suffix,
+            '-thr', '0.7',
+            '-bin',
+            # '-mul', '-1',
+            # '-add', '1',
+            '-mul',
+            path_brain + '_mask' + f_suffix,
+            output
+        ]
+        completion = subprocess.run(arg)
+        if completion.returncode != 0:
+            raise Exception('Unable to create CSF mask. '
+                            'See above for errors.')
+        # Remove intermediate files
+        os.remove(B0_nan)
+        os.remove(op.join(outdir, path_brain + f_suffix))
+        for i in range(4):
+            os.remove(path_tissue + '_pve_' + str(i) + f_suffix)
+            os.remove(path_tissue + '_pve_thr_' + str(i) + f_suffix)
+        os.remove(path_tissue + '_mixeltype' + f_suffix)
+        os.remove(path_tissue + '_pveseg' + f_suffix)
+        os.remove(path_tissue + '_seg' + f_suffix)
+    if 'adc' in method:
+        # Get list of b-values
+        bvals = mrinfoutil.shells(input)
+        # Find index of shell closest to b=1000
+        idx = min(range(len(bvals)), key=lambda i: abs(bvals[i]-1000))
+        # Specify file paths
+        path_b0 = op.join(outdir, 'S0.mif')
+        path_shell = op.join(outdir, 'S1000.mif')
+        # Extract mean B
+        # Extract averaged B0 from DWI
+        extractmeanbzero(
+            input=input,
+            output=path_b0,
+            nthreads=nthreads,
+            force=force,
+            verbose=verbose)
+        # Extract mean of indexed b=1000 shell
+        extractmeanshell(
+            input=input,
+            output=path_shell,
+            shell=bvals[idx],
+            nthreads=nthreads,
+            force=force,
+            verbose=verbose
+        )
+        # Use the formula D_pseudo = ln(S0/S1000)/B1000 > 2 to compute
+        # brain mask based on pseudo-ADC
+        arg = ['mrcalc']
+        if force:
+            arg.append('-force')
+        if not verbose:
+            arg.append('-quiet')
+        if not (nthreads is None):
+            arg.extend(['-nthreads', str(nthreads)])
+        arg.extend(
+            [
+                path_b0,
+                path_shell,
+                '-div',
+                '-log',
+                str(bvals[idx]/1000),
+                '-div',
+                str(coeff),
+                '-gt',
+                output
+            ]
+        )
+        completion = subprocess.run(arg)
+        if completion.returncode != 0:
+            raise Exception('Unable to compute pseudo ADC. '
+                            'See above for errors.')
+        os.remove(path_b0)
+        os.remove(path_shell)
+
+def smooth(input, output, csfname=None, fwhm=1.25, size=5):
     """
     Performs Gaussian smoothing on input .mif image
 
@@ -504,6 +705,8 @@ def smooth(input, output, fwhm=1.25):
         Path to input .mif file
     output : str
         Path to output .mif file
+    csfname : str
+        Path to CSF mask file in .nii format
     fwhm : float
         The full width half max in voxels to be smoothed
         (Default: 1.25)
@@ -519,15 +722,22 @@ def smooth(input, output, fwhm=1.25):
         raise OSError('Specifed directory for output file {} does not '
                       'exist. Please ensure that this is a valid '
                       'directory.'.format(op.dirname(output)))
+    if not (csfname is None):
+        if not op.exists(csfname):
+            raise OSError('Path to CSF mask does not exist. Please '
+                          'ensure that the file specified exists.')
     if fwhm < 0:
         raise Exception('FWHM cannot be less than zero.')
+    if size < 0:
+        raise Exception('Size cannot be less than zero. Please '
+                        'specify size as a positive integer.')
     # Convert input .mif to .nii
     outdir = op.dirname(output)
     nii_path = op.join(outdir, 'dwism.nii')
     miftonii(input=input, output=nii_path, strides='1,2,3,4')
     # Perform smoothing
     smoothing.smooth_image(nii_path,
-                           csfname=None,
+                           csfname=csfname,
                            outname=nii_path,
                            width=fwhm)
     # Convert .nii to .mif
@@ -695,7 +905,7 @@ def extractmeanbzero(input, output, nthreads=None, force=False,
                 '0', '-if', output]
     completion = subprocess.run(arg_nan)
     if completion.returncode != 0:
-        raise Exception('Unable to remove NaNs from averaged B0. See'
+        raise Exception('Unable to remove NaNs from averaged B0. See '
                         'above for errors.')
     # Remove non-essential files
     os.remove(fname_bzero)
@@ -753,6 +963,140 @@ def extractnonbzero(input, output, nthreads=None, force=False,
     if completion.returncode != 0:
         raise Exception('Unable to extract B0s from DWI for computation '
                         'of brain mask. See above for errors.')
+
+def extractshell(input, output, shell, nthreads=None, force=False,
+              verbose=False):
+    """
+    Extracts specified shell from an input mif file.
+
+    Parameters
+    ----------
+    input : str
+        Path to input .mif file
+    output : str
+        Path to output .mif file
+    shell : int
+        Approximate b-value to extract
+    nthreads : int, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force : bool, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose : bool, optional
+        Specify whether to print console output (Default: False)
+
+    Returns
+    -------
+    None; writes out file
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if not isinstance(shell, int):
+        raise Exception('Please specify the shell to extract as an '
+                        'integer.')
+    if shell < 0:
+        raise Exception('Please specify the shell to extract as a '
+                        'positive (more than 0) integer.')
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    arg = ['dwiextract']
+    if force:
+        arg.append('-force')
+    if not verbose:
+        arg.append('-quiet')
+    if not (nthreads is None):
+        arg.extend(['-nthreads', str(nthreads)])
+    arg.extend(['-no_bzero',
+                '-singleshell',
+                '-shell', str(shell),
+                input, output])
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('Unable to extract specified shells from DWI. '
+                        'See above for errors.')
+
+def extractmeanshell(input, output, shell, nthreads=None, force=False,
+              verbose=False):
+    """
+    Extracts mean of specified from an input mif file.
+
+    Parameters
+    ----------
+    input : str
+        Path to input .mif file
+    output : str
+        Path to output .mif file
+    shell : int
+        Approximate b-value to extract
+    nthreads : int, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force : bool, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose : bool, optional
+        Specify whether to print console output (Default: False)
+
+    Returns
+    -------
+    None; writes out file
+    """
+    if not op.exists(input):
+        raise OSError('Input path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if not isinstance(shell, int):
+        raise Exception('Please specify the shell to extract as an '
+                        'integer.')
+    if shell < 0:
+        raise Exception('Please specify the shell to extract as a '
+                        'positive (more than 0) integer.')
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    outdir = op.dirname(output)
+    fname_shell = op.join(outdir, 'b' + str(shell) + '_ALL.mif')
+    fname_mean = op.join(outdir, 'b' + str(shell) + '_MEAN.mif')
+    # Extract all specified shells
+    extractshell(input, fname_shell, shell=shell, nthreads=nthreads,
+                 force=force, verbose=verbose)
+    # Compute mean
+    arg_mean = ['mrmath', '-axis', '3', fname_shell, 'mean', fname_mean]
+    completion = subprocess.run(arg_mean)
+    if completion.returncode != 0:
+        raise Exception('Unable to compute mean of B0s. See above for'
+                        'errors.')
+    arg_nan = ['mrcalc', fname_mean, '-finite', fname_mean,
+                '0', '-if', output]
+    completion = subprocess.run(arg_nan)
+    if completion.returncode != 0:
+        raise Exception('Unable to remove NaNs from averaged shell '
+                        'image. See above for errors.')
+    # Remove non-essential files
+    os.remove(fname_shell)
+    os.remove(fname_mean)
 
 def epiboost(input, output, num=1, nthreads=None, force=False,
               verbose=False):

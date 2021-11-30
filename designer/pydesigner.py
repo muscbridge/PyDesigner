@@ -169,6 +169,15 @@ def main():
     parser.add_argument('--user_mask', metavar='path',
                         help='Path to user-supplied brain mask.',
                         type=str)
+    parser.add_argument('-cf', '--csf_fsl', action='store_true', default=False,
+                        help='Compute a CSF mask for CSF-excluded '
+                        'smoothing to minimize partial volume '
+                        'effects using FSL FAST.')
+    parser.add_argument('-cd', '--csf_adc', metavar='n', default=False,
+                        help='Compute a CSF mask for CSF-excluded '
+                        'smoothing to minimize partial volume '
+                        'effects using thresholding a pseudo-ADC map '
+                        'computed as ln(S0/S1000)/b1000.')
     parser.add_argument('--reslice', metavar='x,y,z',
                         help='Relices DWI to voxel resolution '
                         'specified in millimeters (mm) or output '
@@ -300,7 +309,7 @@ def main():
         args.denoise = True
         args.undistort = True
         args.smooth = True
-        #--extra options--
+        args.csf_adc = 2
         args.mask = True
         args.degibbs = True
         args.rician = True
@@ -331,6 +340,11 @@ def main():
         errmsg+='Cannot run with both --mask and --user_mask; '
         errmsg+='--mask if you do not have a custom brain mask and ' \
                 '--user_mask if you want to supply a mask.'
+    
+    # Cannot run --csf_fsl and --csf_adc at the same time
+    if args.csf_fsl and args.csf_adc:
+        errmsg+='Cannot run with both --csf_fsl and --csf_adc; '
+        errmsg+='please supply only one option.'
 
     # Check to make sure brain mask exists if given
     if args.user_mask:
@@ -652,6 +666,32 @@ def main():
                             voxel=mrinfoutil.spacing(working_path))
 
     #-----------------------------------------------------------------
+    # Create CSF Mask
+    #-----------------------------------------------------------------
+    csfmask_name = 'csf_mask.nii'
+    csfmask_out = op.join(outpath, csfmask_name)
+    # FSL Method
+    if args.csf_fsl:
+        mrpreproc.csfmask(input=working_path,
+                            output=csfmask_out,
+                            method='fsl',
+                            thresh=args.maskthr,
+                            nthreads=args.nthreads,
+                            force=args.force,
+                            verbose=args.verbose)
+        filetable['csfmask'] = DWIFile(csfmask_out)
+    # ADC Method
+    if args.csf_adc:
+        mrpreproc.csfmask(input=working_path,
+                            output=csfmask_out,
+                            method='adc',
+                            coeff=args.csf_adc,
+                            nthreads=args.nthreads,
+                            force=args.force,
+                            verbose=args.verbose)
+        filetable['csfmask'] = DWIFile(csfmask_out)
+
+    #-----------------------------------------------------------------
     # Create Brain Mask
     #-----------------------------------------------------------------
     if args.mask:
@@ -672,9 +712,28 @@ def main():
         filetable['mask'] = DWIFile(brainmask_out)
 
     #-----------------------------------------------------------------
+    # Multiply Brain Mask with CSF Mask if both present
+    #-----------------------------------------------------------------
+    if args.mask and (args.csf_fsl or args.csf_adc):
+        cmd = [
+            'mrcalc',
+            '-force',
+            brainmask_out,
+            csfmask_out,
+            '-mult',
+            csfmask_out
+        ]
+        completion = subprocess.run(cmd)
+        if completion.returncode != 0:
+            raise Exception('Unable to multiply CSF mask with brain '
+                            'mask. See above for errors.')
+    #-----------------------------------------------------------------
     # Smooth
     #-----------------------------------------------------------------
     if args.smooth:
+        csfname = None
+        if 'csfmask' in filetable:
+            csfname = filetable['csfmask'].getFull()
         step_count += 1
         smoothing_name = 'dwi_smoothed'
         # file names
@@ -684,8 +743,10 @@ def main():
         # check to see if this already exists
         if not (args.resume and op.exists(nii_smoothing)):
             mrpreproc.smooth(input=working_path,
-                             output=mif_smoothing,
-                             fwhm=args.fwhm)
+                            csfname=csfname,
+                            output=mif_smoothing,
+                            fwhm=args.fwhm)
+
             mrpreproc.miftonii(input=mif_smoothing,
                                 output=nii_smoothing,
                                 strides='1,2,3,4',

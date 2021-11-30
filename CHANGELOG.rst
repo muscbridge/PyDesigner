@@ -4,6 +4,30 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+`v1.0-RC11`_
+------------
+
+TBA
+
+**Added**:
+
+* CSF excluded smoothing to minimize partial volume effect (PVE).
+  Two methods to do this have been implemented - (1) `-cf or --csf_fsl`
+  using FSL FAST segmentation, and (2) `-cd or --csf_adc n` using
+  pseudo-ADC threshold of more than 2 (ADC > 2).
+
+* Various other support functions such as `mrpreproc.csfmask()` and
+  `mrinfoutil.shells()` to support CSF masking. These functions can
+  also be used for other applications
+
+**Changed**
+
+* Overhaul of preprocessing.smoothing to enable NaN-smoothing
+
+**Removed**
+
+* None
+
 `v1.0-RC10`_
 ------------
 
