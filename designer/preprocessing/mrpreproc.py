@@ -162,6 +162,76 @@ def niitomif(input, output, strides='1,2,3,4', nthreads=None,
         raise Exception('Conversion from .nii to .mif failed; check '
                         'above for errors.')
 
+def stride_match(target, moving, output, nthreads=None, force=True, verbose=False):
+    """
+    Matches strides on inputs target and moving by converting strides
+    on moving image to those of target image.
+
+    Parameters
+    ----------
+    target : str
+        Path to target image .nii or .mif file
+    moving : str
+        Path to moving image .nii or .mif file
+    output : str
+        Path to output .nii or .mif file
+    nthreads : int, optional
+        Specify the number of threads to use in processing
+        (Default: all available threads)
+    force : bool, optional
+        Force overwrite of output files if pre-existing
+        (Default:False)
+    verbose : bool, optional
+        Specify whether to print console output (Default: False)
+
+    Returns
+    -------
+    None; writes out file
+    """
+    if not op.exists(target):
+        raise OSError('Input target path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if op.splitext(target)[-1] not in ['.nii', '.mif']:
+        raise OSError('Input target image needs to be a .nii or .mif file')
+    if not op.exists(moving):
+        raise OSError('Input moving path does not exist. Please ensure that '
+                      'the folder or file specified exists.')
+    if op.splitext(moving)[-1] not in ['.nii', '.mif']:
+        raise OSError('Input moving image needs to be a .nii or .mif file')
+    if not op.exists(op.dirname(output)):
+        raise OSError('Specifed directory for output file {} does not '
+                      'exist. Please ensure that this is a valid '
+                      'directory.'.format(op.dirname(output)))
+    if op.splitext(output)[-1] not in ['.nii', '.mif']:
+        raise OSError('Output specified does not possess the .nii '
+                      'extension.')
+    if not (nthreads is None):
+        if not isinstance(nthreads, int):
+            raise Exception('Please specify the number of threads as an '
+                            'integer.')
+    if not isinstance(force, bool):
+        raise Exception('Please specify whether forced overwrite is True '
+                        'or False.')
+    if not isinstance(verbose, bool):
+        raise Exception('Please specify whether verbose is True or False.')
+    arg  = ['mrconvert']
+    if force:
+        arg.append('-force')
+    if not verbose:
+        arg.append('-quiet')
+    if not (nthreads is None):
+        arg.extend(['-nthreads', str(nthreads)])
+    arg.extend(
+        [
+            '-strides', target,
+            moving,
+            output
+        ]
+    )
+    completion = subprocess.run(arg)
+    if completion.returncode != 0:
+        raise Exception('Stride matching failed; check above for errors.')
+
 def denoise(input, output, noisemap=True, extent='5,5,5', nthreads=None,
             force=True, verbose=False):
     """
