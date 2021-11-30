@@ -309,7 +309,7 @@ def main():
         args.denoise = True
         args.undistort = True
         args.smooth = True
-        #--extra options--
+        args.csf_adc = 2
         args.mask = True
         args.degibbs = True
         args.rician = True
