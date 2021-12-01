@@ -42,7 +42,11 @@ RUN apt-get update && \
       nano \
       software-properties-common \
       python2.7 python-pip \
-      python3-pip
+      python3-pip \
+      libblas-dev \
+      liblapack-dev \
+      libatlas-base-dev \
+      gfortran
 
 # Install MRTRIX3 dependencies
 RUN apt-get install -y --no-install-recommends \

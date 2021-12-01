@@ -43,13 +43,16 @@ RUN apt-get update && \
       software-properties-common \
       python2.7 python-pip \
       python3-pip \
-      jq
+      jq \
+      libblas-dev \
+      liblapack-dev \
+      libatlas-base-dev \
+      gfortran
 
 # Install MRTRIX3 dependencies
 RUN apt-get install -y --no-install-recommends \
       clang \
       git \
-      python-numpy \
       libeigen3-dev \
       zlib1g-dev \
       libqt4-opengl-dev \
