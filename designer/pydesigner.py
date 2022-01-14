@@ -882,7 +882,7 @@ def main():
     # Handle multi-echo data
     #-----------------------------------------------------------------
     imPath = filetable['HEAD'].getFull()
-    if multi_echo:
+    if multi_echo and args.multite:
         imPath = []
         for i in range(len(image.echotime)):
             echo_out = op.join(outpath, 'TE' + str(image.echotime[i]) + '_dwi_preprocessed.nii')
