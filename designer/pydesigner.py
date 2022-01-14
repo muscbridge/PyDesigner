@@ -107,8 +107,9 @@ def main():
 
     # Mandatory
     parser.add_argument('dwi',
-                        help='the diffusion dataset you would like '
-                        'to process',
+                        nargs='+',
+                        help='The diffusion dataset you would like '
+                        'to process. ',
                         type=str)
 
     # Optional
