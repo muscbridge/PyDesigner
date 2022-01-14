@@ -4,6 +4,26 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+`v1.0-RC12`_
+------------
+
+Jan 14, 2022
+
+**Added**
+
+* None
+
+**Changed**
+
+* Fixed a logic in multi-TE detection algorithm that prevented certain
+  datasets from processing
+* Overhauled how inputs paths are entered. Paths to input DWIs can now
+  be provided to PyDesigner without comma separation
+
+**Removed**
+
+* None
+
 `v1.0-RC11`_
 ------------
 
@@ -74,7 +94,7 @@ Jun 29, 2021
 
 Mar 16, 2021
 
-**Added**:
+**Added**
 
 * None
 
@@ -92,7 +112,7 @@ Mar 16, 2021
 
 Feb 15, 2021
 
-**Added**:
+**Added**
 
 * Added missing Rician preprocessing to :code:`-s, --standard`
   preprocessing
@@ -111,7 +131,7 @@ Feb 15, 2021
 
 Feb 11, 2021
 
-**Added**:
+**Added**
 
 * Missing Docker figures in RTD documentation
 
@@ -131,7 +151,7 @@ Feb 11, 2021
 
 Dec 22, 2020
 
-**Added**:
+**Added**
 
 * None
 
@@ -157,7 +177,7 @@ Dec 22, 2020
 
 Oct 26, 2020
 
-**Added**:
+**Added**
 
 * Check for b-value scaling so .bval file so values
   specified as either 2.0 or 2000 can be processed.
@@ -168,7 +188,7 @@ Oct 26, 2020
   produces an ``fbi_tractography_dsi.fib`` file that can be loaded
   into DSI Studio to perform tractography.
 
-**Changed**:
+**Changed**
 
 * Fixed issue where eddy correction would attempt
   to QC and fail despite parsing the ``--noqc`` flag.
@@ -186,18 +206,18 @@ Oct 26, 2020
 
 Sep 22, 2020
 
-**Added**:
+**Added**
 
 * Reslicing compatibility udpated for new MRTrix3 version
   where ``mrrelice`` has been changed to ``mrgrid``.
   PyDesigner will work with either versions.
 
-**Changed**:
+**Changed**
 
 * Fixed a bad indent in tensor reordering function
   that produced an error in DTI protocols.
 
-**Removed**:
+**Removed**
 
 * None
 
@@ -206,7 +226,7 @@ Sep 22, 2020
 
 Sep 21, 2020
 
-**Added**:
+**Added**
 
 * FBI fODF map for FBI tractography. Users may use MRTrix3
   to further process this file.
@@ -216,11 +236,11 @@ Sep 21, 2020
   ``-l_max n`` flag. This is based on
   information found at https://mrtrix.readthedocs.io/en/dev/concepts/sh_basis_lmax.html
 
-**Changed**:
+**Changed**
 
 * None
 
-**Removed**:
+**Removed**
 
 * None
 
@@ -229,11 +249,11 @@ Sep 21, 2020
 
 Aug 25, 2020
 
-**Added**:
+**Added**
 
 * References to README.rst
 
-**Changed**:
+**Changed**
 
 * The minimum B-value required for FBI (4000) is now inclusive
   instead of exclusive. This would allow executiong of FBI/FBWM
@@ -242,7 +262,7 @@ Aug 25, 2020
   can recognize the flag
 * Updated Slack permalink in README.rst
 
-**Removed**:
+**Removed**
 
 * None
 
@@ -251,7 +271,7 @@ Aug 25, 2020
 
 Aug 19, 2020
 
-**Added**:
+**Added**
 
 * Methods to perform tensor only with compatible B-values. PyDesigner
   previously use all B-values in a DWI to do so. This behavior has
@@ -259,13 +279,13 @@ Aug 19, 2020
 * FBI and FBWM calculations
 * Brief documentation on how to run PyDesigner
 
-**Changed**:
+**Changed**
 
 * Automatically issues ``dwipreproc`` or ``dwifslpreproc`` for
   compatibility with MRtrix3 >= 3.0.1
 * Updated minimum version for required Python modules
 
-**Removed**:
+**Removed**
 
 * None
 
@@ -274,12 +294,12 @@ Aug 19, 2020
 
 Apr 21, 2020
 
-**Added**:
+**Added**
 
 * Intrinsic inter-axonal and mean extra-axonal diffusivity
   calculation to WMTI
 
-**Changed**:
+**Changed**
 
 * Method ``json2fslgrad`` converted from class method to function
   definition
@@ -290,7 +310,7 @@ Apr 21, 2020
 * DKE conversion scripts modified to correctly create ft and dke
   parameter files
 
-**Removed**:
+**Removed**
 
 * None
 
@@ -299,18 +319,18 @@ Apr 21, 2020
 
 Apr 9, 2020
 
-**Added**:
+**Added**
 
 * NaN check in AWF calculculation that prevents further errors in intra-axonal
   and extra-axonal WMTI metrics computation
 
-**Changed**:
+**Changed**
 
 * ``designer.fitting.dwipy`` input file detection method
 * ``Dockerfile_release`` now deletes the correct temporary file to prevent build
   error
 
-**Removed**:
+**Removed**
 
 * None
 
@@ -319,14 +339,14 @@ Apr 9, 2020
 
 Apr 8, 2020
 
-**Added**:
+**Added**
 
 * Head motion plot from on eddy_qc outputs
 * Outlier plot from IRRLS outlier detection
 * Updated documentation
 * Option to reslice DWI with ``--reslice [x,y,z]``
 
-**Changed**:
+**Changed**
 
 * Flag ``--epiboost [index]`` changed to ``--epi [n]``, where
   users can specify the number of reverse phase encoded B0 pairs to
@@ -340,7 +360,7 @@ Apr 8, 2020
   that gets called by PyDesigner main. This allows a B0.nii to be
   produced regardless of the ``--mask`` flag.
 
-**Removed**:
+**Removed**
 
 * Documentation inconsistencies
 
@@ -349,7 +369,7 @@ Apr 8, 2020
 
 Feb 26, 2020
 
-**Added**:
+**Added**
 
 * Installer for setup with ``pip install .``
 * Multiple file support: *.nii*, *.nii.gz*, *.dcm*, *.mif*
@@ -359,11 +379,11 @@ Feb 26, 2020
 * Full utilization of AVX instruction set on AMD machines
 * WMTI parameters
 
-**Changed**:
+**Changed**
 
 * Fixed topup series not being denoised
 
-**Removed**:
+**Removed**
 
 * CSF masking; feature failed to work consistently
 
@@ -373,16 +393,16 @@ Feb 26, 2020
 Dec 2, 2019
 
 
-**Added**:
+**Added**
 
 * None
 
-**Changed**:
+**Changed**
 
 * Fixed bug in Dockerfile that prevented ``pydesigner.py`` from being
   found
 
-**Removed**:
+**Removed**
 
 * None
 
@@ -396,6 +416,7 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
+.. _v1.0-RC12: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC12
 .. _v1.0-RC11: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC11
 .. _v1.0-RC10: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC10
 .. _v1.0-RC9: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC9

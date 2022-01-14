@@ -29,6 +29,10 @@ The list of ever possible output file is given in the table below.
 | :code:`brain_mask.nii`              | brain mask extracted from B0.nii (exists only if         |
 |                                     | :code:`--mask` is used)                                  |
 +-------------------------------------+----------------------------------------------------------+
+|                                     |                                                          |
+| :code:`csf_mask.nii`                | csf mask extracted from B0.nii (exists only if           |
+|                                     | :code:`---cf` or :code:`---cd`are used)                  |
++-------------------------------------+----------------------------------------------------------+
 | :code:`dwi_preprocessed.nii`        | fully preprocessed DWI NifTi file                        |
 +-------------------------------------+----------------------------------------------------------+
 | :code:`dwi_preprocessed.bval`       | fully preprocessed DWI's BVAL file in FSL format         |

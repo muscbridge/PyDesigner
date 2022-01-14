@@ -107,8 +107,9 @@ def main():
 
     # Mandatory
     parser.add_argument('dwi',
-                        help='the diffusion dataset you would like '
-                        'to process',
+                        nargs='+',
+                        help='The diffusion dataset you would like '
+                        'to process. ',
                         type=str)
 
     # Optional
@@ -177,18 +178,18 @@ def main():
                         help='Compute a CSF mask for CSF-excluded '
                         'smoothing to minimize partial volume '
                         'effects using thresholding a pseudo-ADC map '
-                        'computed as ln(S0/S1000)/b1000.')
+                        'computed as ln(S0/S1000)/b1000. Default: 2')
     parser.add_argument('--reslice', metavar='x,y,z',
                         help='Relices DWI to voxel resolution '
                         'specified in millimeters (mm) or output '
                         'dimensions. Performing reslicing will skip '
                         'plotting of SNR curves. Providing dimensions '
-                        'greater than 9 will swtich from mm voxel '
+                        'greater than 9 will switch from mm voxel '
                         'reslicing to output image reslicing.')
     parser.add_argument('--interp', action='store_true', default='linear',
                         help='Set the interpolation to use when '
                         'reslicing. Choices are linear (default), ' 
-                        'nearest, cubic, sinc.')
+                        'nearest, cubic, and sinc.')
     parser.add_argument('-te', '--multite', action='store_true',
                         default=False,
                         help='Specify whether input DWI consists of '
@@ -882,7 +883,7 @@ def main():
     # Handle multi-echo data
     #-----------------------------------------------------------------
     imPath = filetable['HEAD'].getFull()
-    if multi_echo:
+    if multi_echo and args.multite:
         imPath = []
         for i in range(len(image.echotime)):
             echo_out = op.join(outpath, 'TE' + str(image.echotime[i]) + '_dwi_preprocessed.nii')

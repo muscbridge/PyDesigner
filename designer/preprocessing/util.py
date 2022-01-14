@@ -355,7 +355,7 @@ class DWIParser:
         self : class
             DWIParser class object
         """
-        UserCpath = path.rsplit(',')
+        UserCpath = path
         self.DWIlist = [op.realpath(i) for i in UserCpath]
         # This loop determines the types of inputs parsed into the function
         ftype = []

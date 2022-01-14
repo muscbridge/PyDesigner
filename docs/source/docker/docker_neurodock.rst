@@ -29,11 +29,11 @@ following command to pull NeuroDock.
     $ docker pull docker pull dmri/neurodock:tagname
 
 where :code:`tagname` is the version you'd like to pull. To install
-NeuroDock v0.2, you would run the command
+the latest NeuroDock, you would run the command
 
 .. code-block:: console
 
-    $ docker pull dmri/neurodock:v0.2
+    $ docker pull dmri/neurodock:latest
 
 And that's it! All you have to do now is to wait for the NeuroDock
 image to finish downloading.
