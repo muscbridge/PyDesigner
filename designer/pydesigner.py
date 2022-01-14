@@ -177,18 +177,18 @@ def main():
                         help='Compute a CSF mask for CSF-excluded '
                         'smoothing to minimize partial volume '
                         'effects using thresholding a pseudo-ADC map '
-                        'computed as ln(S0/S1000)/b1000.')
+                        'computed as ln(S0/S1000)/b1000. Default: 2')
     parser.add_argument('--reslice', metavar='x,y,z',
                         help='Relices DWI to voxel resolution '
                         'specified in millimeters (mm) or output '
                         'dimensions. Performing reslicing will skip '
                         'plotting of SNR curves. Providing dimensions '
-                        'greater than 9 will swtich from mm voxel '
+                        'greater than 9 will switch from mm voxel '
                         'reslicing to output image reslicing.')
     parser.add_argument('--interp', action='store_true', default='linear',
                         help='Set the interpolation to use when '
                         'reslicing. Choices are linear (default), ' 
-                        'nearest, cubic, sinc.')
+                        'nearest, cubic, and sinc.')
     parser.add_argument('-te', '--multite', action='store_true',
                         default=False,
                         help='Specify whether input DWI consists of '

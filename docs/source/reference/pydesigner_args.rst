@@ -22,35 +22,40 @@ Preprocessing contol flags allow users to tweak certain parts of the
 preprocessing pipeline, to accomodate all types of datasets.
 
 
--s, --standard  Runs the recommended preprocessing pipeline in order: denoise, degibbs, undistort, brain mask, smooth, rician
+-s, --standard      Runs the recommended preprocessing pipeline in order: denoise, degibbs, undistort, brain mask, smooth, rician
 
 -n, --denoise       Denoises input DWI
 
---extent        Shape of denoising extent matrix, defaults to 5,5,5
+--extent            Shape of denoising extent matrix, defaults to 5,5,5
 
---reslice       Reslices input DWI and outputs to a specific resolution in mm or output dimensions
+--reslice xyz       Reslices DWI to voxel resolution specified in miliimeters (mm) or output dimensions. Performinh reslicing will skip plotting of SNR curves. Dimensions less than 9 will reslice in mm, image dimension otherwise. Specify argument as `--reslice x,y,z`.
 
---interp        The interpolation method to use when resizing
+--interp CHOICE     Set the interpolation to use when reslicing. Choices are linear (default), nearest, cubic, and sinc
 
 -g, --degibbs       Corrects Gibb’s ringing
 
 -u, --undistort     Undistorts image using a suite of EPI distortion correction, eddy current correction, and co-registration. Does not run EPI correction if reverse phase encoding DWI is absent.
 
---rpe_pairs n   Speeds up topup if a reverse PE is present; specify the number (integer) of reverse PE direction B0 pairs to use
+--rpe_pairs N       Speeds up TOPUP if a reverse PE is present; specify the number (integer) of reverse PE direction B0 pairs to use.
 
---mask          Computes a brain mask at 0.20 threshold by default
+--mask              Computes a brain mask at 0.20 threshold by default
 
---maskthr       Specify FSL bet fractional intensity threshold for brain masking, defaults to 0.20
+--maskthr           Specify FSL bet fractional intensity threshold for brain masking, defaults to 0.20
 
---user_mask     Provide path to user-generated brain mask in NifTi (.nii) format
+--user_mask         Provide path to user-generated brain mask in NifTi (.nii) format
+
+-cf, --csf_fsl      Compute a CSF mask for CSF-excluded smoothing to minimize partial volume effects using FSL fit_constraints
+
+-cd, --csf_adc  Compute CSF mask for CSF-excluded smoothing to minimize partial volume effects by thresholding a pseudo-ADC map computed as ln(S0/S1000)/b1000. N is the ADC thresold to use (default: 2).
 
 -z, --smooth        Smooths DWI data at a default FWHM of 1.25
 
---fwhm          Specify the FWHM at which to smooth, defaults to 1.25
+--fwhm              Specify the FWHM at which to smooth, defaults to 1.25
 
 -r, --rician        Corrects Rician bias
 
--te             Enable multi-TE support. This mode preprocesses all concatenated DWIs together, but performs tensor fitting separately.
+-te, --multite      Enable multi-TE support. This mode preprocesses all concatenated DWIs together, but performs tensor fitting separately.
+
 
 Diffusion Tensor Control
 ------------------------
