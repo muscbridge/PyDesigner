@@ -839,6 +839,34 @@ def main():
     filetable['HEAD'] = filetable['B0']
 
     #-----------------------------------------------------------------
+    # Extract averaged non-B0 shells
+    #-----------------------------------------------------------------
+    # get non B0 shells
+    b_shells = [x for x in mrinfoutil.shells(working_path) if x != 0]
+    # remove 
+    # file names
+    b_names = ['B' + str(x) for x in b_shells]
+    b_paths = [op.join(outpath, x + '.nii') for x in b_names]
+    # check to see if this already exists
+    for b_value, b_nii in zip(b_shells, b_paths):
+        if not (args.resume and op.exists(b_nii)):
+            # extract mean shells
+            mrpreproc.extractmeanshell(
+                input=working_path,
+                output=b_nii,
+                shell=b_value,
+                nthreads=args.nthreads,
+                force=args.force,
+                verbose=args.verbose
+            )
+            # update command history
+            cmdtable['B' + str(b_value)] = mrinfoutil.commandhistory(working_path)[-1]
+            cmdtable['HEAD'] = cmdtable['B' + str(b_value)]
+            # update nifti file tracking
+            filetable['B' + str(b_value)] = DWIFile(b_nii)
+            filetable['HEAD'] = filetable['B' + str(b_value)]
+
+    #-----------------------------------------------------------------
     # Make preprocessed file
     #-----------------------------------------------------------------
     preprocessed = op.join(outpath, 'dwi_preprocessed.nii')
