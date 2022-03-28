@@ -132,6 +132,75 @@ class odfmodel():
             harmonics.extend(np.arange(sh_start,sh_end+1))
         B = shbasis(degs, theta, phi)
 
+
+def odfspherical(odf, phi, theta):
+    """
+    Convert ODFs to spherical form.
+
+    Parameters
+    ----------
+    odf : array_like(dtype=float64)
+        ODF coefficients at a voxel. There are 29 coefficients for DKI ODFs
+    phi : array_like(dtype=float64)
+        Polar phi angles
+    theta : array_like(dtype=float64)
+        Polar theta angles
+    
+    Returns
+    -------
+    spherical : array_like(dtype=float64)
+        ODF in spherical form
+    """
+    if len(theta) != len(phi):
+        raise Exception('Inputs theta and phi are not the same size')
+    spherical = (1 / ((np.sin(phi) * np.cos(theta))**2 *  odf[22] + (np.sin(phi) * np.sin(theta))**2 *  odf[23] + np.cos(phi)**2 *  odf[24] + 2 * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) *  odf[25] + \
+    2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) *  odf[26] + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) *  odf[27]))**(( odf[28] + 1) / 2) * (1 + ( odf[0] + \
+    ( odf[1] * (np.sin(phi) * np.cos(theta))**2 +  odf[2] * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) +  odf[3] * (np.sin(phi) * np.cos(theta)) * np.cos(phi) +  odf[4] * (np.sin(phi) * np.sin(theta))**2 + \
+    odf[5] * (np.sin(phi) * np.sin(theta)) * np.cos(phi) +  odf[6] * np.cos(phi)**2) / ((np.sin(phi) * np.cos(theta))**2 *  odf[22] + (np.sin(phi) * np.sin(theta))**2 *  odf[23] + np.cos(phi)**2 *  odf[24] + \
+    2 * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) *  odf[25] + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) *  odf[26] + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) *  odf[27]) + \
+    ( odf[7] * (np.sin(phi) * np.cos(theta))**4 +  odf[8] * (np.sin(phi) * np.cos(theta))**3 * (np.sin(phi) * np.sin(theta)) +  odf[9] * (np.sin(phi) * np.cos(theta))**3 * np.cos(phi) +  odf[10] * (np.sin(phi) * np.cos(theta))**2 * (np.sin(phi) * np.sin(theta))**2 + \
+    odf[11] * (np.sin(phi) * np.cos(theta))**2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) +  odf[12] * (np.sin(phi) * np.cos(theta))**2 * np.cos(phi)**2 +  odf[13] * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta))**3 + \
+    odf[14] * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta))**2 * np.cos(phi) +  odf[15] * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) * np.cos(phi)**2 +  odf[16] * (np.sin(phi) * np.cos(theta)) * np.cos(phi)**3 +  odf[17] * (np.sin(phi) * np.sin(theta))**4 + \
+    odf[18] * (np.sin(phi) * np.sin(theta))**3 * np.cos(phi) +  odf[19] * (np.sin(phi) * np.sin(theta))**2 * np.cos(phi)**2 +  odf[20] * (np.sin(phi) * np.sin(theta)) * np.cos(phi)**3 +  odf[21] * np.cos(phi)**4) / ((np.sin(phi) * np.cos(theta))**2 *  odf[22] + (np.sin(phi) * np.sin(theta))**2 *  odf[23] + \
+    np.cos(phi)**2 *  odf[24] + 2 * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) *  odf[25] + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) *  odf[26] + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) *  odf[27])**2) / 24)
+    return spherical
+
+def odfcartesian(odf, x, y, z):
+    """
+    Convert ODFs to Cartesian form.
+
+    Parameters
+    ----------
+    odf : array_like(dtype=float64)
+        ODF coefficients at a voxel. There are 29 coefficients for DKI ODFs
+    x : array_like(dtype=float64)
+        Cartesian x coordinates
+    y : array_like(dtype=float64)
+        Cartesian y coordinates
+    z : array_like(dtype=float64)
+        Cartesian z coordinates
+    
+    Returns
+    -------
+    cart : array_like(dtype=float64)
+        ODF in cartesian form
+    """
+    if len(x) != len(y):
+        raise Exception('Input x, y and z coordinates are not the same size')
+    if len(x) != len(z):
+        raise Exception('Input x, y and z coordinates are not the same size')
+    cart = (1 / ((x)**2 * odf[22] + (y)**2 * odf[23] + z**2 * odf[24] + 2 * (x) * (y) * odf[25] + \
+    2 * (x) * z * odf[26] + 2 * (y) * z * odf[27]))**((odf[28] + 1) / 2) * (1 + (odf[0] + \
+    (odf[1] * (x)**2 + odf[2] * (x) * (y) + odf[3] * (x) * z + odf[4] * (y)**2 + \
+    odf[5] * (y) * z + odf[6] * z**2) / ((x)**2 * odf[22] + (y)**2 * odf[23] + z**2 * odf[24] + \
+    2 * (x) * (y) * odf[25] + 2 * (x) * z * odf[26] + 2 * (y) * z * odf[27]) + \
+    (odf[7] * (x)**4 + odf[8] * (x)**3 * (y) + odf[9] * (x)**3 * z + odf[10] * (x)**2 * (y)**2 + \
+    odf[11] * (x)**2 * (y) * z + odf[12] * (x)**2 * z**2 + odf[13] * (x) * (y)**3 + \
+    odf[14] * (x) * (y)**2 * z + odf[15] * (x) * (y) * z**2 + odf[16] * (x) * z**3 + odf[17] * (y)**4 + \
+    odf[18] * (y)**3 * z + odf[19] * (y)**2 * z**2 + odf[20] * (y) * z**3 + odf[21] * z**4) / ((x)**2 * odf[22] + (y)**2 * odf[23] + \
+    z**2 * odf[24] + 2 * (x) * (y) * odf[25] + 2 * (x) * z * odf[26] + 2 * (y) * z * odf[27])**2) / 24)
+    return cart
+
 def dkiodfhelper(dt, kt, radial_weight=4):
     """
     Computes DKI fODF coefficient at a voxel. This function is intended to
