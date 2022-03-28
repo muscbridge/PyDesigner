@@ -5,7 +5,6 @@ Various definitions of spherical sampling
 """
 import os.path as op
 import numpy as np
-from scipy.io.matlab import loadmat
 
 def dsigrid(odf_key='odf8'):
     """
