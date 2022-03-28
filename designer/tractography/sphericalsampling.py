@@ -10543,7 +10543,8 @@ def odfgrid(res='med'):
     -------
     S : array_like(dtype=float64)
         Coordinates for spherical grid in polar coordinates,  extends slightly
-        over one half of the sphere to estimate local maxima on border.
+        over one half of the sphere to estimate local maxima on border. First
+        column is phi, second column is theta.
     idx : aarray_like(dtype=uint16)
         First column defines points in S over one half of the sphere for
         candiate local maxima. Columns 2-7 define the neighbors for the
