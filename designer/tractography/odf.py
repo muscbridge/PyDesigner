@@ -114,8 +114,8 @@ class odfmodel():
 
         Returns
         -------
-        coeff : array_like(dtype=float)
-            DKI ODF coefficients containing 29 elements
+        odf : array_like(dtype=float)
+            DKI ODFs in either coefficient, spherical, or cartesian form
         """
         D = np.array(
             [
@@ -206,7 +206,7 @@ class odfmodel():
         if form == 'coefficient':
             odf = coeff
         if form == 'spherical':
-            odf = odfspherical(coeff, self.vertices[:, 0], self.vertices[:, 1])
+            odf = dkiodfspherical(coeff, self.vertices[:, 0], self.vertices[:, 1])
         if form == 'cartesian':
             x, y, z = sphere2cart(self.vertices[:, 1], self.vertices[:, 0])
             odf = coeff(odf, x, y, z)
@@ -235,20 +235,88 @@ class odfmodel():
         DT = vectorize(self.DT, self.mask_img)
         KT = vectorize(self.KT, self.mask_img)
         nvox = DT.shape[-1]
-        # coeff = np.zeros((29, nvox))
-        # for i in tqdm(range(nvox),
-        #     desc='Computing fODFs',
-        #     bar_format='{desc}: [{percentage:0.0f}%]',
-        #     unit='vox',
-        #     ncols=70):
-        #     coeff[:, i] = dkiodfhelper(DT[:, i], KT[:, i], radial_weight)
         inputs = tqdm(range(nvox),
                         desc='DKI fODFs',
                         bar_format='{desc}: [{percentage:0.0f}%]',
                         unit='vox',
                         ncols=70)
         odf = Parallel(n_jobs=self.workers, prefer='processes') (delayed(self.dkiodfhelper)\
-            (DT[:, i], KT[:, i], self.radial_weight) for i in inputs)
+            (DT[:, i], KT[:, i], self.radial_weight, form) for i in inputs)
+        odf = np.array(odf).T
+        odf = vectorize(odf, self.mask_img)
+        return(odf)
+
+    def dtiodfhelper(self, dt, radial_weight=4, form='spherical'):
+        """
+        Computes DTI fODF coefficient at a voxel. This function is intended to
+        parallelize computations across the brain. Use only for diffusion
+        ellipsoids.
+
+        Parameters
+        ----------
+        dt : array_like(dtype=float)
+            Diffusion tensor containing 6 elements
+        radial_weighing : float; optional
+            Radial weighting power for detecting directional differences (Default: 4)
+        form : str; optional; {'spherical', 'coefficient'}
+            Form of ODF to return in
+            (Default: 'spherical')
+
+        Returns
+        -------
+        odf : array_like(dtype=float)
+            DKI ODFs in either coefficient, spherical, or cartesian form
+        """
+        D = np.array(
+            [
+                [dt[0], dt[3], dt[4]],
+                [dt[3], dt[1], dt[5]],
+                [dt[4], dt[5], dt[2]]
+            ]
+        )
+        Davg = np.trace(D)/3
+        U = Davg* np.linalg.inv(D)
+        U11 = U[0,0]
+        U22 = U[1,1]
+        U33 = U[2,2]
+        U12 = U[0,1]
+        U13 = U[0,2]
+        U23 = U[1,2]
+        coeff = np.array(
+            [U11, U12, U13, U22, U23, U33]
+        )
+        if form == 'coefficient':
+            odf = coeff
+        if form == 'spherical':
+            odf = dtiodfspherical(coeff, self.vertices[:, 0], self.vertices[:, 1], self.radial_weight)
+        return odf
+
+    def dtiodf(self, form='spherical'):
+        """
+        Computed DTI ODFs for the whole brain (ellipsoids)
+
+        Parameters
+        ----------
+        form : str; optional; {'spherical', 'cartesial', 'coefficient'}
+            Form of ODF to return in
+            (Default: 'spherical')
+        Returns
+        -------
+        DTI ODF in defined form
+        """
+        if self.DT is None:
+                raise AttributeError('WOAH! Cannot compute DTI ODFs without '
+                'diffusion tensor (DT), Jumbo.')
+        # Vectorize images
+        DT = vectorize(self.DT, self.mask_img)
+        nvox = DT.shape[-1]
+        inputs = tqdm(range(nvox),
+                        desc='DTI ODF',
+                        bar_format='{desc}: [{percentage:0.0f}%]',
+                        unit='vox',
+                        ncols=70)
+        odf = Parallel(n_jobs=self.workers, prefer='processes') (delayed(self.dtiodfhelper)\
+            (DT[:, i], self.radial_weight, form) for i in inputs)
         odf = np.array(odf).T
         odf = vectorize(odf, self.mask_img)
         return(odf)
@@ -300,7 +368,7 @@ class odfmodel():
         B = B[:, harmonics]
         nvox = odf.shape[-1]
         inputs = tqdm(range(nvox),
-                        desc='ODF Spherical Harmonics',
+                        desc='ODF SH Expansion',
                         bar_format='{desc}: [{percentage:0.0f}%]',
                         unit='vox',
                         ncols=70)
@@ -327,9 +395,9 @@ class odfmodel():
         """
         writeNii(var, self.hdr, path)
 
-def odfspherical(odf, phi, theta):
+def dkiodfspherical(odf, phi, theta):
     """
-    Convert ODFs coefficients at voxel to spherical form.
+    Convert DKI ODFs coefficients at voxel to spherical form.
 
     Parameters
     ----------
@@ -359,9 +427,9 @@ def odfspherical(odf, phi, theta):
     np.cos(phi)**2 *  odf[24] + 2 * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) *  odf[25] + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) *  odf[26] + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) *  odf[27])**2) / 24)
     return spherical
 
-def odfcartesian(odf, x, y, z):
+def dkiodfcartesian(odf, x, y, z):
     """
-    Convert ODF coefficients at voxel to Cartesian form.
+    Convert DKI ODF coefficients at voxel to Cartesian form.
 
     Parameters
     ----------
@@ -394,6 +462,37 @@ def odfcartesian(odf, x, y, z):
     odf[18] * (y)**3 * z + odf[19] * (y)**2 * z**2 + odf[20] * (y) * z**3 + odf[21] * z**4) / ((x)**2 * odf[22] + (y)**2 * odf[23] + \
     z**2 * odf[24] + 2 * (x) * (y) * odf[25] + 2 * (x) * z * odf[26] + 2 * (y) * z * odf[27])**2) / 24)
     return cart
+
+def dtiodfspherical(odf, phi, theta, radial_weight=4):
+    """
+    Convert DTI ODFs coefficients at voxel to spherical form.
+
+    Parameters
+    ----------
+    odf : array_like(dtype=float64)
+        ODF coefficients at a voxel. There are 29 coefficients for DKI ODFs
+    phi : array_like(dtype=float64)
+        Polar phi angles
+    theta : array_like(dtype=float64)
+        Polar theta angles
+    radial_weight : float
+        Radial weighting power for detecting directional differences
+        (Default: 4)
+    
+    Returns
+    -------
+    spherical : array_like(dtype=float64)
+        ODF in spherical form
+    """
+    if len(theta) != len(phi):
+        raise Exception('Inputs theta and phi are not the same size')
+    spherical = (1/((np.sin(phi) * np.cos(theta))**2 * odf[0] + (np.sin(phi) *\
+         np.sin(theta))**2 * odf[3] + np.cos(phi)**2 * odf[5] + 2 * \
+             (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) * \
+                 odf[1] + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) * \
+                     odf[2] + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) \
+                         * odf[4]))**((radial_weight + 1)/2)
+    return spherical
 
 def shbasis(deg, theta, phi):
     """
