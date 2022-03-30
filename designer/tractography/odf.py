@@ -210,7 +210,6 @@ class odfmodel():
         if form == 'cartesian':
             x, y, z = sphere2cart(self.vertices[:, 1], self.vertices[:, 0])
             odf = coeff(odf, x, y, z)
-        odf[np.isnan(odf)] = 0
         return odf
     
     def dkiodf(self, form='spherical'):
@@ -337,7 +336,9 @@ class odfmodel():
         -------
         sh : Shpherical harmonic expansion of ODF at voxel
         """
-        sh = np.dot(np.linalg.pinv(B), odf / np.max(odf))
+        sh = np.dot(np.linalg.pinv(B), odf / np.amax(odf))
+        sh[np.isnan(sh)] = 0
+        sh[np.isinf(sh)] = 0
         return sh
 
     def odf2sh(self, odf):
