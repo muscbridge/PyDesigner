@@ -10516,7 +10516,7 @@ def dsigrid(odf_key='odf8'):
             ]
         )
     
-    return odf_vertices, odf_faces
+    return odf_vertices.T, odf_faces.T
 
 def odfgrid(res='med'):
     """
@@ -10549,7 +10549,7 @@ def odfgrid(res='med'):
         First column defines points in S over one half of the sphere for
         candiate local maxima. Columns 2-7 define the neighbors for the
         corresponding point in column 1.
-    idx8 : array_like(dtype=uint8)
+    idx8 : array_like(dtype=uint16)
         Defines vertices to undersample for sphericalgrid3 - this is useful, for
         example, when trying to save a smaler datastructure to load into DSI
         studio (all coordinates are savesd in one large file)
