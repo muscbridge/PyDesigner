@@ -20,6 +20,7 @@ from dipy.core.geometry import cart2sphere
 from dipy.core.sphere import HemiSphere
 from dipy.direction import peak_directions
 from scipy.io.matlab import loadmat, savemat
+from designer.tractography import sphericalsampling
 from tqdm import tqdm
 ODF_COLS = 20000  # Number of columns in DSI Studio odf split
 tqdmWidth = 70
@@ -140,7 +141,7 @@ def makefib(input, output, mask=None, n_fibers=3):
     convertLPS(input, input_)
     convertLPS(mask, mask_)
     # Get ODF geometry
-    verts, faces = get_dsi_studio_ODF_geometry("odf8")
+    verts, faces = sphericalsampling.dsigrid('odf8')
     num_dirs, _ = verts.shape
     hemisphere = num_dirs // 2
     x, y, z = verts[:hemisphere].T
@@ -165,6 +166,7 @@ def makefib(input, output, mask=None, n_fibers=3):
     # Load images
     amplitudes_img = nib.load(odf_amplitudes_nii)
     ampl_data = amplitudes_img.get_fdata()
+    ampl_data[np.isnan(ampl_data)] = 0
     if not mask is None:
         mask_img = nib.load(mask_)
         if not np.allclose(mask_img.affine, amplitudes_img.affine):
