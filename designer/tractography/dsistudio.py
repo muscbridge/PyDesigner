@@ -166,7 +166,6 @@ def makefib(input, output, mask=None, n_fibers=3):
     # Load images
     amplitudes_img = nib.load(odf_amplitudes_nii)
     ampl_data = amplitudes_img.get_fdata()
-    ampl_data[np.isnan(ampl_data)] = 0
     if not mask is None:
         mask_img = nib.load(mask_)
         if not np.allclose(mask_img.affine, amplitudes_img.affine):
