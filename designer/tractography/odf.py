@@ -208,8 +208,8 @@ class odfmodel():
         if form == 'spherical':
             odf = dkiodfspherical(coeff, self.vertices[:, 0], self.vertices[:, 1])
         if form == 'cartesian':
-            x, y, z = sphere2cart(self.vertices[:, 1], self.vertices[:, 0])
-            odf = coeff(odf, x, y, z)
+            x, y, z = sphere2cart(1, self.vertices[:, 1], self.vertices[:, 0])
+            odf = dkiodfcartesian(coeff, x, y, z)
         return odf
     
     def dkiodf(self, form='spherical'):
@@ -296,7 +296,7 @@ class odfmodel():
 
         Parameters
         ----------
-        form : str; optional; {'spherical', 'cartesial', 'coefficient'}
+        form : str; optional; {'spherical', 'cartesian', 'coefficient'}
             Form of ODF to return in
             (Default: 'spherical')
         Returns
