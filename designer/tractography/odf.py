@@ -22,7 +22,7 @@ class odfmodel():
     DTI/DKI tractograpy class for computing ODFs and preparing spherical
     harmonics for DTI or DKI fiber tracking.
     """
-    def __init__(self, dt, kt=None, mask=None, res='med', l_max=6,
+    def __init__(self, dt, kt=None, mask=None, scale=None, res='med', l_max=6,
         radial_weight=4, nthreads=None):
         """
         Parameters
@@ -36,6 +36,9 @@ class odfmodel():
             (Default: None)
         mask :  str; optional
             Path to brain mask in NifTI format
+        scale : str; optional
+            Path to dMRI metric map to use for ODF scaling, where metric value
+            at a voxel is multiplied by the ODF.
         res : str; optional, {'low', 'med', 'high'}
             Resolution of directions for ODF calculation. Higher resolution
             implies slower computation.
@@ -58,7 +61,11 @@ class odfmodel():
         if not mask is None:
             if not op.exists(mask):
                 raise OSError('Path to brain mask does not exist. Please '
-                'ensure that the folder specified exists.')
+                'ensure that the file specified exists.')
+        if not scale is None:
+            if not op.exists(scale):
+                raise OSError('Path to scale image does not exist. Please '
+                'ensure that the file specified exists.')
         if not isinstance(res, str):
             raise Exception('Please specify resolution as a string. Possible '
             'choices are "low", "med", or "high"')
@@ -73,6 +80,13 @@ class odfmodel():
             self.mask_img = nib.load(mask).get_fdata()
         else:
             self.mask_img = None
+        if not scale is None:
+            self.scale_img = nib.load(scale).get_fdata()
+        else:
+            self.scale_img = np.ones(self.DT.shape[0:3])
+        # Normalize scale image from 0 to 1
+        self.scale_img = (self.scale_img - np.nanmin(self.scale_img)) / \
+            (np.nanmax(self.scale_img) - np.nanmin(self.scale_img))
         if l_max % 2 != 0:
             raise Exception('Please provide l_max as a postive '
         'and even integer')
@@ -320,7 +334,7 @@ class odfmodel():
         odf = vectorize(odf, self.mask_img)
         return(odf)
 
-    def odf2shhelper(self, odf, B):
+    def odf2shhelper(self, odf, B, scale):
         """
         Helper function to parallelize computation spherical harmonic expansion
         at a voxel.
@@ -331,12 +345,14 @@ class odfmodel():
             Spherical ODF values at a voxel
         B : array_like(dtype=complex)
             Spherical harmonic basis set to compute expansion
+        scale : float64
+            Value to multiply ODF by for scaling
         
         Returns
         -------
         sh : Shpherical harmonic expansion of ODF at voxel
         """
-        sh = np.dot(np.linalg.pinv(B), odf / np.amax(odf))
+        sh = np.dot(np.linalg.pinv(B), odf / np.amax(odf)) * scale
         sh[np.isnan(sh)] = 0
         sh[np.isinf(sh)] = 0
         return sh
@@ -356,6 +372,7 @@ class odfmodel():
             Shperical harmonic expansion of ODF
         """
         odf = vectorize(odf, self.mask_img)
+        scale = vectorize(self.scale_img, self.mask_img)
         # Create shperical harmonic (SH) base set
         degs = np.arange(self.l_max + 1, dtype=int)
         l_num = 2 * degs[::2] + 1 # how many per degree (evens only)
@@ -374,7 +391,7 @@ class odfmodel():
                         unit='vox',
                         ncols=70)
         sh = Parallel(n_jobs=self.workers, prefer='processes') (delayed(self.odf2shhelper)\
-            (odf[:, i], B) for i in inputs)
+            (odf[:, i], B, scale[i]) for i in inputs)
         sh = np.array(sh).T.real
         sh = vectorize(sh, self.mask_img)
         return sh
