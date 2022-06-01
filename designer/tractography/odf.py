@@ -190,7 +190,7 @@ class odfmodel():
                         # Coefficients for: -6(a+1)UijWijklVkl
                         B0 = -6*(radial_weight+1) * U[i,j] * W[i,j,k,l]
                         B11 = B11 + B0 * (U[k,0] * U[l,0])              
-                        B12 = B12 + B0 * (U[k,0] * U[l,1] + U[k,2] * U[l,0])
+                        B12 = B12 + B0 * (U[k,0] * U[l,1] + U[k,1] * U[l,0])
                         B13 = B13 + B0 * (U[k,0] * U[l,2] + U[k,2] * U[l,0])
                         B22 = B22 + B0 * (U[k,1] * U[l,1])              
                         B23 = B23 + B0 * (U[k,1] * U[l,2] + U[k,2] * U[l,1])
