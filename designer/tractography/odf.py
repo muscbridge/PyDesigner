@@ -167,11 +167,6 @@ class odfmodel():
             idx = np.argsort(L)[::-1]
             L = L[idx]
             V = V[:, idx]
-            # fa = np.sqrt(1 / 2) * \
-            #     np.sqrt((L[0] - L[1]) ** 2 + \
-            #             (L[0] - L[2]) ** 2 + \
-            #             (L[1] - L[2]) ** 2) / \
-            #     np.sqrt(L[0] ** 2 + L[1] ** 2 + L[2] ** 2)
             fa = np.sqrt(
                 (
                     (L[0] - L[1])**2 + \
