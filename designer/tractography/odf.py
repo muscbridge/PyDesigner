@@ -301,7 +301,7 @@ class odfmodel():
         odf = vectorize(odf, self.mask_img)
         return(odf)
 
-    def dtiodfhelper(self, dt, radial_weight=4, form='spherical'):
+    def dtiodfhelper(self, dt, form='spherical'):
         """
         Computes DTI fODF coefficient at a voxel. This function is intended to
         parallelize computations across the brain. Use only for diffusion
@@ -371,7 +371,7 @@ class odfmodel():
                         unit='vox',
                         ncols=70)
         odf = Parallel(n_jobs=self.workers, prefer='processes') (delayed(self.dtiodfhelper)\
-            (DT[:, i], self.radial_weight, form) for i in inputs)
+            (DT[:, i], form) for i in inputs)
         odf = np.array(odf).T
         odf = vectorize(odf, self.mask_img)
         return(odf)
