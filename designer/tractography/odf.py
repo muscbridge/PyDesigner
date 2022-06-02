@@ -122,6 +122,12 @@ class odfmodel():
             Kurtosis tensor containing 15 elements
         radial_weighing : float; optional
             Radial weighting power for detecting directional differences (Default: 4)
+        fa_t : float64
+            In rare cases the diffusion tensor may be extremely isotropic with
+            very small eigenvalues, causing the kurtosis dODF to have erratic
+            behavior with very large values, as the kurtosis dODF evaluates the
+            inverse of D. Setting a threshold removes negative eigenvalues while
+            preserving principal orientation in voxels where FA >= threshold 
         form : str; optional; {'spherical', 'cartesian', 'coefficient'}
             Form of ODF to return in
             (Default: 'spherical')
@@ -155,6 +161,36 @@ class odfmodel():
         W[0,0,1,2] = kt[12]; W[0,0,2,1] = W[0,0,1,2]; W[0,1,0,2] = W[0,0,1,2]; W[0,1,2,0] = W[0,0,1,2]; W[0,2,0,1] = W[0,0,1,2]; W[0,2,1,0] = W[0,0,1,2]; W[1,0,0,2] = W[0,0,1,2]; W[1,0,2,0] = W[0,0,1,2]; W[1,2,0,0] = W[0,0,1,2]; W[2,0,0,1] = W[0,0,1,2]; W[2,0,1,0] = W[0,0,1,2]; W[2,1,0,0] = W[0,0,1,2]
         W[0,1,1,2] = kt[13]; W[0,1,2,1] = W[0,1,1,2]; W[0,2,1,1] = W[0,1,1,2]; W[1,0,1,2] = W[0,1,1,2]; W[1,0,2,1] = W[0,1,1,2]; W[1,1,0,2] = W[0,1,1,2]; W[1,1,2,0] = W[0,1,1,2]; W[1,2,0,1] = W[0,1,1,2]; W[1,2,1,0] = W[0,1,1,2]; W[2,0,1,1] = W[0,1,1,2]; W[2,1,0,1] = W[0,1,1,2]; W[2,1,1,0] = W[0,1,1,2]
         W[0,1,2,2] = kt[14]; W[0,2,1,2] = W[0,1,2,2]; W[0,2,2,1] = W[0,1,2,2]; W[1,0,2,2] = W[0,1,2,2]; W[1,2,0,2] = W[0,1,2,2]; W[1,2,2,0] = W[0,1,2,2]; W[2,0,1,2] = W[0,1,2,2]; W[2,0,2,1] = W[0,1,2,2]; W[2,1,0,2] = W[0,1,2,2]; W[2,1,2,0] = W[0,1,2,2]; W[2,2,0,1] = W[0,1,2,2]; W[2,2,1,0] = W[0,1,2,2]
+
+        # Reglarize tensor if fa is more than threshold specified (fa_t)
+        if not fa_t is None:
+            L, V = np.linalg.eig(D)
+            idx = np.argsort(L)[::-1]
+            L = L[idx]
+            V = V[:, idx]
+            # fa = np.sqrt(1 / 2) * \
+            #     np.sqrt((L[0] - L[1]) ** 2 + \
+            #             (L[0] - L[2]) ** 2 + \
+            #             (L[1] - L[2]) ** 2) / \
+            #     np.sqrt(L[0] ** 2 + L[1] ** 2 + L[2] ** 2)
+            fa = np.sqrt(
+                (
+                    (L[0] - L[1])**2 + \
+                    (L[0] - L[2])**2 + \
+                    (L[1] - L[2])**2 \
+                ) / (2 * (np.sum(L**2)))
+            )
+            if fa > fa_t:
+                print(D)
+                print(fa, 'Regularize')
+                x = np.roots([2*(1-2*fa_t**2)/3, -4*L[0]/3, 2*(1-fa_t**2)/3*L[0]**2])
+                if x[np.logical_and(x > 0, x < L[0])].size != 0:
+                    L[1:3] = x[np.logical_and(x > 0, x < L[0])]
+                else:
+                    Davg = np.trace(D)/3
+                    L[L < 0.1 * Davg] = 0.1 * Davg
+                D = np.matmul(np.matmul(V, np.diag(L)), np.linalg.inv(V))
+                W = np.zeros((3,3,3,3))
 
         Davg = np.trace(D)/3
         U = Davg* np.linalg.inv(D)
@@ -254,7 +290,7 @@ class odfmodel():
                         unit='vox',
                         ncols=70)
         odf = Parallel(n_jobs=self.workers, prefer='processes') (delayed(self.dkiodfhelper)\
-            (DT[:, i], KT[:, i], self.radial_weight, form) for i in inputs)
+            (DT[:, i], KT[:, i], self.radial_weight, fa_t, form) for i in inputs)
         odf = np.array(odf).T
         odf = vectorize(odf, self.mask_img)
         return(odf)
