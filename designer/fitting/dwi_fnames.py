@@ -7,7 +7,8 @@ _dti_ = {
     'ad': 'dti_ad',
     'fa': 'dti_fa',
     'fe': 'dti_fe',
-    'trace': 'dti_trace'
+    'trace': 'dti_trace',
+    'odf': 'dti_fodf'
 }
 
 _dki_ = {
@@ -16,7 +17,8 @@ _dki_ = {
     'ak': 'dki_ak',
     'kfa': 'dki_kfa',
     'mkt': 'dki_mkt',
-    'trace': 'dki_trace'
+    'trace': 'dki_trace',
+    'odf': 'dki_fodf'
 }
 
 _wmti_ = {
@@ -30,7 +32,7 @@ _wmti_ = {
 _fbi_ = {
     'zeta': 'fbi_zeta',
     'faa': 'fbi_faa',
-    'sph': 'fbi_fodf',
+    'odf': 'fbi_fodf',
     'tract': 'fbi_tractography_dsi',
     'awf': 'fbwm_awf',
     'Da': 'fbwm_da',

@@ -17,6 +17,8 @@ from . import dwidirs
 from . import thresholds as th
 from . import dwi_fnames
 from designer.plotting import outlierplot
+from designer.tractography import odf
+from designer.system.utils import vectorize, writeNii, highprecisionexp, highprecisionpower
 
 # Define the lowest number possible before it is considered a zero
 minZero = th.__minZero__
@@ -1965,7 +1967,7 @@ class DWI(object):
             n = sumViols/dirSample
         elif c[0] == 1 and c[1] == 1 and c[2] == 0:
             # [1 1 0]
-            n = sumVioms/(2 * dirSample)
+            n = sumViols/(2 * dirSample)
         elif c[0] == 1 and c[1] == 0 and c[2] == 1:
             # [1 0 1]
             n = sumViols/(2 * dirSample)
@@ -2787,6 +2789,15 @@ def fit_regime(input, output,
         writeNii(fa, img.hdr, op.join(output, fname_dti['fa']))
         writeNii(fe, img.hdr, op.join(output, fname_dti['fe']))
         writeNii(trace, img.hdr, op.join(output, fname_dti['trace']))
+        dtimodel = odf.odfmodel(
+            dt = op.join(output, fname_tensor['DT']),
+            mask=mask,
+            l_max=2,
+            res='med'
+        )
+        dti_odfs = dtimodel.dtiodf()
+        dti_sh = dtimodel.odf2sh(dti_odfs)
+        dtimodel.savenii(dti_sh, op.join(output, fname_dti['odf']))
     if img.isdki():
     # DKI Parameters 
         mk, rk, ak, kfa, mkt, trace = img.extractDKI()
@@ -2796,6 +2807,16 @@ def fit_regime(input, output,
         writeNii(kfa, img.hdr, op.join(output, fname_dki['kfa']))
         writeNii(mkt, img.hdr, op.join(output, fname_dki['mkt']))
         writeNii(trace, img.hdr, op.join(output, fname_dki['trace']))
+        dkimodel = odf.odfmodel(
+            dt = op.join(output, fname_tensor['DT']),
+            kt = op.join(output, fname_tensor['KT']),
+            mask=mask,
+            l_max=6,
+            res='med'
+        )
+        dki_odfs = dkimodel.dkiodf(fa_t=0.90)
+        dki_sh = dkimodel.odf2sh(dki_odfs)
+        dkimodel.savenii(dki_sh, op.join(output, fname_dki['odf']))
     # WMTI Parameters
         awf, eas_ad, eas_rd, eas_tort, ias_da = img.extractWMTI()
         writeNii(awf, img.hdr, op.join(output, fname_wmti['awf']))
@@ -2810,7 +2831,7 @@ def fit_regime(input, output,
                     img.fbi(l_max=l_max, fbwm=True, rectify=rectify)
             writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
             writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
-            writeNii(sph, img.hdr, op.join(output, fname_fbi['sph']))
+            writeNii(sph, img.hdr, op.join(output, fname_fbi['odf']))
             writeNii(min_awf, img.hdr, op.join(output, fname_fbi['awf']))
             writeNii(Da, img.hdr, op.join(output, fname_fbi['Da']))
             writeNii(De_mean, img.hdr, op.join(output, fname_fbi['De_mean']))
@@ -2825,186 +2846,186 @@ def fit_regime(input, output,
                     img.fbi(l_max=l_max, fbwm=False, rectify=rectify)
             writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
             writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
-            writeNii(sph, img.hdr, op.join(output, fname_fbi['sph']))
+            writeNii(sph, img.hdr, op.join(output, fname_fbi['odf']))
 
-def vectorize(img, mask):
-    """
-    Returns vectorized image based on brain mask, requires no input
-    parameters
-    If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
-    If the input is 3D or 4D, vectorize it using a mask
-    Classification: Function
+# def vectorize(img, mask):
+#     """
+#     Returns vectorized image based on brain mask, requires no input
+#     parameters
+#     If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
+#     If the input is 3D or 4D, vectorize it using a mask
+#     Classification: Function
 
-    Parameters
-    ----------
-    img : ndarray
-        1D, 2D, 3D or 4D image array to vectorize
-    mask : ndarray
-        3D image array for masking
+#     Parameters
+#     ----------
+#     img : ndarray
+#         1D, 2D, 3D or 4D image array to vectorize
+#     mask : ndarray
+#         3D image array for masking
 
-    Returns
-    -------
-    vec : N X number_of_voxels vector or array, where N is the number
-        of DWI volumes
+#     Returns
+#     -------
+#     vec : N X number_of_voxels vector or array, where N is the number
+#         of DWI volumes
 
-    Examples
-    --------
-    vec = vectorize(img) if there's no mask
-    vec = vectorize(img, mask) if there's a mask
-    """
-    if mask is None:
-        mask = np.ones((img.shape[0],
-                        img.shape[1],
-                        img.shape[2]),
-                       order='F')
-    mask = mask.astype(bool)
-    if img.ndim == 1:
-        n = img.shape[0]
-        s = np.zeros((mask.shape[0],
-                      mask.shape[1],
-                      mask.shape[2]),
-                     order='F')
-        s[mask] = img
-    if img.ndim == 2:
-        n = img.shape[0]
-        s = np.zeros((mask.shape[0],
-                      mask.shape[1],
-                      mask.shape[2], n),
-                     order='F')
-        for i in range(0, n):
-            s[mask, i] = img[i,:]
-    if img.ndim == 3:
-        maskind = np.ma.array(img, mask=np.logical_not(mask))
-        s = np.ma.compressed(maskind)
-    if img.ndim == 4:
-        s = np.zeros((img.shape[-1], np.sum(mask).astype(int)), order='F')
-        for i in range(0, img.shape[-1]):
-            tmp = img[:,:,:,i]
-            # Compressed returns non-masked area, so invert the mask first
-            maskind = np.ma.array(tmp, mask=np.logical_not(mask))
-            s[i,:] = np.ma.compressed(maskind)
-    return np.squeeze(s)
+#     Examples
+#     --------
+#     vec = vectorize(img) if there's no mask
+#     vec = vectorize(img, mask) if there's a mask
+#     """
+#     if mask is None:
+#         mask = np.ones((img.shape[0],
+#                         img.shape[1],
+#                         img.shape[2]),
+#                        order='F')
+#     mask = mask.astype(bool)
+#     if img.ndim == 1:
+#         n = img.shape[0]
+#         s = np.zeros((mask.shape[0],
+#                       mask.shape[1],
+#                       mask.shape[2]),
+#                      order='F')
+#         s[mask] = img
+#     if img.ndim == 2:
+#         n = img.shape[0]
+#         s = np.zeros((mask.shape[0],
+#                       mask.shape[1],
+#                       mask.shape[2], n),
+#                      order='F')
+#         for i in range(0, n):
+#             s[mask, i] = img[i,:]
+#     if img.ndim == 3:
+#         maskind = np.ma.array(img, mask=np.logical_not(mask))
+#         s = np.ma.compressed(maskind)
+#     if img.ndim == 4:
+#         s = np.zeros((img.shape[-1], np.sum(mask).astype(int)), order='F')
+#         for i in range(0, img.shape[-1]):
+#             tmp = img[:,:,:,i]
+#             # Compressed returns non-masked area, so invert the mask first
+#             maskind = np.ma.array(tmp, mask=np.logical_not(mask))
+#             s[i,:] = np.ma.compressed(maskind)
+#     return np.squeeze(s)
 
-def writeNii(map, hdr, outDir, range=None):
-    """
-    Write clipped NifTi images
+# def writeNii(map, hdr, outDir, range=None):
+#     """
+#     Write clipped NifTi images
 
-    Parameters
-    ----------
-    map : ndarray(dtype=float)
-        3D array to write
-    header : class
-        Nibabel class header file containing NifTi properties
-    outDir : str
-        Output file name
-    range : array_like
-        [1 x 2] vector specifying range to clip, inclusive of value
-        in range, e.g. range = [0, 1] for FA map
+#     Parameters
+#     ----------
+#     map : ndarray(dtype=float)
+#         3D array to write
+#     header : class
+#         Nibabel class header file containing NifTi properties
+#     outDir : str
+#         Output file name
+#     range : array_like
+#         [1 x 2] vector specifying range to clip, inclusive of value
+#         in range, e.g. range = [0, 1] for FA map
 
-    Returns
-    -------
-    None; writes out file
+#     Returns
+#     -------
+#     None; writes out file
 
-    Examples
-    --------
-    writeNii(matrix, header, output_directory, [0, 2])
+#     Examples
+#     --------
+#     writeNii(matrix, header, output_directory, [0, 2])
 
-    See Also
-    clipImage(img, range) : this function is wrapped around
-    """
-    if range == None:
-        clipped_img = nib.Nifti1Image(map, hdr.affine, hdr.header)
-    else:
-        clipped_img = clipImage(map, range)
-        clipped_img = nib.Nifti1Image(clipped_img, hdr.affine, hdr.header)
-    nib.save(clipped_img, outDir)
+#     See Also
+#     clipImage(img, range) : this function is wrapped around
+#     """
+#     if range == None:
+#         clipped_img = nib.Nifti1Image(map, hdr.affine, hdr.header)
+#     else:
+#         clipped_img = clipImage(map, range)
+#         clipped_img = nib.Nifti1Image(clipped_img, hdr.affine, hdr.header)
+#     nib.save(clipped_img, outDir)
 
-def clipImage(img, range):
-    """
-    Clips input matrix within desired range. Min and max values are
-    inclusive of range
-    Classification: Function
+# def clipImage(img, range):
+#     """
+#     Clips input matrix within desired range. Min and max values are
+#     inclusive of range
+#     Classification: Function
 
-    Parameters
-    ----------
-    img : ndarray(dtype=float)
-        Input 3D image array
-    range : array_like
-        [1 x 2] vector specifying range to clip
+#     Parameters
+#     ----------
+#     img : ndarray(dtype=float)
+#         Input 3D image array
+#     range : array_like
+#         [1 x 2] vector specifying range to clip
 
-    Returns
-    -------
-    clippedImage:   clipped image; same size as img
+#     Returns
+#     -------
+#     clippedImage:   clipped image; same size as img
 
-    Examples
-    --------
-    clippedImage = clipImage(image, [0 3])
-    Clips input matrix in the range 0 to 3
-    """
-    img[img > range[1]] = range[1]
-    img[img < range[0]] = range[0]
-    return img
+#     Examples
+#     --------
+#     clippedImage = clipImage(image, [0 3])
+#     Clips input matrix in the range 0 to 3
+#     """
+#     img[img > range[1]] = range[1]
+#     img[img < range[0]] = range[0]
+#     return img
 
-def highprecisionexp(array, maxp=1e32):
-    """
-    Prevents overflow warning with numpy.exp by assigning overflows
-    to a maxumum precision value
-    Classification: Function
+# def highprecisionexp(array, maxp=1e32):
+#     """
+#     Prevents overflow warning with numpy.exp by assigning overflows
+#     to a maxumum precision value
+#     Classification: Function
 
-    Parameters
-    ----------
-    array : ndarray
-        Array or scalar of number to run np.exp on
-    maxp : float, optional
-        Maximum preicison to assign if overflow (Default: 1e32)
+#     Parameters
+#     ----------
+#     array : ndarray
+#         Array or scalar of number to run np.exp on
+#     maxp : float, optional
+#         Maximum preicison to assign if overflow (Default: 1e32)
 
-    Returns
-    -------
-    exponent or max-precision
+#     Returns
+#     -------
+#     exponent or max-precision
 
-    Examples
-    --------
-    a = highprecisionexp(array)
-    """
-    np.seterr(all='ignore')
-    defaultErrorState = np.geterr()
-    np.seterr(over='raise', invalid='raise')
-    try:
-        ans = np.exp(array)
-    except:
-        ans = np.full(array.shape, maxp)
-    np.seterr(**defaultErrorState)
-    return ans
+#     Examples
+#     --------
+#     a = highprecisionexp(array)
+#     """
+#     np.seterr(all='ignore')
+#     defaultErrorState = np.geterr()
+#     np.seterr(over='raise', invalid='raise')
+#     try:
+#         ans = np.exp(array)
+#     except:
+#         ans = np.full(array.shape, maxp)
+#     np.seterr(**defaultErrorState)
+#     return ans
 
-def highprecisionpower(x1, x2, maxp=1e32):
-    """
-    Prevents overflow warning with numpy.powerr by assigning overflows
-    to a maxumum precision value
-    Classification: Function
+# def highprecisionpower(x1, x2, maxp=1e32):
+#     """
+#     Prevents overflow warning with numpy.powerr by assigning overflows
+#     to a maxumum precision value
+#     Classification: Function
 
-    Parameters
-    ----------
-    x1 : array_like
-        The bases
-    x2 : array_like
-        The exponents
-    maxp : float, optional
-        Maximum preicison to assign if overflow (Default: 1e32)
+#     Parameters
+#     ----------
+#     x1 : array_like
+#         The bases
+#     x2 : array_like
+#         The exponents
+#     maxp : float, optional
+#         Maximum preicison to assign if overflow (Default: 1e32)
 
-    Returns
-    -------
-    x1 raised to x2 power, or max precision defined by maxp
+#     Returns
+#     -------
+#     x1 raised to x2 power, or max precision defined by maxp
 
-    Examples
-    --------
-    a = highprecisionexp(array)
-    """
-    np.seterr(all='ignore')
-    defaultErrorState = np.geterr()
-    np.seterr(over='raise', invalid='raise')
-    try:
-        ans = np.power(x1, x2)
-    except:
-        ans = np.full(x1.shape, maxp)
-    np.seterr(**defaultErrorState)
-    return ans
+#     Examples
+#     --------
+#     a = highprecisionexp(array)
+#     """
+#     np.seterr(all='ignore')
+#     defaultErrorState = np.geterr()
+#     np.seterr(over='raise', invalid='raise')
+#     try:
+#         ans = np.power(x1, x2)
+#     except:
+#         ans = np.full(x1.shape, maxp)
+#     np.seterr(**defaultErrorState)
+#     return ans

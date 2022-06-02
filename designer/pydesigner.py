@@ -990,7 +990,7 @@ def main():
     for f in f_odf:
         if 'mask' in filetable:
             path, ext = op.splitext(f)
-            f_fib = path + '_tractography_dsi.fib'
+            f_fib = path + '.fib'
             ds.makefib(
                 input=f,
                 output=f_fib,

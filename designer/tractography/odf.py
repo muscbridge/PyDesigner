@@ -13,9 +13,9 @@ import numpy as np
 import nibabel as nib
 from scipy.special import sph_harm
 from dipy.core.geometry import sphere2cart
-from designer.fitting.dwipy import vectorize, writeNii
-from designer.fitting import thresholds as th
+from designer.system.utils import vectorize, writeNii
 from designer.tractography import sphericalsampling
+from designer.fitting.thresholds import __minZero__
 from tqdm import tqdm
 
 class odfmodel():
@@ -163,7 +163,7 @@ class odfmodel():
         # Reglarize tensor if fa is more than threshold specified (fa_t)
         if not fa_t is None:
             L, V = np.linalg.eig(D)
-            L[L < th.__minZero__] = th.__minZero__
+            L[L < __minZero__] = __minZero__
             idx = np.argsort(L)[::-1]
             L = L[idx]
             V = V[:, idx]
@@ -287,7 +287,7 @@ class odfmodel():
         KT = vectorize(self.KT, self.mask_img)
         nvox = DT.shape[-1]
         inputs = tqdm(range(nvox),
-                        desc='DKI fODFs',
+                        desc='DKI ODF',
                         bar_format='{desc}: [{percentage:0.0f}%]',
                         unit='vox',
                         ncols=70)
