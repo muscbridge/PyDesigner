@@ -264,7 +264,7 @@ class odfmodel():
             odf = dkiodfcartesian(coeff, x, y, z)
         return odf
     
-    def dkiodf(self, form='spherical'):
+    def dkiodf(self, form='spherical', fa_t=0.90):
         """
         Computes DKI ODFs for the whole brain.
 
@@ -273,6 +273,13 @@ class odfmodel():
         form : str; optional; {'spherical', 'cartesial', 'coefficient'}
             Form of ODF to return in
             (Default: 'spherical')
+        fa_t : float64; optional
+            In rare cases the diffusion tensor may be extremely isotropic with
+            very small eigenvalues, causing the kurtosis dODF to have erratic
+            behavior with very large values, as the kurtosis dODF evaluates the
+            inverse of D. Setting a threshold removes negative eigenvalues while
+            preserving principal orientation in voxels where FA >= threshold
+            (Default: 0.95)
         Returns
         -------
         DKI ODF in defined form
