@@ -109,7 +109,7 @@ class odfmodel():
         else:
             self.workers = nthreads
 
-    def dkiodfhelper(self, dt, kt, radial_weight=4, form='spherical'):
+    def dkiodfhelper(self, dt, kt, radial_weight=4, fa_t=None, form='spherical'):
         """
         Computes DKI fODF coefficient at a voxel. This function is intended to
         parallelize computations across the brain.
@@ -449,6 +449,14 @@ class odfmodel():
             sh_start = sh_end + l_num[h] - 1
             sh_end = sh_start + l_num[h] - 1
             harmonics.extend(np.arange(sh_start - 1, sh_end))
+        # MRtrix does not have (-1)^m in formulas so we index where this would
+        # occur and multiply those volumes by -1
+        sh_idx = []
+        sh_start = 2
+        for h in range(1,len(degs[::2])):
+            sh_end = sh_start + l_num[h] - 2
+            sh_idx.extend(np.arange(sh_start, sh_end, 2))
+            sh_start = sh_end + 2
         B = shbasis(degs, self.vertices[:, 0], self.vertices[:, 1])
         B = B[:, harmonics]
         nvox = odf.shape[-1]
@@ -460,6 +468,7 @@ class odfmodel():
         sh = Parallel(n_jobs=self.workers, prefer='processes') (delayed(self.odf2shhelper)\
             (odf[:, i], B, scale[i]) for i in inputs)
         sh = np.array(sh).T.real
+        sh[sh_idx,:] = -sh[sh_idx,:]
         sh = vectorize(sh, self.mask_img)
         return sh
 
