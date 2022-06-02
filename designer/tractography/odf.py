@@ -185,7 +185,10 @@ class odfmodel():
                 W = np.zeros((3,3,3,3))
 
         Davg = np.trace(D)/3
-        U = Davg* np.linalg.inv(D)
+        try:
+            U = Davg * np.linalg.inv(D)
+        except:
+            U = Davg * np.linalg.pinv(D)
         A1=0
         B11=0
         B12=0
@@ -323,7 +326,10 @@ class odfmodel():
             ]
         )
         Davg = np.trace(D)/3
-        U = Davg* np.linalg.inv(D)
+        try:
+            U = Davg * np.linalg.inv(D)
+        except:
+            U = Davg * np.linalg.pinv(D)
         U11 = U[0,0]
         U22 = U[1,1]
         U33 = U[2,2]
