@@ -180,8 +180,6 @@ class odfmodel():
                 ) / (2 * (np.sum(L**2)))
             )
             if fa > fa_t:
-                print(D)
-                print(fa, 'Regularize')
                 x = np.roots([2*(1-2*fa_t**2)/3, -4*L[0]/3, 2*(1-fa_t**2)/3*L[0]**2])
                 if x[np.logical_and(x > 0, x < L[0])].size != 0:
                     L[1:3] = x[np.logical_and(x > 0, x < L[0])]
@@ -480,7 +478,7 @@ class odfmodel():
 
     def savenii(self, var, path):
         """
-        Write out NifTI output of associated spherical hamonic file
+        Write out NifTI output of associated spherical harmonic file
 
         Parameters
         ----------
