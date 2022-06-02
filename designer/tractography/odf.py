@@ -370,6 +370,34 @@ class odfmodel():
         odf = vectorize(odf, self.mask_img)
         return(odf)
 
+    def odfmaxhelper(self, odf):
+        """
+        Find local maxima of ODF over spherical grid at voxel
+
+        Parameters
+        ----------
+        odf : array_like(dtype=float64)
+            Spherical ODF values at a voxel
+
+        Returns
+        -------
+        odfmax : array_like(dtype=float64)
+            Local maxima of ODF over spherical grid in descending order
+        dirmax : array_like(dtype=float64)
+            Corresponding direction vector where local ODF maxima occur
+        """
+        maxidx = self.idx[odf[self.idx[:, 1]] == np.amax(odf[self.idx], axis=1), 0]
+        odf_max = odf[maxidx]
+        dir_max = self.vertices[maxidx, :]
+        # Sort by magnitude in descending order
+        idx = np.argsort(odf_max)[::-1]
+        odfmax = odf_max[idx]
+        dirmax = dir_max[idx]
+        if odfmax.size == 0:
+            odfmax = np.array([1])
+            dirmax = np.array([0, 0])
+        return odfmax, dirmax 
+
     def odf2shhelper(self, odf, B, scale):
         """
         Helper function to parallelize computation spherical harmonic expansion
@@ -382,13 +410,16 @@ class odfmodel():
         B : array_like(dtype=complex)
             Spherical harmonic basis set to compute expansion
         scale : float64
-            Value to multiply ODF by for scaling
+            Value of dMRI metric to multiply ODF with to control stopping
+            criteria in tractography
         
         Returns
         -------
         sh : Shpherical harmonic expansion of ODF at voxel
         """
-        sh = np.dot(np.linalg.pinv(B), odf / np.amax(odf)) * scale
+        odfmax, dirmax = self.odfmaxhelper(odf)
+        odfmax = odfmax[0]
+        sh = np.dot(np.linalg.pinv(B), odf / odfmax) * scale
         sh[np.isnan(sh)] = 0
         sh[np.isinf(sh)] = 0
         return sh
