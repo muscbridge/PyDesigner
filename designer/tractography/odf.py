@@ -83,9 +83,6 @@ class odfmodel():
             self.mask_img = None
         if not scale is None:
             self.scale_img = nib.load(scale).get_fdata()
-            # Normalize scale image from 0 to 1
-            self.scale_img = (self.scale_img - np.nanmin(self.scale_img)) / \
-                (np.nanmax(self.scale_img) - np.nanmin(self.scale_img))
         else:
             self.scale_img = np.ones(self.DT.shape[0:3])
         if l_max % 2 != 0:
