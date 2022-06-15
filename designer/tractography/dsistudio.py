@@ -147,7 +147,7 @@ def makefib(input, output, mask=None, n_fibers=3):
     x, y, z = verts[:hemisphere].T
     hs = HemiSphere(x=x, y=y, z=z)
     # Convert to DSI Studio LPS+ from MRTRIX3 RAS+
-    _, theta, phi = cart2sphere(x, y, z)
+    _, theta, phi = cart2sphere(x, y, -z)
     dirs_txt = op.join(outdir, "directions.txt")
     np.savetxt(dirs_txt, np.column_stack([phi, theta]))
     # Get SH amplitude
