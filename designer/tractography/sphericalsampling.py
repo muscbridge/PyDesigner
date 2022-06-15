@@ -35454,4 +35454,4 @@ def odfgrid(res='med'):
         )
         separation_angle = 2.16
     
-    return S, idx, idx8, area, faces, separation_angle
+    return S, idx, np.squeeze(idx8), np.squeeze(area), faces, separation_angle

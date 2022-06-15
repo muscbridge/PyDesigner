@@ -17,7 +17,7 @@ from . import dwidirs
 from . import thresholds as th
 from . import dwi_fnames
 from designer.plotting import outlierplot
-from designer.tractography import odf
+from designer.tractography import odf, sphericalsampling
 from designer.system.utils import vectorize, writeNii, highprecisionexp, highprecisionpower
 
 # Define the lowest number possible before it is considered a zero
@@ -1550,16 +1550,23 @@ class DWI(object):
             sh_start = sh_end + l_num[h] - 1
             sh_end = sh_start + l_num[h] - 1
             harmonics.extend(np.arange(sh_start,sh_end+1))
+        # MRtrix does not have (-1)^m in formulas so we index where this would
+        # occur and multiply those volumes by -1
+        sh_idx = []
+        sh_start = 2
+        for h in range(1,len(degs[::2])):
+            sh_end = sh_start + l_num[h] - 2
+            sh_idx.extend(np.arange(sh_start, sh_end, 2))
+            sh_start = sh_end + 2
         # Define the azimuthal (phi) and polar(theta) angles for our
         # spherical expansion using the experimentally defined
         # gradients from the scanner
         theta = np.arccos(self.grad[self.idxfbi(), 2])
         phi = np.arctan2(self.grad[self.idxfbi() ,1], self.grad[self.idxfbi() ,0])
         # gradients for resampling from distribution
-        spherical_grid = dwidirs.sh_grid # this is only HALF-SPHERE
+        spherical_grid, idx, idx8, AREA, faces, separation_angle = sphericalsampling.odfgrid('med')
         S1 = spherical_grid[:,0] # theta, i think
         S2 = spherical_grid[:,1] # phi, i think
-        AREA = spherical_grid[:,2] # need the area since it is impossible to get exact isotropic (uniform) sampling
         B = shbasis(degs, theta, phi)
         H = shbasis(degs, S1, S2)
         idx_Y = 0
@@ -1650,9 +1657,11 @@ class DWI(object):
                     rectify=rectify,
                     sh_area=AREA
                 ) for i in inputs))
+        
         zeta = vectorize(np.array(zeta), self.mask)
         faa = vectorize(np.array(faa), self.mask)
         fodf = vectorize(np.array(fodf).T, self.mask)
+        fodf[:,:,:,sh_idx] = -fodf[:,:,:,sh_idx]
         awf = vectorize(np.array(min_awf), self.mask)
         Da = vectorize(np.array(Da), self.mask)
         De_mean = vectorize(np.array(De_mean), self.mask)
