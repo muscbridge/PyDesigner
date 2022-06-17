@@ -593,7 +593,7 @@ def dtiodfspherical(odf, phi, theta, radial_weight=4):
                          * odf[4]))**((radial_weight + 1)/2)
     return spherical
 
-def shbasis(deg, theta, phi):
+def shbasis(deg, phi, theta):
     """
     Computes shperical harmonic basis set for even degrees of
     harmonics
@@ -602,11 +602,11 @@ def shbasis(deg, theta, phi):
     ----------
     deg : list of ints
         Degrees of harmonic
-    theta : array_like
-        (n, ) vector denoting azimuthal coordinates
     phi : array_like
         (n, ) vector denoting polar coordinates
-    
+    theta : array_like
+        (n, ) vector denoting azimuthal coordinates
+
     Returns
     -------
     complex array_like
@@ -621,5 +621,5 @@ def shbasis(deg, theta, phi):
     SH = []
     for n in deg:
         for m in range(-n, n + 1):
-            SH.append(sph_harm(m, n, phi, theta))
+            SH.append(sph_harm(m, n, theta, phi))
     return np.array(SH, dtype=np.complex, order='F').T

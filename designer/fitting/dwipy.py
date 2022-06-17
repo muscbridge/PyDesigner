@@ -1165,7 +1165,7 @@ class DWI(object):
         """
         #--------------------FUNCTION SEPARATOR-----------------------
         
-        def shbasis(deg, theta, phi):
+        def shbasis(deg, phi, theta):
             """
             Computes shperical harmonic basis set for even degrees of
             harmonics
@@ -1174,10 +1174,10 @@ class DWI(object):
             ----------
             deg : list of ints
                 Degrees of harmonic
-            theta : array_like
-                (n, ) vector denoting azimuthal coordinates
             phi : array_like
                 (n, ) vector denoting polar coordinates
+            theta : array_like
+                (n, ) vector denoting azimuthal coordinates
             
             Returns
             -------
@@ -1194,7 +1194,7 @@ class DWI(object):
             for n in deg:
                 for m in range(-n, n + 1):
                     if (n % 2) == 0:
-                        SH.append(sph_harm(m, n, phi, theta))
+                        SH.append(sph_harm(m, n, theta, phi))
             return np.array(SH, dtype=np.complex, order='F').T
 
         def fbi_rectify(fodf, sh_area, iter=1000):
@@ -1561,13 +1561,13 @@ class DWI(object):
         # Define the azimuthal (phi) and polar(theta) angles for our
         # spherical expansion using the experimentally defined
         # gradients from the scanner
-        theta = np.arccos(self.grad[self.idxfbi(), 2])
-        phi = np.arctan2(self.grad[self.idxfbi() ,1], self.grad[self.idxfbi() ,0])
+        phi = np.arccos(self.grad[self.idxfbi(), 2])
+        theta = np.arctan2(self.grad[self.idxfbi() ,1], self.grad[self.idxfbi() ,0])
         # gradients for resampling from distribution
         spherical_grid, idx, idx8, AREA, faces, separation_angle = sphericalsampling.odfgrid('med')
-        S1 = spherical_grid[:,0] # theta, i think
-        S2 = spherical_grid[:,1] # phi, i think
-        B = shbasis(degs, theta, phi)
+        S1 = spherical_grid[:,0] # phi
+        S2 = spherical_grid[:,1] # theta
+        B = shbasis(degs, phi, theta)
         H = shbasis(degs, S1, S2)
         idx_Y = 0
         Pl0 = np.zeros((len(harmonics), 1), order ='F') # need Legendre polynomial Pl0
@@ -1586,14 +1586,14 @@ class DWI(object):
         if fbwm:
             # Index gradients based on b1000 and b2000 shells
             bval = np.rint(self.grad[:, -1])
-            theta1 = np.arccos(self.grad[bval == 1, 2])
-            phi1 =  np.arctan2(self.grad[bval == 1, 1],self.grad[bval == 1,0])
+            phi1 = np.arccos(self.grad[bval == 1, 2])
+            theta1 =  np.arctan2(self.grad[bval == 1, 1],self.grad[bval == 1,0])
 
-            theta2 = np.arccos(self.grad[bval == 2, 2])
-            phi2 =  np.arctan2(self.grad[bval == 2, 1], self.grad[bval == 2,0])
+            phi2 = np.arccos(self.grad[bval == 2, 2])
+            theta2 =  np.arctan2(self.grad[bval == 2, 1], self.grad[bval == 2,0])
             # SH basis set for the two B-values in DKI
-            fbwm_SH1 = shbasis(degs,theta1,phi1)
-            fbwm_SH2 = shbasis(degs,theta2,phi2)
+            fbwm_SH1 = shbasis(degs,phi1,theta1)
+            fbwm_SH2 = shbasis(degs,phi2,theta2)
             dt, kt = self.tensorReorder('dki')
             dt = vectorize(dt, self.mask)
             # for i in inputs:
