@@ -18,7 +18,7 @@ import numpy as np
 import nibabel as nib
 from dipy.core.geometry import cart2sphere
 from dipy.core.sphere import HemiSphere
-from dipy.direction import peak_directions
+from dipy.direction import peak_directions, gfa
 from scipy.io.matlab import loadmat, savemat
 from designer.tractography import sphericalsampling
 from tqdm import tqdm
@@ -88,7 +88,7 @@ def convertLPS(input, output):
         raise Exception('Conversion of NifTI file to LPS failed. '
         'Check above for errors.')
 
-def makefib(input, output, mask=None, n_fibers=3):
+def makefib(input, output, map=None, mask=None, n_fibers=3):
     """
     Converts a NifTi ``.nii`` file containing sh coefficients to a DSI
     Studio fib file
@@ -103,6 +103,11 @@ def makefib(input, output, mask=None, n_fibers=3):
         Path to input nifti file containing SH coefficients
     output : str
         Path to output fib file; must end with .fib
+    map : str
+        Path to dMRI map to control stopping criteria; usually an FA map. This
+        map is stored under variable fa_n (n =  1, 2,..., n ) in .fib file.
+        This maps is visualized by qa in DSI Studio. The peak amplitude response
+        is used if no map is provided
     mask : str, optional
         Path to nifti file containing brain mask
     n_fibers : int, optional
@@ -125,6 +130,10 @@ def makefib(input, output, mask=None, n_fibers=3):
         '(.nii)')
     if op.splitext(output)[-1] != '.fib':
         raise IOError('Output file needs to specified as a .fib file')
+    if not map is None:
+        if not op.exists(map):
+            raise OSError('Path to map image does not exist. Please '
+            'ensure that the folder specified exists.')
     if not mask is None:
         if not op.exists(mask):
             raise OSError('Path to brain mask does not exist. Please '
@@ -134,12 +143,17 @@ def makefib(input, output, mask=None, n_fibers=3):
     fname, ext = op.splitext(op.basename(input))
     fname = fname +'_lps'
     input_ = op.join(outdir, fname + ext)
+    convertLPS(input, input_)
+    if not map is None:
+        fname, ext = op.splitext(op.basename(map))
+        fname = fname +'_lps'
+        map_ = op.join(outdir, fname + ext)
+        convertLPS(map, map_)
     if not mask is None:
         (fname, ext) = op.splitext(op.basename(mask))
         fname = fname +'_lps'
         mask_ = op.join(outdir, fname + ext)
-    convertLPS(input, input_)
-    convertLPS(mask, mask_)
+        convertLPS(mask, mask_)
     # Get ODF geometry
     verts, faces = sphericalsampling.dsigrid('odf8')
     num_dirs, _ = verts.shape
@@ -180,8 +194,42 @@ def makefib(input, output, mask=None, n_fibers=3):
         ampl_data.shape[2]), order='F')
     # Make flat mask
     flat_mask = mask_img.flatten(order='F') > 0
-    odf_array = ampl_data.reshape(-1, ampl_data.shape[3], order="F")
+    odf_array = ampl_data.reshape(-1, ampl_data.shape[3], order='F')
     masked_odfs = odf_array[flat_mask, :]
+    masked_odfs = np.nan_to_num(masked_odfs)
+    if not map is None:
+        map_img = nib.load(map_)
+        if not np.allclose(map_img.affine, amplitudes_img.affine):
+            raise ValueError('Differing orientation between map image and '
+            'amplitudes.')
+        if not map_img.shape == amplitudes_img.shape[:3]:
+            raise ValueError('Differing grid between map image and '
+            'amplitudes')
+        map_img = map_img.get_fdata().flatten(order='F')
+        masked_map = map_img[flat_mask]
+
+    # Compute GFA
+    masked_gfa = np.zeros(masked_odfs.shape[0])
+    for vox in tqdm(range(masked_odfs.shape[0]),
+        desc='Computing GFA',
+        bar_format='{desc}: [{percentage:0.0f}%]',
+        unit='vox',
+        ncols=tqdmWidth):
+        masked_gfa[vox] = gfa(masked_odfs[vox, :])
+    
+    # Remove voxels possibly containing errors in ODF calculations. This is
+    # particularly important for volumes that were co-registered as it fixes
+    # large amplitudes ODF amplitude at border voxels
+    if not map is None:
+        idx = np.logical_or(masked_map == 0, np.sum(masked_odfs, axis=1) == 0)
+        masked_map[idx] = 0
+    else:
+        idx = np.sum(masked_odfs, axis=1) == 0
+    masked_odfs[idx, :] = 0
+    masked_gfa[idx] = 0
+    if not map is None:
+        masked_map[idx] = 0 
+
     n_odfs = masked_odfs.shape[0]
     peak_indices = np.zeros((n_odfs, n_fibers))
     peak_vals = np.zeros((n_odfs, n_fibers))
@@ -204,7 +252,10 @@ def makefib(input, output, mask=None, n_fibers=3):
     for nfib in range(n_fibers):
         # fill in the "fa" values
         fa_n = np.zeros(n_voxels)
-        fa_n[flat_mask] = peak_vals[:, nfib]
+        if not map is None:
+            fa_n[flat_mask] =  masked_map
+        else:
+            fa_n[flat_mask] = peak_vals[:, nfib]
         dsi_mat['fa%d' % nfib] = fa_n.astype(np.float32)
         # Fill in the index values
         index_n = np.zeros(n_voxels)
@@ -219,9 +270,16 @@ def makefib(input, output, mask=None, n_fibers=3):
     dsi_mat['odf_vertices'] = verts.T
     dsi_mat['odf_faces'] = faces.T
     dsi_mat['z0'] = np.array([1.])
+    # Fill in GFA
+    g_fa = np.zeros(n_voxels)
+    g_fa[flat_mask] = masked_gfa
+    dsi_mat['gfa'] = g_fa.astype(np.float32)
     savemat(output, dsi_mat, format='4', appendmat=False)
     # Remove unwanted files
     os.remove(input_)
-    os.remove(mask_)
+    if not mask is None:
+        os.remove(mask_)
+    if not map is None:
+        os.remove(map_)
     os.remove(dirs_txt)
     os.remove(odf_amplitudes_nii)
