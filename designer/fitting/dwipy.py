@@ -17,7 +17,7 @@ from . import dwidirs
 from . import thresholds as th
 from . import dwi_fnames
 from designer.plotting import outlierplot
-from designer.tractography import odf, sphericalsampling
+from designer.tractography import odf, sphericalsampling, dsistudio
 from designer.system.utils import vectorize, writeNii, highprecisionexp, highprecisionpower
 
 # Define the lowest number possible before it is considered a zero
@@ -1118,7 +1118,7 @@ class DWI(object):
             vols = (l_max + 1) * (l_max/2 + 1)
         return l_max - 2
 
-    def fbi(self, l_max=6, fbwm=True, rectify=True):
+    def fbi(self, l_max=6, fbwm=True, rectify=True, res='med'):
         """
         Perform fiber ball imaging (FBI) and FBI white matter model
         (FBWM) analyses
@@ -1135,6 +1135,15 @@ class DWI(object):
         rectify : bool
             Perform fODF rectification if True
             (Default: True)
+        res : str
+            Resolution of spherical sampling distribution (Default: 'med')
+            'low' defines the spherical grid defined by 3 fold quadrisection of the
+            isocahedron, or 8 fold tesselation of icosahedron.
+            'med' defines the spherical grid defined by 4 fold quadrisection of the
+            isocahedron, or 16 fold tesselation of icosahedron.
+            'high' defines the spherical grid defined by 5 fold quadrisection of the
+            isocahedron, or 24 fold tesselation of icosahedron.
+            Default: "med"
 
         Returns
         -------
@@ -1161,7 +1170,6 @@ class DWI(object):
             min_cost_fn)
         min_cost_fn : array_like(dtype=float)
             Cost function
-        
         """
         #--------------------FUNCTION SEPARATOR-----------------------
         
@@ -1386,7 +1394,7 @@ class DWI(object):
             # only the real part would be read out but that would need to be done later on after the rectification process below
             ODF = np.matmul(H,clm)
             if rectify:
-                ODF = fbi_rectify(ODF.real, sh_area, iter=1000)
+                ODF = fbi_rectify(ODF.real, sh_area, iter=100)
                 # Re-expand the rectified fODF into SH's
                 clm = np.matmul(sh_area*ODF,np.conj(H))
             clm = (clm/clm[0])*(1/np.sqrt(4*np.pi)) # normalize clm
@@ -1564,7 +1572,7 @@ class DWI(object):
         phi = np.arccos(self.grad[self.idxfbi(), 2])
         theta = np.arctan2(self.grad[self.idxfbi() ,1], self.grad[self.idxfbi() ,0])
         # gradients for resampling from distribution
-        spherical_grid, idx, idx8, AREA, faces, separation_angle = sphericalsampling.odfgrid('med')
+        spherical_grid, idx, idx8, AREA, faces, separation_angle = sphericalsampling.odfgrid(res)
         S1 = spherical_grid[:,0] # phi
         S2 = spherical_grid[:,1] # theta
         B = shbasis(degs, phi, theta)
@@ -2661,6 +2669,8 @@ def fit_regime(input, output,
                 fit_constraints=[0,1,0],
                 l_max=None,
                 rectify=True,
+                res='med',
+                n_fibers=5,
                 mask=None,
                 nthreads=None):
     """
@@ -2725,6 +2735,7 @@ def fit_regime(input, output,
     fname_fbi = {}
     fname_tensor = {} 
     fname_outliers = {}
+    fname_tractography = {}
     for key, value in dwi_fnames._dti_.items():
         fname_dti[key] = prefix + value + suffix + ext
     for key, value in dwi_fnames._dki_.items():
@@ -2737,6 +2748,8 @@ def fit_regime(input, output,
         fname_tensor[key] = prefix + value + suffix + ext
     for key, value in dwi_fnames._outliers_.items():
         fname_outliers[key] = prefix + value + suffix + ext
+    for key, value in dwi_fnames._tractography_.items():
+        fname_tractography[key] = prefix + value + suffix + '.fib'
     if irlls:
         if img.isdki():
             outliers, dt_est = img.irlls(mode='DKI', excludeb0=True)
@@ -2802,11 +2815,18 @@ def fit_regime(input, output,
             dt = op.join(output, fname_tensor['DT']),
             mask=mask,
             l_max=2,
-            res='med'
+            res=res
         )
         dti_odfs = dtimodel.dtiodf()
         dti_sh = dtimodel.odf2sh(dti_odfs)
         dtimodel.savenii(dti_sh, op.join(output, fname_dti['odf']))
+        dsistudio.makefib(
+            input=op.join(output, fname_dti['odf']),
+            output=op.join(output, fname_tractography['dti']),
+            map=op.join(output, fname_dti['fa']),
+            mask=mask,
+            n_fibers=n_fibers
+        )
     if img.isdki():
     # DKI Parameters 
         mk, rk, ak, kfa, mkt, trace = img.extractDKI()
@@ -2821,11 +2841,18 @@ def fit_regime(input, output,
             kt = op.join(output, fname_tensor['KT']),
             mask=mask,
             l_max=6,
-            res='med'
+            res=res
         )
         dki_odfs = dkimodel.dkiodf(fa_t=0.90)
         dki_sh = dkimodel.odf2sh(dki_odfs)
         dkimodel.savenii(dki_sh, op.join(output, fname_dki['odf']))
+        dsistudio.makefib(
+            input=op.join(output, fname_dki['odf']),
+            output=op.join(output, fname_tractography['dki']),
+            map=op.join(output, fname_dki['mk']),
+            mask=mask,
+            n_fibers=n_fibers
+        )
     # WMTI Parameters
         awf, eas_ad, eas_rd, eas_tort, ias_da = img.extractWMTI()
         writeNii(awf, img.hdr, op.join(output, fname_wmti['awf']))
@@ -2856,6 +2883,13 @@ def fit_regime(input, output,
             writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
             writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
             writeNii(sph, img.hdr, op.join(output, fname_fbi['odf']))
+        dsistudio.makefib(
+            input=op.join(output, fname_fbi['odf']),
+            output=op.join(output, fname_tractography['fbi']),
+            map=op.join(output, fname_fbi['faa']),
+            mask=mask,
+            n_fibers=n_fibers
+        )
 
 # def vectorize(img, mask):
 #     """

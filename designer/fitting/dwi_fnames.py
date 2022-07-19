@@ -53,3 +53,9 @@ _outliers_ = {
     'IRLLS': 'outliers_irlls',
     'AKC': 'outliers_akc'
 }
+
+_tractography_ = {
+    'dti': 'dti_dsistudio',
+    'dki': 'dki_dsistudio',
+    'fbi': 'fbi_dsistudio',
+}
