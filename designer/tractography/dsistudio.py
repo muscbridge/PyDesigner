@@ -80,7 +80,7 @@ def convertLPS(input, output):
         '-quiet',
         '-force',
         input,
-        '-strides', '-1,-2,3',
+        '-strides', '-1,-2,3,4',
         output
     ]
     completion = subprocess.run(arg)
@@ -206,7 +206,11 @@ def makefib(input, output, map=None, mask=None, n_fibers=3):
             raise ValueError('Differing grid between map image and '
             'amplitudes')
         map_img = map_img.get_fdata().flatten(order='F')
+        map_img[map_img < 0] = 0
         masked_map = map_img[flat_mask]
+
+    # Scale ODF
+    # masked_odfs = 0.5 * masked_odfs
 
     # Compute GFA
     masked_gfa = np.zeros(masked_odfs.shape[0])
@@ -231,7 +235,7 @@ def makefib(input, output, map=None, mask=None, n_fibers=3):
         masked_map[idx] = 0 
 
     n_odfs = masked_odfs.shape[0]
-    peak_indices = np.zeros((n_odfs, n_fibers))
+    peak_indices = np.zeros((n_odfs, n_fibers), dtype=int)
     peak_vals = np.zeros((n_odfs, n_fibers))
     dsi_mat = {}
     # Create matfile that can be read by dsi Studio
@@ -253,7 +257,9 @@ def makefib(input, output, map=None, mask=None, n_fibers=3):
         # fill in the "fa" values
         fa_n = np.zeros(n_voxels)
         if not map is None:
-            fa_n[flat_mask] =  masked_map
+            fa_fromidx = np.zeros(masked_map.shape)
+            np.putmask(fa_fromidx, peak_vals[:, nfib] != 0, masked_map)
+            fa_n[flat_mask] = fa_fromidx
         else:
             fa_n[flat_mask] = peak_vals[:, nfib]
         dsi_mat['fa%d' % nfib] = fa_n.astype(np.float32)
