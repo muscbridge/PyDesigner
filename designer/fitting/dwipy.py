@@ -2825,7 +2825,8 @@ def fit_regime(input, output,
             output=op.join(output, fname_tractography['dti']),
             map=op.join(output, fname_dti['fa']),
             mask=mask,
-            n_fibers=n_fibers
+            n_fibers=n_fibers,
+            scale=0.5
         )
     if img.isdki():
     # DKI Parameters 
@@ -2851,7 +2852,8 @@ def fit_regime(input, output,
             output=op.join(output, fname_tractography['dki']),
             map=op.join(output, fname_dki['mk']),
             mask=mask,
-            n_fibers=n_fibers
+            n_fibers=n_fibers,
+            scale=0.5
         )
     # WMTI Parameters
         awf, eas_ad, eas_rd, eas_tort, ias_da = img.extractWMTI()
@@ -2888,7 +2890,8 @@ def fit_regime(input, output,
             output=op.join(output, fname_tractography['fbi']),
             map=op.join(output, fname_fbi['faa']),
             mask=mask,
-            n_fibers=n_fibers
+            n_fibers=n_fibers,
+            scale=1
         )
 
 # def vectorize(img, mask):

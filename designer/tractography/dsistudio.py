@@ -88,7 +88,7 @@ def convertLPS(input, output):
         raise Exception('Conversion of NifTI file to LPS failed. '
         'Check above for errors.')
 
-def makefib(input, output, map=None, mask=None, n_fibers=3):
+def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1):
     """
     Converts a NifTi ``.nii`` file containing sh coefficients to a DSI
     Studio fib file
@@ -113,6 +113,10 @@ def makefib(input, output, map=None, mask=None, n_fibers=3):
     n_fibers : int, optional
         The maximum number ODF maxima to extract per voxel
         (Default: 3)
+    scale: float; optional 
+        Affects overall size of odfs in .fib file. This only affects
+        visualization.
+        (Default: 1)
 
     Returns
     -------
@@ -210,7 +214,7 @@ def makefib(input, output, map=None, mask=None, n_fibers=3):
         masked_map = map_img[flat_mask]
 
     # Scale ODF
-    # masked_odfs = 0.5 * masked_odfs
+    masked_odfs = scale * masked_odfs
 
     # Compute GFA
     masked_gfa = np.zeros(masked_odfs.shape[0])
