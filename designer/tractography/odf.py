@@ -447,21 +447,27 @@ class odfmodel():
         scale = vectorize(self.scale_img, self.mask_img)
         # Create shperical harmonic (SH) base set
         degs = np.arange(self.l_max + 1, dtype=int)
-        l_num = 2 * degs[::2] + 1 # how many per degree (evens only)
+        l_num = 2 * degs + 1 # how many per degree (evens only)
+        # Variable `harmonics` holds the index of phase m where l is even i.e.
+        # l = 0; m = 0                                  --> 1 phases  (even l)
+        # l = 1, m = -1, m = 0, m = 1                   --> 3 phases (odd l)
+        # l = 2, m = -2, m = -1, m = 0, m = 1, m = 2    --> 5 phases (even l)
         harmonics = []
-        sh_end = 1 # initialize the SH set for indexing
-        for h in range(0,len(degs[::2])):
-            sh_start = sh_end + l_num[h] - 1
-            sh_end = sh_start + l_num[h] - 1
-            harmonics.extend(np.arange(sh_start - 1, sh_end))
-        # MRtrix does not have (-1)^m in formulas so we index where this would
-        # occur and multiply those volumes by -1
-        sh_idx = []
-        sh_start = 2
-        for h in range(1,len(degs[::2])):
-            sh_end = sh_start + l_num[h] - 2
-            sh_idx.extend(np.arange(sh_start, sh_end, 2))
-            sh_start = sh_end + 2
+        sh_end = 0 # initialize the SH set for indexing
+        for _, m in enumerate(l_num[::2]):
+            sh_start = sh_end + m - 1
+            sh_end = sh_start + m - 1
+            harmonics.extend(np.arange(sh_start, sh_end + 1))
+        # MRtrix does not have Condon–Shortley phase i.e. (-1)^m in formulas for
+        # even l where m < 0, so we index where this would occur and multiply
+        # those volumes by -1.
+        cs_idx = []
+        cs_start = 0
+        for order in degs[::2]:
+            for phase in range(-order, order + 1):
+                if (-1) ** phase == -1:
+                    cs_idx.append(cs_start)
+                cs_start += 1
         B = shbasis(degs, self.vertices[:, 0], self.vertices[:, 1])
         B = B[:, harmonics]
         nvox = odf.shape[-1]
@@ -473,7 +479,7 @@ class odfmodel():
         sh = Parallel(n_jobs=self.workers, prefer='processes') (delayed(self.odf2shhelper)\
             (odf[:, i], B, scale[i]) for i in inputs)
         sh = np.array(sh).T.real
-        sh[sh_idx,:] = -sh[sh_idx,:]
+        sh[cs_idx,:] = -sh[cs_idx,:]
         sh = vectorize(sh, self.mask_img)
         return sh
 
@@ -595,7 +601,7 @@ def dtiodfspherical(odf, phi, theta, radial_weight=4):
 
 def shbasis(deg, phi, theta):
     """
-    Computes shperical harmonic basis set for even degrees of
+    Computes shperical harmonic basis set for all degrees (even and odd) of
     harmonics
 
     Parameters
