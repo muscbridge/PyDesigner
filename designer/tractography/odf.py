@@ -425,8 +425,8 @@ class odfmodel():
         odfmax, dirmax = self.odfmaxhelper(odf)
         odfmax = odfmax[0]
         sh = np.dot(np.linalg.pinv(B), odf / odfmax) * scale
-        sh[np.isnan(sh)] = 0
-        sh[np.isinf(sh)] = 0
+        sh[np.isnan(sh)] = __minZero__
+        sh[np.isinf(sh)] = __minZero__
         return sh
 
     def odf2sh(self, odf):
@@ -454,21 +454,11 @@ class odfmodel():
         # l = 2, m = -2, m = -1, m = 0, m = 1, m = 2    --> 5 phases (even l)
         harmonics = []
         sh_end = 0 # initialize the SH set for indexing
-        for _, m in enumerate(l_num[::2]):
-            sh_start = sh_end + m - 1
-            sh_end = sh_start + m - 1
+        for _, phase in enumerate(l_num[::2]):
+            sh_start = sh_end + phase - 1
+            sh_end = sh_start + phase - 1
             harmonics.extend(np.arange(sh_start, sh_end + 1))
-        # MRtrix does not have Condon–Shortley phase i.e. (-1)^m in formulas for
-        # even l where m < 0, so we index where this would occur and multiply
-        # those volumes by -1.
-        cs_idx = []
-        cs_start = 0
-        for order in degs[::2]:
-            for phase in range(-order, order + 1):
-                if (-1) ** phase == -1:
-                    cs_idx.append(cs_start)
-                cs_start += 1
-        B = shbasis(degs, self.vertices[:, 0], self.vertices[:, 1])
+        B = shbasis(degs, self.vertices[:, 0], self.vertices[:, 1], 'tournier')
         B = B[:, harmonics]
         nvox = odf.shape[-1]
         inputs = tqdm(range(nvox),
@@ -479,7 +469,6 @@ class odfmodel():
         sh = Parallel(n_jobs=self.workers, prefer='processes') (delayed(self.odf2shhelper)\
             (odf[:, i], B, scale[i]) for i in inputs)
         sh = np.array(sh).T.real
-        sh[cs_idx,:] = -sh[cs_idx,:]
         sh = vectorize(sh, self.mask_img)
         return sh
 
@@ -599,10 +588,10 @@ def dtiodfspherical(odf, phi, theta, radial_weight=4):
                          * odf[4]))**((radial_weight + 1)/2)
     return spherical
 
-def shbasis(deg, phi, theta):
+def shbasis(deg, phi, theta, method='scipy'):
     """
-    Computes shperical harmonic basis set for all degrees (even and odd) of
-    harmonics
+    Computes shperical harmonic bases for all orders (even and odd), using
+    functions defined by `scipy`, `Tournier`, or `Descoteaux`.
 
     Parameters
     ----------
@@ -612,6 +601,8 @@ def shbasis(deg, phi, theta):
         (n, ) vector denoting polar coordinates
     theta : array_like
         (n, ) vector denoting azimuthal coordinates
+    method : str; optional; {scipy, tournier, descoteaux}
+        Define method for SH basis set
 
     Returns
     -------
@@ -624,8 +615,37 @@ def shbasis(deg, phi, theta):
         except:
             raise TypeError('Please supply degree of '
             'shperical harmonic as an integer')
+    if not isinstance(method, str):
+        raise TypeError('Please enter method as a string')
+    if not method in ['scipy', 'tournier', 'descoteaux']:
+        raise Exception('Please select a valid method for SH basis set')
     SH = []
     for n in deg:
         for m in range(-n, n + 1):
-            SH.append(sph_harm(m, n, theta, phi))
-    return np.array(SH, dtype=np.complex, order='F').T
+            if method == 'tournier':
+                # Tournier does not have Condon–Shortley phase i.e. (-1)^m in 
+                # their formulas, so we multiply those terms by (-1)^m to reverse the
+                # inclusion of this phase from scipy's `sph_harm`.
+
+                # Tournier formulas have sqrt(2) normalization term so we
+                # multiply Ylm.
+                shb = sph_harm(m, n, theta, phi, dtype=complex)
+                if m < 0:
+                    sh_ = np.sqrt(2) * shb.imag * (-1)**m
+                elif m > 0:
+                    sh_ = np.sqrt(2) * shb.real * (-1)**m
+                elif m == 0:
+                    sh_ = shb
+            elif method == 'scipy' or method == 'descoteaux':
+                shb = sph_harm(m, n, theta, phi, dtype=complex)
+                if method == 'descoteaux':
+                    if m < 0:
+                        sh_ = shb.real * (-1)**m
+                    elif m > 0:
+                        sh_ = shb.imag * (-1)**m
+                    elif m == 0:
+                        sh_ = shb
+                elif method == 'scipy':
+                    sh_ = shb
+            SH.append(sh_)
+    return np.array(SH, order='F').T
