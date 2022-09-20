@@ -2850,7 +2850,7 @@ def fit_regime(input, output,
         dsistudio.makefib(
             input=op.join(output, fname_dki['odf']),
             output=op.join(output, fname_tractography['dki']),
-            map=op.join(output, fname_dki['mk']),
+            map=op.join(output, fname_dti['fa']),
             mask=mask,
             n_fibers=n_fibers,
             scale=0.5
