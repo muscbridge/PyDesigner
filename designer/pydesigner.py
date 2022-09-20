@@ -289,7 +289,6 @@ def main():
     if not (args.resume and op.exists(init_nii)):
         mrpreproc.miftonii(input=working_path,
                         output=init_nii,
-                        strides='1,2,3,4',
                         nthreads=args.nthreads,
                         force=args.force,
                         verbose=args.verbose)
@@ -535,7 +534,6 @@ def main():
                               verbose=args.verbose)
             mrpreproc.miftonii(input=mif_denoised,
                                output=nii_denoised,
-                               strides='1,2,3,4',
                                nthreads=args.nthreads,
                                force=args.force,
                                verbose=False)
@@ -581,7 +579,6 @@ def main():
                               verbose=args.verbose)
             mrpreproc.miftonii(input=mif_reslice,
                                output=nii_reslice,
-                               strides='1,2,3,4',
                                nthreads=args.nthreads,
                                force=args.force,
                                verbose=False)
@@ -616,7 +613,6 @@ def main():
                               verbose=args.verbose)
             mrpreproc.miftonii(input=mif_degibbs,
                                output=nii_degibbs,
-                               strides='1,2,3,4',
                                nthreads=args.nthreads,
                                force=args.force,
                                verbose=False)
@@ -655,7 +651,6 @@ def main():
                                 verbose=args.verbose)
             mrpreproc.miftonii(input=mif_undistorted,
                             output=nii_undistorted,
-                            strides='1,2,3,4',
                             nthreads=args.nthreads,
                             force=args.force,
                             verbose=False)
@@ -769,7 +764,6 @@ def main():
 
             mrpreproc.miftonii(input=mif_smoothing,
                                 output=nii_smoothing,
-                                strides='1,2,3,4',
                                 nthreads=args.nthreads,
                                 force=args.force,
                                 verbose=False)
@@ -807,7 +801,6 @@ def main():
             nii_rician_full = op.join(outpath, nii_rician_name)
             mrpreproc.miftonii(input=mif_rician,
                                 output=nii_rician,
-                                strides='1,2,3,4',
                                 nthreads=args.nthreads,
                                 force=args.force,
                                 verbose=False)
@@ -883,7 +876,6 @@ def main():
     if not (args.resume and op.exists(preprocessed)):
         mrpreproc.miftonii(input=working_path,
                             output=preprocessed,
-                            strides='1,2,3,4',
                             nthreads=args.nthreads,
                             force=args.force,
                             verbose=False)

@@ -12,7 +12,7 @@ import subprocess
 import numpy as np
 from designer.preprocessing import preparation, util, smoothing, rician, mrinfoutil
 
-def miftonii(input, output, strides='1,2,3,4', nthreads=None,
+def miftonii(input, output, nthreads=None,
              force=True, verbose=False):
     """
     Converts input `.mif` images to output `.nii` images
@@ -23,9 +23,6 @@ def miftonii(input, output, strides='1,2,3,4', nthreads=None,
         Path to input .mif file
     output : str
         Path to output .nii file
-    strides : str, optional
-        Specify the strides of the output data in memory
-        (Default: '1,2,3,4')
     nthreads : int, optional
         Specify the number of threads to use in processing
         (Default: all available threads)
@@ -53,8 +50,6 @@ def miftonii(input, output, strides='1,2,3,4', nthreads=None,
     if op.splitext(output)[-1] != '.nii':
         raise OSError('Output specified does not possess the .nii '
                       'extension.')
-    if not isinstance(strides, str):
-        raise Exception('Please specify strides as a string.')
     if not (nthreads is None):
         if not isinstance(nthreads, int):
             raise Exception('Please specify the number of threads as an '
@@ -75,14 +70,13 @@ def miftonii(input, output, strides='1,2,3,4', nthreads=None,
                 op.splitext(output)[0] + '.bvec',
                 op.splitext(output)[0] + '.bval'])
     arg.extend(['-json_export', op.splitext(output)[0] + '.json'])
-    arg.extend(['-strides', strides])
     arg.extend([input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
         raise Exception('Conversion from .mif to .nii failed; check '
                         'above for errors.')
 
-def niitomif(input, output, strides='1,2,3,4', nthreads=None,
+def niitomif(input, output, nthreads=None,
              force=True, verbose=False):
     """
     Converts input `.nii` images to output `.nif` images provided that
@@ -94,9 +88,6 @@ def niitomif(input, output, strides='1,2,3,4', nthreads=None,
         Path to input .nii file
     output : str
         Path to output .mif file
-    strides : str, optional
-        Specify the strides of the output data in memory
-        (Default: '1,2,3,4')
     nthreads : int, optional
         Specify the number of threads to use in processing
         (Default: all available threads)
@@ -133,8 +124,6 @@ def niitomif(input, output, strides='1,2,3,4', nthreads=None,
     if not op.exists(op.splitext(input)[0] + '.json'):
         raise OSError('Unable to locate JSON file" {}'.format(op.splitext(
             output)[0] + '.json'))
-    if not isinstance(strides, str):
-        raise Exception('Please specify strides as a string.')
     if not (nthreads is None):
         if not isinstance(nthreads, int):
             raise Exception('Please specify the number of threads as an '
@@ -155,7 +144,6 @@ def niitomif(input, output, strides='1,2,3,4', nthreads=None,
                 op.splitext(input)[0] + '.bvec',
                 op.splitext(input)[0] + '.bval'])
     arg.extend(['-json_import', op.splitext(input)[0] + '.json'])
-    arg.extend(['-strides', strides])
     arg.extend([input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
@@ -804,14 +792,14 @@ def smooth(input, output, csfname=None, fwhm=1.25, size=5):
     # Convert input .mif to .nii
     outdir = op.dirname(output)
     nii_path = op.join(outdir, 'dwism.nii')
-    miftonii(input=input, output=nii_path, strides='1,2,3,4')
+    miftonii(input=input, output=nii_path)
     # Perform smoothing
     smoothing.smooth_image(nii_path,
                            csfname=csfname,
                            outname=nii_path,
                            width=fwhm)
     # Convert .nii to .mif
-    niitomif(input=nii_path, output=output, strides='1,2,3,4')
+    niitomif(input=nii_path, output=output)
     # Remove converted files
     os.remove(nii_path)
     os.remove(op.splitext(nii_path)[0] + '.bvec')
@@ -854,13 +842,13 @@ def riciancorrect(input, output, noise=None):
     # Convert input .mif to .nii
     outdir = op.dirname(output)
     nii_path = op.join(outdir, 'dwirc.nii')
-    miftonii(input=input, output=nii_path, strides='1,2,3,4')
+    miftonii(input=input, output=nii_path)
     # Perform Rician correction
     rician.rician_img_correct(nii_path,
                               noise,
                               outpath=nii_path)
     # Convert .nii to .mif
-    niitomif(input=nii_path, output=output, strides='1,2,3,4')
+    niitomif(input=nii_path, output=output)
     # Remove converted files
     os.remove(nii_path)
     os.remove(op.splitext(nii_path)[0] + '.bvec')

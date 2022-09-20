@@ -442,7 +442,7 @@ class DWIParser:
                     except:
                         raise IOError('Please supply a valid JSON file '
                                       'accompanying {}'.format(i))
-                convert_args = ['mrconvert -stride 1,2,3,4']
+                convert_args = ['mrconvert']
                 if verbose is False:
                     convert_args.append('-quiet')
                 if force is True:
@@ -512,7 +512,7 @@ class DWIParser:
 
             # Output concatenated .mif into other formats
             if '.mif' not in ext:
-                convert_args = ['mrconvert -stride 1,2,3,4']
+                convert_args = ['mrconvert']
                 if verbose is False:
                     convert_args.append('-quiet')
                 if force is True:
