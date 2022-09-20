@@ -33,28 +33,33 @@ def vectorize(img, mask):
         mask = np.ones((img.shape[0],
                         img.shape[1],
                         img.shape[2]),
-                       order='F')
+                        order='F',
+                        dtype=img.dtype)
     mask = mask.astype(bool)
     if img.ndim == 1:
         n = img.shape[0]
         s = np.zeros((mask.shape[0],
                       mask.shape[1],
                       mask.shape[2]),
-                     order='F')
+                      order='F',
+                      dtype=img.dtype)
         s[mask] = img
     if img.ndim == 2:
         n = img.shape[0]
         s = np.zeros((mask.shape[0],
                       mask.shape[1],
                       mask.shape[2], n),
-                     order='F')
+                      order='F',
+                      dtype=img.dtype)
         for i in range(0, n):
             s[mask, i] = img[i,:]
     if img.ndim == 3:
-        maskind = np.ma.array(img, mask=np.logical_not(mask))
+        maskind = np.ma.array(img, mask=np.logical_not(mask),
+                              dtype=img.dtype, order='F')
         s = np.ma.compressed(maskind)
     if img.ndim == 4:
-        s = np.zeros((img.shape[-1], np.sum(mask).astype(int)), order='F')
+        s = np.zeros((img.shape[-1], np.sum(mask).astype(int)),
+                     order='F', dtype=img.dtype)
         for i in range(0, img.shape[-1]):
             tmp = img[:,:,:,i]
             # Compressed returns non-masked area, so invert the mask first
