@@ -269,7 +269,7 @@ def main():
             resume=args.resume)
     working_path = op.join(outpath, 'working' + fType)
     # Create index of DWI volumes with different TEs
-    if np.unique(image.echotime).size > 1:
+    if not args.resume and np.unique(image.echotime).size > 1:
         multi_echo = True
         multi_echo_start = [0]
         multi_echo_end = [image.vols[0] - 1]
