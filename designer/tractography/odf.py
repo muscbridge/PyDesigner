@@ -487,6 +487,7 @@ class odfmodel():
         -------
         None; writes out file
         """
+        self.hdr.set_data_dtype(var.dtype)
         writeNii(var, self.hdr, path)
 
 def dkiodfspherical(odf, phi, theta):
