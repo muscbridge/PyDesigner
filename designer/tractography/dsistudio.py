@@ -88,7 +88,8 @@ def convertLPS(input, output):
         raise Exception('Conversion of NifTI file to LPS failed. '
         'Check above for errors.')
 
-def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1):
+def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1,
+    other_maps=None):
     """
     Converts a NifTi ``.nii`` file containing sh coefficients to a DSI
     Studio fib file
@@ -117,6 +118,11 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1):
         Affects overall size of odfs in .fib file. This only affects
         visualization.
         (Default: 1)
+    other_maps : list of str; optional
+        List containing paths to other metrics maps to include into the .fib
+        file for computing metrics values along tracks. The maps could be AD,
+        AK, MK, AWF, etc. as long as they are the same size as SH coefficient
+        file.
 
     Returns
     -------
@@ -142,6 +148,13 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1):
         if not op.exists(mask):
             raise OSError('Path to brain mask does not exist. Please '
             'ensure that the folder specified exists.')
+    if type(other_maps) == list:
+        if any([not op.exists(x) for x in other_maps]):
+            raise OSError('One of the paths defined in other maps does not '
+            'exist Please ensure all files exist.')
+    else:
+        raise TypeError('Path to other maps needs to be entered as a list of '
+        'strings defining paths to other metric files.')
     outdir = op.dirname(output)
     # Convert to LPS
     fname, ext = op.splitext(op.basename(input))
@@ -154,7 +167,7 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1):
         map_ = op.join(outdir, fname + ext)
         convertLPS(map, map_)
     if not mask is None:
-        (fname, ext) = op.splitext(op.basename(mask))
+        fname, ext = op.splitext(op.basename(mask))
         fname = fname +'_lps'
         mask_ = op.join(outdir, fname + ext)
         convertLPS(mask, mask_)
@@ -165,7 +178,7 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1):
     x, y, z = verts[:hemisphere].T
     hs = HemiSphere(x=x, y=y, z=z)
     # Convert to DSI Studio LPS+ from MRTRIX3 RAS+
-    _, theta, phi = cart2sphere(x, y, -z)
+    _, theta, phi = cart2sphere(-x, -y, z)
     dirs_txt = op.join(outdir, "directions.txt")
     np.savetxt(dirs_txt, np.column_stack([phi, theta]))
     # Get SH amplitude
@@ -284,6 +297,20 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1):
     g_fa = np.zeros(n_voxels)
     g_fa[flat_mask] = masked_gfa
     dsi_mat['gfa'] = g_fa.astype(np.float32)
+    # Fill in other metrics maps
+    if not other_maps is None:
+        for path_map in other_maps:
+            map_name, ext = op.splitext(op.basename(path_map))
+            map_dir = op.dirname(path_map)
+            map_lps = op.join(map_dir, map_name + '_lps' + ext)
+            convertLPS(path_map, map_lps)
+            other_img = nib.load(map_lps)
+            if not other_img.shape == amplitudes_img.shape[:3]:
+                raise ValueError('Differing grid between other map image: {} '
+                'and amplitudes'.format(path_map))
+            gmap = other_img.get_fdata().flatten(order='F')
+            dsi_mat[map_name] = gmap.astype(np.float32)
+            os.remove(map_lps)
     savemat(output, dsi_mat, format='4', appendmat=False)
     # Remove unwanted files
     os.remove(input_)
