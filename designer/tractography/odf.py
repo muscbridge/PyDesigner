@@ -622,6 +622,7 @@ def shbasis(deg, phi, theta, method='scipy'):
     SH = []
     for n in deg:
         for m in range(-n, n + 1):
+            shb = sph_harm(m, n, theta, phi, dtype=complex)
             if method == 'tournier':
                 # Tournier does not have Condon–Shortley phase i.e. (-1)^m in 
                 # their formulas, so we multiply those terms by (-1)^m to reverse the
@@ -629,23 +630,20 @@ def shbasis(deg, phi, theta, method='scipy'):
 
                 # Tournier formulas have sqrt(2) normalization term so we
                 # multiply Ylm.
-                shb = sph_harm(m, n, theta, phi, dtype=complex)
                 if m < 0:
-                    sh_ = np.sqrt(2) * shb.imag * (-1)**m
+                    sh_ = np.sqrt(2) * shb.imag
                 elif m > 0:
                     sh_ = np.sqrt(2) * shb.real * (-1)**m
                 elif m == 0:
                     sh_ = shb
-            elif method == 'scipy' or method == 'descoteaux':
-                shb = sph_harm(m, n, theta, phi, dtype=complex)
-                if method == 'descoteaux':
-                    if m < 0:
-                        sh_ = shb.real * (-1)**m
-                    elif m > 0:
-                        sh_ = shb.imag * (-1)**m
-                    elif m == 0:
-                        sh_ = shb
-                elif method == 'scipy':
+            elif method == 'descoteaux':
+                if m < 0:
+                    sh_ = shb.real
+                elif m > 0:
+                    sh_ = shb.imag * (-1)**m
+                elif m == 0:
                     sh_ = shb
+            elif method == 'scipy':
+                sh_ = shb
             SH.append(sh_)
     return np.array(SH, order='F').T
