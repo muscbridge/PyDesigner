@@ -148,10 +148,11 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1,
         if not op.exists(mask):
             raise OSError('Path to brain mask does not exist. Please '
             'ensure that the folder specified exists.')
-    if type(other_maps) == list:
-        if any([not op.exists(x) for x in other_maps]):
-            raise OSError('One of the paths defined in other maps does not '
-            'exist Please ensure all files exist.')
+    if type(other_maps) == list or other_maps == None:
+        if type(other_maps) == list:
+            if any([not op.exists(x) for x in other_maps]):
+                raise OSError('One of the paths defined in other maps does not '
+                'exist Please ensure all files exist.')
     else:
         raise TypeError('Path to other maps needs to be entered as a list of '
         'strings defining paths to other metric files.')
