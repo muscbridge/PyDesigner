@@ -2826,10 +2826,15 @@ def fit_regime(input, output,
             map=op.join(output, fname_dti['fa']),
             mask=mask,
             n_fibers=n_fibers,
-            scale=0.5
+            scale=0.5,
+            other_maps = [
+                op.join(output, fname_dti['md']),
+                op.join(output, fname_dti['rd']),
+                op.join(output, fname_dti['ad']),
+            ]
         )
     if img.isdki():
-    # DKI Parameters 
+        # DKI Parameters 
         mk, rk, ak, kfa, mkt, trace = img.extractDKI()
         writeNii(mk, img.hdr, op.join(output, fname_dki['mk']))
         writeNii(rk, img.hdr, op.join(output, fname_dki['rk']))
@@ -2837,6 +2842,13 @@ def fit_regime(input, output,
         writeNii(kfa, img.hdr, op.join(output, fname_dki['kfa']))
         writeNii(mkt, img.hdr, op.join(output, fname_dki['mkt']))
         writeNii(trace, img.hdr, op.join(output, fname_dki['trace']))
+        # WMTI Parameters
+        awf, eas_ad, eas_rd, eas_tort, ias_da = img.extractWMTI()
+        writeNii(awf, img.hdr, op.join(output, fname_wmti['awf']))
+        writeNii(eas_ad, img.hdr, op.join(output, fname_wmti['eas_ad']))
+        writeNii(eas_rd, img.hdr, op.join(output, fname_wmti['eas_rd']))
+        writeNii(eas_tort, img.hdr, op.join(output, fname_wmti['eas_tort']))
+        writeNii(ias_da, img.hdr, op.join(output, fname_wmti['ias_da']))
         dkimodel = odf.odfmodel(
             dt = op.join(output, fname_tensor['DT']),
             kt = op.join(output, fname_tensor['KT']),
@@ -2853,15 +2865,22 @@ def fit_regime(input, output,
             map=op.join(output, fname_dti['fa']),
             mask=mask,
             n_fibers=n_fibers,
-            scale=0.5
+            scale=0.5,
+            other_maps = [
+                op.join(output, fname_dti['md']),
+                op.join(output, fname_dti['rd']),
+                op.join(output, fname_dti['ad']),
+                op.join(output, fname_dki['mk']),
+                op.join(output, fname_dki['rk']),
+                op.join(output, fname_dki['ak']),
+                op.join(output, fname_dki['kfa']),
+                op.join(output, fname_wmti['awf']),
+                op.join(output, fname_wmti['eas_ad']),
+                op.join(output, fname_wmti['eas_rd']),
+                op.join(output, fname_wmti['eas_tort']),
+                op.join(output, fname_wmti['ias_da']),
+            ]
         )
-    # WMTI Parameters
-        awf, eas_ad, eas_rd, eas_tort, ias_da = img.extractWMTI()
-        writeNii(awf, img.hdr, op.join(output, fname_wmti['awf']))
-        writeNii(eas_ad, img.hdr, op.join(output, fname_wmti['eas_ad']))
-        writeNii(eas_rd, img.hdr, op.join(output, fname_wmti['eas_rd']))
-        writeNii(eas_tort, img.hdr, op.join(output, fname_wmti['eas_tort']))
-        writeNii(ias_da, img.hdr, op.join(output, fname_wmti['ias_da']))
     if img.isfbi():
         if img.isfbwm():
             zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, \
@@ -2869,7 +2888,7 @@ def fit_regime(input, output,
                     img.fbi(l_max=l_max, fbwm=True, rectify=rectify)
             writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
             writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
-            writeNii(sph, img.hdr, op.join(output, fname_fbi['odf']))
+            writeNii(np.real(sph), img.hdr, op.join(output, fname_fbi['odf']))
             writeNii(min_awf, img.hdr, op.join(output, fname_fbi['awf']))
             writeNii(Da, img.hdr, op.join(output, fname_fbi['Da']))
             writeNii(De_mean, img.hdr, op.join(output, fname_fbi['De_mean']))
@@ -2878,6 +2897,36 @@ def fit_regime(input, output,
             writeNii(De_fa, img.hdr, op.join(output, fname_fbi['fae']))
             writeNii(min_cost, img.hdr, op.join(output, fname_fbi['min_cost']))
             writeNii(min_cost_fn, img.hdr, op.join(output, fname_fbi['min_cost_fn']))
+            dsistudio.makefib(
+                input=op.join(output, fname_fbi['odf']),
+                output=op.join(output, fname_tractography['fbi']),
+                map=op.join(output, fname_fbi['faa']),
+                mask=mask,
+                n_fibers=n_fibers,
+                scale=1,
+            other_maps = [
+                op.join(output, fname_dti['md']),
+                op.join(output, fname_dti['rd']),
+                op.join(output, fname_dti['ad']),
+                op.join(output, fname_dki['mk']),
+                op.join(output, fname_dki['rk']),
+                op.join(output, fname_dki['ak']),
+                op.join(output, fname_dki['kfa']),
+                op.join(output, fname_wmti['awf']),
+                op.join(output, fname_wmti['eas_ad']),
+                op.join(output, fname_wmti['eas_rd']),
+                op.join(output, fname_wmti['eas_tort']),
+                op.join(output, fname_wmti['ias_da']),
+                op.join(output, fname_fbi['zeta']),
+                op.join(output, fname_fbi['faa']),
+                op.join(output, fname_fbi['awf']),
+                op.join(output, fname_fbi['Da']),
+                op.join(output, fname_fbi['De_mean']),
+                op.join(output, fname_fbi['De_ax']),
+                op.join(output, fname_fbi['De_rad']),
+                op.join(output, fname_fbi['fae']),
+            ]
+            )
         else:
             zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, \
                 De_fa, min_cost, min_cost_fn = \
@@ -2885,13 +2934,17 @@ def fit_regime(input, output,
             writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
             writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
             writeNii(sph, img.hdr, op.join(output, fname_fbi['odf']))
-        dsistudio.makefib(
-            input=op.join(output, fname_fbi['odf']),
-            output=op.join(output, fname_tractography['fbi']),
-            map=op.join(output, fname_fbi['faa']),
-            mask=mask,
-            n_fibers=n_fibers,
-            scale=1
+            dsistudio.makefib(
+                input=op.join(output, fname_fbi['odf']),
+                output=op.join(output, fname_tractography['fbi']),
+                map=op.join(output, fname_fbi['faa']),
+                mask=mask,
+                n_fibers=n_fibers,
+                scale=1,
+                other_maps = [
+                    op.join(output, fname_fbi['zeta']),
+                    op.join(output, fname_fbi['faa']),
+                ]
         )
 
 # def vectorize(img, mask):
