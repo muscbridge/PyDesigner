@@ -396,7 +396,7 @@ def shells(path):
     console = [s.split(' ') for s in console]
     console = [item for sublist in console for item in sublist]
     console = list(filter(None, console))
-    console = [int(x) for x in console]
+    console = [int(round(float(x))) for x in console]
     return console
 
 def num_shells(path):
