@@ -53,6 +53,7 @@ Notable Features
 - Works with **DTI**, **DKI**, **WMTI**, **FBI**, or **FBWM** datasets
 - Supports **multi-TE** dataset processing
 - **Tractography ready:** Computes ODF spherical harmonic expansion for MRtrix3, and .fib files for DSI Studio
+- Installable modules for **Python or Jupyter Notebook scripting** of custom workflows
 
 
 We welcome all DTI/DKI researchers to evaluate this software and pass
