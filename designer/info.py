@@ -10,21 +10,23 @@ __execdir__ = os.path.basename(
     )
 )
 __packagename__ = 'PyDesigner'
-__version__='v1.0-RC12'
+__version__='v1.0.0'
 __author__ = 'PyDesigner developers'
-__copyright__ = 'Copyright 2021, PyDesigner developers, MUSC Advanced Image Analysis (MAMA)'
+__copyright__ = 'Copyright 2023, PyDesigner developers, MUSC Advanced Image Analysis (MAMA)'
 __credits__ = [
     'Siddhartha Dhiman',
     'Joshua Teves',
-    'Kayti Keith',
+    'Ryn Thorn',
     'Benjamin Ades-Aron',
     'Jelle Veraart',
     'Vitria Adisetiyo',
     'Els Fieremans',
-    'Jens Jensen'
+    'Jens Jensen',
+    'Joseph Helpern',
+    'Andreana Benitez'
 ]
 __maintainer__ = 'Siddhartha Dhiman'
-__email__ = 'mama@musc.edu'
+__email__ = 'bridge@musc.edu'
 __url__ = 'https://github.com/m-ama/PyDesigner'
 __license__='MPL 2.0'
 __description__ = ('Python Port of NYU\'s Designer pipeline for dMRI '
