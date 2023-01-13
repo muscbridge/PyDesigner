@@ -9,7 +9,7 @@ __execdir__ = os.path.basename(
         )
     )
 )
-__packagename__ = 'PyDesigner'
+__packagename__ = 'PyDesigner-DWI'
 __version__='v1.0.0'
 __author__ = 'PyDesigner developers'
 __copyright__ = 'Copyright 2023, PyDesigner developers, MUSC Advanced Image Analysis (MAMA)'

@@ -10,7 +10,7 @@ PyDesigner can be installed using the PyPI package manager using the command
 
 .. code-block:: console
 
-    $ pip install pydesigner
+    $ pip install PyDesigner-DWI
 
 **Note**:
     Remember to switch to your conda environement before parsing this
