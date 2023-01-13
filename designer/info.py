@@ -28,7 +28,7 @@ __credits__ = [
 __maintainer__ = 'Siddhartha Dhiman'
 __email__ = 'bridge@musc.edu'
 __url__ = 'https://github.com/m-ama/PyDesigner'
-__license__='MPL 2.0'
+__license__='CUSTOM'
 __description__ = ('Python Port of NYU\'s Designer pipeline for dMRI '
                 'processing')
 # Gets folder name where this file resides
