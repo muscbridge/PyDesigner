@@ -2882,7 +2882,6 @@ def fit_regime(input, output,
                 op.join(output, fname_wmti['eas_tort']),
                 op.join(output, fname_wmti['ias_da']),
                 op.join(output, fname_fbi['zeta']),
-                op.join(output, fname_fbi['faa']),
                 op.join(output, fname_fbi['awf']),
                 op.join(output, fname_fbi['Da']),
                 op.join(output, fname_fbi['De_mean']),
@@ -2906,8 +2905,7 @@ def fit_regime(input, output,
                 n_fibers=n_fibers,
                 scale=1,
                 other_maps = [
-                    op.join(output, fname_fbi['zeta']),
-                    op.join(output, fname_fbi['faa']),
+                    op.join(output, fname_fbi['zeta'])
                 ]
         )
 
