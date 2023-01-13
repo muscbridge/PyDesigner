@@ -6,6 +6,7 @@ __pycache__/
 *.egg-info
 .vscode/
 /docs/build/
+dist/
 
 # Files to ignore
 .DS_Store

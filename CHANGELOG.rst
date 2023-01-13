@@ -7,7 +7,7 @@ page
 `v1.0.0`_
 ------------
 
-Jul 8, 2022
+Jan 13, 2023
 
 **Added**
 
@@ -16,6 +16,7 @@ Jul 8, 2022
 * ODF computations and spherical harmonic expansion for DTI and DKI
 * Option to add user-defined map for tractography stopping criteria
 * Added option to import multiple custom maps into DSI studio file
+* PyDesigner can now be pulled from PyPI with `pip install pydesigner`
 
 **Changed**
 

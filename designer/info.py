@@ -28,7 +28,7 @@ __credits__ = [
 __maintainer__ = 'Siddhartha Dhiman'
 __email__ = 'bridge@musc.edu'
 __url__ = 'https://github.com/m-ama/PyDesigner'
-__license__='MPL 2.0'
+__license__='CUSTOM'
 __description__ = ('Python Port of NYU\'s Designer pipeline for dMRI '
                 'processing')
 # Gets folder name where this file resides
@@ -63,7 +63,7 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3.7',
     'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
     'Operating System :: OS Independent',
-    'Topic :: Scientific/Engineering :: Bio-Informatics'
+    'Topic :: Scientific/Engineering :: Bio-Informatics',
     'Topic :: Scientific/Engineering :: Information Analysis',
     'Topic :: Scientific/Engineering :: Mathematics',
     'Topic :: Scientific/Engineering :: Physics'
