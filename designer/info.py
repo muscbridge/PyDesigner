@@ -63,7 +63,7 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3.7',
     'License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)',
     'Operating System :: OS Independent',
-    'Topic :: Scientific/Engineering :: Bio-Informatics'
+    'Topic :: Scientific/Engineering :: Bio-Informatics',
     'Topic :: Scientific/Engineering :: Information Analysis',
     'Topic :: Scientific/Engineering :: Mathematics',
     'Topic :: Scientific/Engineering :: Physics'

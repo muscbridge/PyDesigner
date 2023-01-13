@@ -30,6 +30,11 @@ PyDesigner makes this easy, and you will love it!
    :target: https://pydesigner.readthedocs.io/en/latest/
    :alt: Click here to view documentation
 
+.. image:: https://img.youtube.com/vi/mChQFuQqX3k/maxresdefault.jpg
+    :width: 512pt
+    :alt: PyDesigner Walkthrough Video: Software Setup & Usage
+    :target: https://www.youtube.com/watch?v=mChQFuQqX3k
+
 Notable Features
 ================
 
