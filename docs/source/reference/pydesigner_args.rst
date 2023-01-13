@@ -65,7 +65,7 @@ with the following flags.
 
 --nofit             Performs preprocessing only, disables DTI/DKI parameter extraction
 
---noakc             Disables brute forced kurtosis tensor outlier rejection
+--akc               Performs brute forced kurtosis tensor outlier rejection
 
 --nooutliers        Disables IRLLS outlier detection
 
