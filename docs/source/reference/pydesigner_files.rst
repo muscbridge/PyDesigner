@@ -131,7 +131,7 @@ The list of ever possible output file is given in the table below.
 +-------------------------------------+----------------------------------------------------------+
 | :code:`fbi_faa.nii`                 | axonal fractional anisotropy (3d nifti)                  |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbi_odf.nii`                | FBI ODFs from spherical harmonic expansion (4d nifti)    |
+| :code:`fbi_odf.nii`                 | FBI ODFs from spherical harmonic expansion (4d nifti)    |
 +-------------------------------------+----------------------------------------------------------+
 | :code:`fbi_dsistudio.fib`           | FBI ODFs prepared for DSI Studio's tractography (fib)    |
 +-------------------------------------+----------------------------------------------------------+

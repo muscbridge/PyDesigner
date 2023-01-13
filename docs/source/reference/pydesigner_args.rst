@@ -32,7 +32,7 @@ preprocessing pipeline, to accomodate all types of datasets.
 
 --interp CHOICE     Set the interpolation to use when reslicing. Choices are linear (default), nearest, cubic, and sinc
 
--g, --degibbs       Corrects Gibb’s ringing
+-g, --degibbs       Corrects Gibbs ringing
 
 -u, --undistort     Undistorts image using a suite of EPI distortion correction, eddy current correction, and co-registration. Does not run EPI correction if reverse phase encoding DWI is absent.
 
@@ -46,7 +46,7 @@ preprocessing pipeline, to accomodate all types of datasets.
 
 -cf, --csf_fsl      Compute a CSF mask for CSF-excluded smoothing to minimize partial volume effects using FSL fit_constraints
 
--cd, --csf_adc  Compute CSF mask for CSF-excluded smoothing to minimize partial volume effects by thresholding a pseudo-ADC map computed as ln(S0/S1000)/b1000. N is the ADC thresold to use (default: 2).
+-cd, --csf_adc      Compute CSF mask for CSF-excluded smoothing to minimize partial volume effects by thresholding a pseudo-ADC map computed as ln(S0/S1000)/b1000. N is the ADC thresold to use (default: 2).
 
 -z, --smooth        Smooths DWI data at a default FWHM of 1.25
 
@@ -65,7 +65,7 @@ with the following flags.
 
 --nofit             Performs preprocessing only, disables DTI/DKI parameter extraction
 
---akc               Performs brute forced kurtosis tensor outlier rejection
+--noakc             Performs brute forced kurtosis tensor outlier rejection
 
 --nooutliers        Disables IRLLS outlier detection
 
@@ -80,7 +80,7 @@ Fiber Ball Imaging (FBI) Control
 
 FBI parameters may be fine-tuned with the following flags.
 
---l_max n   Maximum spherical harmonic degree used in spherical harmonic expansion for fODF calculation
+--l_max n     Maximum spherical harmonic degree used in spherical harmonic expansion for fODF calculation
 
 --no_rectify  Disable rectification of FBI fODFs in instances where it does more harm than good. In rare instances, fODFs computed from FBI acquisitions can be degraded from rectification - this flag disables rectification for such datasets.
 
