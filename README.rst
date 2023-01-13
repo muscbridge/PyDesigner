@@ -6,18 +6,10 @@ PyDesigner
    :target: https://hub.docker.com/r/dmri/neurodock
    :alt: Docker Pulls
 
-.. image:: https://img.shields.io/docker/cloud/automated/dmri/neurodock?style=flat-square
-   :target: https://hub.docker.com/r/dmri/neurodock/builds
-   :alt: Docker Cloud Automated build
-
-.. image:: https://img.shields.io/docker/cloud/build/dmri/neurodock?style=flat-square
-   :target: https://hub.docker.com/r/dmri/neurodock/builds
-   :alt: Docker Cloud Build Status
-
-.. image:: https://img.shields.io/github/v/release/m-ama/PyDesigner?include_prereleases&style=flat-square\
+.. image:: https://img.shields.io/github/downloads-pre/m-ama/pydesigner/latest/total?style=flat-square
    :target: https://github.com/m-ama/PyDesigner/releases/latest
    :alt: GitHub release (latest SemVer including pre-releases)
-
+   
 .. image:: https://img.shields.io/readthedocs/pydesigner?style=flat-square
    :target: https://pydesigner.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
@@ -55,14 +47,15 @@ Notable Features
 - Uses the **latest techniques** from DTI/DKI/FBI literature
 - Works with **DTI**, **DKI**, **WMTI**, **FBI**, or **FBWM** datasets
 - Supports **multi-TE** dataset processing
+- **Tractography ready:** Computes ODF spherical harmonic expansion for MRtrix3, and .fib files for DSI Studio
+
 
 We welcome all DTI/DKI researchers to evaluate this software and pass
-on their feedback or issues through the `Issues`_ page of this
-project’s GitHub repository. Additionally, you may join the `M-AMA
-Slack channel`_ for live support.
+on their feedback or issues through the `Issues`_ and `Discussion`_ page of this
+project’s GitHub repository.
 
 .. _Issues: https://github.com/m-ama/PyDesigner/issues
-.. _M-AMA Slack channel: https://m-ama.slack.com/
+.. _Discussion: https://github.com/m-ama/PyDesigner/discussions
 
 **System Requirements**
    Parallel processing in PyDesigner scales almost linearly with the

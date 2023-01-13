@@ -101,6 +101,10 @@ The list of ever possible output file is given in the table below.
 |                                     | the mean diffusivity (MD) is three times the trace       |
 |                                     | [MD 3 * trace ]                                          |
 +-------------------------------------+----------------------------------------------------------+
+| :code:`dti_fodf.nii`                | DTI ODFs from spherical harmonic expansion (4d nifti)    |
++-------------------------------------+----------------------------------------------------------+
+| :code:`dti_fodf.fib`                | DTI ODFs prepared for DSI Studio's tractography (fib)    |
++-------------------------------------+----------------------------------------------------------+
 | :code:`dki_ak.nii`                  | axial kurtosis map (3 nifti)                             |
 +-------------------------------------+----------------------------------------------------------+
 | :code:`dki_rk.nii`                  | radial kurtosis map (3d nifti)                           |
@@ -113,6 +117,10 @@ The list of ever possible output file is given in the table below.
 |                                     | mean kurtosis tensor (3d nifti); alternative calculation |
 |                                     | for mean kurtosis                                        |
 +-------------------------------------+----------------------------------------------------------+
+| :code:`dki_fodf.nii`                | DKI ODFs from spherical harmonic expansion (4d nifti)    |
++-------------------------------------+----------------------------------------------------------+
+| :code:`dki_fodf.fib`                | DKI ODFs prepared for DSI Studio's tractography (fib)    |
++-------------------------------------+----------------------------------------------------------+
 | :code:`DT.nii`                      | diffusion tensor (4d nifti; 6 three-dimensional volumes) |
 +-------------------------------------+----------------------------------------------------------+
 | :code:`KT.nii`                      | kurtosis tensor (4d nifti; 15 three dimensional volumes) |
@@ -123,9 +131,9 @@ The list of ever possible output file is given in the table below.
 +-------------------------------------+----------------------------------------------------------+
 | :code:`fbi_faa.nii`                 | axonal fractional anisotropy (3d nifti)                  |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbi_fodf.nii`                | FBI fODFs from spherical harmonic expansion (4d nifti)   |
+| :code:`fbi_fodf.nii`                | FBI ODFs from spherical harmonic expansion (4d nifti)    |
 +-------------------------------------+----------------------------------------------------------+
-| :code:`fbi_tractography_dsi.fib`    | FBI fODFs prepared for DSI Studio's tractography (fib)   |
+| :code:`fbi_fodf.fib`                | FBI ODFs prepared for DSI Studio's tractography (fib)    |
 +-------------------------------------+----------------------------------------------------------+
 | :code:`fbwm_awf.nii`                | axonal water fraction (3d nifti)                         |
 +-------------------------------------+----------------------------------------------------------+

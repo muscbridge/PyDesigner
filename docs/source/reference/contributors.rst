@@ -43,7 +43,7 @@ Contributors
    | Department of Neuroscience
    | Medical University of South Carolina
 
-.. figure:: https://cai2r.net/sites/default/files/styles/medium/public/pictures/Biosketch_Images/BenjaminAdes-aron_2016_2.jpg?itok=ZH8amlr2
+.. figure:: https://engineering.nyu.edu/sites/default/files/styles/square_large_default_1x/public/2018-12/benjaminades-aron_2016_2.jpg?h=8b4b92cc&itok=fk9rDUoH
    :width: 150px
    :align: left
    :height: 175px

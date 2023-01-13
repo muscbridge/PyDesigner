@@ -21,11 +21,11 @@ import sphinx_rtd_theme
 # -- Project information -----------------------------------------------------
 
 project = 'PyDesigner'
-copyright = '2021, MUSC Advanced MRI Analysis (MAMA)'
-author = 'Siddhartha Dhiman, Joshua Teves, Kayti Keith'
+copyright = '2023, MUSC Advanced MRI Analysis (MAMA)'
+author = 'Siddhartha Dhiman, Joshua Teves, Ryn Thorn'
 
 # The full version, including alpha/beta/rc tags
-release = 'v1.0-RC11'
+release = 'v1.0.0'
 
 
 # -- General configuration ---------------------------------------------------
