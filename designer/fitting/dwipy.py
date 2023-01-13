@@ -1173,38 +1173,6 @@ class DWI(object):
         """
         #--------------------FUNCTION SEPARATOR-----------------------
         
-        def shbasis(deg, phi, theta):
-            """
-            Computes shperical harmonic basis set for even degrees of
-            harmonics
-
-            Parameters
-            ----------
-            deg : list of ints
-                Degrees of harmonic
-            phi : array_like
-                (n, ) vector denoting polar coordinates
-            theta : array_like
-                (n, ) vector denoting azimuthal coordinates
-            
-            Returns
-            -------
-            complex array_like
-                Harmonic samples at theta and phi at specified order
-            """
-            if not any([isinstance(x, int) for x in deg]):
-                try:
-                    deg = [int(x) for x in deg]
-                except:
-                    raise TypeError('Please supply degree of '
-                    'shperical harmonic as an integer')
-            SH = []
-            for n in deg:
-                for m in range(-n, n + 1):
-                    if (n % 2) == 0:
-                        SH.append(sph_harm(m, n, theta, phi))
-            return np.array(SH, dtype=np.complex, order='F').T
-
         def fbi_rectify(fodf, sh_area, iter=1000):
             """
             Rectifies fODF values to eliminate all negative values while
@@ -1550,22 +1518,13 @@ class DWI(object):
         img = vectorize(img, self.mask)
         # Create shperical harmonic (SH) base set
         degs = np.arange(l_max + 1, dtype=int)
-        l_tot = 2*degs + 1 # total harmonics in the degree
-        l_num = 2 * degs[::2] + 1 # how many per degree (evens only)
+        l_num = 2 * degs + 1 # how many per degree (evens only)
         harmonics = []
-        sh_end = 1 # initialize the SH set for indexing
-        for h in range(0,len(degs[::2])):
-            sh_start = sh_end + l_num[h] - 1
-            sh_end = sh_start + l_num[h] - 1
-            harmonics.extend(np.arange(sh_start,sh_end+1))
-        # MRtrix does not have (-1)^m in formulas so we index where this would
-        # occur and multiply those volumes by -1
-        sh_idx = []
-        sh_start = 2
-        for h in range(1,len(degs[::2])):
-            sh_end = sh_start + l_num[h] - 2
-            sh_idx.extend(np.arange(sh_start, sh_end, 2))
-            sh_start = sh_end + 2
+        sh_end = 0 # initialize the SH set for indexing
+        for _, phase in enumerate(l_num[::2]):
+            sh_start = sh_end + phase - 1
+            sh_end = sh_start + phase - 1
+            harmonics.extend(np.arange(sh_start, sh_end + 1))
         # Define the azimuthal (phi) and polar(theta) angles for our
         # spherical expansion using the experimentally defined
         # gradients from the scanner
@@ -1575,8 +1534,12 @@ class DWI(object):
         spherical_grid, idx, idx8, AREA, faces, separation_angle = sphericalsampling.odfgrid(res)
         S1 = spherical_grid[:,0] # phi
         S2 = spherical_grid[:,1] # theta
-        B = shbasis(degs, phi, theta)
-        H = shbasis(degs, S1, S2)
+        # B = shbasis(degs, phi, theta)
+        # H = shbasis(degs, S1, S2)
+        B = odf.shbasis(degs, phi, theta, method='tournier')
+        B = B[:, harmonics]
+        H = odf.shbasis(degs, S1, S2, method='tournier')
+        H = H[:, harmonics]
         idx_Y = 0
         Pl0 = np.zeros((len(harmonics), 1), order ='F') # need Legendre polynomial Pl0
         gl = np.zeros((len(harmonics), 1), order ='F') # calculate correction factor (see original FBI paper, Jensen 2016)
@@ -1600,8 +1563,10 @@ class DWI(object):
             phi2 = np.arccos(self.grad[bval == 2, 2])
             theta2 =  np.arctan2(self.grad[bval == 2, 1], self.grad[bval == 2,0])
             # SH basis set for the two B-values in DKI
-            fbwm_SH1 = shbasis(degs,phi1,theta1)
-            fbwm_SH2 = shbasis(degs,phi2,theta2)
+            fbwm_SH1 = odf.shbasis(degs,phi1,theta1, method='tournier')
+            fbwm_SH2 = odf.shbasis(degs,phi2,theta2,method='tournier')
+            fbwm_SH1 = fbwm_SH1[:, harmonics]
+            fbwm_SH2 = fbwm_SH2[:, harmonics]
             dt, kt = self.tensorReorder('dki')
             dt = vectorize(dt, self.mask)
             # for i in inputs:
@@ -1669,7 +1634,6 @@ class DWI(object):
         zeta = vectorize(np.array(zeta), self.mask)
         faa = vectorize(np.array(faa), self.mask)
         fodf = vectorize(np.array(fodf).T, self.mask)
-        fodf[:,:,:,sh_idx] = -fodf[:,:,:,sh_idx]
         awf = vectorize(np.array(min_awf), self.mask)
         Da = vectorize(np.array(Da), self.mask)
         De_mean = vectorize(np.array(De_mean), self.mask)
