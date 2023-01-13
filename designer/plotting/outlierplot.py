@@ -5,8 +5,7 @@ import nibabel as nib
 import os.path as op
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter
-from matplotlib.collections import LineCollection
+from matplotlib.ticker import AutoMinorLocator
 
 def plot(input, output, bval=None, mask=None):
     """

@@ -5,7 +5,7 @@ import nibabel as nib
 import os.path as op
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.interpolate import make_interp_spline, BSpline
+from scipy.interpolate import make_interp_spline
 
 minZero = 1e-8
 np.seterr(all='ignore')
