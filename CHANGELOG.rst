@@ -4,6 +4,32 @@ Changelog
 All notable changes to this project will be documented in this file or
 page
 
+`v1.0.0`_
+------------
+
+Jul 8, 2022
+
+**Added**
+
+* Tractography modules `tractography.dsistudio`, `tractography.odf`,
+  `tractography.sphericalsampling`
+* ODF computations and spherical harmonic expansion for DTI and DKI
+* Option to add user-defined map for tractography stopping criteria
+* Added option to import multiple custom maps into DSI studio file
+
+**Changed**
+
+* Fixed a logic in multi-TE detection algorithm that prevented certain
+  datasets from processing
+* Overhauled how inputs paths are entered. Paths to input DWIs can now
+  be provided to PyDesigner without comma separation
+* Udpate `des2dke.m` for compatibility with nii_preprocess
+* Replaced FBI SH with tesseral SH
+
+**Removed**
+
+* None
+
 `v1.0-RC12`_
 ------------
 
@@ -416,6 +442,7 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
+.. _v1.0.0: https://github.com/m-ama/PyDesigner/releases/tag/v1.0.0
 .. _v1.0-RC12: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC12
 .. _v1.0-RC11: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC11
 .. _v1.0-RC10: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC10

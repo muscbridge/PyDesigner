@@ -17,6 +17,8 @@ from . import dwidirs
 from . import thresholds as th
 from . import dwi_fnames
 from designer.plotting import outlierplot
+from designer.tractography import odf, sphericalsampling, dsistudio
+from designer.system.utils import vectorize, writeNii, highprecisionexp, highprecisionpower
 
 # Define the lowest number possible before it is considered a zero
 minZero = th.__minZero__
@@ -1116,7 +1118,7 @@ class DWI(object):
             vols = (l_max + 1) * (l_max/2 + 1)
         return l_max - 2
 
-    def fbi(self, l_max=6, fbwm=True, rectify=True):
+    def fbi(self, l_max=6, fbwm=True, rectify=True, res='med'):
         """
         Perform fiber ball imaging (FBI) and FBI white matter model
         (FBWM) analyses
@@ -1133,6 +1135,15 @@ class DWI(object):
         rectify : bool
             Perform fODF rectification if True
             (Default: True)
+        res : str
+            Resolution of spherical sampling distribution (Default: 'med')
+            'low' defines the spherical grid defined by 3 fold quadrisection of the
+            isocahedron, or 8 fold tesselation of icosahedron.
+            'med' defines the spherical grid defined by 4 fold quadrisection of the
+            isocahedron, or 16 fold tesselation of icosahedron.
+            'high' defines the spherical grid defined by 5 fold quadrisection of the
+            isocahedron, or 24 fold tesselation of icosahedron.
+            Default: "med"
 
         Returns
         -------
@@ -1159,42 +1170,9 @@ class DWI(object):
             min_cost_fn)
         min_cost_fn : array_like(dtype=float)
             Cost function
-        
         """
         #--------------------FUNCTION SEPARATOR-----------------------
         
-        def shbasis(deg, theta, phi):
-            """
-            Computes shperical harmonic basis set for even degrees of
-            harmonics
-
-            Parameters
-            ----------
-            deg : list of ints
-                Degrees of harmonic
-            theta : array_like
-                (n, ) vector denoting azimuthal coordinates
-            phi : array_like
-                (n, ) vector denoting polar coordinates
-            
-            Returns
-            -------
-            complex array_like
-                Harmonic samples at theta and phi at specified order
-            """
-            if not any([isinstance(x, int) for x in deg]):
-                try:
-                    deg = [int(x) for x in deg]
-                except:
-                    raise TypeError('Please supply degree of '
-                    'shperical harmonic as an integer')
-            SH = []
-            for n in deg:
-                for m in range(-n, n + 1):
-                    if (n % 2) == 0:
-                        SH.append(sph_harm(m, n, phi, theta))
-            return np.array(SH, dtype=np.complex, order='F').T
-
         def fbi_rectify(fodf, sh_area, iter=1000):
             """
             Rectifies fODF values to eliminate all negative values while
@@ -1384,7 +1362,7 @@ class DWI(object):
             # only the real part would be read out but that would need to be done later on after the rectification process below
             ODF = np.matmul(H,clm)
             if rectify:
-                ODF = fbi_rectify(ODF.real, sh_area, iter=1000)
+                ODF = fbi_rectify(ODF.real, sh_area, iter=100)
                 # Re-expand the rectified fODF into SH's
                 clm = np.matmul(sh_area*ODF,np.conj(H))
             clm = (clm/clm[0])*(1/np.sqrt(4*np.pi)) # normalize clm
@@ -1540,26 +1518,28 @@ class DWI(object):
         img = vectorize(img, self.mask)
         # Create shperical harmonic (SH) base set
         degs = np.arange(l_max + 1, dtype=int)
-        l_tot = 2*degs + 1 # total harmonics in the degree
-        l_num = 2 * degs[::2] + 1 # how many per degree (evens only)
+        l_num = 2 * degs + 1 # how many per degree (evens only)
         harmonics = []
-        sh_end = 1 # initialize the SH set for indexing
-        for h in range(0,len(degs[::2])):
-            sh_start = sh_end + l_num[h] - 1
-            sh_end = sh_start + l_num[h] - 1
-            harmonics.extend(np.arange(sh_start,sh_end+1))
+        sh_end = 0 # initialize the SH set for indexing
+        for _, phase in enumerate(l_num[::2]):
+            sh_start = sh_end + phase - 1
+            sh_end = sh_start + phase - 1
+            harmonics.extend(np.arange(sh_start, sh_end + 1))
         # Define the azimuthal (phi) and polar(theta) angles for our
         # spherical expansion using the experimentally defined
         # gradients from the scanner
-        theta = np.arccos(self.grad[self.idxfbi(), 2])
-        phi = np.arctan2(self.grad[self.idxfbi() ,1], self.grad[self.idxfbi() ,0])
+        phi = np.arccos(self.grad[self.idxfbi(), 2])
+        theta = np.arctan2(self.grad[self.idxfbi() ,1], self.grad[self.idxfbi() ,0])
         # gradients for resampling from distribution
-        spherical_grid = dwidirs.sh_grid # this is only HALF-SPHERE
-        S1 = spherical_grid[:,0] # theta, i think
-        S2 = spherical_grid[:,1] # phi, i think
-        AREA = spherical_grid[:,2] # need the area since it is impossible to get exact isotropic (uniform) sampling
-        B = shbasis(degs, theta, phi)
-        H = shbasis(degs, S1, S2)
+        spherical_grid, idx, idx8, AREA, faces, separation_angle = sphericalsampling.odfgrid(res)
+        S1 = spherical_grid[:,0] # phi
+        S2 = spherical_grid[:,1] # theta
+        # B = shbasis(degs, phi, theta)
+        # H = shbasis(degs, S1, S2)
+        B = odf.shbasis(degs, phi, theta, method='tournier')
+        B = B[:, harmonics]
+        H = odf.shbasis(degs, S1, S2, method='tournier')
+        H = H[:, harmonics]
         idx_Y = 0
         Pl0 = np.zeros((len(harmonics), 1), order ='F') # need Legendre polynomial Pl0
         gl = np.zeros((len(harmonics), 1), order ='F') # calculate correction factor (see original FBI paper, Jensen 2016)
@@ -1577,14 +1557,16 @@ class DWI(object):
         if fbwm:
             # Index gradients based on b1000 and b2000 shells
             bval = np.rint(self.grad[:, -1])
-            theta1 = np.arccos(self.grad[bval == 1, 2])
-            phi1 =  np.arctan2(self.grad[bval == 1, 1],self.grad[bval == 1,0])
+            phi1 = np.arccos(self.grad[bval == 1, 2])
+            theta1 =  np.arctan2(self.grad[bval == 1, 1],self.grad[bval == 1,0])
 
-            theta2 = np.arccos(self.grad[bval == 2, 2])
-            phi2 =  np.arctan2(self.grad[bval == 2, 1], self.grad[bval == 2,0])
+            phi2 = np.arccos(self.grad[bval == 2, 2])
+            theta2 =  np.arctan2(self.grad[bval == 2, 1], self.grad[bval == 2,0])
             # SH basis set for the two B-values in DKI
-            fbwm_SH1 = shbasis(degs,theta1,phi1)
-            fbwm_SH2 = shbasis(degs,theta2,phi2)
+            fbwm_SH1 = odf.shbasis(degs,phi1,theta1, method='tournier')
+            fbwm_SH2 = odf.shbasis(degs,phi2,theta2,method='tournier')
+            fbwm_SH1 = fbwm_SH1[:, harmonics]
+            fbwm_SH2 = fbwm_SH2[:, harmonics]
             dt, kt = self.tensorReorder('dki')
             dt = vectorize(dt, self.mask)
             # for i in inputs:
@@ -1648,6 +1630,7 @@ class DWI(object):
                     rectify=rectify,
                     sh_area=AREA
                 ) for i in inputs))
+        
         zeta = vectorize(np.array(zeta), self.mask)
         faa = vectorize(np.array(faa), self.mask)
         fodf = vectorize(np.array(fodf).T, self.mask)
@@ -1965,7 +1948,7 @@ class DWI(object):
             n = sumViols/dirSample
         elif c[0] == 1 and c[1] == 1 and c[2] == 0:
             # [1 1 0]
-            n = sumVioms/(2 * dirSample)
+            n = sumViols/(2 * dirSample)
         elif c[0] == 1 and c[1] == 0 and c[2] == 1:
             # [1 0 1]
             n = sumViols/(2 * dirSample)
@@ -2650,6 +2633,8 @@ def fit_regime(input, output,
                 fit_constraints=[0,1,0],
                 l_max=None,
                 rectify=True,
+                res='med',
+                n_fibers=5,
                 mask=None,
                 nthreads=None):
     """
@@ -2714,6 +2699,7 @@ def fit_regime(input, output,
     fname_fbi = {}
     fname_tensor = {} 
     fname_outliers = {}
+    fname_tractography = {}
     for key, value in dwi_fnames._dti_.items():
         fname_dti[key] = prefix + value + suffix + ext
     for key, value in dwi_fnames._dki_.items():
@@ -2726,6 +2712,8 @@ def fit_regime(input, output,
         fname_tensor[key] = prefix + value + suffix + ext
     for key, value in dwi_fnames._outliers_.items():
         fname_outliers[key] = prefix + value + suffix + ext
+    for key, value in dwi_fnames._tractography_.items():
+        fname_tractography[key] = prefix + value + suffix + '.fib'
     if irlls:
         if img.isdki():
             outliers, dt_est = img.irlls(mode='DKI', excludeb0=True)
@@ -2787,8 +2775,30 @@ def fit_regime(input, output,
         writeNii(fa, img.hdr, op.join(output, fname_dti['fa']))
         writeNii(fe, img.hdr, op.join(output, fname_dti['fe']))
         writeNii(trace, img.hdr, op.join(output, fname_dti['trace']))
+        dtimodel = odf.odfmodel(
+            dt = op.join(output, fname_tensor['DT']),
+            mask=mask,
+            l_max=2,
+            res=res
+        )
+        dti_odfs = dtimodel.dtiodf()
+        dti_sh = dtimodel.odf2sh(dti_odfs)
+        dtimodel.savenii(dti_sh, op.join(output, fname_dti['odf']))
+        dsistudio.makefib(
+            input=op.join(output, fname_dti['odf']),
+            output=op.join(output, fname_tractography['dti']),
+            map=op.join(output, fname_dti['fa']),
+            mask=mask,
+            n_fibers=n_fibers,
+            scale=0.5,
+            other_maps = [
+                op.join(output, fname_dti['md']),
+                op.join(output, fname_dti['rd']),
+                op.join(output, fname_dti['ad']),
+            ]
+        )
     if img.isdki():
-    # DKI Parameters 
+        # DKI Parameters 
         mk, rk, ak, kfa, mkt, trace = img.extractDKI()
         writeNii(mk, img.hdr, op.join(output, fname_dki['mk']))
         writeNii(rk, img.hdr, op.join(output, fname_dki['rk']))
@@ -2796,13 +2806,45 @@ def fit_regime(input, output,
         writeNii(kfa, img.hdr, op.join(output, fname_dki['kfa']))
         writeNii(mkt, img.hdr, op.join(output, fname_dki['mkt']))
         writeNii(trace, img.hdr, op.join(output, fname_dki['trace']))
-    # WMTI Parameters
+        # WMTI Parameters
         awf, eas_ad, eas_rd, eas_tort, ias_da = img.extractWMTI()
         writeNii(awf, img.hdr, op.join(output, fname_wmti['awf']))
         writeNii(eas_ad, img.hdr, op.join(output, fname_wmti['eas_ad']))
         writeNii(eas_rd, img.hdr, op.join(output, fname_wmti['eas_rd']))
         writeNii(eas_tort, img.hdr, op.join(output, fname_wmti['eas_tort']))
         writeNii(ias_da, img.hdr, op.join(output, fname_wmti['ias_da']))
+        dkimodel = odf.odfmodel(
+            dt = op.join(output, fname_tensor['DT']),
+            kt = op.join(output, fname_tensor['KT']),
+            mask=mask,
+            l_max=6,
+            res=res
+        )
+        dki_odfs = dkimodel.dkiodf(fa_t=0.90)
+        dki_sh = dkimodel.odf2sh(dki_odfs)
+        dkimodel.savenii(dki_sh, op.join(output, fname_dki['odf']))
+        dsistudio.makefib(
+            input=op.join(output, fname_dki['odf']),
+            output=op.join(output, fname_tractography['dki']),
+            map=op.join(output, fname_dti['fa']),
+            mask=mask,
+            n_fibers=n_fibers,
+            scale=0.5,
+            other_maps = [
+                op.join(output, fname_dti['md']),
+                op.join(output, fname_dti['rd']),
+                op.join(output, fname_dti['ad']),
+                op.join(output, fname_dki['mk']),
+                op.join(output, fname_dki['rk']),
+                op.join(output, fname_dki['ak']),
+                op.join(output, fname_dki['kfa']),
+                op.join(output, fname_wmti['awf']),
+                op.join(output, fname_wmti['eas_ad']),
+                op.join(output, fname_wmti['eas_rd']),
+                op.join(output, fname_wmti['eas_tort']),
+                op.join(output, fname_wmti['ias_da']),
+            ]
+        )
     if img.isfbi():
         if img.isfbwm():
             zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, \
@@ -2810,7 +2852,7 @@ def fit_regime(input, output,
                     img.fbi(l_max=l_max, fbwm=True, rectify=rectify)
             writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
             writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
-            writeNii(sph, img.hdr, op.join(output, fname_fbi['sph']))
+            writeNii(np.real(sph), img.hdr, op.join(output, fname_fbi['odf']))
             writeNii(min_awf, img.hdr, op.join(output, fname_fbi['awf']))
             writeNii(Da, img.hdr, op.join(output, fname_fbi['Da']))
             writeNii(De_mean, img.hdr, op.join(output, fname_fbi['De_mean']))
@@ -2819,192 +2861,50 @@ def fit_regime(input, output,
             writeNii(De_fa, img.hdr, op.join(output, fname_fbi['fae']))
             writeNii(min_cost, img.hdr, op.join(output, fname_fbi['min_cost']))
             writeNii(min_cost_fn, img.hdr, op.join(output, fname_fbi['min_cost_fn']))
+            dsistudio.makefib(
+                input=op.join(output, fname_fbi['odf']),
+                output=op.join(output, fname_tractography['fbi']),
+                map=op.join(output, fname_fbi['faa']),
+                mask=mask,
+                n_fibers=n_fibers,
+                scale=1,
+            other_maps = [
+                op.join(output, fname_dti['md']),
+                op.join(output, fname_dti['rd']),
+                op.join(output, fname_dti['ad']),
+                op.join(output, fname_dki['mk']),
+                op.join(output, fname_dki['rk']),
+                op.join(output, fname_dki['ak']),
+                op.join(output, fname_dki['kfa']),
+                op.join(output, fname_wmti['awf']),
+                op.join(output, fname_wmti['eas_ad']),
+                op.join(output, fname_wmti['eas_rd']),
+                op.join(output, fname_wmti['eas_tort']),
+                op.join(output, fname_wmti['ias_da']),
+                op.join(output, fname_fbi['zeta']),
+                op.join(output, fname_fbi['awf']),
+                op.join(output, fname_fbi['Da']),
+                op.join(output, fname_fbi['De_mean']),
+                op.join(output, fname_fbi['De_ax']),
+                op.join(output, fname_fbi['De_rad']),
+                op.join(output, fname_fbi['fae']),
+            ]
+            )
         else:
             zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, \
                 De_fa, min_cost, min_cost_fn = \
                     img.fbi(l_max=l_max, fbwm=False, rectify=rectify)
             writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
             writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
-            writeNii(sph, img.hdr, op.join(output, fname_fbi['sph']))
-
-def vectorize(img, mask):
-    """
-    Returns vectorized image based on brain mask, requires no input
-    parameters
-    If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
-    If the input is 3D or 4D, vectorize it using a mask
-    Classification: Function
-
-    Parameters
-    ----------
-    img : ndarray
-        1D, 2D, 3D or 4D image array to vectorize
-    mask : ndarray
-        3D image array for masking
-
-    Returns
-    -------
-    vec : N X number_of_voxels vector or array, where N is the number
-        of DWI volumes
-
-    Examples
-    --------
-    vec = vectorize(img) if there's no mask
-    vec = vectorize(img, mask) if there's a mask
-    """
-    if mask is None:
-        mask = np.ones((img.shape[0],
-                        img.shape[1],
-                        img.shape[2]),
-                       order='F')
-    mask = mask.astype(bool)
-    if img.ndim == 1:
-        n = img.shape[0]
-        s = np.zeros((mask.shape[0],
-                      mask.shape[1],
-                      mask.shape[2]),
-                     order='F')
-        s[mask] = img
-    if img.ndim == 2:
-        n = img.shape[0]
-        s = np.zeros((mask.shape[0],
-                      mask.shape[1],
-                      mask.shape[2], n),
-                     order='F')
-        for i in range(0, n):
-            s[mask, i] = img[i,:]
-    if img.ndim == 3:
-        maskind = np.ma.array(img, mask=np.logical_not(mask))
-        s = np.ma.compressed(maskind)
-    if img.ndim == 4:
-        s = np.zeros((img.shape[-1], np.sum(mask).astype(int)), order='F')
-        for i in range(0, img.shape[-1]):
-            tmp = img[:,:,:,i]
-            # Compressed returns non-masked area, so invert the mask first
-            maskind = np.ma.array(tmp, mask=np.logical_not(mask))
-            s[i,:] = np.ma.compressed(maskind)
-    return np.squeeze(s)
-
-def writeNii(map, hdr, outDir, range=None):
-    """
-    Write clipped NifTi images
-
-    Parameters
-    ----------
-    map : ndarray(dtype=float)
-        3D array to write
-    header : class
-        Nibabel class header file containing NifTi properties
-    outDir : str
-        Output file name
-    range : array_like
-        [1 x 2] vector specifying range to clip, inclusive of value
-        in range, e.g. range = [0, 1] for FA map
-
-    Returns
-    -------
-    None; writes out file
-
-    Examples
-    --------
-    writeNii(matrix, header, output_directory, [0, 2])
-
-    See Also
-    clipImage(img, range) : this function is wrapped around
-    """
-    if range == None:
-        clipped_img = nib.Nifti1Image(map, hdr.affine, hdr.header)
-    else:
-        clipped_img = clipImage(map, range)
-        clipped_img = nib.Nifti1Image(clipped_img, hdr.affine, hdr.header)
-    nib.save(clipped_img, outDir)
-
-def clipImage(img, range):
-    """
-    Clips input matrix within desired range. Min and max values are
-    inclusive of range
-    Classification: Function
-
-    Parameters
-    ----------
-    img : ndarray(dtype=float)
-        Input 3D image array
-    range : array_like
-        [1 x 2] vector specifying range to clip
-
-    Returns
-    -------
-    clippedImage:   clipped image; same size as img
-
-    Examples
-    --------
-    clippedImage = clipImage(image, [0 3])
-    Clips input matrix in the range 0 to 3
-    """
-    img[img > range[1]] = range[1]
-    img[img < range[0]] = range[0]
-    return img
-
-def highprecisionexp(array, maxp=1e32):
-    """
-    Prevents overflow warning with numpy.exp by assigning overflows
-    to a maxumum precision value
-    Classification: Function
-
-    Parameters
-    ----------
-    array : ndarray
-        Array or scalar of number to run np.exp on
-    maxp : float, optional
-        Maximum preicison to assign if overflow (Default: 1e32)
-
-    Returns
-    -------
-    exponent or max-precision
-
-    Examples
-    --------
-    a = highprecisionexp(array)
-    """
-    np.seterr(all='ignore')
-    defaultErrorState = np.geterr()
-    np.seterr(over='raise', invalid='raise')
-    try:
-        ans = np.exp(array)
-    except:
-        ans = np.full(array.shape, maxp)
-    np.seterr(**defaultErrorState)
-    return ans
-
-def highprecisionpower(x1, x2, maxp=1e32):
-    """
-    Prevents overflow warning with numpy.powerr by assigning overflows
-    to a maxumum precision value
-    Classification: Function
-
-    Parameters
-    ----------
-    x1 : array_like
-        The bases
-    x2 : array_like
-        The exponents
-    maxp : float, optional
-        Maximum preicison to assign if overflow (Default: 1e32)
-
-    Returns
-    -------
-    x1 raised to x2 power, or max precision defined by maxp
-
-    Examples
-    --------
-    a = highprecisionexp(array)
-    """
-    np.seterr(all='ignore')
-    defaultErrorState = np.geterr()
-    np.seterr(over='raise', invalid='raise')
-    try:
-        ans = np.power(x1, x2)
-    except:
-        ans = np.full(x1.shape, maxp)
-    np.seterr(**defaultErrorState)
-    return ans
+            writeNii(sph, img.hdr, op.join(output, fname_fbi['odf']))
+            dsistudio.makefib(
+                input=op.join(output, fname_fbi['odf']),
+                output=op.join(output, fname_tractography['fbi']),
+                map=op.join(output, fname_fbi['faa']),
+                mask=mask,
+                n_fibers=n_fibers,
+                scale=1,
+                other_maps = [
+                    op.join(output, fname_fbi['zeta'])
+                ]
+        )

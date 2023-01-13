@@ -32,7 +32,7 @@ fprintf('\tA:...loaded image\n');
 bval = load(bval_Path);
 fprintf('\tC:...loaded BVAL\n');
 bvec = load(bvec_Path);
-bval = ceil(bval);
+bval = round(bval, 1);
 fprintf('\tD:...loaded BVEC\n');
 
 %% Form Indexes
@@ -84,13 +84,11 @@ hdr.ImageSize = size(dwi);
 fprintf('\tA:...writing image\n');
 niftiwrite(dwi,dwi_Path,hdr);
 
-
 fprintf('\tB:...writing BVAL\n');
 dlmwrite(bval_Path,bval,',');
 fprintf('\tC:...writing BVAL\n');
 dlmwrite(bvec_Path,bvec,',');
 b1_idx_new = find(bval == 1000); %indices have changed, update
-
 
 [p,~,~] = fileparts(bvec_Path);
 Gradient1 = bvec';
@@ -127,6 +125,8 @@ fidout=fopen(fout,'w');
 while(~feof(fid))
     s=fgetl(fid);
     s=strrep(s,'dir-sub-changeme',dke_Path); %s=strrep(s,'A201', subject_list{i}) replace subject
+    s=strrep(s,'dir-trk-changeme',mask_Path); %s=strrep(s,'A201', subject_list{i}) replace subject
+    s=strrep(s,'dir-seed-changeme',mask_Path); %s=strrep(s,'A201', subject_list{i}) replace subject
     fprintf(fidout,'%s\n',s);
 end
 fclose(fid);

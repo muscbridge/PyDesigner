@@ -17,13 +17,13 @@ subject_list = {''};         %Specify subject numbers (i.e. {'Subject01','Subjec
     
 %Tractography
 
-    tractography_flg = 1;      %Perform tractography (1) or don't perform tractography (0).
+    tractography_flg = 0;      %Perform tractography (1) or don't perform tractography (0).
     fa_threshold = 0.1;        %FA threshold.
     angle_threshold = 35;      %Angle threshold in degrees.
     trk_length = 20;           %Minimum tract length in mm.
     step_size = 1;             %Step size in mm (0 defaults to half of the voxel length).
-    trk_mask = '';             %Path to tracking mask to apply in addition to other tract termination criteria defined above. Should be in the same orientation as the fa.nii image.
-    seed_mask = '';            %Mask within which to put seeds. Should be in the same orientation as the fa.nii image
+    trk_mask = 'dir-trk-changeme';             %Path to tracking mask to apply in addition to other tract termination criteria defined above. Should be in the same orientation as the fa.nii image.
+    seed_mask = 'dir-seed-changeme';            %Mask within which to put seeds. Should be in the same orientation as the fa.nii image
     seednum = 1E5;             %Number of random seed points in the tracking mask. 
     shift = 0.5;               %Shift applied to voxel coordinates in .trk file.
     output_DTI_trks = 1;       %Include tractography performed from just the diffusion tensor (1) or don't (0).

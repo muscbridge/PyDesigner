@@ -7,7 +7,8 @@ _dti_ = {
     'ad': 'dti_ad',
     'fa': 'dti_fa',
     'fe': 'dti_fe',
-    'trace': 'dti_trace'
+    'trace': 'dti_trace',
+    'odf': 'dti_odf'
 }
 
 _dki_ = {
@@ -16,7 +17,8 @@ _dki_ = {
     'ak': 'dki_ak',
     'kfa': 'dki_kfa',
     'mkt': 'dki_mkt',
-    'trace': 'dki_trace'
+    'trace': 'dki_trace',
+    'odf': 'dki_odf'
 }
 
 _wmti_ = {
@@ -30,8 +32,7 @@ _wmti_ = {
 _fbi_ = {
     'zeta': 'fbi_zeta',
     'faa': 'fbi_faa',
-    'sph': 'fbi_fodf',
-    'tract': 'fbi_tractography_dsi',
+    'odf': 'fbi_odf',
     'awf': 'fbwm_awf',
     'Da': 'fbwm_da',
     'De_mean': 'fbwm_de_mean',
@@ -50,4 +51,10 @@ _tensor_ = {
 _outliers_ = {
     'IRLLS': 'outliers_irlls',
     'AKC': 'outliers_akc'
+}
+
+_tractography_ = {
+    'dti': 'dti_dsistudio',
+    'dki': 'dki_dsistudio',
+    'fbi': 'fbi_dsistudio'
 }

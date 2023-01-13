@@ -13,3 +13,5 @@ Submodules
    :maxdepth: 4
 
    designer.tractography.dsistudio
+   designer.tractography.odf
+   designer.tractography.sphericalsampling
