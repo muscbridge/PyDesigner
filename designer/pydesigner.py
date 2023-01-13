@@ -153,8 +153,10 @@ def main():
                         '(requires --denoise to generate a noisemap).')
     parser.add_argument('--nofit', action='store_true', default=False,
                         help='Do not fit DTI or DKI tensors.')
-    parser.add_argument('--noakc', action='store_true', default=False,
-                        help='Do not brute force K tensor outlier rejection.')
+    parser.add_argument('--akc', action='store_true', default=False,
+                        help='Brute force K tensor outlier rejection. Applies '
+                        'a median filter to tensor voxels that exhibit AKC '
+                        'values of less than 2 and more than 10.')
     parser.add_argument('--nooutliers', action='store_true', default=False,
                         help='Do not perform outlier correction on kurtosis '
                         'fitting metrics.')
@@ -322,7 +324,7 @@ def main():
     # Can't do WMTI if no fit
     if args.nofit:
         stdmsg='--nofit given but '
-        if args.noakc:
+        if not args.akc:
             warningmsg+=msgstart+stdmsg+'--noakc'+override+'tensor fitting.\n'
             args.nofit = False
         if args.nooutliers:
@@ -949,7 +951,7 @@ def main():
                     suffix=None,
                     ext=ext,
                     irlls=not args.nooutliers,
-                    akc=not args.noakc,
+                    akc=args.akc,
                     l_max=args.l_max,
                     res=args.t_res,
                     n_fibers=args.t_fibers,
@@ -967,7 +969,7 @@ def main():
                 suffix=None,
                 ext=ext,
                 irlls=not args.nooutliers,
-                akc=not args.noakc,
+                akc=args.akc,
                 l_max=args.l_max,
                 rectify = fbi_rectify,
                 res=args.t_res,
