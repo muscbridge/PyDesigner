@@ -77,6 +77,20 @@ project’s GitHub repository.
    - 12 GB free storage
    - Nvidia CUDA-enabled GPU
 
+PyDesigner in Container
+=======================
+PyDesigner can run on all major platforms (x86, x64, and ARM) via Docker container technology. The containerized
+form of PyDesigner is called `NeuroDock`_ and comes preloaded with PyDesigner, FSL, and MRtrix3.
+
+Obtaining the `FSL`_ software typically requires `registration`_. Therefore, we requeust users of NeuroDock who have
+not previously registered as a user of the FSL software complete the registration process. This allows developers
+of FSL to be recognized for the utilization of their software.
+
+.. _NeuroDock: https://hub.docker.com/repository/docker/dmri/neurodock/general
+.. _FSL: https://www.fmrib.ox.ac.uk/fsl
+.. _registration: https://fsl.fmrib.ox.ac.uk/fsldownloads_registration
+
+
 Cite PyDesigner
 ===============
 Please include the following citation if you used PyDesigner in your
