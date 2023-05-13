@@ -11,7 +11,7 @@ import pprint #pprint
 import numpy as np
 import math
 import warnings
-from designer.preprocessing import mrinfoutil
+from pydesigner.preprocessing import mrinfoutil
 
 def find_valid_ext(pathname):
     """

@@ -13,9 +13,9 @@ import numpy as np
 import nibabel as nib
 from scipy.special import sph_harm
 from dipy.core.geometry import sphere2cart
-from designer.system.utils import vectorize, writeNii
-from designer.tractography import sphericalsampling
-from designer.fitting.thresholds import __minZero__
+from pydesigner.system.utils import vectorize, writeNii
+from pydesigner.tractography import sphericalsampling
+from pydesigner.fitting.thresholds import __minZero__
 from tqdm import tqdm
 
 class odfmodel():

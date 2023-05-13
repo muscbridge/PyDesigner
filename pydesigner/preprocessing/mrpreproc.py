@@ -10,7 +10,7 @@ import os.path as op
 from shutil import copyfile, which
 import subprocess
 import numpy as np
-from designer.preprocessing import preparation, util, smoothing, rician, mrinfoutil
+from pydesigner.preprocessing import preparation, util, smoothing, rician, mrinfoutil
 
 def miftonii(input, output, nthreads=None,
              force=True, verbose=False):

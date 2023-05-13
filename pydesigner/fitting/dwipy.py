@@ -16,9 +16,9 @@ from tqdm import tqdm
 from . import dwidirs
 from . import thresholds as th
 from . import dwi_fnames
-from designer.plotting import outlierplot
-from designer.tractography import odf, sphericalsampling, dsistudio
-from designer.system.utils import vectorize, writeNii, highprecisionexp, highprecisionpower
+from pydesigner.plotting import outlierplot
+from pydesigner.tractography import odf, sphericalsampling, dsistudio
+from pydesigner.system.utils import vectorize, writeNii, highprecisionexp, highprecisionpower
 
 # Define the lowest number possible before it is considered a zero
 minZero = th.__minZero__
