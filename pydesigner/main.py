@@ -16,11 +16,11 @@ import argparse # ArgumentParser, add_argument
 import textwrap # dedent
 import json
 import numpy as np # array, ndarray
-from designer.info import __version__
-from designer.preprocessing import util, mrinfoutil, mrpreproc
-from designer.plotting import snrplot, motionplot
-from designer.fitting import dwipy as dp
-from designer.postprocessing import filters
+from pydesigner.info import __version__
+from pydesigner.preprocessing import util, mrinfoutil, mrpreproc
+from pydesigner.plotting import snrplot, motionplot
+from pydesigner.fitting import dwipy as dp
+from pydesigner.postprocessing import filters
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
 

@@ -1,5 +1,5 @@
 from setuptools import setup, find_packages
-from designer.info import (
+from pydesigner.info import (
     __packagename__,
     __version__,
     __author__,

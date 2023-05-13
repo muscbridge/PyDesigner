@@ -13,7 +13,7 @@ from enum import Enum
 import nibabel as nib # various utilities for reading Nifti images
 import subprocess
 import re # regex substitution
-from designer.preprocessing import util # preprocessing
+from pydesigner.preprocessing import util # preprocessing
 DWIFile = util.DWIFile
 
 def fix_bval(bvalfile):

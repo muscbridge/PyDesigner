@@ -20,7 +20,7 @@ from dipy.core.geometry import cart2sphere
 from dipy.core.sphere import HemiSphere
 from dipy.direction import peak_directions, gfa
 from scipy.io.matlab import loadmat, savemat
-from designer.tractography import sphericalsampling
+from pydesigner.tractography import sphericalsampling
 from tqdm import tqdm
 ODF_COLS = 20000  # Number of columns in DSI Studio odf split
 tqdmWidth = 70
