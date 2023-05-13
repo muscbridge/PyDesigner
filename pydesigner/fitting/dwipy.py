@@ -134,11 +134,11 @@ class DWI(object):
             self.workers = nthreads
         if self.workers == -1:
             tqdm.write('Processing with ' +
-                       np.str(multiprocessing.cpu_count()) +
+                       str(multiprocessing.cpu_count()) +
                        ' workers...')
         else:
             tqdm.write('Processing with ' +
-                       np.str(self.workers) +
+                       str(self.workers) +
                        ' workers...')
 
     def getBvals(self):
