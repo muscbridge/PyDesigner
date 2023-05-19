@@ -3,34 +3,40 @@
 
 import nibabel as nib
 import os.path as op
+from typing import Union
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator
 
-def plot(input, output, bval=None, mask=None):
+def plot(
+        input: str,
+        output: str,
+        bval: Union[str, None] = None,
+        mask: Union[str, None] = None
+) -> None:
     """
     Plots and saves the number of outliers in input 4D irlls output
-    file as a PNG file
+    file as a PNG file.
 
     Parameters
     ----------
-    input :  ndarry(dtype=float)
-        List of 4D DWI (nifti-format) paths to evaluate and plot
-    output : str
-        Output path of plot in .png format
-    bval : str
-        Path to relevant .bval file
-    mask : str
-        Path to brain mask in nifti format
+    input:  ndarry(dtype=float)
+        List of 4D DWI (nifti-format) paths to evaluate and plot.
+    output: str
+        Output path of plot in .png format.
+    bval: str
+        Path to relevant .bval file.
+    mask: str
+        Path to brain mask in nifti format.
 
     Returns
     -------
-    None; writes out plot to file
+    None; writes out plot to file.
 
     See Also
     --------
-    motionplot : plots subject motion from eddy_qc output file
-    snrplot : plots DWI's SNR  
+    motionplot: plots subject motion from eddy_qc output file.
+    snrplot : plots DWI's SNR.
     """
     print('Plotting outliers...')
     if not op.exists(input):

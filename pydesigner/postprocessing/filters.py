@@ -9,6 +9,7 @@ This module contains filter(s) for postprocessing DTI/DKI maps
 # Package Management
 #---------------------------------------------------------------------
 import os.path as op
+from typing import Union
 import numpy as np
 from scipy.ndimage import median_filter, generate_binary_structure
 import nibabel as nib
@@ -16,7 +17,7 @@ import nibabel as nib
 #---------------------------------------------------------------------
 # Functions
 #---------------------------------------------------------------------
-def readnii(input):
+def readnii(input: str):
     """
     Reads nifti files and returns header and numpy data array
 
@@ -37,7 +38,7 @@ def readnii(input):
     img = np.array(hdr.dataobj)
     return hdr, img
 
-def writenii(hdr, img, output):
+def writenii(hdr, img: np.ndarray[float], output: str) -> None:
     """
     Write nupy array to nifti file
 
@@ -55,7 +56,9 @@ def writenii(hdr, img, output):
     struct = nib.Nifti1Image(img, hdr.affine, hdr.header)
     nib.save(struct, output)
 
-def median(input, output, mask=None):
+def median(
+        input: str, output: str, mask: Union[str, None] = None
+) -> None:
     """
     Applies median filtering to input nifti file
 

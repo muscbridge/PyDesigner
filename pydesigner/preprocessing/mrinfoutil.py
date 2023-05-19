@@ -8,25 +8,26 @@ types.
 """
 
 import os.path as op
+from typing import Tuple, List, Union
 import subprocess
 import re
 
-def getconsole(path, flag):
+def getconsole(path: int, flag: str) -> str:
     """
     Fetches the console output of MRtrix3's mrinfo with specified
-    flag
+    flag.
 
     Parameters
     ----------
-    path : str
-        Path to input image or directory
-    flag : str
-        Flag to pass onto mrinfo
+    path: str
+        Path to input image or directory.
+    flag: str
+        Flag to pass onto mrinfo.
 
     Returns
     -------
     str
-        MRtrix3's mrinfo console output
+        MRtrix3's mrinfo console output.
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
@@ -44,159 +45,159 @@ def getconsole(path, flag):
     console = console.replace("'", "")
     return console
 
-def format(path):
+def format(path: str) -> str:
     """
-    Returns the file format of input DWI
+    Returns the file format of input DWI.
 
     Parameters
     ----------
-    path : str
-        Path to input image or directory
+    path: str
+        Path to input image or directory.
 
     Returns
     -------
     str
-        Image file format
+        Image file format.
     """
     type = getconsole(path, '-format')
     return type
 
-def ndim(path):
+def ndim(path: str) -> int:
     """
-    Returns the number of image dimensions of input DWI
+    Returns the number of image dimensions of input DWI.
 
     Parameters
     ----------
-    path : str
-        Path to input image or directory
+    path: str
+        Path to input image or directory.
 
     Returns
     -------
     int
-        Number of dimensions in image
+        Number of dimensions in image.
     """
     num = getconsole(path, '-ndim')
     return int(num)
 
-def size(path):
+def size(path: str) -> Tuple(int):
     """
-    Returns the size of input DWI image along each axis
+    Returns the size of input DWI image along each axis.
 
     Parameters
     ----------
-    path : str
-        Path to input image or directory
+    path: str
+        Path to input image or directory.
 
     Returns
     -------
-    tuple of int
-        Number of voxels in [X, Y, Z, B-value]
+    tuple(int)
+        Number of voxels in [X, Y, Z, B-value].
     """
     num = getconsole(path, '-size').split()
     num = tuple(map(int, num))
     return num
 
-def spacing(path):
+def spacing(path: str) -> Tuple(int):
     """
-    Returns the voxel spacing along each of input DWI's dimensions
+    Returns the voxel spacing along each of input DWI's dimensions.
 
     Parameters
     ----------
     path : str
-        Path to input image or directory
+        Path to input image or directory.
 
     Returns
     -------
-    tuple of int
-        Number of spacing between voxels [X, Y, Z, B-value]
+    tuple(int)
+        Number of spacing between voxels [X, Y, Z, B-value].
     """
     num = getconsole(path, '-spacing').split()
     num = tuple(map(float, num))
     return num
 
-def datatype(path):
+def datatype(path: str) -> str:
     """
-    Returns the data type used for storing input DWI
+    Returns the data type used for storing input DWI.
 
     Parameters
     ----------
     path : str
-        Path to input image or directory
+        Path to input image or directory.
 
     Returns
     -------
     str
-        MRtrix3 datatype
+        MRtrix3 datatype.
     """
     return getconsole(path, '-datatype')
 
-def strides(path):
+def strides(path: str) -> Tuple[int]:
     """
-    Returns data strides of input DWI
+    Returns data strides of input DWI.
 
     Parameters
     ----------
     path : str
-        Path to input image or directory
+        Path to input image or directory.
 
     Returns
     -------
-    tuple of ints
-        MRtrix3's strides
+    num: tuple(int)
+        MRtrix3's strides.
     """
     num = getconsole(path, '-strides').split()
     num = tuple(map(int, num))
     return num
 
-def offset(path):
+def offset(path: str) -> float:
     """
-    Returns the input DWI's intensity offset
+    Returns the input DWI's intensity offset.
 
     Parameters
     ----------
-    path : str
-        Path to input image or directory
+    path: str
+        Path to input image or directory.
 
     Returns
     -------
-    float
-        Image intensity offset
+    num: float
+        Image intensity offset.
     """
     num = getconsole(path, '-offset')
     num = float(num)
     return num
 
-def multiplier(path):
+def multiplier(path: str) -> float:
     """
-    Returns the input DWI's intensity multiplier
+    Returns the input DWI's intensity multiplier.
 
     Parameters
     ----------
-    path : str
-        Path to input image or directory
+    path: str
+        Path to input image or directory.
 
     Returns
     -------
-    float
-        Image intensity multiplier
+    num: float
+        Image intensity multiplier.
     """
     num = getconsole(path, '-multiplier')
     num = float(num)
     return num
 
-def transform(path):
+def transform(path: str) -> Tuple[float]:
     """
-    Returns the input DWI's 4x4 voxel to image transformation matrix
+    Returns the input DWI's 4x4 voxel to image transformation matrix.
 
     Parameters
     ----------
-    path : str
-        Path to input image or directory
+    path: str
+        Path to input image or directory.
 
     Returns
     -------
-    tuple of float
-        Image transformation matrix
+    num: tuple(float)
+        Image transformation matrix.
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
@@ -212,19 +213,19 @@ def transform(path):
     num = [s for s in num if s != []]
     return tuple(num)
 
-def commandhistory(path):
+def commandhistory(path: str) -> List[str]:
     """
     Returns a list of command history (manipulations or transformations)
     performed on MRtrix file format .mif
 
     Parameters
     ----------
-    path : str
+    path: str
         Path to input image or directory
 
     Returns
     -------
-    list of str
+    list(str)
         command history of input file
     """
     if not op.exists(path):
@@ -257,19 +258,19 @@ def commandhistory(path):
     console = [s.rstrip() for s in console]
     return list(console)
 
-def dwscheme(path):
+def dwscheme(path: str) -> List[float]:
     """
-    Returns a list of input DWI's diffusion weighting scheme
+    Returns a list of input DWI's diffusion weighting scheme.
 
     Parameters
     ----------
-    path : str
-        Path to input image or directory
+    path: str
+        Path to input image or directory.
 
     Returns
     -------
-    list of float
-        diffusion weighing scheme
+    dw_scheme: list(float)
+        diffusion weighing scheme.
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
@@ -304,22 +305,20 @@ def dwscheme(path):
         dw_scheme.append(nums)
     return dw_scheme
 
-def pescheme(path):
+def pescheme(path: str) -> List[float]:
     """
     Returns a list of phase encoding scheme. If len(pescheme) > 1,
-    the .mif DWI contains more than one directons
+    the .mif DWI contains more than one directons.
 
     Parameters
     ----------
-    path : str
-        Path to input image or directory
+    path: str
+        Path to input image or directory.
 
     Returns
     -------
-    nPE: int
-        Number of PE directions
-    PE: int or list of int
-        Phase encoding direction(s)
+    pe_scheme: list(float)
+        Phase encoding scheme.
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
@@ -354,19 +353,19 @@ def pescheme(path):
         pe_scheme.append(nums)
     return pe_scheme
 
-def shells(path):
+def shells(path: str) -> int:
     """
-    Returns the number of b-value shells detected in input file
+    Returns the number of b-value shells detected in input file.
 
     Parameters
     ----------
-    path : str
-        Path to input image or directory
+    path: str
+        Path to input image or directory.
 
     Returns
     -------
-    int
-        Number of shells
+    console: int
+        Number of shells.
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
@@ -399,19 +398,19 @@ def shells(path):
     console = [int(round(float(x))) for x in console]
     return console
 
-def num_shells(path):
+def num_shells(path: str) -> int:
     """
-    Returns the number of b-value shells detected in input file
+    Returns the number of b-value shells detected in input file.
 
     Parameters
     ----------
-    path : str
-        Path to input image or directory
+    path: str
+        Path to input image or directory.
 
     Returns
     -------
     int
-        Number of shells
+        Number of shells.
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
@@ -424,13 +423,13 @@ def num_shells(path):
     console = shells(path)
     return len(console)
 
-def max_shell(path):
+def max_shell(path: str) -> int:
     """
     Returns the maximum b-value shell in DWI
 
     Parameters
     ----------
-    path : str
+    path: str
         Path to input image or directory
 
     Returns
@@ -469,21 +468,21 @@ def max_shell(path):
     console = [int(round(float(s))) for s in console]
     return max(console)
 
-def is_fullsphere(path):
+def is_fullsphere(path: str) -> bool:
     """
     Returns boolean value indicating whether input file has full
-    spherical sampling
+    spherical sampling.
 
     Parameters
     ----------
-    path : str
-        Path to input image or directory
+    path: str
+        Path to input image or directory.
 
     Returns
     -------
     bool
-        True if full spherical sampling
-        False if half-spherical sampling
+        True if full spherical sampling.
+        False if half-spherical sampling.
     """
     if not op.exists(path):
         raise OSError('Input path does not exist. Please ensure that the '
@@ -528,13 +527,13 @@ def is_fullsphere(path):
         else:
             return False
 
-def echotime(path):
+def echotime(path: str) -> Union[int, str]:
     """
     Returns the echo time(s) of DWI in miliseconds
 
     Parameters
     ----------
-    path : str
+    path: str
         Path to input image or directory
 
     Returns

@@ -2,11 +2,16 @@
 # -*- coding: utf-8 -*-
 
 import os.path as op
+from typing import Union, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter
 
-def plot(input, output, voxel=None):
+def plot(
+        input: str,
+        output: str,
+        voxel: Union[Tuple[float], None] = None
+) -> None:
     """
     Plots subject motion from eddy_qc output file.
 

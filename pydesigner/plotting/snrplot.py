@@ -3,107 +3,56 @@
 
 import nibabel as nib
 import os.path as op
+from typing import Union, Tuple, List, Self
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline
+from system.utils import vectorize
 
 minZero = 1e-8
 np.seterr(all='ignore')
 
-def vectorize(img, mask):
-    """
-    Returns vectorized image based on brain mask, requires no input
-    parameters
-    If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
-    If the input is 3D or 4D, vectorize it using a mask
-    Classification: Function
-
-    Parameters
-    ----------
-    img : ndarray
-        1D, 2D, 3D or 4D image array to vectorize
-    mask : ndarray
-        3D image array for masking
-
-    Returns
-    -------
-    vec : N X number_of_voxels vector or array, where N is the number
-        of DWI volumes
-
-    Usage
-    -----
-    vec = vectorize(img) if there's no mask
-    vec = vectorize(img, mask) if there's a mask
-    """
-    if mask is None:
-        mask = np.ones((img.shape[0],
-                        img.shape[1],
-                        img.shape[2]),
-                       order='F')
-    mask = mask.astype(bool)
-    if img.ndim == 1:
-        n = img.shape[0]
-        s = np.zeros((mask.shape[0],
-                      mask.shape[1],
-                      mask.shape[2]),
-                     order='F')
-        s[mask] = img
-    if img.ndim == 2:
-        n = img.shape[0]
-        s = np.zeros((mask.shape[0],
-                      mask.shape[1],
-                      mask.shape[2], n),
-                     order='F')
-        for i in range(0, n):
-            s[mask, i] = img[i,:]
-    if img.ndim == 3:
-        maskind = np.ma.array(img, mask=np.logical_not(mask))
-        s = np.ma.compressed(maskind)
-    if img.ndim == 4:
-        s = np.zeros((img.shape[-1], np.sum(mask).astype(int)), order='F')
-        for i in range(0, img.shape[-1]):
-            tmp = img[:,:,:,i]
-            # Compressed returns non-masked area, so invert the mask first
-            maskind = np.ma.array(tmp, mask=np.logical_not(mask))
-            s[i,:] = np.ma.compressed(maskind)
-    return np.squeeze(s)
-
 class makesnr:
     """
     Class object that computes and prints SNR plots for any number of
-    input DWIs
+    input DWIs.
 
     Parameters
     ----------
-    dwilist : list of str
-        List of 4D DWI (nifti-format) paths to evaluate and plot
-    noisepath : str
-        Path to noise map from "dwidenoise"
-    maskpath : str, optional
-        Path to brain mask
+    dwilist: list of str
+        List of 4D DWI (nifti-format) paths to evaluate and plot.
+    noisepath: str
+        Path to noise map from "dwidenoise".
+    maskpath: str, optional
+        Path to brain mask.
 
     Methods
     ----------
-    __init__ : constructs makesnr class
+    __init__: constructs makesnr class
     getuniquebval : creates a list of unique B-values for the purpose of
-                    SNR computation
-    computesnr : performs SNR computation
-    histcount : bins SNR values
-    makeplot : creates and saves SNR plot from bin counts
+                    SNR computation.
+    computesnr: performs SNR computation.
+    histcount: bins SNR values.
+    makeplot: creates and saves SNR plot from bin counts.
 
     """
-    def __init__(self, dwilist, noisepath=None, maskpath=None):
+    def __init__(
+            self,
+            dwilist: List[str],
+            noisepath: Union[str, None] = None,
+            maskpath: Union[str, None]=None
+    ) -> Self:
         """
         Constructor for makesnr class
 
         Parameters
         ----------
-        dwilist : list of str
-            String list of nifti paths to plot
-        noisepath : str
-            Path to noisemap (Default: None)
-        maskpath : str, optional
-            Path to nifti brain mask (Default: None)
+        dwilist: list of str
+            String list of nifti paths to plot.
+        noisepath: str
+            Path to noisemap (Default: None).
+        maskpath: str, optional
+            Path to nifti brain mask (Default: None).
         """
         if noisepath is None:
             raise Exception('Please provide the path to noise map from '
@@ -162,7 +111,7 @@ class makesnr:
                                      (self.img < minZero))
         self.img[truncateIdx] = minZero
 
-    def getuniquebval(self):
+    def getuniquebval(self) -> np.ndarray[float]:
         """
         Creates a list of unique B-values for the purpose of SNR
         computation. In the calculation of SNR, B0 signal can be averaged
@@ -175,9 +124,9 @@ class makesnr:
 
         Returns
         -------
-        b_list : ndarray
+        b_list : ndarray(dtype=float)
             Numpy vector containing list of B-values to be used in
-            SNR calculation
+            SNR calculation.
         """
 
         b_list = []
@@ -199,13 +148,13 @@ class makesnr:
             b_list.append(bval_list)
         return np.asarray(b_list, dtype=int)
 
-    def computesnr(self):
+    def computesnr(self) -> np.ndarray[float]:
         """
-        Computes SNR of all DWIs in class object
+        Computes SNR of all DWIs in class object.
 
         Returns
         -------
-        snr_dwi : ndarray
+        snr_dwi: ndarray(dtype=float)
             Numpy array of SNR across all DWI.
         """
         bval_list = self.getuniquebval()
@@ -237,23 +186,27 @@ class makesnr:
         snr_dwi[truncateIdx] = minZero
         return snr_dwi
 
-    def histcount(self, nbins=100):
+    def histcount(self, nbins: int = 100) -> Tuple[
+        np.ndarray[int],
+        np.ndarray[float],
+        np.ndarray[float]
+    ]:
         """
-        Bins SNR into nbins and returns various counting properties
+        Bins SNR into nbins and returns various counting properties.
 
         Parameters
         ----------
-        nbins :  int
-        Number of bins to plot
+        nbins:  int
+            Number of bins to plot.
 
         Returns
         -------
-        count : ndarray
-            Array of count of voxels in bins
-        binval : ndarray
-            Array of bin values
-        unibvals : ndarray
-            Array containing all unique B-values detected
+        count: ndarray(dtype=int)
+            Array of count of voxels in bins.
+        binval: ndarray(dtype=float)
+            Array of bin values.
+        unibvals: ndarray(dtype=float)
+            Array containing all unique B-values detected.
         """
         if not isinstance(nbins, int):
             raise ValueError('Number of bins (nbins) entered is not an '
@@ -287,7 +240,12 @@ class makesnr:
             binval[i] = np.median([edges[i], edges[i + 1]])
         return count, binval, unibvals
 
-    def makeplot(self, path, smooth=True, smoothfactor=5):
+    def makeplot(
+            self,
+            path: str,
+            smooth: bool = True,
+            smoothfactor: int = 5
+    ) -> None:
         """
         Creates and saves SNR plot to a path as SNR.png
 
