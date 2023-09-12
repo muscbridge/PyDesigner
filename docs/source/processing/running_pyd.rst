@@ -13,7 +13,7 @@ For example, one may run PyDesigner with standard processing using the command:
 .. code-block:: console
 
     $ pydesigner -s --verbose \
-    ~/Dataset/DKI_B0.nii,~/Dataset/DKI_B1000.nii,~/Dataset/DKI_B2000.nii
+    ~/Dataset/DKI_B0.nii ~/Dataset/DKI_B1000.nii ~/Dataset/DKI_B2000.nii
 
 Simple as that!
 
