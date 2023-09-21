@@ -6,7 +6,7 @@ Various definitions of spherical sampling
 import os.path as op
 import numpy as np
 
-def dsigrid(odf_key='odf8'):
+def dsigrid(odf_key='odf8') -> np.ndarray[float]:
     """
     Reads DSIStudio's ODF geometry in odfs.mat to use in creation of DSIStudio's
     .fib file.
@@ -10518,7 +10518,7 @@ def dsigrid(odf_key='odf8'):
     
     return odf_vertices.T, odf_faces.T
 
-def odfgrid(res='med'):
+def odfgrid(res='med') -> np.ndarray[float]:
     """
     Defines the spherical grid defined by quadrisection of the isocahedron.
     There are three possible options: 'low', 'med', or 'high', where higher
