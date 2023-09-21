@@ -4,7 +4,7 @@
 import numpy as np
 import nibabel as nib
 
-def vectorize(img, mask):
+def vectorize(img, mask) -> np.ndarray[float]:
     """
     Returns vectorized image based on brain mask, requires no input
     parameters
@@ -67,7 +67,7 @@ def vectorize(img, mask):
             s[i,:] = np.ma.compressed(maskind)
     return np.squeeze(s)
 
-def writeNii(map, hdr, outDir, range=None):
+def writeNii(map, hdr, outDir, range=None) -> None:
     """
     Write clipped NifTi images
 
@@ -101,7 +101,7 @@ def writeNii(map, hdr, outDir, range=None):
         clipped_img = nib.Nifti1Image(clipped_img, hdr.affine, hdr.header)
     nib.save(clipped_img, outDir)
 
-def clipImage(img, range):
+def clipImage(img, range) -> np.ndarray[float]:
     """
     Clips input matrix within desired range. Min and max values are
     inclusive of range
@@ -127,7 +127,7 @@ def clipImage(img, range):
     img[img < range[0]] = range[0]
     return img
 
-def highprecisionexp(array, maxp=1e32):
+def highprecisionexp(array, maxp=1e32) -> np.ndarray[float]:
     """
     Prevents overflow warning with numpy.exp by assigning overflows
     to a maxumum precision value
@@ -158,7 +158,7 @@ def highprecisionexp(array, maxp=1e32):
     np.seterr(**defaultErrorState)
     return ans
 
-def highprecisionpower(x1, x2, maxp=1e32):
+def highprecisionpower(x1, x2, maxp=1e32) -> np.ndarray[float]:
     """
     Prevents overflow warning with numpy.powerr by assigning overflows
     to a maxumum precision value

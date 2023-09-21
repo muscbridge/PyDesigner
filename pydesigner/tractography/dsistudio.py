@@ -13,6 +13,7 @@ References:
 
 import os
 import os.path as op
+from typing import Tuple
 import subprocess
 import numpy as np
 import nibabel as nib
@@ -25,7 +26,7 @@ from tqdm import tqdm
 ODF_COLS = 20000  # Number of columns in DSI Studio odf split
 tqdmWidth = 70
 
-def get_dsi_studio_ODF_geometry(odf_key):
+def get_dsi_studio_ODF_geometry(odf_key) -> Tuple[np.ndarray[int], np.ndarray[float]]:
     """
     Reads DSIStudio's ODF geometry in odfs.mat
 
@@ -47,7 +48,7 @@ def get_dsi_studio_ODF_geometry(odf_key):
     odf_faces = m[odf_key + '_faces'].T
     return odf_vertices, odf_faces
 
-def convertLPS(input, output):
+def convertLPS(input, output) -> None:
     """
     Converts a nifti file to LPS for compatibility with DSIStudio
 
@@ -89,7 +90,7 @@ def convertLPS(input, output):
         'Check above for errors.')
 
 def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1,
-    other_maps=None):
+    other_maps=None) -> None:
     """
     Converts a NifTi ``.nii`` file containing sh coefficients to a DSI
     Studio fib file
