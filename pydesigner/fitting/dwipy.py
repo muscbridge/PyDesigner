@@ -1498,12 +1498,12 @@ class DWI(object):
                     idx_Y = 0
                     for l in degs[::2]:
                         hypergeom_opt = np.sum((gamma((l+1)/2 + int_grid) * gamma(l+(3/2)) * ((-BT[b] * f_grid[idx_hyper]**2 * zeta**-2)*np.ones((1,len(f_grid[idx_hyper])))).T ** int_grid / (factorial(int_grid) * gamma(l+(3/2) + int_grid) * gamma((l+1)/2))),1)*np.ones((1,len(f_grid[idx_hyper])))
-                        g2l_fa_R[idx_Y:idx_Y+(2*l+1),np.squeeze(idx_hyper)] = npm.repmat((factorial(l/2) * (BT[b] * f_grid[idx_hyper]**2 * zeta**-2) ** ((l+1)/2) / gamma(l+(3/2)) * hypergeom_opt),(2*l+1),1) # Eq. 9 FBWM paper
+                        g2l_fa_R[idx_Y:idx_Y+(2*l+1),np.squeeze(idx_hyper)] = npm.repmat((factorial(l//2) * (BT[b] * f_grid[idx_hyper]**2 * zeta**-2) ** ((l+1)/2) / gamma(l+(3/2)) * hypergeom_opt),(2*l+1),1) # Eq. 9 FBWM paper
                         idx_Y = idx_Y + (2*l+1)
                     g2l_fa_R_b[b,np.squeeze(idx_hyper),:] = g2l_fa_R[:,np.squeeze(idx_hyper)].T
                     idx_Y = 0
                     for l in degs[::2]:
-                        g2l_fa_R_large[idx_Y:idx_Y+(2*l+1), np.squeeze(~idx_hyper)] = npm.repmat((np.exp(-l/2 * (l+1) / ((2*BT[b] * (f_grid[~idx_hyper]**2 * zeta**-2))))),(2*l+1),1) # Eq. 20 FBI paper
+                        g2l_fa_R_large[idx_Y:idx_Y+(2*l+1), np.squeeze(~idx_hyper)] = npm.repmat((np.exp(-l//2 * (l+1) / ((2*BT[b] * (f_grid[~idx_hyper]**2 * zeta**-2))))),(2*l+1),1) # Eq. 20 FBI paper
                         idx_Y = idx_Y + (2*l+1)
                     g2l_fa_R_b[b,np.squeeze(~idx_hyper),:] = g2l_fa_R_large[:,np.squeeze(~idx_hyper)].T
                 cost_fn = __costCalculator(
@@ -1610,16 +1610,16 @@ class DWI(object):
         S2 = spherical_grid[:,1] # theta
         # B = shbasis(degs, phi, theta)
         # H = shbasis(degs, S1, S2)
-        B = odf.shbasis(degs, phi, theta, method='tournier')
+        B = odf.shbasis(degs, phi, theta, method='scipy')
         B = B[:, harmonics]
-        H = odf.shbasis(degs, S1, S2, method='tournier')
+        H = odf.shbasis(degs, S1, S2, method='scipy')
         H = H[:, harmonics]
         idx_Y = 0
         Pl0 = np.zeros((len(harmonics), 1), order ='F') # need Legendre polynomial Pl0
         gl = np.zeros((len(harmonics), 1), order ='F') # calculate correction factor (see original FBI paper, Jensen 2016)
         for l in degs[::2]:
-            Pl0[idx_Y:idx_Y+(2*l+1), :] = (np.power(-1,l/2)* np.math.factorial(l)) / (np.power(4,l/2)*np.power(np.math.factorial(l/2),2))*np.ones((2*l+1,1))
-            gl[idx_Y:idx_Y+(2*l+1), :] = (np.math.factorial(l/2)*np.power(self.maxBval()*th.__d0__,(l+1)/2))/gamma(l+3/2)*hyp1f1((l+1)/2,l+3/2,-self.maxBval()*th.__d0__)*np.ones((2*l+1,1))
+            Pl0[idx_Y:idx_Y+(2*l+1), :] = (np.power(-1,l//2)* np.math.factorial(l)) / (np.power(4,l//2)*np.power(np.math.factorial(l//2),2))*np.ones((2*l+1,1))
+            gl[idx_Y:idx_Y+(2*l+1), :] = (np.math.factorial(l//2)*np.power(self.maxBval()*th.__d0__,(l+1)/2))/gamma(l+3/2)*hyp1f1((l+1)/2,l+3/2,-self.maxBval()*th.__d0__)*np.ones((2*l+1,1))
             idx_Y = idx_Y + (2*l+1)
         Pl0 = np.squeeze(Pl0)
         gl = np.squeeze(gl)
@@ -1637,8 +1637,8 @@ class DWI(object):
             phi2 = np.arccos(self.grad[bval == 2, 2])
             theta2 =  np.arctan2(self.grad[bval == 2, 1], self.grad[bval == 2,0])
             # SH basis set for the two B-values in DKI
-            fbwm_SH1 = odf.shbasis(degs,phi1,theta1, method='tournier')
-            fbwm_SH2 = odf.shbasis(degs,phi2,theta2,method='tournier')
+            fbwm_SH1 = odf.shbasis(degs,phi1,theta1, method='scipy')
+            fbwm_SH2 = odf.shbasis(degs,phi2,theta2,method='scipy')
             fbwm_SH1 = fbwm_SH1[:, harmonics]
             fbwm_SH2 = fbwm_SH2[:, harmonics]
             dt, kt = self.tensorReorder('dki')
@@ -1704,10 +1704,11 @@ class DWI(object):
                     rectify=rectify,
                     sh_area=AREA
                 ) for i in inputs))
-        
+        fodf_mrtrix = odf.odf_conversion(np.array(fodf).T, target='tournier')
         zeta = vectorize(np.array(zeta), self.mask)
         faa = vectorize(np.array(faa), self.mask)
         fodf = vectorize(np.array(fodf).T, self.mask)
+        fodf_mrtrix = vectorize(fodf_mrtrix, self.mask)
         awf = vectorize(np.array(min_awf), self.mask)
         Da = vectorize(np.array(Da), self.mask)
         De_mean = vectorize(np.array(De_mean), self.mask)
@@ -1716,7 +1717,7 @@ class DWI(object):
         De_fa = vectorize(np.array(De_fa), self.mask)
         min_cost = vectorize(np.array(min_cost), self.mask)
         min_cost_fn = vectorize(np.array(min_cost_fn).T, self.mask)
-        return zeta, faa, fodf, awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
+        return zeta, faa, fodf, fodf_mrtrix, awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
 
     def extractWMTI(self) -> Tuple[
         np.ndarray[float],
@@ -2743,12 +2744,13 @@ def fit_regime(
         )
     if img.isfbi():
         if img.isfbwm():
-            zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, \
+            zeta, faa, sph, sph_mrtrix, min_awf, Da, De_mean, De_ax, De_rad, \
                 De_fa, min_cost, min_cost_fn = \
                     img.fbi(l_max=l_max, fbwm=True, rectify=rectify)
             writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
             writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
             writeNii(np.real(sph), img.hdr, op.join(output, fname_fbi['odf']))
+            writeNii(np.real(sph_mrtrix), img.hdr, op.join(output, fname_fbi['odf_mrtrix']))
             writeNii(min_awf, img.hdr, op.join(output, fname_fbi['awf']))
             writeNii(Da, img.hdr, op.join(output, fname_fbi['Da']))
             writeNii(De_mean, img.hdr, op.join(output, fname_fbi['De_mean']))
@@ -2758,7 +2760,7 @@ def fit_regime(
             writeNii(min_cost, img.hdr, op.join(output, fname_fbi['min_cost']))
             writeNii(min_cost_fn, img.hdr, op.join(output, fname_fbi['min_cost_fn']))
             dsistudio.makefib(
-                input=op.join(output, fname_fbi['odf']),
+                input=op.join(output, fname_fbi['odf_mrtrix']),
                 output=op.join(output, fname_tractography['fbi']),
                 map=op.join(output, fname_fbi['faa']),
                 mask=mask,
@@ -2787,12 +2789,13 @@ def fit_regime(
             ]
             )
         else:
-            zeta, faa, sph, min_awf, Da, De_mean, De_ax, De_rad, \
+            zeta, faa, sph, sph_mrtrix, min_awf, Da, De_mean, De_ax, De_rad, \
                 De_fa, min_cost, min_cost_fn = \
                     img.fbi(l_max=l_max, fbwm=False, rectify=rectify)
             writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
             writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
-            writeNii(sph, img.hdr, op.join(output, fname_fbi['odf']))
+            writeNii(np.real(sph), img.hdr, op.join(output, fname_fbi['odf']))
+            writeNii(np.real(sph_mrtrix), img.hdr, op.join(output, fname_fbi['odf_mrtrix']))
             dsistudio.makefib(
                 input=op.join(output, fname_fbi['odf']),
                 output=op.join(output, fname_tractography['fbi']),

@@ -603,7 +603,7 @@ def dtiodfspherical(odf, phi, theta, radial_weight=4) -> np.ndarray[float]:
 def shbasis(deg, phi, theta, method='scipy') -> np.ndarray[complex]:
     """
     Computes shperical harmonic bases for all orders (even and odd), using
-    functions defined by `scipy`, `Tournier`, or `Descoteaux`.
+    functions defined by `scipy`, `tournier`, or `descoteaux`.
 
     Parameters
     ----------
@@ -659,3 +659,49 @@ def shbasis(deg, phi, theta, method='scipy') -> np.ndarray[complex]:
                 sh_ = shb
             SH.append(sh_)
     return np.array(SH, order='F').T
+
+
+def odf_conversion(odf, target='tournier'):
+    """Converts ODFs from scipy to tournier or descoteaux.
+    
+    Parameters
+    ----------
+    odf: array_like
+        ODF from even number spherical harmonics
+    
+    target: str; optional; {tournier, descoteaux}
+        Define method to convert ODFs
+        
+    """
+    if not isinstance(target, str):
+        raise TypeError('Please enter method as a string')
+    if not target in ['tournier', 'descoteaux']:
+        raise Exception('Please select a valid method for SH basis set')
+    print(odf.shape)
+    l_max_table = np.arange(0, 42, 2, dtype=int) # create array of even l_max allowed
+    vol_table = np.array([0.5*(x + 1)*(x + 2) for x in l_max_table], dtype=int)
+    vols = odf.shape[0]
+    l_max = l_max_table[np.where(vol_table == vols)[0]]
+    degs = np.arange(0, l_max + 1, 2, dtype=int)
+    curr_vol = 0
+    odf_  = np.zeros_like(odf)
+    for n in degs:
+        for m in range(-n, n + 1):
+            shb = odf[curr_vol, :]
+            if target == 'tournier':
+                if m < 0:
+                    sh_ = np.sqrt(2) * shb.imag
+                elif m > 0:
+                    sh_ = np.sqrt(2) * shb.real * (-1)**m
+                elif m == 0:
+                    sh_ = shb
+            elif target == 'descoteaux':
+                if m < 0:
+                    sh_ = shb.real
+                elif m > 0:
+                    sh_ = shb.imag * (-1)**m
+                elif m == 0:
+                    sh_ = shb
+            odf_[curr_vol, :] = shb
+            curr_vol = curr_vol + 1
+    return odf_
