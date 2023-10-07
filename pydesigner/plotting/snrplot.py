@@ -7,7 +7,7 @@ from typing import Union, Tuple, List, Self
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.interpolate import make_interp_spline
-from system.utils import vectorize
+from ..system.utils import vectorize
 
 minZero = 1e-8
 np.seterr(all='ignore')
