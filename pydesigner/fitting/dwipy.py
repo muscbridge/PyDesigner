@@ -28,8 +28,9 @@ dirSample = th.__dirs__
 # Progress bar Properties
 tqdmWidth = 70  # Number of columns of progress bar
 # Set default numpy errorstates
-np.seterr(all = 'ignore')
+np.seterr(all="ignore")
 defaultErrorState = np.geterr()
+
 
 class DWI(object):
     """
@@ -53,12 +54,14 @@ class DWI(object):
     workers: int
         Number of CPU workers to use in processing.
     """
+
     def __init__(
-            self, imPath: str,
-            bvecPath: str = None,
-            bvalPath: str = None,
-            mask: str = None,
-            nthreads: int = -1
+        self,
+        imPath: str,
+        bvecPath: str = None,
+        bvalPath: str = None,
+        mask: str = None,
+        nthreads: int = -1,
     ) -> None:
         """
         DWI class initializer
@@ -78,11 +81,10 @@ class DWI(object):
             all physically present workers).
         """
         if not os.path.exists(imPath):
-            raise OSError('Input image {} not found'.format(imPath))
+            raise OSError("Input image {} not found".format(imPath))
         self.hdr = nib.load(imPath)
         self.img = np.array(self.hdr.dataobj)
-        truncateIdx = np.logical_or(np.isnan(self.img),
-                                (self.img < minZero))
+        truncateIdx = np.logical_or(np.isnan(self.img), (self.img < minZero))
         self.img[truncateIdx] = minZero
         # Get just NIFTI filename + extensio
         (path, file) = os.path.split(imPath)
@@ -90,22 +92,18 @@ class DWI(object):
         fName = os.path.splitext(file)[0]
         if bvecPath:
             if not isinstance(bvecPath, str):
-                raise TypeError('Path to .bvec is not specified '
-                'as a string')
+                raise TypeError("Path to .bvec is not specified " "as a string")
             if not os.path.exists(bvecPath):
-                raise OSError('Path to .bvec does not exist: '
-                '{}'.format(bvecPath))
+                raise OSError("Path to .bvec does not exist: " "{}".format(bvecPath))
         else:
-            bvecPath = os.path.join(path, fName + '.bvec')
+            bvecPath = os.path.join(path, fName + ".bvec")
         if bvalPath:
             if not isinstance(bvalPath, str):
-                raise TypeError('Path to .bval is not specified '
-                'as a string')
+                raise TypeError("Path to .bval is not specified " "as a string")
             if not os.path.exists(bvalPath):
-                raise OSError('Path to .bvec does not exist: '
-                '{}'.format(bvalPath))
+                raise OSError("Path to .bvec does not exist: " "{}".format(bvalPath))
         else:
-            bvalPath = os.path.join(path, fName + '.bval')
+            bvalPath = os.path.join(path, fName + ".bval")
         if os.path.exists(bvalPath) and os.path.exists(bvecPath):
             # Load bvecs
             bvecs = np.loadtxt(bvecPath)
@@ -113,15 +111,15 @@ class DWI(object):
             bvals = np.loadtxt(bvalPath)
             # Scale bvals to ms/um2 by checking for number of digits
             # in max bval
-            if int(np.log10(np.max(bvals)))+1 >= 3: # if no. of digits >= 3
+            if int(np.log10(np.max(bvals))) + 1 >= 3:  # if no. of digits >= 3
                 bvals = bvals / 1000
             # Combine bvecs and bvals into [n x 4] array where n is
             # number of DWI volumes. [Gx Gy Gz Bval]
             self.grad = np.c_[np.transpose(bvecs), bvals]
         else:
-            raise OSError('Unable to locate BVAL or BVEC files')
+            raise OSError("Unable to locate BVAL or BVEC files")
         if mask is None:
-            maskPath = os.path.join(path,'brain_mask.nii')
+            maskPath = os.path.join(path, "brain_mask.nii")
         else:
             maskPath = mask
         if os.path.exists(maskPath):
@@ -129,29 +127,27 @@ class DWI(object):
             self.mask = np.array(tmp.dataobj).astype(bool)
             self.maskStatus = True
         else:
-            self.mask = np.ones((self.img.shape[0], self.img.shape[
-                1], self.img.shape[2]), order='F')
+            self.mask = np.ones(
+                (self.img.shape[0], self.img.shape[1], self.img.shape[2]), order="F"
+            )
             self.maskStatus = False
-            print('No brain mask supplied')
-        tqdm.write('Image ' + fName + '.nii loaded successfully')
+            print("No brain mask supplied")
+        tqdm.write("Image " + fName + ".nii loaded successfully")
         if not nthreads is None:
             if not isinstance(nthreads, int):
-                raise Exception('Variable nthreads need to be an integer')
+                raise Exception("Variable nthreads need to be an integer")
             if nthreads < -1 or nthreads == 0:
-                raise Exception('Variable nthreads is a positive integer or '
-                                '-1')      
+                raise Exception("Variable nthreads is a positive integer or " "-1")
         if nthreads is None:
             self.workers = -1
         else:
             self.workers = nthreads
         if self.workers == -1:
-            tqdm.write('Processing with ' +
-                       str(multiprocessing.cpu_count()) +
-                       ' workers...')
+            tqdm.write(
+                "Processing with " + str(multiprocessing.cpu_count()) + " workers..."
+            )
         else:
-            tqdm.write('Processing with ' +
-                       str(self.workers) +
-                       ' workers...')
+            tqdm.write("Processing with " + str(self.workers) + " workers...")
 
     def getBvals(self) -> np.ndarray:
         """
@@ -166,13 +162,13 @@ class DWI(object):
         --------
         bvals = dwi.getBvals(), where dwi is the DWI class object.
         """
-        return self.grad[:,3]
+        return self.grad[:, 3]
 
     def getBvecs(self) -> np.ndarray:
         """
         Returns an array of gradient vectors, requires no input
         parameters.
-        
+
         Returns
         -------
         ndarray(dtype=float)
@@ -182,7 +178,7 @@ class DWI(object):
         --------
         bvecs = dwi.getBvecs(), where dwi is the DWI class object.
         """
-        return self.grad[:,0:3]
+        return self.grad[:, 0:3]
 
     def maxBval(self) -> float:
         """
@@ -199,7 +195,7 @@ class DWI(object):
         a = dwi.maxBval(), where dwi is the DWI class object.
 
         """
-        return max(np.unique(self.grad[:,3])).astype(int)
+        return max(np.unique(self.grad[:, 3])).astype(int)
 
     def maxDTIBval(self) -> float:
         """
@@ -216,8 +212,8 @@ class DWI(object):
 
         """
         exclude_idx = self.grad[:, 3] <= th.__maxdtibval__
-        return max(np.unique(self.grad[exclude_idx,3])).astype(int)
-    
+        return max(np.unique(self.grad[exclude_idx, 3])).astype(int)
+
     def maxDKIBval(self) -> float:
         """
         Returns the maximum DKI b-value in a dataset.
@@ -233,7 +229,7 @@ class DWI(object):
 
         """
         exclude_idx = self.grad[:, 3] <= th.__maxdkibval__
-        return max(np.unique(self.grad[exclude_idx,3])).astype(int)
+        return max(np.unique(self.grad[exclude_idx, 3])).astype(int)
 
     def maxFBIBval(self) -> float:
         """
@@ -250,7 +246,7 @@ class DWI(object):
 
         """
         exclude_idx = self.grad[:, 3] <= th.__maxfbibval__
-        return max(np.unique(self.grad[exclude_idx,3])).astype(int)
+        return max(np.unique(self.grad[exclude_idx, 3])).astype(int)
 
     def idxb0(self) -> np.ndarray[bool]:
         """
@@ -263,7 +259,7 @@ class DWI(object):
             Index of DTI/DKI b-values.
 
         """
-        return(np.rint(self.grad[:, 3]) == 0)
+        return np.rint(self.grad[:, 3]) == 0
 
     def idxdti(self) -> np.ndarray[bool]:
         """
@@ -280,7 +276,7 @@ class DWI(object):
         if self.isdti():
             idx = self.grad[:, 3] <= self.maxDTIBval()
         return idx
-    
+
     def idxdki(self) -> np.ndarray[bool]:
         """
         Returns the index of all DTI/DKI B-values according to bvals
@@ -312,7 +308,7 @@ class DWI(object):
         if self.isfbi():
             idx = np.rint(self.grad[:, -1]) == np.rint(self.maxFBIBval())
         else:
-            raise IndexError('No valid FBI sequence found.')
+            raise IndexError("No valid FBI sequence found.")
         return idx
 
     def getndirs(self) -> int:
@@ -347,19 +343,22 @@ class DWI(object):
         a = dwi.tensorType(), where dwi is the DWI class object
         """
         type = []
-        if self.maxDTIBval() <= th.__maxdtibval__ and \
-            self.maxDTIBval() >= th.__mindkibval__:
-            type.append('dti')
-        if self.maxDKIBval() >= th.__maxdtibval__ and \
-            self.maxDKIBval() <= th.__maxdkibval__:
-            type.append('dki')
+        if (
+            self.maxDTIBval() <= th.__maxdtibval__
+            and self.maxDTIBval() >= th.__mindkibval__
+        ):
+            type.append("dti")
+        if (
+            self.maxDKIBval() >= th.__maxdtibval__
+            and self.maxDKIBval() <= th.__maxdkibval__
+        ):
+            type.append("dki")
         if self.maxBval() >= th.__minfbibval__:
-            type.append('fbi')
-        if 'fbi' in type and 'dki' in type:
-            type.append('fbwm')
+            type.append("fbi")
+        if "fbi" in type and "dki" in type:
+            type.append("fbwm")
         if not type:
-            raise ValueError('tensortype: Error in determining maximum '
-                             'BVAL')
+            raise ValueError("tensortype: Error in determining maximum " "BVAL")
         return type
 
     def isdti(self) -> bool:
@@ -376,7 +375,7 @@ class DWI(object):
         --------
         ans = dwi.isdki(), where dwi is the DWI class object.
         """
-        if 'dti' in self.tensorType():
+        if "dti" in self.tensorType():
             ans = True
         else:
             ans = False
@@ -396,7 +395,7 @@ class DWI(object):
         --------
         ans = dwi.isdki(), where dwi is the DWI class object.
         """
-        if 'dki' in self.tensorType():
+        if "dki" in self.tensorType():
             ans = True
         else:
             ans = False
@@ -411,12 +410,12 @@ class DWI(object):
         -------
         ans: bool
             True if FBI; false otherwise.
-        
+
         Examples
         --------
         ans = dwi.isfbi(), where dwi is the DWI class object.
         """
-        if 'fbi' in self.tensorType():
+        if "fbi" in self.tensorType():
             ans = True
         else:
             ans = False
@@ -431,19 +430,19 @@ class DWI(object):
         -------
         and: bool
             True if FBWM; false otherwise.
-        
+
         Examples
         --------
         ans = dwi.isfbi(), where dwi is the DWI class object.
         """
-        if 'fbwm' in self.tensorType():
+        if "fbwm" in self.tensorType():
             ans = True
         else:
             ans = False
         return ans
 
     def createTensorOrder(
-            self, order: Union[int, None] = None
+        self, order: Union[int, None] = None
     ) -> Tuple[np.ndarray[int], np.ndarray[int]]:
         """
         Creates tensor order array and indices.
@@ -470,7 +469,7 @@ class DWI(object):
         The tensors for this pipeline are based on NYU's designer layout as
         depicted in the table below. This will soon be depreciated and
         updated with MRTRIX3's layout.
-        
+
          .. code-block:: none
 
             ~~~~~~D~~~~~~
@@ -499,38 +498,69 @@ class DWI(object):
         """
         if order is None:
             if self.isdki():
-                cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6,
-                                4, 1],
-                               dtype=int)
-                ind = np.array(([1, 1, 1, 1], [1, 1, 1, 2], [1, 1, 1, 3],
-                                [1, 1, 2, 2], [1, 1, 2, 3], [1, 1, 3, 3],
-                                [1, 2, 2, 2], [1, 2, 2, 3], [1, 2, 3, 3],
-                                [1, 3, 3, 3], [2, 2, 2, 2], [2, 2, 2, 3],
-                                [2, 2, 3, 3], [2, 3, 3, 3], [3, 3, 3, 3]))\
-                      - 1
+                cnt = np.array(
+                    [1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4, 1], dtype=int
+                )
+                ind = (
+                    np.array(
+                        (
+                            [1, 1, 1, 1],
+                            [1, 1, 1, 2],
+                            [1, 1, 1, 3],
+                            [1, 1, 2, 2],
+                            [1, 1, 2, 3],
+                            [1, 1, 3, 3],
+                            [1, 2, 2, 2],
+                            [1, 2, 2, 3],
+                            [1, 2, 3, 3],
+                            [1, 3, 3, 3],
+                            [2, 2, 2, 2],
+                            [2, 2, 2, 3],
+                            [2, 2, 3, 3],
+                            [2, 3, 3, 3],
+                            [3, 3, 3, 3],
+                        )
+                    )
+                    - 1
+                )
             else:
                 cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
-                ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3],
-                                [3, 3])) - 1
+                ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3])) - 1
         elif order == 2:
             cnt = np.array([1, 2, 2, 1, 2, 1], dtype=int)
-            ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3],
-                            [3, 3])) - 1
+            ind = np.array(([1, 1], [1, 2], [1, 3], [2, 2], [2, 3], [3, 3])) - 1
         elif order == 4:
-            cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4,
-                            1],
-                           dtype=int)
-            ind = np.array(([1,1,1,1],[1,1,1,2],[1,1,1,3],[1,1,2,2],
-                            [1,1,2,3],[1,1,3,3],[1,2,2,2],[1,2,2,3],
-                            [1,2,3,3],[1,3,3,3],[2,2,2,2],[2,2,2,3],
-                            [2,2,3,3],[2,3,3,3],[3,3,3,3])) - 1
+            cnt = np.array([1, 4, 4, 6, 12, 6, 4, 12, 12, 4, 1, 4, 6, 4, 1], dtype=int)
+            ind = (
+                np.array(
+                    (
+                        [1, 1, 1, 1],
+                        [1, 1, 1, 2],
+                        [1, 1, 1, 3],
+                        [1, 1, 2, 2],
+                        [1, 1, 2, 3],
+                        [1, 1, 3, 3],
+                        [1, 2, 2, 2],
+                        [1, 2, 2, 3],
+                        [1, 2, 3, 3],
+                        [1, 3, 3, 3],
+                        [2, 2, 2, 2],
+                        [2, 2, 2, 3],
+                        [2, 2, 3, 3],
+                        [2, 3, 3, 3],
+                        [3, 3, 3, 3],
+                    )
+                )
+                - 1
+            )
         else:
-            raise ValueError('createTensorOrder: Please enter valid '
-                             'order values (2 or 4).')
+            raise ValueError(
+                "createTensorOrder: Please enter valid " "order values (2 or 4)."
+            )
         return cnt, ind
 
     def fibonacciSphere(
-            self, samples: int = 1, randomize: bool = True
+        self, samples: int = 1, randomize: bool = True
     ) -> np.ndarray[float]:
         """
         Returns evenly spaced points on a sphere.
@@ -559,20 +589,18 @@ class DWI(object):
         if randomize:
             rnd = random.random() * samples
         points = []
-        offset = 2/samples
-        increment = np.pi * (3. - np.sqrt(5.))
+        offset = 2 / samples
+        increment = np.pi * (3.0 - np.sqrt(5.0))
         for i in range(samples):
             y = ((i * offset) - 1) + (offset / 2)
-            r = np.sqrt(1 - pow(y,2))
+            r = np.sqrt(1 - pow(y, 2))
             phi = ((i + rnd) % samples) * increment
             x = np.cos(phi) * r
             z = np.sin(phi) * r
-            points.append([x,y,z])
+            points.append([x, y, z])
         return np.array(points)
 
-    def radialSampling(
-            self, dir: np.ndarray[float], n: int
-    ) -> np.ndarray[float]:
+    def radialSampling(self, dir: np.ndarray[float], n: int) -> np.ndarray[float]:
         """
         Get the radial component of a metric from a set of directions.
 
@@ -593,19 +621,19 @@ class DWI(object):
         grad = dwi.radialSampling(dir, number_of_dirs).
 
         """
-        dt = 2*np.pi/n
-        theta = np.arange(0, 2*np.pi-dt,dt)
-        dirs = np.vstack((np.cos(theta), np.sin(theta), 0*theta))
+        dt = 2 * np.pi / n
+        theta = np.arange(0, 2 * np.pi - dt, dt)
+        dirs = np.vstack((np.cos(theta), np.sin(theta), 0 * theta))
         v = np.hstack((-dir[1], dir[0], 0))
         s = np.sqrt(np.sum(v**2))
         c = dir[2]
-        V = np.array([[0, -v[2], v[1]],[v[2], 0, -v[0]],[-v[1], v[0], 0]])
-        R = np.eye(3) + V + np.matmul(V,V) * (1-c)/(s**2)
+        V = np.array([[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]])
+        R = np.eye(3) + V + np.matmul(V, V) * (1 - c) / (s**2)
         dirs = np.matmul(R, dirs).T
         return dirs
 
     def diffusionCoeff(
-            self, dt: np.ndarray[float], dir: np.ndarray[float]
+        self, dt: np.ndarray[float], dir: np.ndarray[float]
     ) -> np.ndarray[float]:
         """
         Computes apparent diffusion coefficient (ADC).
@@ -628,13 +656,12 @@ class DWI(object):
         """
         dcnt, dind = self.createTensorOrder(2)
         ndir = dir.shape[0]
-        bD = np.tile(dcnt,(ndir, 1)) * dir[:,dind[:, 0]] * \
-             dir[:, dind[:, 1]]
+        bD = np.tile(dcnt, (ndir, 1)) * dir[:, dind[:, 0]] * dir[:, dind[:, 1]]
         adc = np.matmul(bD, dt)
         return adc
 
     def kurtosisCoeff(
-            self, dt: np.ndarray[float], dir: np.ndarray[float]
+        self, dt: np.ndarray[float], dir: np.ndarray[float]
     ) -> np.ndarray[float]:
         """
         Computes apparent kurtosis coefficient (AKC)
@@ -659,15 +686,20 @@ class DWI(object):
         ndir = dir.shape[0]
         adc = self.diffusionCoeff(dt[:6], dir)
         adc[adc < minZero] = minZero
-        md = np.sum(dt[np.array([0,3,5])], 0)/3
-        bW = np.tile(wcnt,(ndir, 1)) * dir[:,wind[:, 0]] * \
-             dir[:,wind[:,1]] * dir[:,wind[:, 2]] * dir[:,wind[:, 3]]
+        md = np.sum(dt[np.array([0, 3, 5])], 0) / 3
+        bW = (
+            np.tile(wcnt, (ndir, 1))
+            * dir[:, wind[:, 0]]
+            * dir[:, wind[:, 1]]
+            * dir[:, wind[:, 2]]
+            * dir[:, wind[:, 3]]
+        )
         akc = np.matmul(bW, dt[6:])
-        akc = (akc * np.tile(md**2, (adc.shape[0], 1)))/(adc**2)
+        akc = (akc * np.tile(md**2, (adc.shape[0], 1))) / (adc**2)
         return akc
 
     def dtiTensorParams(
-            self, dt: np.ndarray[float]
+        self, dt: np.ndarray[float]
     ) -> Tuple[np.ndarray[float], np.ndarray[float]]:
         """
         Computes sorted DTI tensor eigenvalues and eigenvectors.
@@ -695,8 +727,10 @@ class DWI(object):
         return values, vectors
 
     def dkiTensorParams(
-            self, v1: np.ndarray[float], dt: np.ndarray[float]
-    ) -> Tuple[np.ndarray[float], np.ndarray[float], np.ndarray[float], np.ndarray[float]]:
+        self, v1: np.ndarray[float], dt: np.ndarray[float]
+    ) -> Tuple[
+        np.ndarray[float], np.ndarray[float], np.ndarray[float], np.ndarray[float]
+    ]:
         """
         Uses average directional statistics to approximate axial
         kurtosis(AK) and radial kurtosis (RK).
@@ -729,53 +763,55 @@ class DWI(object):
         dirs = self.radialSampling(v1, dirSample)
         akc = self.kurtosisCoeff(dt, dirs)
         rk = np.mean(akc)
-        W_F = np.sqrt(dt[6]**2 + \
-                      dt[16]**2 + \
-                      dt[20]**2 + \
-                      6 * dt[9]**2+ \
-                      6 * dt[11]**2 + \
-                      6 * dt[18]**2 + \
-                      4 * dt[7]**2 + \
-                      4 * dt[8]**2 + \
-                      4 * dt[12]**2 + \
-                      4 * dt[17]**2 + \
-                      4 * dt[15]**2 + \
-                      4 * dt[19]**2 + \
-                      12 * dt[10]**2 + \
-                      12 * dt[13]**2 + \
-                      12 * dt[14]**2)
-        Wbar = 1/5 * (dt[6] + dt[16] + dt[20] + 2 *
-                      (dt[9] + dt[11] + dt[18]))
+        W_F = np.sqrt(
+            dt[6] ** 2
+            + dt[16] ** 2
+            + dt[20] ** 2
+            + 6 * dt[9] ** 2
+            + 6 * dt[11] ** 2
+            + 6 * dt[18] ** 2
+            + 4 * dt[7] ** 2
+            + 4 * dt[8] ** 2
+            + 4 * dt[12] ** 2
+            + 4 * dt[17] ** 2
+            + 4 * dt[15] ** 2
+            + 4 * dt[19] ** 2
+            + 12 * dt[10] ** 2
+            + 12 * dt[13] ** 2
+            + 12 * dt[14] ** 2
+        )
+        Wbar = 1 / 5 * (dt[6] + dt[16] + dt[20] + 2 * (dt[9] + dt[11] + dt[18]))
         if W_F < minZero:
             kfa = 0
         else:
             W_diff = np.sqrt(
-                (dt[6] - Wbar)**2 + \
-                (dt[16] - Wbar) ** 2 + \
-                (dt[20] - Wbar)**2 + \
-                6 * (dt[9] - Wbar / 3)**2 + \
-                6 * (dt[11] - Wbar / 3)**2 + \
-                6 * (dt[18] - Wbar / 3)**2 + \
-                4 * dt[7]**2 + \
-                4 * dt[8]**2 + \
-                4 * dt[12]**2 + \
-                4 * dt[17]**2 + \
-                4 * dt[15]**2 + \
-                4 * dt[19]**2 + \
-                12 * dt[10]**2 + \
-                12 * dt[13]**2 + \
-                12 * dt[14]**2)
+                (dt[6] - Wbar) ** 2
+                + (dt[16] - Wbar) ** 2
+                + (dt[20] - Wbar) ** 2
+                + 6 * (dt[9] - Wbar / 3) ** 2
+                + 6 * (dt[11] - Wbar / 3) ** 2
+                + 6 * (dt[18] - Wbar / 3) ** 2
+                + 4 * dt[7] ** 2
+                + 4 * dt[8] ** 2
+                + 4 * dt[12] ** 2
+                + 4 * dt[17] ** 2
+                + 4 * dt[15] ** 2
+                + 4 * dt[19] ** 2
+                + 12 * dt[10] ** 2
+                + 12 * dt[13] ** 2
+                + 12 * dt[14] ** 2
+            )
             kfa = W_diff / W_F
         mkt = Wbar
         return ak, rk, kfa, mkt
-    
+
     def wlls(
         self,
         shat: np.ndarray[float],
         dwi: np.ndarray[float],
         b: np.ndarray[float],
         cons: Union[np.ndarray[float], None] = None,
-        warmup: bool = None
+        warmup: bool = None,
     ) -> np.ndarray[float]:
         """
         Estimates diffusion and kurtosis tenor at voxel with
@@ -824,7 +860,7 @@ class DWI(object):
             The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
                                                       ~~~~~      ~~~~~
                                                         P          q
-        
+
         where A is denoted by multiplier matrix (w * b)
         Multiplying by a positive constant (0.5) does not change the value
         of optimum x*. Similarly, the constant offset b.T*b does not
@@ -837,12 +873,11 @@ class DWI(object):
         w = np.diag(shat)
         # Unconstrained Fitting
         if cons is None:
-            dt = np.matmul(np.linalg.pinv(np.matmul(w, b)),
-                           np.matmul(w, np.log(dwi)))
+            dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
         # Constrained fitting
         else:
-            C = np.matmul(w, b).astype('double')
-            d = np.matmul(w, np.log(dwi)).astype('double').reshape(-1)
+            C = np.matmul(w, b).astype("double")
+            d = np.matmul(w, np.log(dwi)).astype("double").reshape(-1)
             m, n = C.shape
             x = cvx.Variable(n)
             if warmup is not None:
@@ -851,22 +886,22 @@ class DWI(object):
             constraints = [cons @ x >= np.zeros((len(cons)))]
             prob = cvx.Problem(objective, constraints)
             try:
-                prob.solve(solver=cvx.OSQP,
-                           warm_start=True,
-                           max_iter=20000,
-                           polish=True,
-                           linsys_solver='qdldl')
+                prob.solve(
+                    solver=cvx.OSQP,
+                    warm_start=True,
+                    max_iter=20000,
+                    polish=True,
+                    linsys_solver="qdldl",
+                )
                 dt = x.value
-                if prob.status != 'optimal':
+                if prob.status != "optimal":
                     dt = np.full(n, minZero)
             except:
                 dt = np.full(n, minZero)
         return dt
 
     def fit(
-            self,
-            constraints: Union[np.ndarray[float], None] = None,
-            reject: bool = None
+        self, constraints: Union[np.ndarray[float], None] = None, reject: bool = None
     ) -> Self:
         """
         Returns fitted diffusion or kurtosis tensor
@@ -891,68 +926,88 @@ class DWI(object):
             reject = np.zeros(self.img[:, :, :, exclude_idx].shape)
         grad = self.grad[exclude_idx, :]
         grad_orig = grad
-        order = np.floor(np.log(np.abs(np.max(grad[:,-1])+1))/np.log(10))
+        order = np.floor(np.log(np.abs(np.max(grad[:, -1]) + 1)) / np.log(10))
         img = self.img[:, :, :, exclude_idx]
         if order >= 2:
             grad[:, -1] = grad[:, -1]
         img.astype(np.double)
         img[img <= 0] = np.finfo(np.double).eps
         grad.astype(np.double)
-        normgrad = np.sqrt(np.sum(grad[:,:3]**2, 1))
+        normgrad = np.sqrt(np.sum(grad[:, :3] ** 2, 1))
         normgrad[normgrad == 0] = 1
-        grad[:,:3] = grad[:,:3]/np.tile(normgrad, (3,1)).T
+        grad[:, :3] = grad[:, :3] / np.tile(normgrad, (3, 1)).T
         grad[np.isnan(grad)] = 0
         dcnt, dind = self.createTensorOrder(2)
         wcnt, wind = self.createTensorOrder(4)
         ndwis = img.shape[-1]
         bs = np.ones((ndwis, 1))
-        bD = np.tile(dcnt,(ndwis, 1))*grad[:,dind[:, 0]]*grad[:,dind[:, 1]]
-        bW = np.tile(wcnt, (ndwis, 1)) * grad_orig[:,wind[:, 0]] * \
-             grad_orig[:, wind[:, 1]] * grad_orig[:, wind[:,2]] *  \
-             grad_orig[:,wind[:,3]]
-        self.b = np.concatenate((bs, (
-                    np.tile(-self.grad[exclude_idx, -1], (6, 1)).T * bD), np.squeeze(
-            1 / 6 * np.tile(self.grad[exclude_idx, -1], (15, 1)).T ** 2) * bW), 1)
+        bD = np.tile(dcnt, (ndwis, 1)) * grad[:, dind[:, 0]] * grad[:, dind[:, 1]]
+        bW = (
+            np.tile(wcnt, (ndwis, 1))
+            * grad_orig[:, wind[:, 0]]
+            * grad_orig[:, wind[:, 1]]
+            * grad_orig[:, wind[:, 2]]
+            * grad_orig[:, wind[:, 3]]
+        )
+        self.b = np.concatenate(
+            (
+                bs,
+                (np.tile(-self.grad[exclude_idx, -1], (6, 1)).T * bD),
+                np.squeeze(1 / 6 * np.tile(self.grad[exclude_idx, -1], (15, 1)).T ** 2)
+                * bW,
+            ),
+            1,
+        )
         dwi_ = vectorize(img, self.mask)
         reject_ = vectorize(reject, self.mask).astype(bool)
         init = np.matmul(np.linalg.pinv(self.b), np.log(dwi_))
         shat = highprecisionexp(np.matmul(self.b, init))
-        if constraints is None or (constraints[0] == 0 and
-                                   constraints[1] == 0 and
-                                   constraints[2] == 0):
-            inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Unconstrained Tensor Fit',
-                          bar_format='{desc}: [{percentage:0.0f}%]',
-                          unit='vox',
-                          ncols=tqdmWidth)
-            self.dt = Parallel(n_jobs=self.workers, prefer='processes') \
-                (delayed(self.wlls)(shat[~reject_[:, i], i], \
-                                    dwi_[~reject_[:, i], i], \
-                                    self.b[~reject_[:, i]]) \
-                 for i in inputs)
+        if constraints is None or (
+            constraints[0] == 0 and constraints[1] == 0 and constraints[2] == 0
+        ):
+            inputs = tqdm(
+                range(0, dwi_.shape[1]),
+                desc="Unconstrained Tensor Fit",
+                bar_format="{desc}: [{percentage:0.0f}%]",
+                unit="vox",
+                ncols=tqdmWidth,
+            )
+            self.dt = Parallel(n_jobs=self.workers, prefer="processes")(
+                delayed(self.wlls)(
+                    shat[~reject_[:, i], i],
+                    dwi_[~reject_[:, i], i],
+                    self.b[~reject_[:, i]],
+                )
+                for i in inputs
+            )
         else:
             # C is linear inequality constraint matrix A_ub
             C = self.createConstraints(constraints)
-            inputs = tqdm(range(0, dwi_.shape[1]),
-                          desc='Constrained Tensor Fit',
-                          bar_format='{desc}: [{percentage:0.0f}%]',
-                          unit='vox',
-                          ncols=tqdmWidth)
-            self.dt = Parallel(n_jobs=self.workers,
-                               prefer='processes') \
-                (delayed(self.wlls)(shat[~reject_[:, i], i],
-                                         dwi_[~reject_[:, i], i],
-                                         self.b[~reject_[:, i]],
-                                         cons=C) for i in inputs)
+            inputs = tqdm(
+                range(0, dwi_.shape[1]),
+                desc="Constrained Tensor Fit",
+                bar_format="{desc}: [{percentage:0.0f}%]",
+                unit="vox",
+                ncols=tqdmWidth,
+            )
+            self.dt = Parallel(n_jobs=self.workers, prefer="processes")(
+                delayed(self.wlls)(
+                    shat[~reject_[:, i], i],
+                    dwi_[~reject_[:, i], i],
+                    self.b[~reject_[:, i]],
+                    cons=C,
+                )
+                for i in inputs
+            )
         self.dt = np.reshape(self.dt, (dwi_.shape[1], self.b.shape[1])).T
-        self.s0 = highprecisionexp(self.dt[0,:])
-        self.dt = self.dt[1:,:]
-        D_apprSq = 1/(np.sum(self.dt[(0,3,5),:], axis=0)/3)**2
-        self.dt[6:,:] = self.dt[6:,:]*np.tile(D_apprSq, (15,1))
+        self.s0 = highprecisionexp(self.dt[0, :])
+        self.dt = self.dt[1:, :]
+        D_apprSq = 1 / (np.sum(self.dt[(0, 3, 5), :], axis=0) / 3) ** 2
+        self.dt[6:, :] = self.dt[6:, :] * np.tile(D_apprSq, (15, 1))
 
     def createConstraints(
-            self, constraints: List[int]=[0, 1, 0]
-     ) -> np.ndarray[float]:
+        self, constraints: List[int] = [0, 1, 0]
+    ) -> np.ndarray[float]:
         """
         Generates constraint array for constrained minimization quadratic
         programming.
@@ -984,34 +1039,65 @@ class DWI(object):
             ndirs = cDirs.shape[0]
             C = np.empty((0, 22))
             if constraints[0] > 0:  # Dapp > 0
-                C = np.append(C, np.hstack(
-                    (np.zeros((ndirs, 1)),
-                     np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]] * \
-                     cDirs[:, dind[:, 1]],np.zeros((ndirs, 15)))), axis=0)
+                C = np.append(
+                    C,
+                    np.hstack(
+                        (
+                            np.zeros((ndirs, 1)),
+                            np.tile(dcnt, [ndirs, 1])
+                            * cDirs[:, dind[:, 0]]
+                            * cDirs[:, dind[:, 1]],
+                            np.zeros((ndirs, 15)),
+                        )
+                    ),
+                    axis=0,
+                )
             if constraints[1] > 0:  # Kapp > 0
-                C = np.append(C, np.hstack(
-                    (np.zeros((ndirs, 7)),
-                     np.tile(wcnt, [ndirs, 1]) * cDirs[:, wind[:, 0]] * \
-                     cDirs[:, wind[:, 1]] * cDirs[:,wind[:,2]] * \
-                     cDirs[:,wind[:,3]])),axis=0)
+                C = np.append(
+                    C,
+                    np.hstack(
+                        (
+                            np.zeros((ndirs, 7)),
+                            np.tile(wcnt, [ndirs, 1])
+                            * cDirs[:, wind[:, 0]]
+                            * cDirs[:, wind[:, 1]]
+                            * cDirs[:, wind[:, 2]]
+                            * cDirs[:, wind[:, 3]],
+                        )
+                    ),
+                    axis=0,
+                )
             if constraints[2] > 0:  # K < 3/(b*Dapp)
-                C = np.append(C, np.hstack(
-                    (np.zeros((ndirs, 1)),
-                     3 / self.maxDKIBval() * \
-                     np.tile(dcnt, [ndirs, 1]) * cDirs[:, dind[:, 0]],
-                     np.tile(-wcnt, [ndirs, 1]) * cDirs[:, wind[:, 1]] * \
-                     cDirs[:,wind[:, 2]] * cDirs[:,wind[:, 3]])),axis=0)
+                C = np.append(
+                    C,
+                    np.hstack(
+                        (
+                            np.zeros((ndirs, 1)),
+                            3
+                            / self.maxDKIBval()
+                            * np.tile(dcnt, [ndirs, 1])
+                            * cDirs[:, dind[:, 0]],
+                            np.tile(-wcnt, [ndirs, 1])
+                            * cDirs[:, wind[:, 1]]
+                            * cDirs[:, wind[:, 2]]
+                            * cDirs[:, wind[:, 3]],
+                        )
+                    ),
+                    axis=0,
+                )
         else:
             print('Invalid constraints. Please use format "[0, 0, 0]"')
         return C
 
-    def extractDTI(self) -> Tuple[
-            np.ndarray[float],
-            np.ndarray[float],
-            np.ndarray[float],
-            np.ndarray[float],
-            np.ndarray[float],
-            np.ndarray[float]
+    def extractDTI(
+        self,
+    ) -> Tuple[
+        np.ndarray[float],
+        np.ndarray[float],
+        np.ndarray[float],
+        np.ndarray[float],
+        np.ndarray[float],
+        np.ndarray[float],
     ]:
         """
         Extract all DTI parameters from DT tensor. Warning, this can
@@ -1025,7 +1111,7 @@ class DWI(object):
             Radial Diffusivity.
         ad: ndarray(dtype=float)
             Axial Diffusivity.
-        fa: ndarray(dtype=float) 
+        fa: ndarray(dtype=float)
             Fractional Anisotropy.
         fe: ndarray(dtype=float)
             First Eigenvectors.
@@ -1039,10 +1125,21 @@ class DWI(object):
         """
         # extract all tensor parameters from dt
         DT = np.reshape(
-            np.concatenate((self.dt[0, :], self.dt[1, :], self.dt[2, :],
-                            self.dt[1, :], self.dt[3, :], self.dt[4, :],
-                            self.dt[2, :], self.dt[4, :], self.dt[5, :])),
-            (3, 3, self.dt.shape[1]))
+            np.concatenate(
+                (
+                    self.dt[0, :],
+                    self.dt[1, :],
+                    self.dt[2, :],
+                    self.dt[1, :],
+                    self.dt[3, :],
+                    self.dt[4, :],
+                    self.dt[2, :],
+                    self.dt[4, :],
+                    self.dt[5, :],
+                )
+            ),
+            (3, 3, self.dt.shape[1]),
+        )
         # get the trace
         rdwi = highprecisionexp(np.matmul(self.b[:, 1:], self.dt))
         B = np.round(-(self.b[:, 0] + self.b[:, 3] + self.b[:, 5]) * 1000)
@@ -1052,15 +1149,18 @@ class DWI(object):
             t = np.where(B == uB[ib])
             trace[:, ib] = np.mean(rdwi[t[0], :], axis=0)
         nvox = self.dt.shape[1]
-        inputs = tqdm(range(0, nvox),
-                      desc='DTI Parameters',
-                      bar_format='{desc}: [{percentage:0.0f}%]',
-                      unit='vox',
-                      ncols=tqdmWidth)
+        inputs = tqdm(
+            range(0, nvox),
+            desc="DTI Parameters",
+            bar_format="{desc}: [{percentage:0.0f}%]",
+            unit="vox",
+            ncols=tqdmWidth,
+        )
         values, vectors = zip(
-            *Parallel(n_jobs=self.workers, prefer='processes') \
-                (delayed(self.dtiTensorParams)(DT[:, :, i]) for i in
-                 inputs))
+            *Parallel(n_jobs=self.workers, prefer="processes")(
+                delayed(self.dtiTensorParams)(DT[:, :, i]) for i in inputs
+            )
+        )
         values = np.reshape(np.abs(values), (nvox, 3))
         vectors = np.reshape(vectors, (nvox, 3, 3))
         self.DTIvectors = vectors
@@ -1071,23 +1171,28 @@ class DWI(object):
         md = (l1 + l2 + l3) / 3
         rd = (l2 + l3) / 2
         ad = l1
-        fa = np.sqrt(1 / 2) * \
-             np.sqrt((l1 - l2) ** 2 + \
-                     (l2 - l3) ** 2 + \
-                     (l3 - l1) ** 2) / \
-             np.sqrt(l1 ** 2 + l2 ** 2 + l3 ** 2)
-        fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1],
-                              fa * v1[:, :, :, 2]), axis=3))
+        fa = (
+            np.sqrt(1 / 2)
+            * np.sqrt((l1 - l2) ** 2 + (l2 - l3) ** 2 + (l3 - l1) ** 2)
+            / np.sqrt(l1**2 + l2**2 + l3**2)
+        )
+        fe = np.abs(
+            np.stack(
+                (fa * v1[:, :, :, 0], fa * v1[:, :, :, 1], fa * v1[:, :, :, 2]), axis=3
+            )
+        )
         trace = vectorize(trace.T, self.mask)
         return md, rd, ad, fa, fe, trace
 
-    def extractDKI(self) -> Tuple[
-            np.ndarray[float],
-            np.ndarray[float],
-            np.ndarray[float],
-            np.ndarray[float],
-            np.ndarray[float],
-            np.ndarray[float]
+    def extractDKI(
+        self,
+    ) -> Tuple[
+        np.ndarray[float],
+        np.ndarray[float],
+        np.ndarray[float],
+        np.ndarray[float],
+        np.ndarray[float],
+        np.ndarray[float],
     ]:
         """
         Extract all DKI parameters from DT tensor. Warning, this can
@@ -1125,15 +1230,19 @@ class DWI(object):
         akc = self.kurtosisCoeff(self.dt, dirs)
         mk = np.mean(akc, 0)
         nvox = self.dt.shape[1]
-        inputs = tqdm(range(0, nvox),
-                      desc='DKI Parameters',
-                      bar_format='{desc}: [{percentage:0.0f}%]',
-                      unit='vox',
-                      ncols=tqdmWidth)
-        ak, rk, kfa, mkt = zip(*Parallel(n_jobs=self.workers,
-                                  prefer='processes') \
-            (delayed(self.dkiTensorParams)(self.DTIvectors[i, :, 0],
-                                           self.dt[:, i]) for i in inputs))
+        inputs = tqdm(
+            range(0, nvox),
+            desc="DKI Parameters",
+            bar_format="{desc}: [{percentage:0.0f}%]",
+            unit="vox",
+            ncols=tqdmWidth,
+        )
+        ak, rk, kfa, mkt = zip(
+            *Parallel(n_jobs=self.workers, prefer="processes")(
+                delayed(self.dkiTensorParams)(self.DTIvectors[i, :, 0], self.dt[:, i])
+                for i in inputs
+            )
+        )
         ak = np.reshape(ak, (nvox))
         rk = np.reshape(rk, (nvox))
         kfa = np.reshape(kfa, (nvox))
@@ -1162,24 +1271,22 @@ class DWI(object):
             l_max suitable for DWI.
         """
         if not self.isfbi():
-            raise Exception('Input DWI is not an '
-        'FBI or HARDI acquisiton. Cannot compute '
-        'l_max.')
+            raise Exception(
+                "Input DWI is not an "
+                "FBI or HARDI acquisiton. Cannot compute "
+                "l_max."
+            )
         bt_unique = np.unique(self.grad[:, -1])
         fbi_vols = np.count_nonzero(self.grad[self.idxfbi(), -1])
         l_max = 0
-        vols = (l_max + 1) * (l_max/2 + 1)
+        vols = (l_max + 1) * (l_max / 2 + 1)
         while vols <= fbi_vols:
             l_max += 2
-            vols = (l_max + 1) * (l_max/2 + 1)
+            vols = (l_max + 1) * (l_max / 2 + 1)
         return l_max - 2
 
     def fbi(
-            self,
-            l_max: int = 6,
-            fbwm: bool = True,
-            rectify: bool = True,
-            res: str = 'med'
+        self, l_max: int = 6, fbwm: bool = True, rectify: bool = True, res: str = "med"
     ) -> Tuple[
         np.ndarray[float],
         np.ndarray[float],
@@ -1191,7 +1298,7 @@ class DWI(object):
         np.ndarray[float],
         np.ndarray[float],
         np.ndarray[float],
-        np.ndarray[float]
+        np.ndarray[float],
     ]:
         """
         Perform fiber ball imaging (FBI) and FBI white matter model
@@ -1240,13 +1347,13 @@ class DWI(object):
         De_fa: array_like(dtype=float)
             Extra-axonal FA
         min_cost: array_like(dtype=float)
-            Minimum cost of the cost function (first index of 
+            Minimum cost of the cost function (first index of
             min_cost_fn)
         min_cost_fn: array_like(dtype=float)
             Cost function
         """
-        #--------------------FUNCTION SEPARATOR-----------------------
-        
+        # --------------------FUNCTION SEPARATOR-----------------------
+
         def __fbi_rectify(fodf, sh_area, iter=1000):
             """
             Rectifies fODF values to eliminate all negative values while
@@ -1269,20 +1376,22 @@ class DWI(object):
             """
             # fODF rectification
             odf = fodf
-            fODF = fodf.real # grab real part of the fODF
+            fODF = fodf.real  # grab real part of the fODF
             fODF[np.isnan(fODF)] = 0
-            Fmax = np.max(fODF) # get the max peak value of the ODF
-            lB = 0 # initial lower bound
-            uB = Fmax # initial upper bound
-            M = 1 # initialze iteration counter
-            Mmax = iter # max iterations (could probably be 100 too)
+            Fmax = np.max(fODF)  # get the max peak value of the ODF
+            lB = 0  # initial lower bound
+            uB = Fmax  # initial upper bound
+            M = 1  # initialze iteration counter
+            Mmax = iter  # max iterations (could probably be 100 too)
             if Fmax > 0:
                 while M <= Mmax:
                     # BEGIN: bi-section algorithm
-                    midpt = (lB + uB)/2
-                    fODF_lB = np.sum((np.abs(fODF - lB) - fODF - lB)*sh_area, axis=0)
-                    fODF_midpt = np.sum((np.abs(fODF - midpt) - fODF - midpt)*sh_area, axis=0)
-                    if fODF_midpt == 0 or (uB - lB)/2 < minZero:
+                    midpt = (lB + uB) / 2
+                    fODF_lB = np.sum((np.abs(fODF - lB) - fODF - lB) * sh_area, axis=0)
+                    fODF_midpt = np.sum(
+                        (np.abs(fODF - midpt) - fODF - midpt) * sh_area, axis=0
+                    )
+                    if fODF_midpt == 0 or (uB - lB) / 2 < minZero:
                         EPS = midpt
                         break
                     else:
@@ -1293,14 +1402,16 @@ class DWI(object):
                             uB = midpt
                     # END: bi-section algorithm
                 # Subract solution from each ODF point
-                odf = (1/2)*(np.abs(odf - EPS) + odf - EPS)
+                odf = (1 / 2) * (np.abs(odf - EPS) + odf - EPS)
                 odf = odf.real
                 # due to numerical error, we manually set
                 # very very very tiny peaks to zero after the fact...
                 odf[np.logical_and(odf > -minZero, odf < minZero)] = 0
             return odf
 
-        def __costCalculator(grid, BT, GT, b0, IMG, iDT, iaDT, zeta, shB, Pl0, g2l_fa_R_b, clm):
+        def __costCalculator(
+            grid, BT, GT, b0, IMG, iDT, iaDT, zeta, shB, Pl0, g2l_fa_R_b, clm
+        ):
             """
             Computes the cost function at voxel for FBWM calculations.
             Refer to paper for additional information.
@@ -1331,28 +1442,63 @@ class DWI(object):
                 Information not provided
             clm : array_like(dtype=complex)
                 fODF SH coefficients
-            
+
             Returns
             -------
             cost_fn : array_like(dype=float)
                 Cost values for input grid
             """
             if grid.ndim > 1:
-                raise Exception('Grid needs to be a flattened 1D vector')
+                raise Exception("Grid needs to be a flattened 1D vector")
             ndir = [len(x) for x in GT]
             cost_fn = np.zeros_like(grid)
-            with np.errstate(all='ignore'):
+            with np.errstate(all="ignore"):
                 for idx, awf in np.ndenumerate(grid):
                     for b in range(0, len(BT)):
-                        Se = (b0 * np.exp((-BT[b] * (1-awf)**-1) * np.diag((GT[b].dot((iDT - (awf**3 * zeta**-2) * iaDT).dot(GT[b].T)))))) * (1 - awf) # Eq. 3 FBWM paper
-                        Sa = (2*np.pi*b0*zeta*np.sqrt(np.pi/BT[b])) * (shB[b].dot((Pl0 * g2l_fa_R_b[b,idx,:][0]*clm))) # Eq. 4 FBM paper
-                        cost_fn[idx] = cost_fn[idx] + ndir[b]**-1 * np.sum((IMG[b] - Se.real - Sa.real)**2)
-                    cost_fn[idx] = b0**-1 * np.sqrt(len(BT)**-1 * cost_fn[idx]) # Eq. 21 FBWM paper
+                        Se = (
+                            b0
+                            * np.exp(
+                                (-BT[b] * (1 - awf) ** -1)
+                                * np.diag(
+                                    (
+                                        GT[b].dot(
+                                            (iDT - (awf**3 * zeta**-2) * iaDT).dot(
+                                                GT[b].T
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        ) * (
+                            1 - awf
+                        )  # Eq. 3 FBWM paper
+                        Sa = (2 * np.pi * b0 * zeta * np.sqrt(np.pi / BT[b])) * (
+                            shB[b].dot((Pl0 * g2l_fa_R_b[b, idx, :][0] * clm))
+                        )  # Eq. 4 FBM paper
+                        cost_fn[idx] = cost_fn[idx] + ndir[b] ** -1 * np.sum(
+                            (IMG[b] - Se.real - Sa.real) ** 2
+                        )
+                    cost_fn[idx] = b0**-1 * np.sqrt(
+                        len(BT) ** -1 * cost_fn[idx]
+                    )  # Eq. 21 FBWM paper
             return cost_fn
 
-        def fbi_helper(dwi, b0, B, H, Pl0, gl, rectify=True,
-            fbwm_SH1=None, fbwm_SH2=None, fbwm_B1=None, fbwm_B2=None,
-            fbwm_dt=None, fbwm_degs=None, sh_area=None):
+        def fbi_helper(
+            dwi,
+            b0,
+            B,
+            H,
+            Pl0,
+            gl,
+            rectify=True,
+            fbwm_SH1=None,
+            fbwm_SH2=None,
+            fbwm_B1=None,
+            fbwm_B2=None,
+            fbwm_dt=None,
+            fbwm_degs=None,
+            sh_area=None,
+        ):
             """
             Computes FBI calculations for a given voxel. This function
             will perform FBWM only if all optional FBWM parameters are
@@ -1414,36 +1560,52 @@ class DWI(object):
             De_fa: float
                 Extra-axonal FA.
             min_cost: float
-                Minimum cost of the cost function (first index of 
+                Minimum cost of the cost function (first index of
                 min_cost_fn).
             min_cost_fn: array_like(dtype=float)
                 Cost function vector.
             """
             fbwm = False
-            if not ((fbwm_SH1 is None) or (fbwm_SH2 is None) or 
-                    (fbwm_B1 is None) or (fbwm_B2 is None) or 
-                    (fbwm_dt is None)):
+            if not (
+                (fbwm_SH1 is None)
+                or (fbwm_SH2 is None)
+                or (fbwm_B1 is None)
+                or (fbwm_B2 is None)
+                or (fbwm_dt is None)
+            ):
                 fbwm = True
             if sh_area is None:
                 rectify = False
             # For references to alm and clm see FBI papers, they (alm
             # and clm) are defined in all of them
-            alm = np.dot(np.linalg.pinv(B),(dwi/b0)) # DWI signal SH coefficients (these are complex)
+            alm = np.dot(
+                np.linalg.pinv(B), (dwi / b0)
+            )  # DWI signal SH coefficients (these are complex)
             alm[np.isnan(alm)] = 0
-            a00 = alm[0].real # the imaginary part is on the order of 10^-18 (this is for zeta)
-            clm = alm*gl[0]*highprecisionpower(np.sqrt(4*np.pi)*alm[0]*Pl0*gl,-1) # fODF SH coefficients (these are complex)
+            a00 = alm[
+                0
+            ].real  # the imaginary part is on the order of 10^-18 (this is for zeta)
+            clm = (
+                alm
+                * gl[0]
+                * highprecisionpower(np.sqrt(4 * np.pi) * alm[0] * Pl0 * gl, -1)
+            )  # fODF SH coefficients (these are complex)
             # need to figure out how to do peak detection (on this variable and then read out odf structures like in MATLAB code)
             # only the real part would be read out but that would need to be done later on after the rectification process below
-            ODF = np.matmul(H,clm)
+            ODF = np.matmul(H, clm)
             if rectify:
                 ODF = __fbi_rectify(ODF.real, sh_area, iter=100)
                 # Re-expand the rectified fODF into SH's
-                clm = np.matmul(sh_area*ODF,np.conj(H))
-            clm = (clm/clm[0])*(1/np.sqrt(4*np.pi)) # normalize clm
+                clm = np.matmul(sh_area * ODF, np.conj(H))
+            clm = (clm / clm[0]) * (1 / np.sqrt(4 * np.pi))  # normalize clm
             # zeta and FAA calculations
             # NOTE: zeta is not affected by the rectification, only FAA
-            zeta = a00*np.sqrt(self.maxBval())/np.pi
-            faa = np.sqrt(3*np.sum(np.abs(clm[1:6]**2))/(5*np.abs(clm[0])**2 + 2 * np.sum(np.abs(clm[1:6]**2))))
+            zeta = a00 * np.sqrt(self.maxBval()) / np.pi
+            faa = np.sqrt(
+                3
+                * np.sum(np.abs(clm[1:6] ** 2))
+                / (5 * np.abs(clm[0]) ** 2 + 2 * np.sum(np.abs(clm[1:6] ** 2)))
+            )
             # BEGIN: construct axonal DT (aDT)
             c00 = clm[0]
             c2_2 = clm[1]
@@ -1451,61 +1613,124 @@ class DWI(object):
             c20 = clm[3]
             c21 = clm[4]
             c22 = clm[5]
-            A11 = ((np.sqrt(30)/3)*c00 - (np.sqrt(6)/3)*c20 + c22 + c2_2)
-            A22 = ((np.sqrt(30)/3)*c00 - (np.sqrt(6)/3)*c20 - c22 - c2_2)
-            A33 = ((np.sqrt(30)/3)*c00 + (2*np.sqrt(6)/3)*c20)
-            A12 = (1j*(c22 - c2_2))
-            A13 = ((-c21 + c2_1))
-            A23 = (1j*(-c21 - c2_1))
+            A11 = (np.sqrt(30) / 3) * c00 - (np.sqrt(6) / 3) * c20 + c22 + c2_2
+            A22 = (np.sqrt(30) / 3) * c00 - (np.sqrt(6) / 3) * c20 - c22 - c2_2
+            A33 = (np.sqrt(30) / 3) * c00 + (2 * np.sqrt(6) / 3) * c20
+            A12 = 1j * (c22 - c2_2)
+            A13 = -c21 + c2_1
+            A23 = 1j * (-c21 - c2_1)
             aDT = np.array([A11, A12, A13, A12, A22, A23, A13, A23, A33]).real
-            aDT = 1/(c00*np.sqrt(30))*aDT
-            iaDT = np.reshape(aDT,(3,3)).real
+            aDT = 1 / (c00 * np.sqrt(30)) * aDT
+            iaDT = np.reshape(aDT, (3, 3)).real
             if fbwm:
                 bval = np.rint(self.grad[:, -1])
                 BT = np.unique(bval)
-                BT = BT[BT != 0] # Exclude B0s
+                BT = BT[BT != 0]  # Exclude B0s
                 GT = [self.grad[bval == x, 0:3] for x in BT]
                 ndir = [len(x) for x in GT]
-                f_grid = np.linspace(0,1,100) # define AWF grid (100 pts evenly spaced between 0 (min) and 1 (max))
-                int_grid = np.linspace(0,99,100, dtype=int) # define grid points to iterate over (100 of them)
-                awf_grid = np.linspace(0,1,100) # another AWF grid
+                f_grid = np.linspace(
+                    0, 1, 100
+                )  # define AWF grid (100 pts evenly spaced between 0 (min) and 1 (max))
+                int_grid = np.linspace(
+                    0, 99, 100, dtype=int
+                )  # define grid points to iterate over (100 of them)
+                awf_grid = np.linspace(0, 1, 100)  # another AWF grid
                 # This holds the SH basis sets for each b-value shell
-                shB = [fbwm_SH1,fbwm_SH2,B] # list object: to access, shB[0] = B1 (for example)
+                shB = [
+                    fbwm_SH1,
+                    fbwm_SH2,
+                    B,
+                ]  # list object: to access, shB[0] = B1 (for example)
                 # This hold all DWI volumes for each b-vlaue shell
-                IMG = [fbwm_B1, fbwm_B2, dwi] # list object: to access
+                IMG = [fbwm_B1, fbwm_B2, dwi]  # list object: to access
                 # BEGIN: DT construction
                 iDT = np.array(
-                    [fbwm_dt[0],
-                    fbwm_dt[3],
-                    fbwm_dt[4],
-                    fbwm_dt[3],
-                    fbwm_dt[1],
-                    fbwm_dt[5],
-                    fbwm_dt[4],
-                    fbwm_dt[5],
-                    fbwm_dt[2]]
-                    )
-                iDT = np.reshape(iDT,(3,3))
+                    [
+                        fbwm_dt[0],
+                        fbwm_dt[3],
+                        fbwm_dt[4],
+                        fbwm_dt[3],
+                        fbwm_dt[1],
+                        fbwm_dt[5],
+                        fbwm_dt[4],
+                        fbwm_dt[5],
+                        fbwm_dt[2],
+                    ]
+                )
+                iDT = np.reshape(iDT, (3, 3))
                 # END: DT construction
                 # initialze correction factor elements that will be looped over and filled accordingly...
-                g2l_fa_R = np.zeros((len(Pl0),f_grid.shape[0]), order = 'F')
-                g2l_fa_R_b = np.zeros((len(BT),f_grid.shape[0],len(Pl0)), order = 'F')
-                g2l_fa_R_large = np.zeros((len(Pl0),f_grid.shape[0]), order = 'F')
+                g2l_fa_R = np.zeros((len(Pl0), f_grid.shape[0]), order="F")
+                g2l_fa_R_b = np.zeros((len(BT), f_grid.shape[0], len(Pl0)), order="F")
+                g2l_fa_R_large = np.zeros((len(Pl0), f_grid.shape[0]), order="F")
                 # BEGIN: cost function
                 # Not many comments here, See McKinnon 2018 FBWm paper for details
-                for b in range(0,len(BT)):
-                    idx_hyper = BT[b] * np.power(f_grid,2) * np.power(zeta,-2) < 20 # when should hypergeometric function be implemented? When b*D is small
+                for b in range(0, len(BT)):
+                    idx_hyper = (
+                        BT[b] * np.power(f_grid, 2) * np.power(zeta, -2) < 20
+                    )  # when should hypergeometric function be implemented? When b*D is small
                     idx_Y = 0
                     for l in degs[::2]:
-                        hypergeom_opt = np.sum((gamma((l+1)/2 + int_grid) * gamma(l+(3/2)) * ((-BT[b] * f_grid[idx_hyper]**2 * zeta**-2)*np.ones((1,len(f_grid[idx_hyper])))).T ** int_grid / (factorial(int_grid) * gamma(l+(3/2) + int_grid) * gamma((l+1)/2))),1)*np.ones((1,len(f_grid[idx_hyper])))
-                        g2l_fa_R[idx_Y:idx_Y+(2*l+1),np.squeeze(idx_hyper)] = npm.repmat((factorial(l//2) * (BT[b] * f_grid[idx_hyper]**2 * zeta**-2) ** ((l+1)/2) / gamma(l+(3/2)) * hypergeom_opt),(2*l+1),1) # Eq. 9 FBWM paper
-                        idx_Y = idx_Y + (2*l+1)
-                    g2l_fa_R_b[b,np.squeeze(idx_hyper),:] = g2l_fa_R[:,np.squeeze(idx_hyper)].T
+                        hypergeom_opt = np.sum(
+                            (
+                                gamma((l + 1) / 2 + int_grid)
+                                * gamma(l + (3 / 2))
+                                * (
+                                    (-BT[b] * f_grid[idx_hyper] ** 2 * zeta**-2)
+                                    * np.ones((1, len(f_grid[idx_hyper])))
+                                ).T
+                                ** int_grid
+                                / (
+                                    factorial(int_grid)
+                                    * gamma(l + (3 / 2) + int_grid)
+                                    * gamma((l + 1) / 2)
+                                )
+                            ),
+                            1,
+                        ) * np.ones((1, len(f_grid[idx_hyper])))
+                        g2l_fa_R[
+                            idx_Y : idx_Y + (2 * l + 1), np.squeeze(idx_hyper)
+                        ] = npm.repmat(
+                            (
+                                factorial(l // 2)
+                                * (BT[b] * f_grid[idx_hyper] ** 2 * zeta**-2)
+                                ** ((l + 1) / 2)
+                                / gamma(l + (3 / 2))
+                                * hypergeom_opt
+                            ),
+                            (2 * l + 1),
+                            1,
+                        )  # Eq. 9 FBWM paper
+                        idx_Y = idx_Y + (2 * l + 1)
+                    g2l_fa_R_b[b, np.squeeze(idx_hyper), :] = g2l_fa_R[
+                        :, np.squeeze(idx_hyper)
+                    ].T
                     idx_Y = 0
                     for l in degs[::2]:
-                        g2l_fa_R_large[idx_Y:idx_Y+(2*l+1), np.squeeze(~idx_hyper)] = npm.repmat((np.exp(-l//2 * (l+1) / ((2*BT[b] * (f_grid[~idx_hyper]**2 * zeta**-2))))),(2*l+1),1) # Eq. 20 FBI paper
-                        idx_Y = idx_Y + (2*l+1)
-                    g2l_fa_R_b[b,np.squeeze(~idx_hyper),:] = g2l_fa_R_large[:,np.squeeze(~idx_hyper)].T
+                        g2l_fa_R_large[
+                            idx_Y : idx_Y + (2 * l + 1), np.squeeze(~idx_hyper)
+                        ] = npm.repmat(
+                            (
+                                np.exp(
+                                    -l
+                                    // 2
+                                    * (l + 1)
+                                    / (
+                                        (
+                                            2
+                                            * BT[b]
+                                            * (f_grid[~idx_hyper] ** 2 * zeta**-2)
+                                        )
+                                    )
+                                )
+                            ),
+                            (2 * l + 1),
+                            1,
+                        )  # Eq. 20 FBI paper
+                        idx_Y = idx_Y + (2 * l + 1)
+                    g2l_fa_R_b[b, np.squeeze(~idx_hyper), :] = g2l_fa_R_large[
+                        :, np.squeeze(~idx_hyper)
+                    ].T
                 cost_fn = __costCalculator(
                     awf_grid,
                     BT,
@@ -1518,22 +1743,30 @@ class DWI(object):
                     shB,
                     Pl0,
                     g2l_fa_R_b,
-                    clm
+                    clm,
                 )
-                min_cost_fn_idx = np.argsort(cost_fn, axis=0) # find the indexes of the sorted cost_fn values
-                min_cost_fn = np.take_along_axis(cost_fn, min_cost_fn_idx, axis=0) # sort those values
-                min_awf = awf_grid[min_cost_fn_idx[0]] # grad the minimum AWF value based on the cost_fn sorting done immeidately prior to this... 
+                min_cost_fn_idx = np.argsort(
+                    cost_fn, axis=0
+                )  # find the indexes of the sorted cost_fn values
+                min_cost_fn = np.take_along_axis(
+                    cost_fn, min_cost_fn_idx, axis=0
+                )  # sort those values
+                min_awf = awf_grid[
+                    min_cost_fn_idx[0]
+                ]  # grad the minimum AWF value based on the cost_fn sorting done immeidately prior to this...
                 De = (iDT - (min_awf**3 * zeta**-2) * iaDT) / (1 - min_awf)
                 Da = min_awf**2 / zeta**2
-                iDe = De # intermeidate De
+                iDe = De  # intermeidate De
                 iDe[np.isnan(iDe)] = minZero
                 iDe[np.isinf(iDe)] = minZero
-                L,V = np.linalg.eig(iDe) # L : eigVals and V: eigVecs
-                L = np.sort(L) # sort them (this is ascending)
-                L = L[::-1] # reverse the order so they are descending (high -> low)
-                N = 1 # initialize counter
+                L, V = np.linalg.eig(iDe)  # L : eigVals and V: eigVecs
+                L = np.sort(L)  # sort them (this is ascending)
+                L = L[::-1]  # reverse the order so they are descending (high -> low)
+                N = 1  # initialize counter
                 if L[0] < 0 or L[1] < 0 or L[2] < 0:
-                    while L[0] < 0 or L[1] < 0 or L[2] < 0: # find new AWF values if L's are < 0
+                    while (
+                        L[0] < 0 or L[1] < 0 or L[2] < 0
+                    ):  # find new AWF values if L's are < 0
                         N = N + 1
                         if N < 100:
                             min_awf = awf_grid[min_cost_fn_idx[N]]
@@ -1542,19 +1775,22 @@ class DWI(object):
                             break
                         # update De here...
                         De = (iDT - (min_awf**3 * zeta**2) * iaDT) / (1 - min_awf)
-                        Da = min_awf**2 / zeta**2 # recalculate Da too...
+                        Da = min_awf**2 / zeta**2  # recalculate Da too...
                     # Now recalculate eigVals again with correct AWF values
                     iDe = De
                     iDe[np.isnan(iDe)] = minZero
                     iDe[np.isinf(iDe)] = minZero
-                    L,V = np.linalg.eig(iDe) # L : eigVals and V: eigVecs
-                    L = np.sort(L) # again, ascending
-                    L = L[::-1] # now, descending
-                with np.errstate(invalid='ignore'):
-                    De_ax = L[0] # Eq. 24 FBWM paper, axial extra-axonal diffusivity
-                    De_rad = (L[1] + L[2])/2 # radial De
-                    De_fa = np.sqrt(((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2 ) / (2 * np.sum(L ** 2))) # extra-axonal FA
-                    De_mean = (1/3) * (2 * De_rad + De_ax) # average De
+                    L, V = np.linalg.eig(iDe)  # L : eigVals and V: eigVecs
+                    L = np.sort(L)  # again, ascending
+                    L = L[::-1]  # now, descending
+                with np.errstate(invalid="ignore"):
+                    De_ax = L[0]  # Eq. 24 FBWM paper, axial extra-axonal diffusivity
+                    De_rad = (L[1] + L[2]) / 2  # radial De
+                    De_fa = np.sqrt(
+                        ((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2)
+                        / (2 * np.sum(L**2))
+                    )  # extra-axonal FA
+                    De_mean = (1 / 3) * (2 * De_rad + De_ax)  # average De
                     min_cost = min_cost_fn[0]
             else:
                 min_awf = None
@@ -1566,21 +1802,36 @@ class DWI(object):
                 min_cost = None
                 min_cost_fn = None
 
-            return zeta, faa, clm, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
-        #--------------------FUNCTION SEPARATOR-----------------------
+            return (
+                zeta,
+                faa,
+                clm,
+                min_awf,
+                Da,
+                De_mean,
+                De_ax,
+                De_rad,
+                De_fa,
+                min_cost,
+                min_cost_fn,
+            )
 
-        if fbwm and not hasattr(self, 'dt'):
-            raise Exception('Cannot compute FBWM parameters '
-        'without running diffusion tensor fitting first. '
-        'Please run DWI.fit(constraints) before running DWI.fbi().')
+        # --------------------FUNCTION SEPARATOR-----------------------
+
+        if fbwm and not hasattr(self, "dt"):
+            raise Exception(
+                "Cannot compute FBWM parameters "
+                "without running diffusion tensor fitting first. "
+                "Please run DWI.fit(constraints) before running DWI.fbi()."
+            )
         if l_max % 2 != 0:
-            raise Exception('Please provide l_max as a postive '
-        'and even integer')
+            raise Exception("Please provide l_max as a postive " "and even integer")
         if l_max > self.optimal_lmax():
-            print('[WARNING]: l_max value provided ({}) is '
-            'more than that supported by DWI ({}). Reverting '
-            'to l_max = {}'.format(l_max, self.optimal_lmax(),
-            self.optimal_lmax()))
+            print(
+                "[WARNING]: l_max value provided ({}) is "
+                "more than that supported by DWI ({}). Reverting "
+                "to l_max = {}".format(l_max, self.optimal_lmax(), self.optimal_lmax())
+            )
             l_max = self.optimal_lmax()
         img = self.img
         bt_unique = np.unique(self.grad[:, -1])
@@ -1592,9 +1843,9 @@ class DWI(object):
         img = vectorize(img, self.mask)
         # Create shperical harmonic (SH) base set
         degs = np.arange(l_max + 1, dtype=int)
-        l_num = 2 * degs + 1 # how many per degree (evens only)
+        l_num = 2 * degs + 1  # how many per degree (evens only)
         harmonics = []
-        sh_end = 0 # initialize the SH set for indexing
+        sh_end = 0  # initialize the SH set for indexing
         for _, phase in enumerate(l_num[::2]):
             sh_start = sh_end + phase - 1
             sh_end = sh_start + phase - 1
@@ -1603,45 +1854,68 @@ class DWI(object):
         # spherical expansion using the experimentally defined
         # gradients from the scanner
         phi = np.arccos(self.grad[self.idxfbi(), 2])
-        theta = np.arctan2(self.grad[self.idxfbi() ,1], self.grad[self.idxfbi() ,0])
+        theta = np.arctan2(self.grad[self.idxfbi(), 1], self.grad[self.idxfbi(), 0])
         # gradients for resampling from distribution
-        spherical_grid, idx, idx8, AREA, faces, separation_angle = sphericalsampling.odfgrid(res)
-        S1 = spherical_grid[:,0] # phi
-        S2 = spherical_grid[:,1] # theta
+        (
+            spherical_grid,
+            idx,
+            idx8,
+            AREA,
+            faces,
+            separation_angle,
+        ) = sphericalsampling.odfgrid(res)
+        S1 = spherical_grid[:, 0]  # phi
+        S2 = spherical_grid[:, 1]  # theta
         # B = shbasis(degs, phi, theta)
         # H = shbasis(degs, S1, S2)
-        B = odf.shbasis(degs, phi, theta, method='scipy')
+        B = odf.shbasis(degs, phi, theta, method="scipy")
         B = B[:, harmonics]
-        H = odf.shbasis(degs, S1, S2, method='scipy')
+        H = odf.shbasis(degs, S1, S2, method="scipy")
         H = H[:, harmonics]
         idx_Y = 0
-        Pl0 = np.zeros((len(harmonics), 1), order ='F') # need Legendre polynomial Pl0
-        gl = np.zeros((len(harmonics), 1), order ='F') # calculate correction factor (see original FBI paper, Jensen 2016)
+        Pl0 = np.zeros((len(harmonics), 1), order="F")  # need Legendre polynomial Pl0
+        gl = np.zeros(
+            (len(harmonics), 1), order="F"
+        )  # calculate correction factor (see original FBI paper, Jensen 2016)
         for l in degs[::2]:
-            Pl0[idx_Y:idx_Y+(2*l+1), :] = (np.power(-1,l//2)* np.math.factorial(l)) / (np.power(4,l//2)*np.power(np.math.factorial(l//2),2))*np.ones((2*l+1,1))
-            gl[idx_Y:idx_Y+(2*l+1), :] = (np.math.factorial(l//2)*np.power(self.maxBval()*th.__d0__,(l+1)/2))/gamma(l+3/2)*hyp1f1((l+1)/2,l+3/2,-self.maxBval()*th.__d0__)*np.ones((2*l+1,1))
-            idx_Y = idx_Y + (2*l+1)
+            Pl0[idx_Y : idx_Y + (2 * l + 1), :] = (
+                (np.power(-1, l // 2) * np.math.factorial(l))
+                / (np.power(4, l // 2) * np.power(np.math.factorial(l // 2), 2))
+                * np.ones((2 * l + 1, 1))
+            )
+            gl[idx_Y : idx_Y + (2 * l + 1), :] = (
+                (
+                    np.math.factorial(l // 2)
+                    * np.power(self.maxBval() * th.__d0__, (l + 1) / 2)
+                )
+                / gamma(l + 3 / 2)
+                * hyp1f1((l + 1) / 2, l + 3 / 2, -self.maxBval() * th.__d0__)
+                * np.ones((2 * l + 1, 1))
+            )
+            idx_Y = idx_Y + (2 * l + 1)
         Pl0 = np.squeeze(Pl0)
         gl = np.squeeze(gl)
-        inputs = tqdm(range(0, img.shape[1]),
-                        desc='FBI Fit',
-                        bar_format='{desc}: [{percentage:0.0f}%]',
-                        unit='vox',
-                        ncols=tqdmWidth)
+        inputs = tqdm(
+            range(0, img.shape[1]),
+            desc="FBI Fit",
+            bar_format="{desc}: [{percentage:0.0f}%]",
+            unit="vox",
+            ncols=tqdmWidth,
+        )
         if fbwm:
             # Index gradients based on b1000 and b2000 shells
             bval = np.rint(self.grad[:, -1])
             phi1 = np.arccos(self.grad[bval == 1, 2])
-            theta1 =  np.arctan2(self.grad[bval == 1, 1],self.grad[bval == 1,0])
+            theta1 = np.arctan2(self.grad[bval == 1, 1], self.grad[bval == 1, 0])
 
             phi2 = np.arccos(self.grad[bval == 2, 2])
-            theta2 =  np.arctan2(self.grad[bval == 2, 1], self.grad[bval == 2,0])
+            theta2 = np.arctan2(self.grad[bval == 2, 1], self.grad[bval == 2, 0])
             # SH basis set for the two B-values in DKI
-            fbwm_SH1 = odf.shbasis(degs,phi1,theta1, method='scipy')
-            fbwm_SH2 = odf.shbasis(degs,phi2,theta2,method='scipy')
+            fbwm_SH1 = odf.shbasis(degs, phi1, theta1, method="scipy")
+            fbwm_SH2 = odf.shbasis(degs, phi2, theta2, method="scipy")
             fbwm_SH1 = fbwm_SH1[:, harmonics]
             fbwm_SH2 = fbwm_SH2[:, harmonics]
-            dt, kt = self.tensorReorder('dki')
+            dt, kt = self.tensorReorder("dki")
             dt = vectorize(dt, self.mask)
             # for i in inputs:
             #     zeta, faa, fodf, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
@@ -1661,24 +1935,39 @@ class DWI(object):
             #             fbwm_degs=degs,
             #             sh_area=AREA
             #             )
-            zeta, faa, fodf, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
-                                    prefer='processes') \
-                (delayed(fbi_helper)(
-                    dwi=img[self.idxfbi(), i],
-                    b0 = b0[i],
-                    B = B,
-                    H = H,
-                    Pl0=Pl0,
-                    gl = gl,
-                    rectify=rectify,
-                    fbwm_SH1 = fbwm_SH1,
-                    fbwm_SH2 = fbwm_SH2,
-                    fbwm_B1 = img[bval == 1, i],
-                    fbwm_B2 = img[bval == 2, i],
-                    fbwm_dt = dt[:, i],
-                    fbwm_degs=degs,
-                    sh_area=AREA
-                ) for i in inputs))
+            (
+                zeta,
+                faa,
+                fodf,
+                min_awf,
+                Da,
+                De_mean,
+                De_ax,
+                De_rad,
+                De_fa,
+                min_cost,
+                min_cost_fn,
+            ) = zip(
+                *Parallel(n_jobs=self.workers, prefer="processes")(
+                    delayed(fbi_helper)(
+                        dwi=img[self.idxfbi(), i],
+                        b0=b0[i],
+                        B=B,
+                        H=H,
+                        Pl0=Pl0,
+                        gl=gl,
+                        rectify=rectify,
+                        fbwm_SH1=fbwm_SH1,
+                        fbwm_SH2=fbwm_SH2,
+                        fbwm_B1=img[bval == 1, i],
+                        fbwm_B2=img[bval == 2, i],
+                        fbwm_dt=dt[:, i],
+                        fbwm_degs=degs,
+                        sh_area=AREA,
+                    )
+                    for i in inputs
+                )
+            )
         else:
             # for i in inputs:
             #     zeta, faa, fodf, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
@@ -1692,19 +1981,34 @@ class DWI(object):
             #             rectify=rectify,
             #             sh_area=AREA
             #             )
-            zeta, faa, fodf, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = zip(*Parallel(n_jobs=self.workers,
-                                    prefer='processes') \
-                (delayed(fbi_helper)(
-                    dwi=img[self.idxfbi(), i],
-                    b0 = b0[i],
-                    B = B,
-                    H = H,
-                    Pl0=Pl0,
-                    gl = gl,
-                    rectify=rectify,
-                    sh_area=AREA
-                ) for i in inputs))
-        fodf_mrtrix = odf.odf_conversion(np.array(fodf).T, target='tournier')
+            (
+                zeta,
+                faa,
+                fodf,
+                min_awf,
+                Da,
+                De_mean,
+                De_ax,
+                De_rad,
+                De_fa,
+                min_cost,
+                min_cost_fn,
+            ) = zip(
+                *Parallel(n_jobs=self.workers, prefer="processes")(
+                    delayed(fbi_helper)(
+                        dwi=img[self.idxfbi(), i],
+                        b0=b0[i],
+                        B=B,
+                        H=H,
+                        Pl0=Pl0,
+                        gl=gl,
+                        rectify=rectify,
+                        sh_area=AREA,
+                    )
+                    for i in inputs
+                )
+            )
+        fodf_mrtrix = odf.odf_conversion(np.array(fodf).T, target="tournier")
         zeta = vectorize(np.array(zeta), self.mask)
         faa = vectorize(np.array(faa), self.mask)
         fodf = vectorize(np.array(fodf).T, self.mask)
@@ -1717,14 +2021,29 @@ class DWI(object):
         De_fa = vectorize(np.array(De_fa), self.mask)
         min_cost = vectorize(np.array(min_cost), self.mask)
         min_cost_fn = vectorize(np.array(min_cost_fn).T, self.mask)
-        return zeta, faa, fodf, fodf_mrtrix, awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn
+        return (
+            zeta,
+            faa,
+            fodf,
+            fodf_mrtrix,
+            awf,
+            Da,
+            De_mean,
+            De_ax,
+            De_rad,
+            De_fa,
+            min_cost,
+            min_cost_fn,
+        )
 
-    def extractWMTI(self) -> Tuple[
+    def extractWMTI(
+        self,
+    ) -> Tuple[
         np.ndarray[float],
         np.ndarray[float],
         np.ndarray[float],
         np.ndarray[float],
-        np.ndarray[float]
+        np.ndarray[float],
     ]:
         """
         Returns white matter tract integrity (WMTI) parameters. Warning:
@@ -1751,20 +2070,20 @@ class DWI(object):
         ias_tort: ndarray(dtype=float)
             Intra-axonal Space Tortuosity
         """
+
         def wmtihelper(dt, dir, adc, akc, awf, adc2dt):
             # Avoid complex output. However,
             # negative AKC might be taken care of by applying constraints
-            with np.errstate(invalid='ignore'):
-                akc[akc < minZero] = minZero 
+            with np.errstate(invalid="ignore"):
+                akc[akc < minZero] = minZero
             try:
                 # Eigenvalue decomposition of De(extra-axonal)
                 De = np.multiply(
-                    adc,
-                    1 + np.sqrt(
-                        (np.multiply(akc, awf) / (3 * (1 - awf)))))
+                    adc, 1 + np.sqrt((np.multiply(akc, awf) / (3 * (1 - awf))))
+                )
                 dt_e = np.matmul(adc2dt, De)
                 DTe = dt_e[[0, 1, 2, 1, 3, 4, 2, 4, 5]]
-                DTe = np.reshape(DTe, (3, 3), order='F')
+                DTe = np.reshape(DTe, (3, 3), order="F")
                 eigval = sla.eigh(DTe, eigvals_only=True)
                 eigval = np.sort(eigval)[::-1]
                 eas_ad = eigval[0]
@@ -1780,47 +2099,51 @@ class DWI(object):
             try:
                 # Eigenvalue decomposition of Da (intra-axonal)
                 Di = np.multiply(
-                    adc,
-                    1 - np.sqrt(
-                        (np.multiply(akc, (1 - awf)) / (3 * awf))))
+                    adc, 1 - np.sqrt((np.multiply(akc, (1 - awf)) / (3 * awf)))
+                )
                 dt_i = np.matmul(adc2dt, Di)
                 DTi = dt_i[[0, 1, 2, 1, 3, 4, 2, 4, 5]]
-                DTi = np.reshape(DTi, (3, 3), order='F')
+                DTi = np.reshape(DTi, (3, 3), order="F")
                 eigval = sla.eigh(DTi, eigvals_only=True)
                 eigval = np.sort(eigval)[::-1]
                 ias_da = np.sum(eigval)
-                np.seterr(invalid='raise')
+                np.seterr(invalid="raise")
             except:
                 ias_da = minZero
             return eas_ad, eas_rd, eas_tort, ias_da
+
         dir = dwidirs.dirs10000
         nvox = self.dt.shape[1]
         N = dir.shape[0]
         nblocks = 10
         maxk = np.zeros((nvox, nblocks)).astype(float)
-        inputs = tqdm(range(nblocks),
-                      desc='Extracting AWF',
-                      bar_format='{desc}: [{percentage:0.0f}%]',
-                      unit='iter',
-                      ncols=tqdmWidth)
+        inputs = tqdm(
+            range(nblocks),
+            desc="Extracting AWF",
+            bar_format="{desc}: [{percentage:0.0f}%]",
+            unit="iter",
+            ncols=tqdmWidth,
+        )
         for i in inputs:
-            maxk = np.stack(self.kurtosisCoeff(
-                self.dt,dir[int(N/nblocks*i):int(N/nblocks*(i+1))])).astype(float)
+            maxk = np.stack(
+                self.kurtosisCoeff(
+                    self.dt, dir[int(N / nblocks * i) : int(N / nblocks * (i + 1))]
+                )
+            ).astype(float)
             maxk = np.nanmax(maxk, axis=0)
         awf = np.divide(maxk, (maxk + 3)).astype(float)
         # Changes voxels less than minZero, nans and infs to minZero
         truncateIdx = np.logical_or(
-            np.logical_or(np.isnan(awf), np.isinf(awf)),
-            (awf < minZero))
+            np.logical_or(np.isnan(awf), np.isinf(awf)), (awf < minZero)
+        )
         awf[truncateIdx] = minZero
         dirs = dwidirs.dirs30
         adc = self.diffusionCoeff(self.dt[:6], dirs)
         akc = self.kurtosisCoeff(self.dt, dirs)
         (dcnt, dind) = self.createTensorOrder(2)
-        adc2dt = np.linalg.pinv(np.matmul(
-                                (dirs[:, dind[:, 0]] * \
-                                 dirs[:, dind[:, 1]]),
-                                 np.diag(dcnt)))
+        adc2dt = np.linalg.pinv(
+            np.matmul((dirs[:, dind[:, 0]] * dirs[:, dind[:, 1]]), np.diag(dcnt))
+        )
         eas_ad = np.zeros(nvox)
         eas_rd = np.zeros(nvox)
         eas_md = np.zeros(nvox)
@@ -1829,19 +2152,21 @@ class DWI(object):
         ias_rd = np.zeros(nvox)
         ias_da = np.zeros(nvox)
         ias_tort = np.zeros(nvox)
-        inputs = tqdm(range(nvox),
-                      desc='Extracting EAS and IAS',
-                      bar_format='{desc}: [{percentage:0.0f}%]',
-                      unit='vox',
-                      ncols=tqdmWidth)
-        eas_ad, eas_rd, eas_tort, ias_da = zip(*Parallel(
-            n_jobs=self.workers, prefer='processes')(
-            delayed(wmtihelper)(self.dt[:, i],
-                                dirs,
-                                adc[:, i],
-                                akc[:,i],
-                                awf[i],
-                                adc2dt) for i in inputs))
+        inputs = tqdm(
+            range(nvox),
+            desc="Extracting EAS and IAS",
+            bar_format="{desc}: [{percentage:0.0f}%]",
+            unit="vox",
+            ncols=tqdmWidth,
+        )
+        eas_ad, eas_rd, eas_tort, ias_da = zip(
+            *Parallel(n_jobs=self.workers, prefer="processes")(
+                delayed(wmtihelper)(
+                    self.dt[:, i], dirs, adc[:, i], akc[:, i], awf[i], adc2dt
+                )
+                for i in inputs
+            )
+        )
         awf = vectorize(awf, self.mask)
         eas_ad = vectorize(np.array(eas_ad), self.mask)
         eas_rd = vectorize(np.array(eas_rd), self.mask)
@@ -1902,26 +2227,25 @@ class DWI(object):
         N = dir.shape[0]
         nblocks = 10
         if iter > nblocks:
-            print('Entered iteration value exceeds 10...resetting to 10')
+            print("Entered iteration value exceeds 10...resetting to 10")
             iter = 10
-        inputs = tqdm(range(iter),
-                      desc='AKC Outlier Detection',
-                      bar_format='{desc}: [{percentage:0.0f}%]',
-                      unit='blk',
-                      ncols=tqdmWidth)
+        inputs = tqdm(
+            range(iter),
+            desc="AKC Outlier Detection",
+            bar_format="{desc}: [{percentage:0.0f}%]",
+            unit="blk",
+            ncols=tqdmWidth,
+        )
         for i in inputs:
             akc = self.kurtosisCoeff(
-                self.dt, dir[int(N/nblocks*i):int(N/nblocks*(i+1))])
-            akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10),
-                                    axis=0))] = True
-            akc_out.astype('bool')
+                self.dt, dir[int(N / nblocks * i) : int(N / nblocks * (i + 1))]
+            )
+            akc_out[np.where(np.any(np.logical_or(akc < -2, akc > 10), axis=0))] = True
+            akc_out.astype("bool")
         return vectorize(akc_out, self.mask)
 
     def akccorrect(
-            self,
-            akc_out: np.ndarray[bool],
-            window: int = 3,
-            connectivity: str = 'face'
+        self, akc_out: np.ndarray[bool], window: int = 3, connectivity: str = "face"
     ) -> Self:
         """
         Applies AKC outlier map to DT to replace outliers with a
@@ -1947,20 +2271,22 @@ class DWI(object):
         d2move = np.int(np.abs(window - (centralIdx + 1)))  # Add 1 to
         # central idx because first index starts with zero
         # Vectorize and Pad
-        dt = np.pad(vectorize(self.dt, self.mask),
-                     ((d2move, d2move), (d2move, d2move),
-                     (d2move, d2move), (0, 0)),
-                     'constant', constant_values=np.nan)
-        akc_out = np.pad(akc_out, d2move, 'constant',
-                         constant_values=False)
-        violIdx = np.array(
-            np.where(akc_out))  # Locate coordinates of violations
+        dt = np.pad(
+            vectorize(self.dt, self.mask),
+            ((d2move, d2move), (d2move, d2move), (d2move, d2move), (0, 0)),
+            "constant",
+            constant_values=np.nan,
+        )
+        akc_out = np.pad(akc_out, d2move, "constant", constant_values=False)
+        violIdx = np.array(np.where(akc_out))  # Locate coordinates of violations
         nvox = violIdx.shape[1]
-        for i in tqdm(range(dt.shape[-1]),
-                      desc='AKC Correction',
-                      bar_format='{desc}: [{percentage:0.0f}%]',
-                      unit='tensor',
-                      ncols=tqdmWidth):
+        for i in tqdm(
+            range(dt.shape[-1]),
+            desc="AKC Correction",
+            bar_format="{desc}: [{percentage:0.0f}%]",
+            unit="tensor",
+            ncols=tqdmWidth,
+        ):
             for j in range(nvox):
                 # Index beginning and ending of patch
                 Ib = violIdx[0, j] - d2move
@@ -1970,31 +2296,57 @@ class DWI(object):
                 Kb = violIdx[2, j] - d2move
                 Ke = violIdx[2, j] + d2move + 1
 
-                if connectivity == 'all':
+                if connectivity == "all":
                     patchViol = np.delete(
                         np.ravel(akc_out[Ib:Ie, Jb:Je, Kb:Ke]),
-                        np.median(range(np.power(window,3))))  # Remove
+                        np.median(range(np.power(window, 3))),
+                    )  # Remove
                     # centroid element
                     patchImg = np.delete(
                         np.ravel(dt[Ib:Ie, Jb:Je, Kb:Ke, i]),
-                        np.median(range(np.power(window,3))))  # Remove
+                        np.median(range(np.power(window, 3))),
+                    )  # Remove
                     # centroid element
-                    connLimit = np.power(window,3) -1
-                elif connectivity == 'face':
-                    patchViol = np.delete(akc_out[
-                        Ib:Ie, violIdx[1, j], violIdx[2, j]], d2move)
-                    patchViol = np.hstack((patchViol, np.delete(akc_out[
-                        violIdx[0, j], Jb:Je, violIdx[2, j]], d2move)))
-                    patchViol = np.hstack((patchViol, np.delete(akc_out[
-                        violIdx[0, j], violIdx[1, j], Kb:Ke], d2move)))
-                    patchImg = np.delete(dt[
-                        Ib:Ie, violIdx[1, j], violIdx[2, j], i], d2move)
-                    patchImg = np.hstack((patchImg, np.delete(dt[
-                        violIdx[0, j], Jb:Je, violIdx[2, j], i],
-                                                              d2move)))
-                    patchImg = np.hstack((patchImg, np.delete(dt[
-                        violIdx[0, j], violIdx[1, j], Kb:Ke, i],
-                                                              d2move)))
+                    connLimit = np.power(window, 3) - 1
+                elif connectivity == "face":
+                    patchViol = np.delete(
+                        akc_out[Ib:Ie, violIdx[1, j], violIdx[2, j]], d2move
+                    )
+                    patchViol = np.hstack(
+                        (
+                            patchViol,
+                            np.delete(
+                                akc_out[violIdx[0, j], Jb:Je, violIdx[2, j]], d2move
+                            ),
+                        )
+                    )
+                    patchViol = np.hstack(
+                        (
+                            patchViol,
+                            np.delete(
+                                akc_out[violIdx[0, j], violIdx[1, j], Kb:Ke], d2move
+                            ),
+                        )
+                    )
+                    patchImg = np.delete(
+                        dt[Ib:Ie, violIdx[1, j], violIdx[2, j], i], d2move
+                    )
+                    patchImg = np.hstack(
+                        (
+                            patchImg,
+                            np.delete(
+                                dt[violIdx[0, j], Jb:Je, violIdx[2, j], i], d2move
+                            ),
+                        )
+                    )
+                    patchImg = np.hstack(
+                        (
+                            patchImg,
+                            np.delete(
+                                dt[violIdx[0, j], violIdx[1, j], Kb:Ke, i], d2move
+                            ),
+                        )
+                    )
                     if window == 3:
                         connLimit = 6
                     elif window == 5:
@@ -2006,8 +2358,8 @@ class DWI(object):
                 else:
                     raise Exception(
                         'Connectivity choice "{}" is invalid. Please '
-                        'enter either "all" or "face".'.format(
-                            connectivity))
+                        'enter either "all" or "face".'.format(connectivity)
+                    )
                 nVoil = np.sum(patchViol)
 
                 # Here a check is performed to compute the number of
@@ -2017,21 +2369,21 @@ class DWI(object):
                 if nVoil == connLimit:
                     continue
                 else:
-                   dt[violIdx[0, j], violIdx[1, j], violIdx[2, j],
-                      i] = np.nanmedian(patchImg)
+                    dt[violIdx[0, j], violIdx[1, j], violIdx[2, j], i] = np.nanmedian(
+                        patchImg
+                    )
         # Remove padding
-        dt = dt[d2move:-d2move, d2move:-d2move,
-             d2move:-d2move, :]
+        dt = dt[d2move:-d2move, d2move:-d2move, d2move:-d2move, :]
         self.dt = vectorize(dt, self.mask)
 
     def irlls(
-            self,
-            excludeb0: bool = True,
-            maxiter: int = 25,
-            convcrit: float = 1e-3,
-            mode: str = 'DKI',
-            leverage: float = 0.85,
-            bounds: int = 3
+        self,
+        excludeb0: bool = True,
+        maxiter: int = 25,
+        convcrit: float = 1e-3,
+        mode: str = "DKI",
+        leverage: float = 0.85,
+        bounds: int = 3,
     ) -> Tuple[np.ndarray[bool], np.ndarray[float]]:
         """
         This functions performs outlier detection and robust parameter
@@ -2075,19 +2427,16 @@ class DWI(object):
         # if not excludeb0.dtype:
         #     assert('option: Excludeb0 should be set to True or False')
 
-        if maxiter < 1 or  maxiter > 200:
-            assert('option: Maxiter should be set to a value between 1 '
-                   'and 200')
+        if maxiter < 1 or maxiter > 200:
+            assert "option: Maxiter should be set to a value between 1 " "and 200"
         if convcrit < 0 or convcrit > 1:
-            assert('option: Maxiter should be set to a value between 1 '
-                   'and 200')
-        if not (mode == 'DKI' or mode == 'DTI'):
-            assert('Mode should be set to DKI or DTI')
+            assert "option: Maxiter should be set to a value between 1 " "and 200"
+        if not (mode == "DKI" or mode == "DTI"):
+            assert "Mode should be set to DKI or DTI"
         if leverage < 0 or leverage > 1:
-            assert('option: Leverage should be set to a value between 0 '
-                   'and 1')
+            assert "option: Leverage should be set to a value between 0 " "and 1"
         if bounds < 1:
-            assert('option: Bounds should be set to a value >= 1')
+            assert "option: Bounds should be set to a value >= 1"
         exclude_idx = np.ones_like(self.grad[:, 3], dtype=bool)
         exclude_idx = self.idxdki()
         # Vectorize DWI
@@ -2098,7 +2447,7 @@ class DWI(object):
         g = self.grad[exclude_idx, 0:3]
         # Apply Scaling
         scaling = False
-        if np.sum(dwi < 1)/np.size(dwi) < 0.001:
+        if np.sum(dwi < 1) / np.size(dwi) < 0.001:
             dwi[dwi < 1] = 1
         else:
             scaling = True
@@ -2107,41 +2456,59 @@ class DWI(object):
             else:
                 tmp = dwi[dwi < 50]
             sc = np.median(tmp)
-            dwi[dwi < sc/1000] = sc/1000
+            dwi[dwi < sc / 1000] = sc / 1000
             dwi = dwi * 1000 / sc
         # Create B-matrix
         (dcnt, dind) = self.createTensorOrder(2)
-        if mode == 'DTI':
+        if mode == "DTI":
             bmat = np.hstack(
-                (np.ones((ndwi, 1)),
-                 np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * \
-                            g[:,dind[:,1]]), np.diag(dcnt))))
+                (
+                    np.ones((ndwi, 1)),
+                    np.matmul(
+                        (-np.tile(b, (1, 6)) * g[:, dind[:, 0]] * g[:, dind[:, 1]]),
+                        np.diag(dcnt),
+                    ),
+                )
+            )
         else:
             (wcnt, wind) = self.createTensorOrder(4)
             bmat = np.hstack(
-                (np.ones((ndwi,1)),
-                 np.matmul((-np.tile(b, (1, 6)) * g[:,dind[:,0]] * \
-                            g[:,dind[:,1]]), np.diag(dcnt)),
-                 (1/6)*np.matmul((np.square(np.tile(b, (1, 15))) * \
-                                  g[:,wind[:,0]] * g[:,wind[:,1]] * \
-                                  g[:,wind[:,2]] * g[:,wind[:,3]]),
-                                              np.diag(wcnt))))
+                (
+                    np.ones((ndwi, 1)),
+                    np.matmul(
+                        (-np.tile(b, (1, 6)) * g[:, dind[:, 0]] * g[:, dind[:, 1]]),
+                        np.diag(dcnt),
+                    ),
+                    (1 / 6)
+                    * np.matmul(
+                        (
+                            np.square(np.tile(b, (1, 15)))
+                            * g[:, wind[:, 0]]
+                            * g[:, wind[:, 1]]
+                            * g[:, wind[:, 2]]
+                            * g[:, wind[:, 3]]
+                        ),
+                        np.diag(wcnt),
+                    ),
+                )
+            )
         nparam = bmat.shape[1]
         ndof = ndwi - nparam
         # Initialization
-        b0_pos = np.zeros(b.shape,dtype=bool, order='F')
+        b0_pos = np.zeros(b.shape, dtype=bool, order="F")
         if excludeb0:
             if self.maxDKIBval() < 10:
                 b0_pos = b < 0.01
             else:
                 b0_pos = b < 10
-        reject = np.zeros(dwi.shape, dtype=bool, order='F')
+        reject = np.zeros(dwi.shape, dtype=bool, order="F")
         conv = np.zeros((nvox, 1))
         dt = np.zeros((nparam, nvox))
         # Attempt basic noise estimation
         try:
             sigma
         except NameError:
+
             def estSigma(dwi, bmat):
                 dwi = np.reshape(dwi, (len(dwi), 1))
                 try:
@@ -2152,8 +2519,9 @@ class DWI(object):
                     dt_ = np.full((bmat.shape[1], 1), minZero)
                 w = highprecisionexp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
                 try:
-                    dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))),
-                                          (np.log(dwi) * w), rcond=None)[0]
+                    dt_ = np.linalg.lstsq(
+                        (bmat * np.tile(w, (1, nparam))), (np.log(dwi) * w), rcond=None
+                    )[0]
                     # dt_ = np.linalg.solve(
                     #     np.dot((bmat * np.tile(w, (1, nparam))).T,
                     #         (bmat * np.tile(w, (1, nparam)))), \
@@ -2168,26 +2536,32 @@ class DWI(object):
                 except:
                     sigma_ = minZero
                 return sigma_
-            sigma_ = np.zeros((nvox,1))
-            inputs = tqdm(range(nvox),
-                          desc='IRLLS Noise Estimation',
-                          bar_format='{desc}: [{percentage:0.0f}%]',
-                          unit='vox',
-                          ncols=tqdmWidth)
-            sigma_ = Parallel(n_jobs=self.workers, prefer='processes') \
-                (delayed(estSigma)(dwi[:, i], bmat) for i in inputs)
+
+            sigma_ = np.zeros((nvox, 1))
+            inputs = tqdm(
+                range(nvox),
+                desc="IRLLS Noise Estimation",
+                bar_format="{desc}: [{percentage:0.0f}%]",
+                unit="vox",
+                ncols=tqdmWidth,
+            )
+            sigma_ = Parallel(n_jobs=self.workers, prefer="processes")(
+                delayed(estSigma)(dwi[:, i], bmat) for i in inputs
+            )
             sigma = np.median(sigma_)
-            sigma = np.tile(sigma,(nvox,1))
+            sigma = np.tile(sigma, (nvox, 1))
         if scaling:
-            sigma = sigma*1000/sc
-        def outlierHelper(dwi, bmat, sigma, b, b0_pos, maxiter=25,
-                          convcrit=1e-3, leverage=3, bounds=3):
+            sigma = sigma * 1000 / sc
+
+        def outlierHelper(
+            dwi, bmat, sigma, b, b0_pos, maxiter=25, convcrit=1e-3, leverage=3, bounds=3
+        ):
             # Preliminary rough outlier check
             dwi_i = dwi.reshape((len(dwi), 1))
             dwi0 = np.median(dwi_i[b.reshape(-1) < 0.01])
             out = dwi_i > (dwi0 + 3 * sigma)
             if np.sum(~out[b.reshape(-1) > 0.01]) < (bmat.shape[1] - 1):
-                out = np.zeros((out.shape),dtype=bool)
+                out = np.zeros((out.shape), dtype=bool)
             out[b0_pos.reshape(-1)] = False
             bmat_i = bmat[~out.reshape(-1)]
             dwi_i = dwi_i[~out.reshape(-1)]
@@ -2202,10 +2576,11 @@ class DWI(object):
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
             w = highprecisionexp(np.matmul(bmat_i, dt_i))
             try:
-                dt_i = np.linalg.lstsq((bmat_i * np.tile(w, (1, nparam))),
-                                       (np.log(dwi_i).reshape(
-                                           (dwi_i.shape[0], 1)) * w),
-                                       rcond=None)[0]
+                dt_i = np.linalg.lstsq(
+                    (bmat_i * np.tile(w, (1, nparam))),
+                    (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
+                    rcond=None,
+                )[0]
                 # dt_i = np.linalg.solve(
                 #     np.dot((bmat_i * np.tile(w, (1, nparam))).T,
                 #            (bmat_i * np.tile(w, (1, nparam)))),
@@ -2216,35 +2591,34 @@ class DWI(object):
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
             dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
             # Goodness-of-fit
-            residu = np.log(dwi_i.reshape((dwi_i.shape[0],1))) - \
-                     np.log(dwi_hat)
-            residu_ = dwi_i.reshape((dwi_i.shape[0],1)) - dwi_hat
-            
+            residu = np.log(dwi_i.reshape((dwi_i.shape[0], 1))) - np.log(dwi_hat)
+            residu_ = dwi_i.reshape((dwi_i.shape[0], 1)) - dwi_hat
+
             try:
-                chi2 = np.sum((residu_ * residu_) /\
-                              np.square(sigma)) / (ndof_i) -1
+                chi2 = np.sum((residu_ * residu_) / np.square(sigma)) / (ndof_i) - 1
             except:
                 chi2 = minZero
             try:
-                gof = np.abs(chi2) < 3 * np.sqrt(2/ndof_i)
+                gof = np.abs(chi2) < 3 * np.sqrt(2 / ndof_i)
             except:
                 gof = True  # If ndof_i = 0, right inequality becomes inf
                 # and makes the logic True
             gof2 = gof
             # Iterative reweighning procedure
             iter = 0
-            np.seterr(divide='raise', invalid='raise')
+            np.seterr(divide="raise", invalid="raise")
             while (not gof) and (iter < maxiter):
                 try:
-                    C = np.sqrt(n_i/(n_i-nparam)) * \
-                        1.4826 * \
-                        np.median(np.abs(residu_ - \
-                                         np.median(residu_))) / dwi_hat
+                    C = (
+                        np.sqrt(n_i / (n_i - nparam))
+                        * 1.4826
+                        * np.median(np.abs(residu_ - np.median(residu_)))
+                        / dwi_hat
+                    )
                 except:
                     C = np.full(dwi_hat.shape, minZero)
                 try:
-                    GMM = np.square(C) / np.square(np.square(residu) + \
-                                                   np.square(C))
+                    GMM = np.square(C) / np.square(np.square(residu) + np.square(C))
                 except:
                     # The following line produces a lot of Intel MKL
                     # warnings that should be ignored. This is a known
@@ -2256,7 +2630,8 @@ class DWI(object):
                     dt_i = np.linalg.lstsq(
                         (bmat_i * np.tile(w, (1, nparam))),
                         (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
-                                           rcond=None)[0]
+                        rcond=None,
+                    )[0]
                     # dt_i = np.linalg.solve(
                     #     np.dot((bmat_i * np.tile(w, (1, nparam))).T,
                     #            (bmat_i * np.tile(w, (1, nparam)))),
@@ -2267,21 +2642,34 @@ class DWI(object):
                     dt_i = np.full((bmat_i.shape[1], 1), minZero)
                 dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
                 dwi_hat[dwi_hat < 1] = 1
-                residu = np.log(
-                    dwi_i.reshape((dwi_i.shape[0],1))) - np.log(dwi_hat)
+                residu = np.log(dwi_i.reshape((dwi_i.shape[0], 1))) - np.log(dwi_hat)
                 residu_ = dwi_i.reshape((dwi_i.shape[0], 1)) - dwi_hat
                 # Convergence check
                 iter = iter + 1
-                gof = np.linalg.norm(
-                    dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
+                gof = np.linalg.norm(dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
                 conv = iter
             np.seterr(**defaultErrorState)
             # Outlier detection
             if ~gof2:
                 try:
-                    lev = np.diag(np.matmul(bmat_i, np.linalg.lstsq(np.matmul(np.transpose(bmat_i),
-                                                            np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i)),
-                                          np.matmul(np.transpose(bmat_i), np.diag(np.square(w.reshape(-1)))), rcond=None)[0]))
+                    lev = np.diag(
+                        np.matmul(
+                            bmat_i,
+                            np.linalg.lstsq(
+                                np.matmul(
+                                    np.transpose(bmat_i),
+                                    np.matmul(
+                                        np.diag(np.square(w).reshape(-1)), bmat_i
+                                    ),
+                                ),
+                                np.matmul(
+                                    np.transpose(bmat_i),
+                                    np.diag(np.square(w.reshape(-1))),
+                                ),
+                                rcond=None,
+                            )[0],
+                        )
+                    )
                     # lev_helper = np.linalg.solve(\
                     #                 np.dot((np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i))).T, \
                     #                         (np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i)))), \
@@ -2292,31 +2680,30 @@ class DWI(object):
                     lev = np.full(residu.shape, minZero)
                 lev = lev.reshape((lev.shape[0], 1))
                 try:
-                    lowerbound_linear = -bounds * \
-                                        np.lib.scimath.sqrt(1-lev) * \
-                                        sigma / dwi_hat
+                    lowerbound_linear = (
+                        -bounds * np.lib.scimath.sqrt(1 - lev) * sigma / dwi_hat
+                    )
                 except:
                     lowerbound_linear = np.full(lev.shape, minZero)
                 try:
-                    upperbound_nonlinear = bounds * \
-                                           np.lib.scimath.sqrt(1 -lev) * sigma
+                    upperbound_nonlinear = bounds * np.lib.scimath.sqrt(1 - lev) * sigma
                 except:
                     upperbound_nonlinear = np.full(lev.shape, minZero)
-                tmp = np.zeros(residu.shape, dtype=bool, order='F')
+                tmp = np.zeros(residu.shape, dtype=bool, order="F")
                 tmp[residu < lowerbound_linear] = True
                 tmp[residu > upperbound_nonlinear] = True
                 tmp[lev > leverage] = False
-                tmp2 = np.ones(b.shape, dtype=bool, order='F')
+                tmp2 = np.ones(b.shape, dtype=bool, order="F")
                 tmp2[~out.reshape(-1)] = tmp
                 tmp2[b0_pos] = False
                 reject = tmp2
             else:
-                tmp2 = np.zeros(b.shape, dtype=bool, order='F')
+                tmp2 = np.zeros(b.shape, dtype=bool, order="F")
                 tmp2[out.reshape(-1)] = True
                 reject = tmp2
             # Robust parameter estimation
             keep = ~reject.reshape(-1)
-            bmat_i = bmat[keep,:]
+            bmat_i = bmat[keep, :]
             dwi_i = dwi[keep]
             try:
                 dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
@@ -2326,8 +2713,14 @@ class DWI(object):
                 dt_ = np.full((bmat_i.shape[1], 1), minZero)
             w = highprecisionexp(np.matmul(bmat_i, dt_))
             try:
-                dt = np.linalg.lstsq((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))), (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1))),
-                                           rcond=None)[0]
+                dt = np.linalg.lstsq(
+                    (bmat_i * np.tile(w.reshape((len(w), 1)), (1, nparam))),
+                    (
+                        np.log(dwi_i).reshape((dwi_i.shape[0], 1))
+                        * w.reshape((len(w), 1))
+                    ),
+                    rcond=None,
+                )[0]
                 # dt = np.linalg.solve(\
                 #     np.dot((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))).T, (bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam)))), \
                 #     np.dot((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))).T, \
@@ -2343,29 +2736,35 @@ class DWI(object):
             #      (np.sqrt(np.square(eigv[0] - eigv[1]) + np.square(eigv[0] - eigv[2]) + np.square(eigv[1] - eigv[2])) / \
             #      np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
             # md = np.sum(eigv)/3
-            return reject.reshape(-1), dt.reshape(-1)#, fa, md
-        inputs = tqdm(range(nvox),
-                          desc='IRLLS Outlier Detection',
-                          bar_format='{desc}: [{percentage:0.0f}%]',
-                          unit='vox',
-                          ncols=tqdmWidth)
-        (reject, dt) = zip(*Parallel(n_jobs=self.workers, prefer='processes') \
-            (delayed(outlierHelper)(dwi[:, i], bmat, sigma[i,0], b, b0_pos) for i in inputs))
+            return reject.reshape(-1), dt.reshape(-1)  # , fa, md
+
+        inputs = tqdm(
+            range(nvox),
+            desc="IRLLS Outlier Detection",
+            bar_format="{desc}: [{percentage:0.0f}%]",
+            unit="vox",
+            ncols=tqdmWidth,
+        )
+        (reject, dt) = zip(
+            *Parallel(n_jobs=self.workers, prefer="processes")(
+                delayed(outlierHelper)(dwi[:, i], bmat, sigma[i, 0], b, b0_pos)
+                for i in inputs
+            )
+        )
         # for i in inputs:
         #     reject[:,i], dt[:,i] = outlierHelper(dwi[:, i], bmat, sigma[i,0], b, b0_pos)
         dt = np.array(dt)
         # self.dt = dt
-        #Unscaling
+        # Unscaling
         if scaling:
-            dt[1, :] = dt[1, :] + np.log(sc/1000)
-        #Unvectorizing
+            dt[1, :] = dt[1, :] + np.log(sc / 1000)
+        # Unvectorizing
         reject = vectorize(np.array(reject).T, self.mask)
         return reject, dt.T
 
-    def tensorReorder(self, dwiType: str) -> Tuple[
-        np.ndarray[float],
-        np.ndarray[float]
-    ]:
+    def tensorReorder(
+        self, dwiType: str
+    ) -> Tuple[np.ndarray[float], np.ndarray[float]]:
         """
         Reorders tensors in DT to those of MRTRIX in accordance to
         the table below.
@@ -2391,7 +2790,7 @@ class DWI(object):
         MRTRIX3 and Designer tensors are described below.
 
         .. code-block:: none
-        
+
             MRTRIX3 Tensors                     DESIGNER Tensors
             ~~~~~~~~~~~~~~~                     ~~~~~~~~~~~~~~~~
 
@@ -2447,42 +2846,44 @@ class DWI(object):
                 20              14
         """
         if self.dt is None:
-            raise Exception('Please run dwi.fit() to generate a tensor '
-                            'prior to reordering tensors.')
+            raise Exception(
+                "Please run dwi.fit() to generate a tensor "
+                "prior to reordering tensors."
+            )
 
-        if dwiType == 'dti':
+        if dwiType == "dti":
             dt = np.zeros((6, self.dt.shape[1]))
-            dt[0,:] =   self.dt[0, :]       # D0
-            dt[1, :] =  self.dt[3, :]       # D1
-            dt[2, :] =  self.dt[5, :]       # D2
-            dt[3, :] =  self.dt[1, :]       # D3
-            dt[4, :] =  self.dt[2, :]       # D4
-            dt[5, :] =  self.dt[4, :]       # D5
+            dt[0, :] = self.dt[0, :]  # D0
+            dt[1, :] = self.dt[3, :]  # D1
+            dt[2, :] = self.dt[5, :]  # D2
+            dt[3, :] = self.dt[1, :]  # D3
+            dt[4, :] = self.dt[2, :]  # D4
+            dt[5, :] = self.dt[4, :]  # D5
             DT = vectorize(dt[0:6, :], self.mask)
             KT = None
-        if dwiType == 'dki':
+        if dwiType == "dki":
             dt = np.zeros(self.dt.shape)
-            dt[0, :] =  self.dt[0, :]       # D0
-            dt[1, :] =  self.dt[3, :]       # D1
-            dt[2, :] =  self.dt[5, :]       # D2
-            dt[3, :] =  self.dt[1, :]       # D3
-            dt[4, :] =  self.dt[2, :]       # D4
-            dt[5, :] =  self.dt[4, :]       # D5
-            dt[6, :] =  self.dt[6, :]       # K0
-            dt[7, :] =  self.dt[16, :]      # K1
-            dt[8, :] =  self.dt[20, :]      # K2
-            dt[9, :] =  self.dt[7, :]       # K3
-            dt[10, :] = self.dt[8, :]       # K4
-            dt[11, :] = self.dt[12, :]      # K5
-            dt[12, :] = self.dt[15, :]      # K6
-            dt[13, :] = self.dt[17, :]      # K7
-            dt[14, :] = self.dt[19, :]      # K8
-            dt[15, :] = self.dt[9, :]       # K9
-            dt[16, :] = self.dt[11, :]      # K10
-            dt[17, :] = self.dt[18, :]      # K11
-            dt[18, :] = self.dt[10, :]      # K12
-            dt[19, :] = self.dt[13, :]      # K13
-            dt[20, :] = self.dt[14, :]      # K14
+            dt[0, :] = self.dt[0, :]  # D0
+            dt[1, :] = self.dt[3, :]  # D1
+            dt[2, :] = self.dt[5, :]  # D2
+            dt[3, :] = self.dt[1, :]  # D3
+            dt[4, :] = self.dt[2, :]  # D4
+            dt[5, :] = self.dt[4, :]  # D5
+            dt[6, :] = self.dt[6, :]  # K0
+            dt[7, :] = self.dt[16, :]  # K1
+            dt[8, :] = self.dt[20, :]  # K2
+            dt[9, :] = self.dt[7, :]  # K3
+            dt[10, :] = self.dt[8, :]  # K4
+            dt[11, :] = self.dt[12, :]  # K5
+            dt[12, :] = self.dt[15, :]  # K6
+            dt[13, :] = self.dt[17, :]  # K7
+            dt[14, :] = self.dt[19, :]  # K8
+            dt[15, :] = self.dt[9, :]  # K9
+            dt[16, :] = self.dt[11, :]  # K10
+            dt[17, :] = self.dt[18, :]  # K11
+            dt[18, :] = self.dt[10, :]  # K12
+            dt[19, :] = self.dt[13, :]  # K13
+            dt[20, :] = self.dt[14, :]  # K14
             DT = vectorize(dt[0:6, :], self.mask)
             KT = vectorize(dt[6:21, :], self.mask)
         return DT, KT
@@ -2513,9 +2914,10 @@ class DWI(object):
         b = np.reshape(b, (len(b), 1))
         b_pos = ~(b < 0.01).reshape(-1)
         img = img[b_pos, :]
-        propViol = np.sum(img,axis=0).astype(int) / np.sum(b_pos)
+        propViol = np.sum(img, axis=0).astype(int) / np.sum(b_pos)
         propViol = vectorize(propViol, self.mask)
         return propViol
+
 
 def fit_regime(
     input: str,
@@ -2526,13 +2928,13 @@ def fit_regime(
     irlls: bool = True,
     akc: bool = True,
     qcpath: Union[str, None] = None,
-    fit_constraints: List[int] = [0,1,0],
+    fit_constraints: List[int] = [0, 1, 0],
     l_max: Union[int, None] = None,
     rectify: bool = True,
-    res: str = 'med',
+    res: str = "med",
     n_fibers: int = 5,
     mask: Union[str, None] = None,
-    nthreads: Union[int, None] = None
+    nthreads: Union[int, None] = None,
 ) -> None:
     """
     Performs the entire tensor fitting regime and writes out maps.
@@ -2582,19 +2984,19 @@ def fit_regime(
         (Default: None)
     """
     if prefix is None:
-        prefix = ''
+        prefix = ""
     if suffix is None:
-        suffix = ''
+        suffix = ""
     if ext is None:
-        ext = '.nii'
+        ext = ".nii"
     img = DWI(input, mask=mask, nthreads=nthreads)
     protocols = img.tensorType()
-    print('Protocol(s) detected: {}' .format(', '.join([x.upper() for x in protocols])))
+    print("Protocol(s) detected: {}".format(", ".join([x.upper() for x in protocols])))
     fname_dti = {}
     fname_dki = {}
     fname_wmti = {}
     fname_fbi = {}
-    fname_tensor = {} 
+    fname_tensor = {}
     fname_outliers = {}
     fname_tractography = {}
     for key, value in dwi_fnames._dti_.items():
@@ -2610,37 +3012,43 @@ def fit_regime(
     for key, value in dwi_fnames._outliers_.items():
         fname_outliers[key] = prefix + value + suffix + ext
     for key, value in dwi_fnames._tractography_.items():
-        fname_tractography[key] = prefix + value + suffix + '.fib'
+        fname_tractography[key] = prefix + value + suffix + ".fib"
     if irlls:
         if img.isdki():
-            outliers, dt_est = img.irlls(mode='DKI', excludeb0=True)
+            outliers, dt_est = img.irlls(mode="DKI", excludeb0=True)
         else:
-            outliers, dt_est = img.irlls(mode='DTI', excludeb0=True)
+            outliers, dt_est = img.irlls(mode="DTI", excludeb0=True)
         if qcpath:
             if op.exists(qcpath):
-                outlier_full = op.join(qcpath, fname_outliers['IRLLS'])
+                outlier_full = op.join(qcpath, fname_outliers["IRLLS"])
                 print(outlier_full)
-                outlier_plot_full = op.join(qcpath,
-                    prefix + 'irlls_outliers_plot' + suffix + '.png')
-                bvals_outlier_full = op.join(qcpath,
-                    prefix + 'irlls_outliers_shells' + suffix + '.bval')
+                outlier_plot_full = op.join(
+                    qcpath, prefix + "irlls_outliers_plot" + suffix + ".png"
+                )
+                bvals_outlier_full = op.join(
+                    qcpath, prefix + "irlls_outliers_shells" + suffix + ".bval"
+                )
                 if img.isdki():
                     bvals_outlier = img.getBvals()[img.idxdki()].astype(int)
                 else:
                     bvals_outlier = img.getBvals()[img.idxdti()].astype(int)
                 bvals_outlier = bvals_outlier * 1000
                 writeNii(outliers, img.hdr, outlier_full)
-                np.savetxt(bvals_outlier_full, bvals_outlier, newline=' ', fmt="%d")
+                np.savetxt(bvals_outlier_full, bvals_outlier, newline=" ", fmt="%d")
                 if mask:
-                    outlierplot.plot(input=outlier_full,
-                                    output=outlier_plot_full,
-                                    bval=bvals_outlier_full,
-                                    mask=mask)
+                    outlierplot.plot(
+                        input=outlier_full,
+                        output=outlier_plot_full,
+                        bval=bvals_outlier_full,
+                        mask=mask,
+                    )
                 else:
-                    outlierplot.plot(input=outlier_full,
-                                    output=outlier_plot_full,
-                                    bval=bvals_outlier_full,
-                                    mask=None)
+                    outlierplot.plot(
+                        input=outlier_full,
+                        output=outlier_plot_full,
+                        bval=bvals_outlier_full,
+                        mask=None,
+                    )
                 os.remove(bvals_outlier_full)
     if irlls:
         img.fit(fit_constraints, reject=outliers)
@@ -2650,160 +3058,179 @@ def fit_regime(
         akc_out = img.akcoutliers()
         img.akccorrect(akc_out)
         if qcpath:
-            writeNii(akc_out,
-                        img.hdr,
-                        op.join(qcpath, fname_outliers['AKC']))
-    if 'dki' in img.tensorType():
-        tensorType = 'dki'
+            writeNii(akc_out, img.hdr, op.join(qcpath, fname_outliers["AKC"]))
+    if "dki" in img.tensorType():
+        tensorType = "dki"
     else:
-        tensorType = 'dti'
+        tensorType = "dti"
     DT, KT = img.tensorReorder(tensorType)
-    if tensorType == 'dki':
-        writeNii(DT, img.hdr, op.join(output, fname_tensor['DT']))
-        writeNii(KT, img.hdr, op.join(output, fname_tensor['KT']))
+    if tensorType == "dki":
+        writeNii(DT, img.hdr, op.join(output, fname_tensor["DT"]))
+        writeNii(KT, img.hdr, op.join(output, fname_tensor["KT"]))
     else:
-        writeNii(DT, img.hdr, op.join(output, fname_tensor['DT']))
+        writeNii(DT, img.hdr, op.join(output, fname_tensor["DT"]))
     # DTI Parameters
     if img.isdti():
         md, rd, ad, fa, fe, trace = img.extractDTI()
-        writeNii(md, img.hdr, op.join(output, fname_dti['md']))
-        writeNii(rd, img.hdr, op.join(output, fname_dti['rd']))
-        writeNii(ad, img.hdr, op.join(output, fname_dti['ad']))
-        writeNii(fa, img.hdr, op.join(output, fname_dti['fa']))
-        writeNii(fe, img.hdr, op.join(output, fname_dti['fe']))
-        writeNii(trace, img.hdr, op.join(output, fname_dti['trace']))
+        writeNii(md, img.hdr, op.join(output, fname_dti["md"]))
+        writeNii(rd, img.hdr, op.join(output, fname_dti["rd"]))
+        writeNii(ad, img.hdr, op.join(output, fname_dti["ad"]))
+        writeNii(fa, img.hdr, op.join(output, fname_dti["fa"]))
+        writeNii(fe, img.hdr, op.join(output, fname_dti["fe"]))
+        writeNii(trace, img.hdr, op.join(output, fname_dti["trace"]))
         dtimodel = odf.odfmodel(
-            dt = op.join(output, fname_tensor['DT']),
-            mask=mask,
-            l_max=2,
-            res=res
+            dt=op.join(output, fname_tensor["DT"]), mask=mask, l_max=2, res=res
         )
         dti_odfs = dtimodel.dtiodf()
         dti_sh = dtimodel.odf2sh(dti_odfs)
-        dtimodel.savenii(dti_sh, op.join(output, fname_dti['odf']))
+        dtimodel.savenii(dti_sh, op.join(output, fname_dti["odf"]))
         dsistudio.makefib(
-            input=op.join(output, fname_dti['odf']),
-            output=op.join(output, fname_tractography['dti']),
-            map=op.join(output, fname_dti['fa']),
+            input=op.join(output, fname_dti["odf"]),
+            output=op.join(output, fname_tractography["dti"]),
+            map=op.join(output, fname_dti["fa"]),
             mask=mask,
             n_fibers=n_fibers,
             scale=0.5,
-            other_maps = [
-                op.join(output, fname_dti['md']),
-                op.join(output, fname_dti['rd']),
-                op.join(output, fname_dti['ad']),
-            ]
+            other_maps=[
+                op.join(output, fname_dti["md"]),
+                op.join(output, fname_dti["rd"]),
+                op.join(output, fname_dti["ad"]),
+            ],
         )
     if img.isdki():
-        # DKI Parameters 
+        # DKI Parameters
         mk, rk, ak, kfa, mkt, trace = img.extractDKI()
-        writeNii(mk, img.hdr, op.join(output, fname_dki['mk']))
-        writeNii(rk, img.hdr, op.join(output, fname_dki['rk']))
-        writeNii(ak, img.hdr, op.join(output, fname_dki['ak']))
-        writeNii(kfa, img.hdr, op.join(output, fname_dki['kfa']))
-        writeNii(mkt, img.hdr, op.join(output, fname_dki['mkt']))
-        writeNii(trace, img.hdr, op.join(output, fname_dki['trace']))
+        writeNii(mk, img.hdr, op.join(output, fname_dki["mk"]))
+        writeNii(rk, img.hdr, op.join(output, fname_dki["rk"]))
+        writeNii(ak, img.hdr, op.join(output, fname_dki["ak"]))
+        writeNii(kfa, img.hdr, op.join(output, fname_dki["kfa"]))
+        writeNii(mkt, img.hdr, op.join(output, fname_dki["mkt"]))
+        writeNii(trace, img.hdr, op.join(output, fname_dki["trace"]))
         # WMTI Parameters
         awf, eas_ad, eas_rd, eas_tort, ias_da = img.extractWMTI()
-        writeNii(awf, img.hdr, op.join(output, fname_wmti['awf']))
-        writeNii(eas_ad, img.hdr, op.join(output, fname_wmti['eas_ad']))
-        writeNii(eas_rd, img.hdr, op.join(output, fname_wmti['eas_rd']))
-        writeNii(eas_tort, img.hdr, op.join(output, fname_wmti['eas_tort']))
-        writeNii(ias_da, img.hdr, op.join(output, fname_wmti['ias_da']))
+        writeNii(awf, img.hdr, op.join(output, fname_wmti["awf"]))
+        writeNii(eas_ad, img.hdr, op.join(output, fname_wmti["eas_ad"]))
+        writeNii(eas_rd, img.hdr, op.join(output, fname_wmti["eas_rd"]))
+        writeNii(eas_tort, img.hdr, op.join(output, fname_wmti["eas_tort"]))
+        writeNii(ias_da, img.hdr, op.join(output, fname_wmti["ias_da"]))
         dkimodel = odf.odfmodel(
-            dt = op.join(output, fname_tensor['DT']),
-            kt = op.join(output, fname_tensor['KT']),
+            dt=op.join(output, fname_tensor["DT"]),
+            kt=op.join(output, fname_tensor["KT"]),
             mask=mask,
             l_max=6,
-            res=res
+            res=res,
         )
         dki_odfs = dkimodel.dkiodf(fa_t=0.90)
         dki_sh = dkimodel.odf2sh(dki_odfs)
-        dkimodel.savenii(dki_sh, op.join(output, fname_dki['odf']))
+        dkimodel.savenii(dki_sh, op.join(output, fname_dki["odf"]))
         dsistudio.makefib(
-            input=op.join(output, fname_dki['odf']),
-            output=op.join(output, fname_tractography['dki']),
-            map=op.join(output, fname_dti['fa']),
+            input=op.join(output, fname_dki["odf"]),
+            output=op.join(output, fname_tractography["dki"]),
+            map=op.join(output, fname_dti["fa"]),
             mask=mask,
             n_fibers=n_fibers,
             scale=0.5,
-            other_maps = [
-                op.join(output, fname_dti['md']),
-                op.join(output, fname_dti['rd']),
-                op.join(output, fname_dti['ad']),
-                op.join(output, fname_dki['mk']),
-                op.join(output, fname_dki['rk']),
-                op.join(output, fname_dki['ak']),
-                op.join(output, fname_dki['kfa']),
-                op.join(output, fname_wmti['awf']),
-                op.join(output, fname_wmti['eas_ad']),
-                op.join(output, fname_wmti['eas_rd']),
-                op.join(output, fname_wmti['eas_tort']),
-                op.join(output, fname_wmti['ias_da']),
-            ]
+            other_maps=[
+                op.join(output, fname_dti["md"]),
+                op.join(output, fname_dti["rd"]),
+                op.join(output, fname_dti["ad"]),
+                op.join(output, fname_dki["mk"]),
+                op.join(output, fname_dki["rk"]),
+                op.join(output, fname_dki["ak"]),
+                op.join(output, fname_dki["kfa"]),
+                op.join(output, fname_wmti["awf"]),
+                op.join(output, fname_wmti["eas_ad"]),
+                op.join(output, fname_wmti["eas_rd"]),
+                op.join(output, fname_wmti["eas_tort"]),
+                op.join(output, fname_wmti["ias_da"]),
+            ],
         )
     if img.isfbi():
         if img.isfbwm():
-            zeta, faa, sph, sph_mrtrix, min_awf, Da, De_mean, De_ax, De_rad, \
-                De_fa, min_cost, min_cost_fn = \
-                    img.fbi(l_max=l_max, fbwm=True, rectify=rectify)
-            writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
-            writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
-            writeNii(np.real(sph), img.hdr, op.join(output, fname_fbi['odf']))
-            writeNii(np.real(sph_mrtrix), img.hdr, op.join(output, fname_fbi['odf_mrtrix']))
-            writeNii(min_awf, img.hdr, op.join(output, fname_fbi['awf']))
-            writeNii(Da, img.hdr, op.join(output, fname_fbi['Da']))
-            writeNii(De_mean, img.hdr, op.join(output, fname_fbi['De_mean']))
-            writeNii(De_ax, img.hdr, op.join(output, fname_fbi['De_ax']))
-            writeNii(De_rad, img.hdr, op.join(output, fname_fbi['De_rad']))
-            writeNii(De_fa, img.hdr, op.join(output, fname_fbi['fae']))
-            writeNii(min_cost, img.hdr, op.join(output, fname_fbi['min_cost']))
-            writeNii(min_cost_fn, img.hdr, op.join(output, fname_fbi['min_cost_fn']))
+            (
+                zeta,
+                faa,
+                sph,
+                sph_mrtrix,
+                min_awf,
+                Da,
+                De_mean,
+                De_ax,
+                De_rad,
+                De_fa,
+                min_cost,
+                min_cost_fn,
+            ) = img.fbi(l_max=l_max, fbwm=True, rectify=rectify)
+            writeNii(zeta, img.hdr, op.join(output, fname_fbi["zeta"]))
+            writeNii(faa, img.hdr, op.join(output, fname_fbi["faa"]))
+            writeNii(np.real(sph), img.hdr, op.join(output, fname_fbi["odf"]))
+            writeNii(
+                np.real(sph_mrtrix), img.hdr, op.join(output, fname_fbi["odf_mrtrix"])
+            )
+            writeNii(min_awf, img.hdr, op.join(output, fname_fbi["awf"]))
+            writeNii(Da, img.hdr, op.join(output, fname_fbi["Da"]))
+            writeNii(De_mean, img.hdr, op.join(output, fname_fbi["De_mean"]))
+            writeNii(De_ax, img.hdr, op.join(output, fname_fbi["De_ax"]))
+            writeNii(De_rad, img.hdr, op.join(output, fname_fbi["De_rad"]))
+            writeNii(De_fa, img.hdr, op.join(output, fname_fbi["fae"]))
+            writeNii(min_cost, img.hdr, op.join(output, fname_fbi["min_cost"]))
+            writeNii(min_cost_fn, img.hdr, op.join(output, fname_fbi["min_cost_fn"]))
             dsistudio.makefib(
-                input=op.join(output, fname_fbi['odf_mrtrix']),
-                output=op.join(output, fname_tractography['fbi']),
-                map=op.join(output, fname_fbi['faa']),
+                input=op.join(output, fname_fbi["odf_mrtrix"]),
+                output=op.join(output, fname_tractography["fbi"]),
+                map=op.join(output, fname_fbi["faa"]),
                 mask=mask,
                 n_fibers=n_fibers,
                 scale=1,
-            other_maps = [
-                op.join(output, fname_dti['md']),
-                op.join(output, fname_dti['rd']),
-                op.join(output, fname_dti['ad']),
-                op.join(output, fname_dki['mk']),
-                op.join(output, fname_dki['rk']),
-                op.join(output, fname_dki['ak']),
-                op.join(output, fname_dki['kfa']),
-                op.join(output, fname_wmti['awf']),
-                op.join(output, fname_wmti['eas_ad']),
-                op.join(output, fname_wmti['eas_rd']),
-                op.join(output, fname_wmti['eas_tort']),
-                op.join(output, fname_wmti['ias_da']),
-                op.join(output, fname_fbi['zeta']),
-                op.join(output, fname_fbi['awf']),
-                op.join(output, fname_fbi['Da']),
-                op.join(output, fname_fbi['De_mean']),
-                op.join(output, fname_fbi['De_ax']),
-                op.join(output, fname_fbi['De_rad']),
-                op.join(output, fname_fbi['fae']),
-            ]
+                other_maps=[
+                    op.join(output, fname_dti["md"]),
+                    op.join(output, fname_dti["rd"]),
+                    op.join(output, fname_dti["ad"]),
+                    op.join(output, fname_dki["mk"]),
+                    op.join(output, fname_dki["rk"]),
+                    op.join(output, fname_dki["ak"]),
+                    op.join(output, fname_dki["kfa"]),
+                    op.join(output, fname_wmti["awf"]),
+                    op.join(output, fname_wmti["eas_ad"]),
+                    op.join(output, fname_wmti["eas_rd"]),
+                    op.join(output, fname_wmti["eas_tort"]),
+                    op.join(output, fname_wmti["ias_da"]),
+                    op.join(output, fname_fbi["zeta"]),
+                    op.join(output, fname_fbi["awf"]),
+                    op.join(output, fname_fbi["Da"]),
+                    op.join(output, fname_fbi["De_mean"]),
+                    op.join(output, fname_fbi["De_ax"]),
+                    op.join(output, fname_fbi["De_rad"]),
+                    op.join(output, fname_fbi["fae"]),
+                ],
             )
         else:
-            zeta, faa, sph, sph_mrtrix, min_awf, Da, De_mean, De_ax, De_rad, \
-                De_fa, min_cost, min_cost_fn = \
-                    img.fbi(l_max=l_max, fbwm=False, rectify=rectify)
-            writeNii(zeta, img.hdr, op.join(output, fname_fbi['zeta']))
-            writeNii(faa, img.hdr, op.join(output, fname_fbi['faa']))
-            writeNii(np.real(sph), img.hdr, op.join(output, fname_fbi['odf']))
-            writeNii(np.real(sph_mrtrix), img.hdr, op.join(output, fname_fbi['odf_mrtrix']))
+            (
+                zeta,
+                faa,
+                sph,
+                sph_mrtrix,
+                min_awf,
+                Da,
+                De_mean,
+                De_ax,
+                De_rad,
+                De_fa,
+                min_cost,
+                min_cost_fn,
+            ) = img.fbi(l_max=l_max, fbwm=False, rectify=rectify)
+            writeNii(zeta, img.hdr, op.join(output, fname_fbi["zeta"]))
+            writeNii(faa, img.hdr, op.join(output, fname_fbi["faa"]))
+            writeNii(np.real(sph), img.hdr, op.join(output, fname_fbi["odf"]))
+            writeNii(
+                np.real(sph_mrtrix), img.hdr, op.join(output, fname_fbi["odf_mrtrix"])
+            )
             dsistudio.makefib(
-                input=op.join(output, fname_fbi['odf']),
-                output=op.join(output, fname_tractography['fbi']),
-                map=op.join(output, fname_fbi['faa']),
+                input=op.join(output, fname_fbi["odf"]),
+                output=op.join(output, fname_tractography["fbi"]),
+                map=op.join(output, fname_fbi["faa"]),
                 mask=mask,
                 n_fibers=n_fibers,
                 scale=1,
-                other_maps = [
-                    op.join(output, fname_fbi['zeta'])
-                ]
-        )
+                other_maps=[op.join(output, fname_fbi["zeta"])],
+            )

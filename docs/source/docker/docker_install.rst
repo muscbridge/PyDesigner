@@ -25,7 +25,7 @@ Uninstall Docker
 installations
 
 .. code-block:: console
-    
+
     $ sudo apt-get remove docker docker-engine docker.io containerd runc
 
 Don't panic if :code:`apt-get` returns an a warning about missing
@@ -98,19 +98,19 @@ you may install it simply via the command:
 .. code-block:: console
 
     $ sudo apt-get install docker-ce docker-ce-cli containerd.io
- 
+
 6. Verify your Docker Engine installation with the command:
- 
+
 .. code-block:: console
-    
+
     $ sudo docker run hello-world
 
 If the following information prints in the console window, your Docker
-Engine installation was sucessful. 
+Engine installation was sucessful.
 
 .. code-block:: console
     :linenos:
-    
+
     Hello from Docker!
     This message shows that your installation appears to be working correctly.
 
@@ -132,7 +132,7 @@ Engine installation was sucessful.
     For more examples and ideas, visit:
     https://docs.docker.com/get-started/
 
-You may now proceed with the fetching of NeuroDock Docker image. 
+You may now proceed with the fetching of NeuroDock Docker image.
 
 
 Mac OS
@@ -155,7 +155,7 @@ by parsing the following command in Terminal:
 
 Or you may run the `hello-world` container to verify the installation:
 
-.. code-block:: 
+.. code-block::
 
     $ docker run hello-world
 
@@ -183,7 +183,7 @@ by parsing the following command in PowerShell.
 
 Or you may run the `hello-world` container to verify the installation:
 
-.. code-block:: 
+.. code-block::
 
     $ docker run hello-world
 

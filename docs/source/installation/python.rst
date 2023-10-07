@@ -26,7 +26,7 @@ Update Conda
 First, update conda with
 
 .. code-block:: console
-    
+
     $ conda update conda
 
 Create new environment

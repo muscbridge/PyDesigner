@@ -4,6 +4,7 @@
 import numpy as np
 import nibabel as nib
 
+
 def vectorize(img, mask) -> np.ndarray[float]:
     """
     Returns vectorized image based on brain mask, requires no input
@@ -30,42 +31,39 @@ def vectorize(img, mask) -> np.ndarray[float]:
     vec = vectorize(img, mask) if there's a mask
     """
     if mask is None:
-        mask = np.ones((img.shape[0],
-                        img.shape[1],
-                        img.shape[2]),
-                        order='F',
-                        dtype=img.dtype)
+        mask = np.ones(
+            (img.shape[0], img.shape[1], img.shape[2]), order="F", dtype=img.dtype
+        )
     mask = mask.astype(bool)
     if img.ndim == 1:
         n = img.shape[0]
-        s = np.zeros((mask.shape[0],
-                      mask.shape[1],
-                      mask.shape[2]),
-                      order='F',
-                      dtype=img.dtype)
+        s = np.zeros(
+            (mask.shape[0], mask.shape[1], mask.shape[2]), order="F", dtype=img.dtype
+        )
         s[mask] = img
     if img.ndim == 2:
         n = img.shape[0]
-        s = np.zeros((mask.shape[0],
-                      mask.shape[1],
-                      mask.shape[2], n),
-                      order='F',
-                      dtype=img.dtype)
+        s = np.zeros(
+            (mask.shape[0], mask.shape[1], mask.shape[2], n), order="F", dtype=img.dtype
+        )
         for i in range(0, n):
-            s[mask, i] = img[i,:]
+            s[mask, i] = img[i, :]
     if img.ndim == 3:
-        maskind = np.ma.array(img, mask=np.logical_not(mask),
-                              dtype=img.dtype, order='F')
+        maskind = np.ma.array(
+            img, mask=np.logical_not(mask), dtype=img.dtype, order="F"
+        )
         s = np.ma.compressed(maskind)
     if img.ndim == 4:
-        s = np.zeros((img.shape[-1], np.sum(mask).astype(int)),
-                     order='F', dtype=img.dtype)
+        s = np.zeros(
+            (img.shape[-1], np.sum(mask).astype(int)), order="F", dtype=img.dtype
+        )
         for i in range(0, img.shape[-1]):
-            tmp = img[:,:,:,i]
+            tmp = img[:, :, :, i]
             # Compressed returns non-masked area, so invert the mask first
             maskind = np.ma.array(tmp, mask=np.logical_not(mask))
-            s[i,:] = np.ma.compressed(maskind)
+            s[i, :] = np.ma.compressed(maskind)
     return np.squeeze(s)
+
 
 def writeNii(map, hdr, outDir, range=None) -> None:
     """
@@ -101,6 +99,7 @@ def writeNii(map, hdr, outDir, range=None) -> None:
         clipped_img = nib.Nifti1Image(clipped_img, hdr.affine, hdr.header)
     nib.save(clipped_img, outDir)
 
+
 def clipImage(img, range) -> np.ndarray[float]:
     """
     Clips input matrix within desired range. Min and max values are
@@ -127,6 +126,7 @@ def clipImage(img, range) -> np.ndarray[float]:
     img[img < range[0]] = range[0]
     return img
 
+
 def highprecisionexp(array, maxp=1e32) -> np.ndarray[float]:
     """
     Prevents overflow warning with numpy.exp by assigning overflows
@@ -148,15 +148,16 @@ def highprecisionexp(array, maxp=1e32) -> np.ndarray[float]:
     --------
     a = highprecisionexp(array)
     """
-    np.seterr(all='ignore')
+    np.seterr(all="ignore")
     defaultErrorState = np.geterr()
-    np.seterr(over='raise', invalid='raise')
+    np.seterr(over="raise", invalid="raise")
     try:
         ans = np.exp(array)
     except:
         ans = np.full(array.shape, maxp)
     np.seterr(**defaultErrorState)
     return ans
+
 
 def highprecisionpower(x1, x2, maxp=1e32) -> np.ndarray[float]:
     """
@@ -181,9 +182,9 @@ def highprecisionpower(x1, x2, maxp=1e32) -> np.ndarray[float]:
     --------
     a = highprecisionexp(array)
     """
-    np.seterr(all='ignore')
+    np.seterr(all="ignore")
     defaultErrorState = np.geterr()
-    np.seterr(over='raise', invalid='raise')
+    np.seterr(over="raise", invalid="raise")
     try:
         ans = np.power(x1, x2)
     except:
