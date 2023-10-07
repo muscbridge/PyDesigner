@@ -17,9 +17,9 @@ from tqdm import tqdm
 from . import dwidirs
 from . import thresholds as th
 from . import dwi_fnames
-from pydesigner.plotting import outlierplot
-from pydesigner.tractography import odf, sphericalsampling, dsistudio
-from pydesigner.system.utils import vectorize, writeNii, highprecisionexp, highprecisionpower
+from ..plotting import outlierplot
+from ..tractography import odf, sphericalsampling, dsistudio
+from ..system.utils import vectorize, writeNii, highprecisionexp, highprecisionpower
 
 # Define the lowest number possible before it is considered a zero
 minZero = th.__minZero__
@@ -1005,14 +1005,14 @@ class DWI(object):
             print('Invalid constraints. Please use format "[0, 0, 0]"')
         return C
 
-    def extractDTI(self) -> Tuple(
+    def extractDTI(self) -> Tuple[
             np.ndarray[float],
             np.ndarray[float],
             np.ndarray[float],
             np.ndarray[float],
             np.ndarray[float],
             np.ndarray[float]
-    ):
+    ]:
         """
         Extract all DTI parameters from DT tensor. Warning, this can
         only be run after tensor fitting dwi.fit().
@@ -1081,14 +1081,14 @@ class DWI(object):
         trace = vectorize(trace.T, self.mask)
         return md, rd, ad, fa, fe, trace
 
-    def extractDKI(self) -> Tuple(
+    def extractDKI(self) -> Tuple[
             np.ndarray[float],
             np.ndarray[float],
             np.ndarray[float],
             np.ndarray[float],
             np.ndarray[float],
             np.ndarray[float]
-    ):
+    ]:
         """
         Extract all DKI parameters from DT tensor. Warning, this can
         only be run after tensor fitting dwi.fit().

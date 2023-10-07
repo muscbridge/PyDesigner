@@ -79,7 +79,7 @@ def ndim(path: str) -> int:
     num = getconsole(path, '-ndim')
     return int(num)
 
-def size(path: str) -> Tuple(int):
+def size(path: str) -> Tuple[int]:
     """
     Returns the size of input DWI image along each axis.
 
@@ -90,14 +90,14 @@ def size(path: str) -> Tuple(int):
 
     Returns
     -------
-    tuple(int)
+    Tuple[int]
         Number of voxels in [X, Y, Z, B-value].
     """
     num = getconsole(path, '-size').split()
     num = tuple(map(int, num))
     return num
 
-def spacing(path: str) -> Tuple(int):
+def spacing(path: str) -> Tuple[int]:
     """
     Returns the voxel spacing along each of input DWI's dimensions.
 
@@ -108,7 +108,7 @@ def spacing(path: str) -> Tuple(int):
 
     Returns
     -------
-    tuple(int)
+    Tuple[int]
         Number of spacing between voxels [X, Y, Z, B-value].
     """
     num = getconsole(path, '-spacing').split()
@@ -142,7 +142,7 @@ def strides(path: str) -> Tuple[int]:
 
     Returns
     -------
-    num: tuple(int)
+    num: Tuple[int]
         MRtrix3's strides.
     """
     num = getconsole(path, '-strides').split()
@@ -196,7 +196,7 @@ def transform(path: str) -> Tuple[float]:
 
     Returns
     -------
-    num: tuple(float)
+    num: Tuple(float)
         Image transformation matrix.
     """
     if not op.exists(path):
