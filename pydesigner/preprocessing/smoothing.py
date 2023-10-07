@@ -3,10 +3,12 @@
 
 import numpy as np
 import nibabel as nib
+
 # import scipy as sc
 from scipy.ndimage import gaussian_filter
 
-def smooth_image(dwiname, csfname=None, outname='dwism.nii', width=1.25, size=5):
+
+def smooth_image(dwiname, csfname=None, outname="dwism.nii", width=1.25, size=5):
     """
     Smooths a DWI dataset
 
@@ -32,9 +34,9 @@ def smooth_image(dwiname, csfname=None, outname='dwism.nii', width=1.25, size=5)
     smooth(dwi, csfmask=None, width=1.25) is wrapped by this function
     """
     if csfname is None:
-        print('Running smoothing at FWHM = {}...'.format(width))
+        print("Running smoothing at FWHM = {}...".format(width))
     else:
-        print('Running CSF-excluded smoothing at FWHM = {}...'.format(width))
+        print("Running CSF-excluded smoothing at FWHM = {}...".format(width))
 
     dwiimg = nib.load(dwiname)
 
@@ -48,6 +50,7 @@ def smooth_image(dwiname, csfname=None, outname='dwism.nii', width=1.25, size=5)
     nib.save(newimg, outname)
 
     return
+
 
 def smooth(dwi, csfmask=None, width=1.25, size=5):
     """
@@ -64,7 +67,7 @@ def smooth(dwi, csfmask=None, width=1.25, size=5):
         The full width half max in voxels to be smoothed. Default: 1.25
     size : int, optional
         The size of 2D Gaussian kernel [size, size]. Default: 5
-       
+
     Returns
     -------
     smoothed : (X x Y x Z x N) array_like or img_like object
@@ -75,31 +78,31 @@ def smooth(dwi, csfmask=None, width=1.25, size=5):
     This is done mainly to reduce the Gibbs ringing. It might be
     recommended to only smooth the high SNR (or b-valued) data in order
     not to alter the Rice distribution of the low SNR data. This is
-    important to maintain the high accuracy of WLLS. If a CSF mask is 
+    important to maintain the high accuracy of WLLS. If a CSF mask is
     given as an additional argument, CSF infiltration in microstructural
     signal is avoided during smoothing.
     """
 
     if dwi.ndim != 4:
-        raise ValueError('Input dwi dataset is not 4-D')
+        raise ValueError("Input dwi dataset is not 4-D")
 
     dwidata = dwi.get_fdata()
     if csfmask:
-        csfdata = csfmask.get_fdata().astype('bool')
+        csfdata = csfmask.get_fdata().astype("bool")
 
     if csfmask is None:
         smoothed = dwidata.copy()
         for i in range(dwi.shape[-1]):
             for z in range(dwi.shape[-2]):
-                currslice = dwidata[:,:,z,i]
-                smoothed[:,:,z,i] = nansmooth(currslice, width, size=size)
+                currslice = dwidata[:, :, z, i]
+                smoothed[:, :, z, i] = nansmooth(currslice, width, size=size)
     else:
         bgmask = np.isnan(dwidata)
         smoothed = dwidata.copy()
         for i in range(dwi.shape[-1]):
             for z in range(dwi.shape[-2]):
-                currslice = dwidata[:,:,z,i]
-                currcsf = csfdata[:,:,z]
+                currslice = dwidata[:, :, z, i]
+                currcsf = csfdata[:, :, z]
                 wmgm = currslice.copy()
                 wmgm[currcsf] = np.nan
                 wmgm_ = nansmooth(wmgm, width, size=size)
@@ -107,9 +110,10 @@ def smooth(dwi, csfmask=None, width=1.25, size=5):
                 csf[np.logical_not(currcsf)] = np.nan
                 csf_ = nansmooth(csf, width, size=size)
                 total = np.nansum(np.dstack((wmgm_, csf_)), 2)
-                smoothed[:,:,z,i] = total
+                smoothed[:, :, z, i] = total
         smoothed[bgmask] = np.nan
     return smoothed
+
 
 def nansmooth(imgslice, fwhm, size=5):
     """Smooths an image slice while ignoring NaNs
@@ -146,22 +150,19 @@ def nansmooth(imgslice, fwhm, size=5):
     stddev = fwhm / np.sqrt(8 * np.log(2))
 
     # Scipy required truncate instead of size
-    truncate = (((size - 1)/2)-0.5)/stddev
+    truncate = (((size - 1) / 2) - 0.5) / stddev
 
     nan_msk = np.isnan(imgslice)
 
     loss = np.zeros(imgslice.shape)
     loss[nan_msk] = 1
-    loss = gaussian_filter(
-            loss, sigma=stddev, mode='constant', truncate=truncate)
+    loss = gaussian_filter(loss, sigma=stddev, mode="constant", truncate=truncate)
 
     gauss = imgslice.copy()
     gauss[nan_msk] = 0
-    gauss = gaussian_filter(
-            gauss, sigma=stddev, mode='constant', truncate=truncate)
+    gauss = gaussian_filter(gauss, sigma=stddev, mode="constant", truncate=truncate)
     gauss[nan_msk] = np.nan
 
     gauss += loss * imgslice
 
     return gauss
-    

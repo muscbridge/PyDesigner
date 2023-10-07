@@ -14,7 +14,7 @@ FSL.
 To check your FSL version:
 
 .. code-block:: console
-    
+
     $ flirt -version
 
 A return value of at least :code:`FLIRT version 6.0` indicates

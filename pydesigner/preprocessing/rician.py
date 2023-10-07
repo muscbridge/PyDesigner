@@ -7,6 +7,7 @@ import scipy as sc
 from scipy import ndimage
 import os.path as op
 
+
 def rician_img_correct(dwiname, noisemapname, outpath=None):
     """
     Performs Rician correction on a dataset with a noisemap
@@ -29,7 +30,7 @@ def rician_img_correct(dwiname, noisemapname, outpath=None):
     rician_correct(dwi, noise) is wrapped by this function
     """
 
-    print('Running Rician correction...')
+    print("Running Rician correction...")
 
     # load files
     dwiimg = nib.load(dwiname)
@@ -43,20 +44,21 @@ def rician_img_correct(dwiname, noisemapname, outpath=None):
 
     # determine the output name
     path = op.dirname(outpath)
-    print('Path: ' + path)
+    print("Path: " + path)
     [name, ext] = op.splitext(op.basename(outpath))
-    print('Name: ' + name)
+    print("Name: " + name)
 
     if not name:
-        name = 'rdwi.nii'
+        name = "rdwi.nii"
     else:
-        name += '.nii'
+        name += ".nii"
     out = op.join(path, name)
-    print('Full: ' + out)
+    print("Full: " + out)
 
     nib.save(newimg, out)
 
     return
+
 
 def rician_correct(dwi, noisemap):
     """
@@ -71,7 +73,7 @@ def rician_correct(dwi, noisemap):
         The noise map from dwidenoise
     width : float, optional
         The full width half max in voxels to be smoothed. Default: 1.25
-       
+
     Returns
     -------
     corrected : (X x Y x Z x N) array_like or img_like object
@@ -90,8 +92,8 @@ def rician_correct(dwi, noisemap):
     sqr_noise = np.square(noisemap)
     sqr_data = np.square(dwi)
     difference = np.zeros(sqr_data.shape)
-    for i in range(len(sqr_data[1,1,1,:])):
-        difference[:,:,:,i] = sqr_noise - sqr_data[:,:,:,i]
+    for i in range(len(sqr_data[1, 1, 1, :])):
+        difference[:, :, :, i] = sqr_noise - sqr_data[:, :, :, i]
     result = np.sqrt(np.absolute(difference))
 
     return result

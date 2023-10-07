@@ -19,19 +19,30 @@ from pydesigner.tractography import sphericalsampling
 from pydesigner.fitting.thresholds import __minZero__
 from tqdm import tqdm
 
-class odfmodel():
+
+class odfmodel:
     """
     DTI/DKI tractograpy class for computing ODFs and preparing spherical
     harmonics for DTI or DKI fiber tracking.
     """
-    def __init__(self, dt, kt=None, mask=None, scale=None, res='med', l_max=6,
-        radial_weight=4, nthreads=None) -> Self:
+
+    def __init__(
+        self,
+        dt,
+        kt=None,
+        mask=None,
+        scale=None,
+        res="med",
+        l_max=6,
+        radial_weight=4,
+        nthreads=None,
+    ) -> Self:
         """
         Parameters
         ----------
         dt : str
             Path to diffusion tensor, which is a 4D NifTI volume composed of six (6)
-            components    
+            components
         kt : str; optional
             Path to kurtosis tensor, which is a 4D NifTI compose of fifteen (15)
             components
@@ -54,23 +65,33 @@ class odfmodel():
             (Default: 4)
         """
         if not op.exists(dt):
-            raise OSError('Input DT path does not exist. Please ensure that '
-                        'the folder or file specified exists.')
+            raise OSError(
+                "Input DT path does not exist. Please ensure that "
+                "the folder or file specified exists."
+            )
         if not kt is None:
             if not op.exists(kt):
-                raise OSError('Input KT path does not exist. Please ensure that '
-                            'the folder or file specified exists.')
+                raise OSError(
+                    "Input KT path does not exist. Please ensure that "
+                    "the folder or file specified exists."
+                )
         if not mask is None:
             if not op.exists(mask):
-                raise OSError('Path to brain mask does not exist. Please '
-                'ensure that the file specified exists.')
+                raise OSError(
+                    "Path to brain mask does not exist. Please "
+                    "ensure that the file specified exists."
+                )
         if not scale is None:
             if not op.exists(scale):
-                raise OSError('Path to scale image does not exist. Please '
-                'ensure that the file specified exists.')
+                raise OSError(
+                    "Path to scale image does not exist. Please "
+                    "ensure that the file specified exists."
+                )
         if not isinstance(res, str):
-            raise Exception('Please specify resolution as a string. Possible '
-            'choices are "low", "med", or "high"')
+            raise Exception(
+                "Please specify resolution as a string. Possible "
+                'choices are "low", "med", or "high"'
+            )
         # Load images
         self.hdr = nib.load(dt)
         self.DT = self.hdr.get_fdata()
@@ -87,29 +108,39 @@ class odfmodel():
         else:
             self.scale_img = np.ones(self.DT.shape[0:3])
         if l_max % 2 != 0:
-            raise Exception('Please provide l_max as a postive '
-        'and even integer')
+            raise Exception("Please provide l_max as a postive " "and even integer")
         self.l_max = l_max
         if radial_weight is None:
-            warnings.warn('Radial weight for dODF computation not specified. '
-            'Using default value of 4.')
+            warnings.warn(
+                "Radial weight for dODF computation not specified. "
+                "Using default value of 4."
+            )
             self.radial_weight = 4
         else:
-            self.radial_weight=radial_weight
-        self.vertices, self.idx, self.idx8, self.area, self.faces, \
-            self.separation_angle = sphericalsampling.odfgrid(res)
+            self.radial_weight = radial_weight
+        (
+            self.vertices,
+            self.idx,
+            self.idx8,
+            self.area,
+            self.faces,
+            self.separation_angle,
+        ) = sphericalsampling.odfgrid(res)
         if not nthreads is None:
             if nthreads > multiprocessing.cpu_count():
-                warnings.warn('Number of workers/threads specified exceed more '
-                'than available. Using the maximum workers/threads available.')
+                warnings.warn(
+                    "Number of workers/threads specified exceed more "
+                    "than available. Using the maximum workers/threads available."
+                )
                 self.workers = -1
         if nthreads is None:
             self.workers = -1
         else:
             self.workers = nthreads
 
-    def dkiodfhelper(self, dt, kt, radial_weight=4, fa_t=None,
-                     form='spherical') -> np.ndarray[float]:
+    def dkiodfhelper(
+        self, dt, kt, radial_weight=4, fa_t=None, form="spherical"
+    ) -> np.ndarray[float]:
         """
         Computes DKI fODF coefficient at a voxel. This function is intended to
         parallelize computations across the brain.
@@ -127,7 +158,7 @@ class odfmodel():
             very small eigenvalues, causing the kurtosis dODF to have erratic
             behavior with very large values, as the kurtosis dODF evaluates the
             inverse of D. Setting a threshold removes negative eigenvalues while
-            preserving principal orientation in voxels where FA >= threshold 
+            preserving principal orientation in voxels where FA >= threshold
         form : str; optional; {'spherical', 'cartesian', 'coefficient'}
             Form of ODF to return in
             (Default: 'spherical')
@@ -138,29 +169,91 @@ class odfmodel():
             DKI ODFs in either coefficient, spherical, or cartesian form
         """
         D = np.array(
-            [
-                [dt[0], dt[3], dt[4]],
-                [dt[3], dt[1], dt[5]],
-                [dt[4], dt[5], dt[2]]
-            ]
+            [[dt[0], dt[3], dt[4]], [dt[3], dt[1], dt[5]], [dt[4], dt[5], dt[2]]]
         )
 
-        W = np.zeros((3,3,3,3))
-        W[0,0,0,0] = kt[0]
-        W[1,1,1,1] = kt[1]
-        W[2,2,2,2] = kt[2]
-        W[0,0,0,1] = kt[3];  W[0,0,1,0] = W[0,0,0,1]; W[0,1,0,0] = W[0,0,0,1]; W[1,0,0,0] = W[0,0,0,1]
-        W[0,0,0,2] = kt[4];  W[0,0,2,0] = W[0,0,0,2]; W[0,2,0,0] = W[0,0,0,2]; W[2,0,0,0] = W[0,0,0,2]
-        W[0,1,1,1] = kt[5];  W[1,0,1,1] = W[0,1,1,1]; W[1,1,0,1] = W[0,1,1,1]; W[1,1,1,0] = W[0,1,1,1]
-        W[0,2,2,2] = kt[6];  W[2,0,2,2] = W[0,2,2,2]; W[2,2,0,2] = W[0,2,2,2]; W[2,2,2,0] = W[0,2,2,2]
-        W[1,1,1,2] = kt[7];  W[1,1,2,1] = W[1,1,1,2]; W[1,2,1,1] = W[1,1,1,2]; W[2,1,1,1] = W[1,1,1,2]
-        W[1,2,2,2] = kt[8];  W[2,1,2,2] = W[1,2,2,2]; W[2,2,1,2] = W[1,2,2,2]; W[2,2,2,1] = W[1,2,2,2]
-        W[0,0,1,1] = kt[9];  W[0,1,0,1] = W[0,0,1,1]; W[0,1,1,0] = W[0,0,1,1]; W[1,0,0,1] = W[0,0,1,1]; W[1,0,1,0] = W[0,0,1,1]; W[1,1,0,0] = W[0,0,1,1]
-        W[0,0,2,2] = kt[10]; W[0,2,0,2] = W[0,0,2,2]; W[0,2,2,0] = W[0,0,2,2]; W[2,0,0,2] = W[0,0,2,2]; W[2,0,2,0] = W[0,0,2,2]; W[2,2,0,0] = W[0,0,2,2]
-        W[1,1,2,2] = kt[11]; W[1,2,1,2] = W[1,1,2,2]; W[1,2,2,1] = W[1,1,2,2]; W[2,1,1,2] = W[1,1,2,2]; W[2,1,2,1] = W[1,1,2,2]; W[2,2,1,1] = W[1,1,2,2]
-        W[0,0,1,2] = kt[12]; W[0,0,2,1] = W[0,0,1,2]; W[0,1,0,2] = W[0,0,1,2]; W[0,1,2,0] = W[0,0,1,2]; W[0,2,0,1] = W[0,0,1,2]; W[0,2,1,0] = W[0,0,1,2]; W[1,0,0,2] = W[0,0,1,2]; W[1,0,2,0] = W[0,0,1,2]; W[1,2,0,0] = W[0,0,1,2]; W[2,0,0,1] = W[0,0,1,2]; W[2,0,1,0] = W[0,0,1,2]; W[2,1,0,0] = W[0,0,1,2]
-        W[0,1,1,2] = kt[13]; W[0,1,2,1] = W[0,1,1,2]; W[0,2,1,1] = W[0,1,1,2]; W[1,0,1,2] = W[0,1,1,2]; W[1,0,2,1] = W[0,1,1,2]; W[1,1,0,2] = W[0,1,1,2]; W[1,1,2,0] = W[0,1,1,2]; W[1,2,0,1] = W[0,1,1,2]; W[1,2,1,0] = W[0,1,1,2]; W[2,0,1,1] = W[0,1,1,2]; W[2,1,0,1] = W[0,1,1,2]; W[2,1,1,0] = W[0,1,1,2]
-        W[0,1,2,2] = kt[14]; W[0,2,1,2] = W[0,1,2,2]; W[0,2,2,1] = W[0,1,2,2]; W[1,0,2,2] = W[0,1,2,2]; W[1,2,0,2] = W[0,1,2,2]; W[1,2,2,0] = W[0,1,2,2]; W[2,0,1,2] = W[0,1,2,2]; W[2,0,2,1] = W[0,1,2,2]; W[2,1,0,2] = W[0,1,2,2]; W[2,1,2,0] = W[0,1,2,2]; W[2,2,0,1] = W[0,1,2,2]; W[2,2,1,0] = W[0,1,2,2]
+        W = np.zeros((3, 3, 3, 3))
+        W[0, 0, 0, 0] = kt[0]
+        W[1, 1, 1, 1] = kt[1]
+        W[2, 2, 2, 2] = kt[2]
+        W[0, 0, 0, 1] = kt[3]
+        W[0, 0, 1, 0] = W[0, 0, 0, 1]
+        W[0, 1, 0, 0] = W[0, 0, 0, 1]
+        W[1, 0, 0, 0] = W[0, 0, 0, 1]
+        W[0, 0, 0, 2] = kt[4]
+        W[0, 0, 2, 0] = W[0, 0, 0, 2]
+        W[0, 2, 0, 0] = W[0, 0, 0, 2]
+        W[2, 0, 0, 0] = W[0, 0, 0, 2]
+        W[0, 1, 1, 1] = kt[5]
+        W[1, 0, 1, 1] = W[0, 1, 1, 1]
+        W[1, 1, 0, 1] = W[0, 1, 1, 1]
+        W[1, 1, 1, 0] = W[0, 1, 1, 1]
+        W[0, 2, 2, 2] = kt[6]
+        W[2, 0, 2, 2] = W[0, 2, 2, 2]
+        W[2, 2, 0, 2] = W[0, 2, 2, 2]
+        W[2, 2, 2, 0] = W[0, 2, 2, 2]
+        W[1, 1, 1, 2] = kt[7]
+        W[1, 1, 2, 1] = W[1, 1, 1, 2]
+        W[1, 2, 1, 1] = W[1, 1, 1, 2]
+        W[2, 1, 1, 1] = W[1, 1, 1, 2]
+        W[1, 2, 2, 2] = kt[8]
+        W[2, 1, 2, 2] = W[1, 2, 2, 2]
+        W[2, 2, 1, 2] = W[1, 2, 2, 2]
+        W[2, 2, 2, 1] = W[1, 2, 2, 2]
+        W[0, 0, 1, 1] = kt[9]
+        W[0, 1, 0, 1] = W[0, 0, 1, 1]
+        W[0, 1, 1, 0] = W[0, 0, 1, 1]
+        W[1, 0, 0, 1] = W[0, 0, 1, 1]
+        W[1, 0, 1, 0] = W[0, 0, 1, 1]
+        W[1, 1, 0, 0] = W[0, 0, 1, 1]
+        W[0, 0, 2, 2] = kt[10]
+        W[0, 2, 0, 2] = W[0, 0, 2, 2]
+        W[0, 2, 2, 0] = W[0, 0, 2, 2]
+        W[2, 0, 0, 2] = W[0, 0, 2, 2]
+        W[2, 0, 2, 0] = W[0, 0, 2, 2]
+        W[2, 2, 0, 0] = W[0, 0, 2, 2]
+        W[1, 1, 2, 2] = kt[11]
+        W[1, 2, 1, 2] = W[1, 1, 2, 2]
+        W[1, 2, 2, 1] = W[1, 1, 2, 2]
+        W[2, 1, 1, 2] = W[1, 1, 2, 2]
+        W[2, 1, 2, 1] = W[1, 1, 2, 2]
+        W[2, 2, 1, 1] = W[1, 1, 2, 2]
+        W[0, 0, 1, 2] = kt[12]
+        W[0, 0, 2, 1] = W[0, 0, 1, 2]
+        W[0, 1, 0, 2] = W[0, 0, 1, 2]
+        W[0, 1, 2, 0] = W[0, 0, 1, 2]
+        W[0, 2, 0, 1] = W[0, 0, 1, 2]
+        W[0, 2, 1, 0] = W[0, 0, 1, 2]
+        W[1, 0, 0, 2] = W[0, 0, 1, 2]
+        W[1, 0, 2, 0] = W[0, 0, 1, 2]
+        W[1, 2, 0, 0] = W[0, 0, 1, 2]
+        W[2, 0, 0, 1] = W[0, 0, 1, 2]
+        W[2, 0, 1, 0] = W[0, 0, 1, 2]
+        W[2, 1, 0, 0] = W[0, 0, 1, 2]
+        W[0, 1, 1, 2] = kt[13]
+        W[0, 1, 2, 1] = W[0, 1, 1, 2]
+        W[0, 2, 1, 1] = W[0, 1, 1, 2]
+        W[1, 0, 1, 2] = W[0, 1, 1, 2]
+        W[1, 0, 2, 1] = W[0, 1, 1, 2]
+        W[1, 1, 0, 2] = W[0, 1, 1, 2]
+        W[1, 1, 2, 0] = W[0, 1, 1, 2]
+        W[1, 2, 0, 1] = W[0, 1, 1, 2]
+        W[1, 2, 1, 0] = W[0, 1, 1, 2]
+        W[2, 0, 1, 1] = W[0, 1, 1, 2]
+        W[2, 1, 0, 1] = W[0, 1, 1, 2]
+        W[2, 1, 1, 0] = W[0, 1, 1, 2]
+        W[0, 1, 2, 2] = kt[14]
+        W[0, 2, 1, 2] = W[0, 1, 2, 2]
+        W[0, 2, 2, 1] = W[0, 1, 2, 2]
+        W[1, 0, 2, 2] = W[0, 1, 2, 2]
+        W[1, 2, 0, 2] = W[0, 1, 2, 2]
+        W[1, 2, 2, 0] = W[0, 1, 2, 2]
+        W[2, 0, 1, 2] = W[0, 1, 2, 2]
+        W[2, 0, 2, 1] = W[0, 1, 2, 2]
+        W[2, 1, 0, 2] = W[0, 1, 2, 2]
+        W[2, 1, 2, 0] = W[0, 1, 2, 2]
+        W[2, 2, 0, 1] = W[0, 1, 2, 2]
+        W[2, 2, 1, 0] = W[0, 1, 2, 2]
 
         # Reglarize tensor if fa is more than threshold specified (fa_t)
         if not fa_t is None:
@@ -170,96 +263,217 @@ class odfmodel():
             L = L[idx]
             V = V[:, idx]
             fa = np.sqrt(
-                (
-                    (L[0] - L[1])**2 + \
-                    (L[0] - L[2])**2 + \
-                    (L[1] - L[2])**2 \
-                ) / (2 * (np.sum(L**2)))
+                ((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2)
+                / (2 * (np.sum(L**2)))
             )
             if fa > fa_t:
-                x = np.roots([2*(1-2*fa_t**2)/3, -4*L[0]/3, 2*(1-fa_t**2)/3*L[0]**2])
+                x = np.roots(
+                    [
+                        2 * (1 - 2 * fa_t**2) / 3,
+                        -4 * L[0] / 3,
+                        2 * (1 - fa_t**2) / 3 * L[0] ** 2,
+                    ]
+                )
                 if x[np.logical_and(x > 0, x < L[0])].size != 0:
                     L[1:3] = x[np.logical_and(x > 0, x < L[0])]
                 else:
-                    Davg = np.trace(D)/3
+                    Davg = np.trace(D) / 3
                     L[L < 0.1 * Davg] = 0.1 * Davg
                 D = np.matmul(np.matmul(V, np.diag(L)), np.linalg.inv(V))
-                W = np.zeros((3,3,3,3))
+                W = np.zeros((3, 3, 3, 3))
 
-        Davg = np.trace(D)/3
+        Davg = np.trace(D) / 3
         try:
             U = Davg * np.linalg.inv(D)
         except:
             U = Davg * np.linalg.pinv(D)
-        A1=0
-        B11=0
-        B12=0
-        B13=0
-        B22=0
-        B23=0
-        B33=0
-        C1111=0
-        C1112=0
-        C1113=0
-        C1122=0
-        C1123=0
-        C1133=0
-        C1222=0
-        C1223=0
-        C1233=0
-        C1333=0
-        C2222=0
-        C2223=0
-        C2233=0
-        C2333=0
-        C3333=0
+        A1 = 0
+        B11 = 0
+        B12 = 0
+        B13 = 0
+        B22 = 0
+        B23 = 0
+        B33 = 0
+        C1111 = 0
+        C1112 = 0
+        C1113 = 0
+        C1122 = 0
+        C1123 = 0
+        C1133 = 0
+        C1222 = 0
+        C1223 = 0
+        C1233 = 0
+        C1333 = 0
+        C2222 = 0
+        C2223 = 0
+        C2233 = 0
+        C2333 = 0
+        C3333 = 0
 
         for i in [0, 1, 2]:
             for j in [0, 1, 2]:
                 for k in [0, 1, 2]:
                     for l in [0, 1, 2]:
                         # Coefficients for: 3UijWijklUkl
-                        A1 = A1 + 3 * U[i,j] * W[i,j,k,l] * U[k,l]
+                        A1 = A1 + 3 * U[i, j] * W[i, j, k, l] * U[k, l]
                         # Coefficients for: -6(a+1)UijWijklVkl
-                        B0 = -6*(radial_weight+1) * U[i,j] * W[i,j,k,l]
-                        B11 = B11 + B0 * (U[k,0] * U[l,0])              
-                        B12 = B12 + B0 * (U[k,0] * U[l,1] + U[k,1] * U[l,0])
-                        B13 = B13 + B0 * (U[k,0] * U[l,2] + U[k,2] * U[l,0])
-                        B22 = B22 + B0 * (U[k,1] * U[l,1])              
-                        B23 = B23 + B0 * (U[k,1] * U[l,2] + U[k,2] * U[l,1])
-                        B33 = B33 + B0 * (U[k,2] * U[l,2])
+                        B0 = -6 * (radial_weight + 1) * U[i, j] * W[i, j, k, l]
+                        B11 = B11 + B0 * (U[k, 0] * U[l, 0])
+                        B12 = B12 + B0 * (U[k, 0] * U[l, 1] + U[k, 1] * U[l, 0])
+                        B13 = B13 + B0 * (U[k, 0] * U[l, 2] + U[k, 2] * U[l, 0])
+                        B22 = B22 + B0 * (U[k, 1] * U[l, 1])
+                        B23 = B23 + B0 * (U[k, 1] * U[l, 2] + U[k, 2] * U[l, 1])
+                        B33 = B33 + B0 * (U[k, 2] * U[l, 2])
                         # Coefficients for: (alpha+1)(alpha+3)W(i,j,k,l)VijVkl
-                        C0 = (radial_weight+1) * (radial_weight+3) * W[i,j,k,l]
-                        C1111 = C1111 + C0 * (U[i,0] * U[j,0] * U[k,0] * U[l,0])                                                                                                                                                                                                                                                                                                                    
-                        C1112 = C1112 + C0 * (U[i,0] * U[j,0] * U[k,0] * U[l,1] + U[i,0] * U[j,0] * U[k,1] * U[l,0] + U[i,0] * U[j,1] * U[k,0] * U[l,0] + U[i,1] * U[j,0] * U[k,0] * U[l,0])                                                                                                                                                                                                                                
-                        C1113 = C1113 + C0 * (U[i,0] * U[j,0] * U[k,0] * U[l,2] + U[i,0] * U[j,0] * U[k,2] * U[l,0] + U[i,0] * U[j,2] * U[k,0] * U[l,0] + U[i,2] * U[j,0] * U[k,0] * U[l,0])                                                                                                                                                                                                                                
-                        C1122 = C1122 + C0 * (U[i,0] * U[j,0] * U[k,1] * U[l,1] + U[i,0] * U[j,1] * U[k,0] * U[l,1] + U[i,0] * U[j,1] * U[k,1] * U[l,0] + U[i,1] * U[j,0] * U[k,0] * U[l,1] + U[i,1] * U[j,0] * U[k,1] * U[l,0] + U[i,1] * U[j,1] * U[k,0] * U[l,0])                                                                                                                                                                        
-                        C1123 = C1123 + C0 * (U[i,0] * U[j,0] * U[k,1] * U[l,2] + U[i,0] * U[j,0] * U[k,2] * U[l,1] + U[i,0] * U[j,1] * U[k,0] * U[l,2] + U[i,0] * U[j,1] * U[k,2] * U[l,0] + U[i,0] * U[j,2] * U[k,0] * U[l,1] + U[i,0] * U[j,2] * U[k,1] * U[l,0] + U[i,1] * U[j,0] * U[k,0] * U[l,2] + U[i,1] * U[j,0] * U[k,2] * U[l,0] + U[i,1] * U[j,2] * U[k,0] * U[l,0] + U[i,2] * U[j,0] * U[k,0] * U[l,1] + U[i,2] * U[j,0] * U[k,1] * U[l,0] + U[i,2] * U[j,1] * U[k,0] * U[l,0])
-                        C1133 = C1133 + C0 * (U[i,0] * U[j,0] * U[k,2] * U[l,2] + U[i,0] * U[j,2] * U[k,0] * U[l,2] + U[i,0] * U[j,2] * U[k,2] * U[l,0] + U[i,2] * U[j,0] * U[k,0] * U[l,2] + U[i,2] * U[j,0] * U[k,2] * U[l,0] + U[i,2] * U[j,2] * U[k,0] * U[l,0])                                                                                                                                                                        
-                        C1222 = C1222 + C0 * (U[i,0] * U[j,1] * U[k,1] * U[l,1] + U[i,1] * U[j,0] * U[k,1] * U[l,1] + U[i,1] * U[j,1] * U[k,0] * U[l,1] + U[i,1] * U[j,1] * U[k,1] * U[l,0])                                                                                                                                                                                                                                
-                        C1223 = C1223 + C0 * (U[i,0] * U[j,1] * U[k,1] * U[l,2] + U[i,0] * U[j,1] * U[k,2] * U[l,1] + U[i,0] * U[j,2] * U[k,1] * U[l,1] + U[i,1] * U[j,0] * U[k,1] * U[l,2] + U[i,1] * U[j,0] * U[k,2] * U[l,1] + U[i,1] * U[j,1] * U[k,0] * U[l,2] + U[i,1] * U[j,1] * U[k,2] * U[l,0] + U[i,1] * U[j,2] * U[k,0] * U[l,1] + U[i,1] * U[j,2] * U[k,1] * U[l,0] + U[i,2] * U[j,0] * U[k,1] * U[l,1] + U[i,2] * U[j,1] * U[k,0] * U[l,1] + U[i,2] * U[j,1] * U[k,1] * U[l,0])
-                        C1233 = C1233 + C0 * (U[i,0] * U[j,1] * U[k,2] * U[l,2] + U[i,0] * U[j,2] * U[k,1] * U[l,2] + U[i,0] * U[j,2] * U[k,2] * U[l,1] + U[i,1] * U[j,0] * U[k,2] * U[l,2] + U[i,1] * U[j,2] * U[k,0] * U[l,2] + U[i,1] * U[j,2] * U[k,2] * U[l,0] + U[i,2] * U[j,0] * U[k,1] * U[l,2] + U[i,2] * U[j,0] * U[k,2] * U[l,1] + U[i,2] * U[j,1] * U[k,0] * U[l,2] + U[i,2] * U[j,1] * U[k,2] * U[l,0] + U[i,2] * U[j,2] * U[k,0] * U[l,1] + U[i,2] * U[j,2] * U[k,1] * U[l,0])
-                        C1333 = C1333 + C0 * (U[i,0] * U[j,2] * U[k,2] * U[l,2] + U[i,2] * U[j,0] * U[k,2] * U[l,2] + U[i,2] * U[j,2] * U[k,0] * U[l,2] + U[i,2] * U[j,2] * U[k,2] * U[l,0])                                                                                                                                                                                                                                
-                        C2222 = C2222 + C0 * (U[i,1] * U[j,1] * U[k,1] * U[l,1])                                                                                                                                                                                                                                                                                                                    
-                        C2223 = C2223 + C0 * (U[i,1] * U[j,1] * U[k,1] * U[l,2] + U[i,1] * U[j,1] * U[k,2] * U[l,1] + U[i,1] * U[j,2] * U[k,1] * U[l,1] + U[i,2] * U[j,1] * U[k,1] * U[l,1])                                                                                                                                                                                                                                
-                        C2233 = C2233 + C0 * (U[i,1] * U[j,1] * U[k,2] * U[l,2] + U[i,1] * U[j,2] * U[k,1] * U[l,2] + U[i,1] * U[j,2] * U[k,2] * U[l,1] + U[i,2] * U[j,1] * U[k,1] * U[l,2] + U[i,2] * U[j,1] * U[k,2] * U[l,1] + U[i,2] * U[j,2] * U[k,1] * U[l,1])                                                                                                                                                                        
-                        C2333 = C2333 + C0 * (U[i,1] * U[j,2] * U[k,2] * U[l,2] + U[i,2] * U[j,1] * U[k,2] * U[l,2] + U[i,2] * U[j,2] * U[k,1] * U[l,2] + U[i,2] * U[j,2] * U[k,2] * U[l,1])                                                                                                                                                                                                                                
-                        C3333 = C3333 + C0 * (U[i,2] * U[j,2] * U[k,2] * U[l,2])
+                        C0 = (radial_weight + 1) * (radial_weight + 3) * W[i, j, k, l]
+                        C1111 = C1111 + C0 * (U[i, 0] * U[j, 0] * U[k, 0] * U[l, 0])
+                        C1112 = C1112 + C0 * (
+                            U[i, 0] * U[j, 0] * U[k, 0] * U[l, 1]
+                            + U[i, 0] * U[j, 0] * U[k, 1] * U[l, 0]
+                            + U[i, 0] * U[j, 1] * U[k, 0] * U[l, 0]
+                            + U[i, 1] * U[j, 0] * U[k, 0] * U[l, 0]
+                        )
+                        C1113 = C1113 + C0 * (
+                            U[i, 0] * U[j, 0] * U[k, 0] * U[l, 2]
+                            + U[i, 0] * U[j, 0] * U[k, 2] * U[l, 0]
+                            + U[i, 0] * U[j, 2] * U[k, 0] * U[l, 0]
+                            + U[i, 2] * U[j, 0] * U[k, 0] * U[l, 0]
+                        )
+                        C1122 = C1122 + C0 * (
+                            U[i, 0] * U[j, 0] * U[k, 1] * U[l, 1]
+                            + U[i, 0] * U[j, 1] * U[k, 0] * U[l, 1]
+                            + U[i, 0] * U[j, 1] * U[k, 1] * U[l, 0]
+                            + U[i, 1] * U[j, 0] * U[k, 0] * U[l, 1]
+                            + U[i, 1] * U[j, 0] * U[k, 1] * U[l, 0]
+                            + U[i, 1] * U[j, 1] * U[k, 0] * U[l, 0]
+                        )
+                        C1123 = C1123 + C0 * (
+                            U[i, 0] * U[j, 0] * U[k, 1] * U[l, 2]
+                            + U[i, 0] * U[j, 0] * U[k, 2] * U[l, 1]
+                            + U[i, 0] * U[j, 1] * U[k, 0] * U[l, 2]
+                            + U[i, 0] * U[j, 1] * U[k, 2] * U[l, 0]
+                            + U[i, 0] * U[j, 2] * U[k, 0] * U[l, 1]
+                            + U[i, 0] * U[j, 2] * U[k, 1] * U[l, 0]
+                            + U[i, 1] * U[j, 0] * U[k, 0] * U[l, 2]
+                            + U[i, 1] * U[j, 0] * U[k, 2] * U[l, 0]
+                            + U[i, 1] * U[j, 2] * U[k, 0] * U[l, 0]
+                            + U[i, 2] * U[j, 0] * U[k, 0] * U[l, 1]
+                            + U[i, 2] * U[j, 0] * U[k, 1] * U[l, 0]
+                            + U[i, 2] * U[j, 1] * U[k, 0] * U[l, 0]
+                        )
+                        C1133 = C1133 + C0 * (
+                            U[i, 0] * U[j, 0] * U[k, 2] * U[l, 2]
+                            + U[i, 0] * U[j, 2] * U[k, 0] * U[l, 2]
+                            + U[i, 0] * U[j, 2] * U[k, 2] * U[l, 0]
+                            + U[i, 2] * U[j, 0] * U[k, 0] * U[l, 2]
+                            + U[i, 2] * U[j, 0] * U[k, 2] * U[l, 0]
+                            + U[i, 2] * U[j, 2] * U[k, 0] * U[l, 0]
+                        )
+                        C1222 = C1222 + C0 * (
+                            U[i, 0] * U[j, 1] * U[k, 1] * U[l, 1]
+                            + U[i, 1] * U[j, 0] * U[k, 1] * U[l, 1]
+                            + U[i, 1] * U[j, 1] * U[k, 0] * U[l, 1]
+                            + U[i, 1] * U[j, 1] * U[k, 1] * U[l, 0]
+                        )
+                        C1223 = C1223 + C0 * (
+                            U[i, 0] * U[j, 1] * U[k, 1] * U[l, 2]
+                            + U[i, 0] * U[j, 1] * U[k, 2] * U[l, 1]
+                            + U[i, 0] * U[j, 2] * U[k, 1] * U[l, 1]
+                            + U[i, 1] * U[j, 0] * U[k, 1] * U[l, 2]
+                            + U[i, 1] * U[j, 0] * U[k, 2] * U[l, 1]
+                            + U[i, 1] * U[j, 1] * U[k, 0] * U[l, 2]
+                            + U[i, 1] * U[j, 1] * U[k, 2] * U[l, 0]
+                            + U[i, 1] * U[j, 2] * U[k, 0] * U[l, 1]
+                            + U[i, 1] * U[j, 2] * U[k, 1] * U[l, 0]
+                            + U[i, 2] * U[j, 0] * U[k, 1] * U[l, 1]
+                            + U[i, 2] * U[j, 1] * U[k, 0] * U[l, 1]
+                            + U[i, 2] * U[j, 1] * U[k, 1] * U[l, 0]
+                        )
+                        C1233 = C1233 + C0 * (
+                            U[i, 0] * U[j, 1] * U[k, 2] * U[l, 2]
+                            + U[i, 0] * U[j, 2] * U[k, 1] * U[l, 2]
+                            + U[i, 0] * U[j, 2] * U[k, 2] * U[l, 1]
+                            + U[i, 1] * U[j, 0] * U[k, 2] * U[l, 2]
+                            + U[i, 1] * U[j, 2] * U[k, 0] * U[l, 2]
+                            + U[i, 1] * U[j, 2] * U[k, 2] * U[l, 0]
+                            + U[i, 2] * U[j, 0] * U[k, 1] * U[l, 2]
+                            + U[i, 2] * U[j, 0] * U[k, 2] * U[l, 1]
+                            + U[i, 2] * U[j, 1] * U[k, 0] * U[l, 2]
+                            + U[i, 2] * U[j, 1] * U[k, 2] * U[l, 0]
+                            + U[i, 2] * U[j, 2] * U[k, 0] * U[l, 1]
+                            + U[i, 2] * U[j, 2] * U[k, 1] * U[l, 0]
+                        )
+                        C1333 = C1333 + C0 * (
+                            U[i, 0] * U[j, 2] * U[k, 2] * U[l, 2]
+                            + U[i, 2] * U[j, 0] * U[k, 2] * U[l, 2]
+                            + U[i, 2] * U[j, 2] * U[k, 0] * U[l, 2]
+                            + U[i, 2] * U[j, 2] * U[k, 2] * U[l, 0]
+                        )
+                        C2222 = C2222 + C0 * (U[i, 1] * U[j, 1] * U[k, 1] * U[l, 1])
+                        C2223 = C2223 + C0 * (
+                            U[i, 1] * U[j, 1] * U[k, 1] * U[l, 2]
+                            + U[i, 1] * U[j, 1] * U[k, 2] * U[l, 1]
+                            + U[i, 1] * U[j, 2] * U[k, 1] * U[l, 1]
+                            + U[i, 2] * U[j, 1] * U[k, 1] * U[l, 1]
+                        )
+                        C2233 = C2233 + C0 * (
+                            U[i, 1] * U[j, 1] * U[k, 2] * U[l, 2]
+                            + U[i, 1] * U[j, 2] * U[k, 1] * U[l, 2]
+                            + U[i, 1] * U[j, 2] * U[k, 2] * U[l, 1]
+                            + U[i, 2] * U[j, 1] * U[k, 1] * U[l, 2]
+                            + U[i, 2] * U[j, 1] * U[k, 2] * U[l, 1]
+                            + U[i, 2] * U[j, 2] * U[k, 1] * U[l, 1]
+                        )
+                        C2333 = C2333 + C0 * (
+                            U[i, 1] * U[j, 2] * U[k, 2] * U[l, 2]
+                            + U[i, 2] * U[j, 1] * U[k, 2] * U[l, 2]
+                            + U[i, 2] * U[j, 2] * U[k, 1] * U[l, 2]
+                            + U[i, 2] * U[j, 2] * U[k, 2] * U[l, 1]
+                        )
+                        C3333 = C3333 + C0 * (U[i, 2] * U[j, 2] * U[k, 2] * U[l, 2])
         coeff = np.array(
             [
-                A1, B11, B12, B13, B22, B23, B33, C1111, C1112, C1113, C1122, C1123, C1133, C1222, C1223, C1233, C1333, C2222, C2223, C2233, C2333, C3333, U[0,0], U[1,1], U[2,2], U[0,1], U[0,2], U[1,2], radial_weight
+                A1,
+                B11,
+                B12,
+                B13,
+                B22,
+                B23,
+                B33,
+                C1111,
+                C1112,
+                C1113,
+                C1122,
+                C1123,
+                C1133,
+                C1222,
+                C1223,
+                C1233,
+                C1333,
+                C2222,
+                C2223,
+                C2233,
+                C2333,
+                C3333,
+                U[0, 0],
+                U[1, 1],
+                U[2, 2],
+                U[0, 1],
+                U[0, 2],
+                U[1, 2],
+                radial_weight,
             ]
         )
-        if form == 'coefficient':
+        if form == "coefficient":
             odf = coeff
-        if form == 'spherical':
+        if form == "spherical":
             odf = dkiodfspherical(coeff, self.vertices[:, 0], self.vertices[:, 1])
-        if form == 'cartesian':
+        if form == "cartesian":
             x, y, z = sphere2cart(1, self.vertices[:, 1], self.vertices[:, 0])
             odf = dkiodfcartesian(coeff, x, y, z)
         return odf
-    
-    def dkiodf(self, form='spherical', fa_t=0.90) -> np.ndarray[float]:
+
+    def dkiodf(self, form="spherical", fa_t=0.90) -> np.ndarray[float]:
         """
         Computes DKI ODFs for the whole brain.
 
@@ -279,27 +493,35 @@ class odfmodel():
         -------
         DKI ODF in defined form
         """
-        if not form in ['spherical', 'cartesian', 'coefficient']:
-            raise Exception('Please select a valid form of ODF to receive')
+        if not form in ["spherical", "cartesian", "coefficient"]:
+            raise Exception("Please select a valid form of ODF to receive")
         if self.KT is None:
-                raise AttributeError('WOAH! Cannot compute DKI ODFs without '
-                'kurtosis tensor (KT). Try using dtiodf(), Jumbo.')
+            raise AttributeError(
+                "WOAH! Cannot compute DKI ODFs without "
+                "kurtosis tensor (KT). Try using dtiodf(), Jumbo."
+            )
         # Vectorize images
         DT = vectorize(self.DT, self.mask_img)
         KT = vectorize(self.KT, self.mask_img)
         nvox = DT.shape[-1]
-        inputs = tqdm(range(nvox),
-                        desc='DKI ODF',
-                        bar_format='{desc}: [{percentage:0.0f}%]',
-                        unit='vox',
-                        ncols=70)
-        odf = Parallel(n_jobs=self.workers, prefer='processes') (delayed(self.dkiodfhelper)\
-            (DT[:, i], KT[:, i], self.radial_weight, fa_t, form) for i in inputs)
+        inputs = tqdm(
+            range(nvox),
+            desc="DKI ODF",
+            bar_format="{desc}: [{percentage:0.0f}%]",
+            unit="vox",
+            ncols=70,
+        )
+        odf = Parallel(n_jobs=self.workers, prefer="processes")(
+            delayed(self.dkiodfhelper)(
+                DT[:, i], KT[:, i], self.radial_weight, fa_t, form
+            )
+            for i in inputs
+        )
         odf = np.array(odf).T
         odf = vectorize(odf, self.mask_img)
-        return(odf)
+        return odf
 
-    def dtiodfhelper(self, dt, form='spherical') -> np.ndarray[float]:
+    def dtiodfhelper(self, dt, form="spherical") -> np.ndarray[float]:
         """
         Computes DTI fODF coefficient at a voxel. This function is intended to
         parallelize computations across the brain. Use only for diffusion
@@ -321,33 +543,29 @@ class odfmodel():
             DKI ODFs in either coefficient, spherical, or cartesian form
         """
         D = np.array(
-            [
-                [dt[0], dt[3], dt[4]],
-                [dt[3], dt[1], dt[5]],
-                [dt[4], dt[5], dt[2]]
-            ]
+            [[dt[0], dt[3], dt[4]], [dt[3], dt[1], dt[5]], [dt[4], dt[5], dt[2]]]
         )
-        Davg = np.trace(D)/3
+        Davg = np.trace(D) / 3
         try:
             U = Davg * np.linalg.inv(D)
         except:
             U = Davg * np.linalg.pinv(D)
-        U11 = U[0,0]
-        U22 = U[1,1]
-        U33 = U[2,2]
-        U12 = U[0,1]
-        U13 = U[0,2]
-        U23 = U[1,2]
-        coeff = np.array(
-            [U11, U12, U13, U22, U23, U33]
-        )
-        if form == 'coefficient':
+        U11 = U[0, 0]
+        U22 = U[1, 1]
+        U33 = U[2, 2]
+        U12 = U[0, 1]
+        U13 = U[0, 2]
+        U23 = U[1, 2]
+        coeff = np.array([U11, U12, U13, U22, U23, U33])
+        if form == "coefficient":
             odf = coeff
-        if form == 'spherical':
-            odf = dtiodfspherical(coeff, self.vertices[:, 0], self.vertices[:, 1], self.radial_weight)
+        if form == "spherical":
+            odf = dtiodfspherical(
+                coeff, self.vertices[:, 0], self.vertices[:, 1], self.radial_weight
+            )
         return odf
 
-    def dtiodf(self, form='spherical') -> np.ndarray[float]:
+    def dtiodf(self, form="spherical") -> np.ndarray[float]:
         """
         Computed DTI ODFs for the whole brain (ellipsoids)
 
@@ -361,21 +579,25 @@ class odfmodel():
         DTI ODF in defined form
         """
         if self.DT is None:
-                raise AttributeError('WOAH! Cannot compute DTI ODFs without '
-                'diffusion tensor (DT), Jumbo.')
+            raise AttributeError(
+                "WOAH! Cannot compute DTI ODFs without " "diffusion tensor (DT), Jumbo."
+            )
         # Vectorize images
         DT = vectorize(self.DT, self.mask_img)
         nvox = DT.shape[-1]
-        inputs = tqdm(range(nvox),
-                        desc='DTI ODF',
-                        bar_format='{desc}: [{percentage:0.0f}%]',
-                        unit='vox',
-                        ncols=70)
-        odf = Parallel(n_jobs=self.workers, prefer='processes') (delayed(self.dtiodfhelper)\
-            (DT[:, i], form) for i in inputs)
+        inputs = tqdm(
+            range(nvox),
+            desc="DTI ODF",
+            bar_format="{desc}: [{percentage:0.0f}%]",
+            unit="vox",
+            ncols=70,
+        )
+        odf = Parallel(n_jobs=self.workers, prefer="processes")(
+            delayed(self.dtiodfhelper)(DT[:, i], form) for i in inputs
+        )
         odf = np.array(odf).T
         odf = vectorize(odf, self.mask_img)
-        return(odf)
+        return odf
 
     def odfmaxhelper(self, odf) -> Tuple[np.ndarray[float], np.ndarray[float]]:
         """
@@ -403,7 +625,7 @@ class odfmodel():
         if odfmax.size == 0:
             odfmax = np.array([1])
             dirmax = np.array([0, 0])
-        return odfmax, dirmax 
+        return odfmax, dirmax
 
     def odf2shhelper(self, odf, B, scale) -> np.ndarray[complex]:
         """
@@ -419,7 +641,7 @@ class odfmodel():
         scale : float64
             Value of dMRI metric to multiply ODF with to control stopping
             criteria in tractography
-        
+
         Returns
         -------
         sh : Shpherical harmonic expansion of ODF at voxel
@@ -449,27 +671,30 @@ class odfmodel():
         scale = vectorize(self.scale_img, self.mask_img)
         # Create shperical harmonic (SH) base set
         degs = np.arange(self.l_max + 1, dtype=int)
-        l_num = 2 * degs + 1 # how many per degree (evens only)
+        l_num = 2 * degs + 1  # how many per degree (evens only)
         # Variable `harmonics` holds the index of phase m where l is even i.e.
         # l = 0; m = 0                                  --> 1 phases  (even l)
         # l = 1, m = -1, m = 0, m = 1                   --> 3 phases (odd l)
         # l = 2, m = -2, m = -1, m = 0, m = 1, m = 2    --> 5 phases (even l)
         harmonics = []
-        sh_end = 0 # initialize the SH set for indexing
+        sh_end = 0  # initialize the SH set for indexing
         for _, phase in enumerate(l_num[::2]):
             sh_start = sh_end + phase - 1
             sh_end = sh_start + phase - 1
             harmonics.extend(np.arange(sh_start, sh_end + 1))
-        B = shbasis(degs, self.vertices[:, 0], self.vertices[:, 1], 'tournier')
+        B = shbasis(degs, self.vertices[:, 0], self.vertices[:, 1], "tournier")
         B = B[:, harmonics]
         nvox = odf.shape[-1]
-        inputs = tqdm(range(nvox),
-                        desc='ODF SH Expansion',
-                        bar_format='{desc}: [{percentage:0.0f}%]',
-                        unit='vox',
-                        ncols=70)
-        sh = Parallel(n_jobs=self.workers, prefer='processes') (delayed(self.odf2shhelper)\
-            (odf[:, i], B, scale[i]) for i in inputs)
+        inputs = tqdm(
+            range(nvox),
+            desc="ODF SH Expansion",
+            bar_format="{desc}: [{percentage:0.0f}%]",
+            unit="vox",
+            ncols=70,
+        )
+        sh = Parallel(n_jobs=self.workers, prefer="processes")(
+            delayed(self.odf2shhelper)(odf[:, i], B, scale[i]) for i in inputs
+        )
         sh = np.array(sh).T.real
         sh = vectorize(sh, self.mask_img)
         return sh
@@ -484,13 +709,14 @@ class odfmodel():
             variable to write out
         path : str
             Path to output file
-        
+
         Returns
         -------
         None; writes out file
         """
         self.hdr.set_data_dtype(var.dtype)
         writeNii(var, self.hdr, path)
+
 
 def dkiodfspherical(odf, phi, theta) -> np.ndarray[float]:
     """
@@ -504,28 +730,104 @@ def dkiodfspherical(odf, phi, theta) -> np.ndarray[float]:
         Polar phi angles
     theta : array_like(dtype=float64)
         Polar theta angles
-    
+
     Returns
     -------
     spherical : array_like(dtype=float64)
         ODF in spherical form
     """
     if len(theta) != len(phi):
-        raise Exception('Inputs theta and phi are not the same size')
+        raise Exception("Inputs theta and phi are not the same size")
     try:
-        spherical = (1 / ((np.sin(phi) * np.cos(theta))**2 *  odf[22] + (np.sin(phi) * np.sin(theta))**2 *  odf[23] + np.cos(phi)**2 *  odf[24] + 2 * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) *  odf[25] + \
-        2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) *  odf[26] + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) *  odf[27]))**(( odf[28] + 1) / 2) * (1 + ( odf[0] + \
-        ( odf[1] * (np.sin(phi) * np.cos(theta))**2 +  odf[2] * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) +  odf[3] * (np.sin(phi) * np.cos(theta)) * np.cos(phi) +  odf[4] * (np.sin(phi) * np.sin(theta))**2 + \
-        odf[5] * (np.sin(phi) * np.sin(theta)) * np.cos(phi) +  odf[6] * np.cos(phi)**2) / ((np.sin(phi) * np.cos(theta))**2 *  odf[22] + (np.sin(phi) * np.sin(theta))**2 *  odf[23] + np.cos(phi)**2 *  odf[24] + \
-        2 * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) *  odf[25] + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) *  odf[26] + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) *  odf[27]) + \
-        ( odf[7] * (np.sin(phi) * np.cos(theta))**4 +  odf[8] * (np.sin(phi) * np.cos(theta))**3 * (np.sin(phi) * np.sin(theta)) +  odf[9] * (np.sin(phi) * np.cos(theta))**3 * np.cos(phi) +  odf[10] * (np.sin(phi) * np.cos(theta))**2 * (np.sin(phi) * np.sin(theta))**2 + \
-        odf[11] * (np.sin(phi) * np.cos(theta))**2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) +  odf[12] * (np.sin(phi) * np.cos(theta))**2 * np.cos(phi)**2 +  odf[13] * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta))**3 + \
-        odf[14] * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta))**2 * np.cos(phi) +  odf[15] * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) * np.cos(phi)**2 +  odf[16] * (np.sin(phi) * np.cos(theta)) * np.cos(phi)**3 +  odf[17] * (np.sin(phi) * np.sin(theta))**4 + \
-        odf[18] * (np.sin(phi) * np.sin(theta))**3 * np.cos(phi) +  odf[19] * (np.sin(phi) * np.sin(theta))**2 * np.cos(phi)**2 +  odf[20] * (np.sin(phi) * np.sin(theta)) * np.cos(phi)**3 +  odf[21] * np.cos(phi)**4) / ((np.sin(phi) * np.cos(theta))**2 *  odf[22] + (np.sin(phi) * np.sin(theta))**2 *  odf[23] + \
-        np.cos(phi)**2 *  odf[24] + 2 * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) *  odf[25] + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) *  odf[26] + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) *  odf[27])**2) / 24)
+        spherical = (
+            1
+            / (
+                (np.sin(phi) * np.cos(theta)) ** 2 * odf[22]
+                + (np.sin(phi) * np.sin(theta)) ** 2 * odf[23]
+                + np.cos(phi) ** 2 * odf[24]
+                + 2
+                * (np.sin(phi) * np.cos(theta))
+                * (np.sin(phi) * np.sin(theta))
+                * odf[25]
+                + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) * odf[26]
+                + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) * odf[27]
+            )
+        ) ** ((odf[28] + 1) / 2) * (
+            1
+            + (
+                odf[0]
+                + (
+                    odf[1] * (np.sin(phi) * np.cos(theta)) ** 2
+                    + odf[2]
+                    * (np.sin(phi) * np.cos(theta))
+                    * (np.sin(phi) * np.sin(theta))
+                    + odf[3] * (np.sin(phi) * np.cos(theta)) * np.cos(phi)
+                    + odf[4] * (np.sin(phi) * np.sin(theta)) ** 2
+                    + odf[5] * (np.sin(phi) * np.sin(theta)) * np.cos(phi)
+                    + odf[6] * np.cos(phi) ** 2
+                )
+                / (
+                    (np.sin(phi) * np.cos(theta)) ** 2 * odf[22]
+                    + (np.sin(phi) * np.sin(theta)) ** 2 * odf[23]
+                    + np.cos(phi) ** 2 * odf[24]
+                    + 2
+                    * (np.sin(phi) * np.cos(theta))
+                    * (np.sin(phi) * np.sin(theta))
+                    * odf[25]
+                    + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) * odf[26]
+                    + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) * odf[27]
+                )
+                + (
+                    odf[7] * (np.sin(phi) * np.cos(theta)) ** 4
+                    + odf[8]
+                    * (np.sin(phi) * np.cos(theta)) ** 3
+                    * (np.sin(phi) * np.sin(theta))
+                    + odf[9] * (np.sin(phi) * np.cos(theta)) ** 3 * np.cos(phi)
+                    + odf[10]
+                    * (np.sin(phi) * np.cos(theta)) ** 2
+                    * (np.sin(phi) * np.sin(theta)) ** 2
+                    + odf[11]
+                    * (np.sin(phi) * np.cos(theta)) ** 2
+                    * (np.sin(phi) * np.sin(theta))
+                    * np.cos(phi)
+                    + odf[12] * (np.sin(phi) * np.cos(theta)) ** 2 * np.cos(phi) ** 2
+                    + odf[13]
+                    * (np.sin(phi) * np.cos(theta))
+                    * (np.sin(phi) * np.sin(theta)) ** 3
+                    + odf[14]
+                    * (np.sin(phi) * np.cos(theta))
+                    * (np.sin(phi) * np.sin(theta)) ** 2
+                    * np.cos(phi)
+                    + odf[15]
+                    * (np.sin(phi) * np.cos(theta))
+                    * (np.sin(phi) * np.sin(theta))
+                    * np.cos(phi) ** 2
+                    + odf[16] * (np.sin(phi) * np.cos(theta)) * np.cos(phi) ** 3
+                    + odf[17] * (np.sin(phi) * np.sin(theta)) ** 4
+                    + odf[18] * (np.sin(phi) * np.sin(theta)) ** 3 * np.cos(phi)
+                    + odf[19] * (np.sin(phi) * np.sin(theta)) ** 2 * np.cos(phi) ** 2
+                    + odf[20] * (np.sin(phi) * np.sin(theta)) * np.cos(phi) ** 3
+                    + odf[21] * np.cos(phi) ** 4
+                )
+                / (
+                    (np.sin(phi) * np.cos(theta)) ** 2 * odf[22]
+                    + (np.sin(phi) * np.sin(theta)) ** 2 * odf[23]
+                    + np.cos(phi) ** 2 * odf[24]
+                    + 2
+                    * (np.sin(phi) * np.cos(theta))
+                    * (np.sin(phi) * np.sin(theta))
+                    * odf[25]
+                    + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) * odf[26]
+                    + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) * odf[27]
+                )
+                ** 2
+            )
+            / 24
+        )
     except:
         spherical = np.full(phi.shape, __minZero__)
     return spherical
+
 
 def dkiodfcartesian(odf, x, y, z) -> np.ndarray[float]:
     """
@@ -541,30 +843,80 @@ def dkiodfcartesian(odf, x, y, z) -> np.ndarray[float]:
         Cartesian y coordinates
     z : array_like(dtype=float64)
         Cartesian z coordinates
-    
+
     Returns
     -------
     cart : array_like(dtype=float64)
         ODF in cartesian form
     """
     if len(x) != len(y):
-        raise Exception('Input x, y and z coordinates are not the same size')
+        raise Exception("Input x, y and z coordinates are not the same size")
     if len(x) != len(z):
-        raise Exception('Input x, y and z coordinates are not the same size')
+        raise Exception("Input x, y and z coordinates are not the same size")
     try:
-        cart = (1 / ((x)**2 * odf[22] + (y)**2 * odf[23] + z**2 * odf[24] + 2 * (x) * (y) * odf[25] + \
-        2 * (x) * z * odf[26] + 2 * (y) * z * odf[27]))**((odf[28] + 1) / 2) * (1 + (odf[0] + \
-        (odf[1] * (x)**2 + odf[2] * (x) * (y) + odf[3] * (x) * z + odf[4] * (y)**2 + \
-        odf[5] * (y) * z + odf[6] * z**2) / ((x)**2 * odf[22] + (y)**2 * odf[23] + z**2 * odf[24] + \
-        2 * (x) * (y) * odf[25] + 2 * (x) * z * odf[26] + 2 * (y) * z * odf[27]) + \
-        (odf[7] * (x)**4 + odf[8] * (x)**3 * (y) + odf[9] * (x)**3 * z + odf[10] * (x)**2 * (y)**2 + \
-        odf[11] * (x)**2 * (y) * z + odf[12] * (x)**2 * z**2 + odf[13] * (x) * (y)**3 + \
-        odf[14] * (x) * (y)**2 * z + odf[15] * (x) * (y) * z**2 + odf[16] * (x) * z**3 + odf[17] * (y)**4 + \
-        odf[18] * (y)**3 * z + odf[19] * (y)**2 * z**2 + odf[20] * (y) * z**3 + odf[21] * z**4) / ((x)**2 * odf[22] + (y)**2 * odf[23] + \
-        z**2 * odf[24] + 2 * (x) * (y) * odf[25] + 2 * (x) * z * odf[26] + 2 * (y) * z * odf[27])**2) / 24)
+        cart = (
+            1
+            / (
+                (x) ** 2 * odf[22]
+                + (y) ** 2 * odf[23]
+                + z**2 * odf[24]
+                + 2 * (x) * (y) * odf[25]
+                + 2 * (x) * z * odf[26]
+                + 2 * (y) * z * odf[27]
+            )
+        ) ** ((odf[28] + 1) / 2) * (
+            1
+            + (
+                odf[0]
+                + (
+                    odf[1] * (x) ** 2
+                    + odf[2] * (x) * (y)
+                    + odf[3] * (x) * z
+                    + odf[4] * (y) ** 2
+                    + odf[5] * (y) * z
+                    + odf[6] * z**2
+                )
+                / (
+                    (x) ** 2 * odf[22]
+                    + (y) ** 2 * odf[23]
+                    + z**2 * odf[24]
+                    + 2 * (x) * (y) * odf[25]
+                    + 2 * (x) * z * odf[26]
+                    + 2 * (y) * z * odf[27]
+                )
+                + (
+                    odf[7] * (x) ** 4
+                    + odf[8] * (x) ** 3 * (y)
+                    + odf[9] * (x) ** 3 * z
+                    + odf[10] * (x) ** 2 * (y) ** 2
+                    + odf[11] * (x) ** 2 * (y) * z
+                    + odf[12] * (x) ** 2 * z**2
+                    + odf[13] * (x) * (y) ** 3
+                    + odf[14] * (x) * (y) ** 2 * z
+                    + odf[15] * (x) * (y) * z**2
+                    + odf[16] * (x) * z**3
+                    + odf[17] * (y) ** 4
+                    + odf[18] * (y) ** 3 * z
+                    + odf[19] * (y) ** 2 * z**2
+                    + odf[20] * (y) * z**3
+                    + odf[21] * z**4
+                )
+                / (
+                    (x) ** 2 * odf[22]
+                    + (y) ** 2 * odf[23]
+                    + z**2 * odf[24]
+                    + 2 * (x) * (y) * odf[25]
+                    + 2 * (x) * z * odf[26]
+                    + 2 * (y) * z * odf[27]
+                )
+                ** 2
+            )
+            / 24
+        )
     except:
         cart = np.full(x.shape, __minZero__)
     return cart
+
 
 def dtiodfspherical(odf, phi, theta, radial_weight=4) -> np.ndarray[float]:
     """
@@ -581,26 +933,35 @@ def dtiodfspherical(odf, phi, theta, radial_weight=4) -> np.ndarray[float]:
     radial_weight : float
         Radial weighting power for detecting directional differences
         (Default: 4)
-    
+
     Returns
     -------
     spherical : array_like(dtype=float64)
         ODF in spherical form
     """
     if len(theta) != len(phi):
-        raise Exception('Inputs theta and phi are not the same size')
+        raise Exception("Inputs theta and phi are not the same size")
     try:
-        spherical = (1/((np.sin(phi) * np.cos(theta))**2 * odf[0] + (np.sin(phi) *\
-            np.sin(theta))**2 * odf[3] + np.cos(phi)**2 * odf[5] + 2 * \
-                (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) * \
-                    odf[1] + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) * \
-                        odf[2] + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) \
-                            * odf[4]))**((radial_weight + 1)/2)
+        spherical = (
+            1
+            / (
+                (np.sin(phi) * np.cos(theta)) ** 2 * odf[0]
+                + (np.sin(phi) * np.sin(theta)) ** 2 * odf[3]
+                + np.cos(phi) ** 2 * odf[5]
+                + 2
+                * (np.sin(phi) * np.cos(theta))
+                * (np.sin(phi) * np.sin(theta))
+                * odf[1]
+                + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) * odf[2]
+                + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) * odf[4]
+            )
+        ) ** ((radial_weight + 1) / 2)
     except:
         sherical = np.full(phi.shape, __minZero__)
     return spherical
 
-def shbasis(deg, phi, theta, method='scipy') -> np.ndarray[complex]:
+
+def shbasis(deg, phi, theta, method="scipy") -> np.ndarray[complex]:
     """
     Computes shperical harmonic bases for all orders (even and odd), using
     functions defined by `scipy`, `tournier`, or `descoteaux`.
@@ -625,18 +986,19 @@ def shbasis(deg, phi, theta, method='scipy') -> np.ndarray[complex]:
         try:
             deg = [int(x) for x in deg]
         except:
-            raise TypeError('Please supply degree of '
-            'shperical harmonic as an integer')
+            raise TypeError(
+                "Please supply degree of " "shperical harmonic as an integer"
+            )
     if not isinstance(method, str):
-        raise TypeError('Please enter method as a string')
-    if not method in ['scipy', 'tournier', 'descoteaux']:
-        raise Exception('Please select a valid method for SH basis set')
+        raise TypeError("Please enter method as a string")
+    if not method in ["scipy", "tournier", "descoteaux"]:
+        raise Exception("Please select a valid method for SH basis set")
     SH = []
     for n in deg:
         for m in range(-n, n + 1):
             shb = sph_harm(m, n, theta, phi, dtype=complex)
-            if method == 'tournier':
-                # Tournier does not have Condon–Shortley phase i.e. (-1)^m in 
+            if method == "tournier":
+                # Tournier does not have Condon–Shortley phase i.e. (-1)^m in
                 # their formulas, so we multiply those terms by (-1)^m to reverse the
                 # inclusion of this phase from scipy's `sph_harm`.
 
@@ -645,63 +1007,62 @@ def shbasis(deg, phi, theta, method='scipy') -> np.ndarray[complex]:
                 if m < 0:
                     sh_ = np.sqrt(2) * shb.imag
                 elif m > 0:
-                    sh_ = np.sqrt(2) * shb.real * (-1)**m
+                    sh_ = np.sqrt(2) * shb.real * (-1) ** m
                 elif m == 0:
                     sh_ = shb
-            elif method == 'descoteaux':
+            elif method == "descoteaux":
                 if m < 0:
                     sh_ = shb.real
                 elif m > 0:
-                    sh_ = shb.imag * (-1)**m
+                    sh_ = shb.imag * (-1) ** m
                 elif m == 0:
                     sh_ = shb
-            elif method == 'scipy':
+            elif method == "scipy":
                 sh_ = shb
             SH.append(sh_)
-    return np.array(SH, order='F').T
+    return np.array(SH, order="F").T
 
 
-def odf_conversion(odf, target='tournier'):
+def odf_conversion(odf, target="tournier"):
     """Converts ODFs from scipy to tournier or descoteaux.
-    
+
     Parameters
     ----------
     odf: array_like
         ODF from even number spherical harmonics
-    
+
     target: str; optional; {tournier, descoteaux}
         Define method to convert ODFs
-        
+
     """
     if not isinstance(target, str):
-        raise TypeError('Please enter method as a string')
-    if not target in ['tournier', 'descoteaux']:
-        raise Exception('Please select a valid method for SH basis set')
-    print(odf.shape)
-    l_max_table = np.arange(0, 42, 2, dtype=int) # create array of even l_max allowed
-    vol_table = np.array([0.5*(x + 1)*(x + 2) for x in l_max_table], dtype=int)
+        raise TypeError("Please enter method as a string")
+    if not target in ["tournier", "descoteaux"]:
+        raise Exception("Please select a valid method for SH basis set")
+    l_max_table = np.arange(0, 42, 2, dtype=int)  # create array of even l_max allowed
+    vol_table = np.array([0.5 * (x + 1) * (x + 2) for x in l_max_table], dtype=int)
     vols = odf.shape[0]
     l_max = l_max_table[np.where(vol_table == vols)[0]]
     degs = np.arange(0, l_max + 1, 2, dtype=int)
     curr_vol = 0
-    odf_  = np.zeros_like(odf)
+    odf_ = np.zeros_like(odf)
     for n in degs:
         for m in range(-n, n + 1):
             shb = odf[curr_vol, :]
-            if target == 'tournier':
+            if target == "tournier":
                 if m < 0:
                     sh_ = np.sqrt(2) * shb.imag
                 elif m > 0:
-                    sh_ = np.sqrt(2) * shb.real * (-1)**m
+                    sh_ = np.sqrt(2) * shb.real * (-1) ** m
                 elif m == 0:
                     sh_ = shb
-            elif target == 'descoteaux':
+            elif target == "descoteaux":
                 if m < 0:
                     sh_ = shb.real
                 elif m > 0:
-                    sh_ = shb.imag * (-1)**m
+                    sh_ = shb.imag * (-1) ** m
                 elif m == 0:
                     sh_ = shb
-            odf_[curr_vol, :] = shb
+            odf_[curr_vol, :] = sh_
             curr_vol = curr_vol + 1
     return odf_

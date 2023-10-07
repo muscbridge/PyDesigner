@@ -45,7 +45,7 @@ sudo apt-get install -y --no-install-recommends \
 if [[ $(echo $FSLDIR) ]]; then
     echo -e "${GREEN}Existing FSL installation found${NC}\n"
     ISFSL=1
-else 
+else
     echo -e "${RED}FSL installation not found...marked for installation\n${NC}"
     ISFSL=0
 fi
@@ -53,7 +53,7 @@ fi
 if [[ $(which dwipreproc) ]]; then
     echo -e "${GREEN}Existing MRtrix3 installation found\n${NC}"
     ISMRTRIX=1
-else 
+else
     echo -e "${RED}MRtrix3 installation not found...marked for installation\n${NC}"
     ISMRTRIX=0
 fi
@@ -61,7 +61,7 @@ fi
 if [[ $(which pydesigner) ]]; then
     echo -e "${GREEN}Existing PyDesigner installation found\n${NC}"
     ISPYD=1
-else 
+else
     echo -e "${RED}PyDesigner installation not found...marked for installation\n${NC}"
     ISPYD=0
 fi

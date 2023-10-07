@@ -184,8 +184,8 @@ Dec 22, 2020
 
 **Changed**
 
-* Replaced ``preprocessing.util.bvec_is_fullsphere()`` and 
-  ``preprocessing.util.vecs_are_fullsphere()`` with 
+* Replaced ``preprocessing.util.bvec_is_fullsphere()`` and
+  ``preprocessing.util.vecs_are_fullsphere()`` with
   ``preprocessing.mrinfoutil.is_fullsphere()``. Even though datasets
   may be half-shelled, it is inaccurate to label them as such because
   distortion relative to b-value is not linear. As such, the
@@ -383,7 +383,7 @@ Apr 8, 2020
   faster EPI distortion correction without degrading DTI/DKI maps.
 * Documentation moved to ReadTheDocs
 * Moved B0 production module from designer.preprocessing.brainmask to
-  a separate function at ``designer.preprocessing.extractmeanbzero()`` 
+  a separate function at ``designer.preprocessing.extractmeanbzero()``
   that gets called by PyDesigner main. This allows a B0.nii to be
   produced regardless of the ``--mask`` flag.
 

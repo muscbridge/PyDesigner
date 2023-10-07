@@ -6,7 +6,7 @@ NeuroDock, and are probably wondering how what else to do...
 
 **You're done. Not even kidding!** You can now start processing data
 with PyDesigner and NeuroDock. It's almost as if FSL, MRtrix3 and
-PyDesigner commands are built natively into your OS - be it Linux, 
+PyDesigner commands are built natively into your OS - be it Linux,
 Mac OS, or even Windows!
 
 Intro to Docker Run
@@ -54,7 +54,7 @@ The second flag. :code:`-v`, makes visible the host's local filesystem
 to a Docker container, which otherwise runs in a completely isolated
 system. By mounting a folder for NeuroDock, you are able to make it
 process data in said folder. The general guideline is to mount one
-subject folder at a time. It is advisable that users read through 
+subject folder at a time. It is advisable that users read through
 `Docker's bind mounts`_ to understand how Docker containers handle
 storage.
 
@@ -102,8 +102,8 @@ The flag to reflect this would then be:
     -v /Users/sid/Desktop/bond_007:/data
 
 This would make the contents of host directory :code:`bond_007`
-available in the NeuroDock at :code:`\data`. Say, for example, the 
-nifti file :code:`bond_dwi.nii`, is located in the host system at 
+available in the NeuroDock at :code:`\data`. Say, for example, the
+nifti file :code:`bond_dwi.nii`, is located in the host system at
 :code:`/Users/sid/Desktop/bond_007/nifti/bond_dwi.nii`. If the above
 mounting scheme is used, the NeuroDock container will see this file in
 :code:`/data/nifti/bond_dwi.nii`
@@ -116,7 +116,7 @@ Put it all together
 ~~~~~~~~~~~~~~~~~~~
 
 Considering everything on this page, it becomes incredibly easy to
-process a subject using the NeuoDock container. Sticking to 
+process a subject using the NeuoDock container. Sticking to
 :code:`bond_007` example above, and combining everthing so far, one
 could process Mr. Bond's DWI with the command:
 

@@ -28,4 +28,3 @@ their DICOM to NifTi conversion software fails to create it.
 PyDesigner primarily looks for partial Fourier information within a JSON information. This information
 if encoded in the fields :code:`PartialFourier`; or :code:`PhaseEncodingSteps` and
 :code:`AcquisitionMatrixPE`. Users need to have have these fields at the bare minimum to process DWIs.
-

@@ -2,7 +2,7 @@ PyDesigner
 ==========
 
 PyD is an installable Python package deisgned to perform pre- and
-post- processing of dMRI acquisitions. 
+post- processing of dMRI acquisitions.
 
 Easy Install
 ------------
@@ -38,7 +38,7 @@ To clone the PyDesigner repository, in terminal, run:
 Install
 -------
 PyDesigner can be automatically installed with all dependencies by
-opening a CLI and changing directory to root PyDesigner directory, 
+opening a CLI and changing directory to root PyDesigner directory,
 followed by
 
 .. code-block:: console

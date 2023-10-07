@@ -49,7 +49,7 @@ if isfile(mask_Path)
 else
     brainmask = ones(dims(1:3));
 end
-    
+
 if isfile(b0_Path)
     hdr_b0 = niftiinfo(b0_Path);
     b0 = niftiread(hdr_b0);
@@ -132,4 +132,3 @@ end
 fclose(fid);
 fclose(fidout);
 fprintf('.....Completed.....\n');
-

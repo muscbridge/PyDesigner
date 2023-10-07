@@ -20,7 +20,7 @@ Please proceed with the installation steps to configure PyD.
 Windows Users
 -------------
 
-FSL and MRtrix3 are currently **not** *available on the Microsoft Windows* 
+FSL and MRtrix3 are currently **not** *available on the Microsoft Windows*
 platform. Users running Windows are recommended to run the Docker image
 `NeuroDock`_ these interdependencies at near-native speed.
 
