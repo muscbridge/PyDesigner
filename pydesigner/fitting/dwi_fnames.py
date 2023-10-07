@@ -32,7 +32,8 @@ _wmti_ = {
 _fbi_ = {
     'zeta': 'fbi_zeta',
     'faa': 'fbi_faa',
-    'odf': 'fbi_odf',
+    'odf': 'fbi_odf_raw',
+    'odf_mrtrix': 'fbi_odf_mrtrix',
     'awf': 'fbwm_awf',
     'Da': 'fbwm_da',
     'De_mean': 'fbwm_de_mean',
