@@ -14,6 +14,10 @@ PyDesigner
    :target: https://pydesigner.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
+.. image:: https://results.pre-commit.ci/badge/github/muscbridge/PyDesigner/master.svg
+   :target: https://results.pre-commit.ci/latest/github/muscbridge/PyDesigner/master
+   :alt: pre-commit.ci status
+
 Welcome to the official PyDesigner project!
 *******************************************
 
