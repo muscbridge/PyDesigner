@@ -6,7 +6,7 @@ from typing import Tuple, Union
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter
+from matplotlib.ticker import AutoMinorLocator
 
 
 def plot(input: str, output: str, voxel: Union[Tuple[float], None] = None) -> None:

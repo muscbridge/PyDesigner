@@ -5,8 +5,6 @@ import os.path as op
 
 import nibabel as nib
 import numpy as np
-import scipy as sc
-from scipy import ndimage
 
 
 def rician_img_correct(dwiname, noisemapname, outpath=None):

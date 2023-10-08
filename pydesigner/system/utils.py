@@ -82,7 +82,7 @@ def writeNii(map, hdr, outDir, range=None) -> None:
     See Also
     clipImage(img, range) : this function is wrapped around
     """
-    if range == None:
+    if range is None:
         clipped_img = nib.Nifti1Image(map, hdr.affine, hdr.header)
     else:
         clipped_img = clipImage(map, range)

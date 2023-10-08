@@ -4,7 +4,6 @@ Runs the PyDesigner pipeline
 
 import argparse  # ArgumentParser, add_argument
 import glob  # recursive file search
-import gzip  # handles fsl's .gz suffix
 import json
 import os  # mkdir
 import os.path as op  # path
@@ -30,7 +29,7 @@ DWIParser = util.DWIParser
 
 # Locate mrtrix3 via which-ing dwidenoise
 dwidenoise_location = shutil.which("dwidenoise")
-if dwidenoise_location == None:
+if dwidenoise_location is None:
     raise Exception("Cannot find mrtrix3, please see " "https://github.com/m-ama/PyDesigner/wiki" " to troubleshoot.")
 
 # Extract mrtrix3 path from dwidenoise_location
@@ -38,7 +37,7 @@ mrtrix3path = op.dirname(dwidenoise_location)
 
 # Locate FSL via which-ing fsl
 fsl_location = shutil.which("fsl")
-if fsl_location == None:
+if fsl_location is None:
     raise Exception("Cannot find FSL, please see " "https://github.com/m-ama/PyDesigner/wiki" " to troubleshoot.")
 
 # Extract FSL path from fsl_location
@@ -479,7 +478,7 @@ def main():
         if not op.exists(args.user_mask):
             errmsg += "--user_mask file " + args.user_mask + " not found\n"
         # Then check if it's a nifti file
-        if not ".nii" in op.splitext(args.user_mask)[-1]:
+        if ".nii" not in op.splitext(args.user_mask)[-1]:
             errmsg += "User supplied mask if not in NifTi (.nii) format."
 
     # Check output directory exists if given
@@ -513,7 +512,7 @@ def main():
                 errmsg += "Output directory does not exist and cannot " "be made."
 
     # Check whether tractography variables are parsed correctly
-    if not args.t_res in ["low", "med", "high"]:
+    if args.t_res not in ["low", "med", "high"]:
         warningmsg += "Specified ODF resolution not understoor. Defaulting to " '"med"\n'
 
     # Print warnings
@@ -618,7 +617,7 @@ def main():
     # TODO: add non-json RPE support, additional RPE type support
 
     # Get naming and location information
-    dwiname = filetable["dwi"].getName()
+    filetable["dwi"].getName()
     if not args.output:
         outpath = filetable["dwi"].getPath()
     else:
@@ -950,7 +949,7 @@ def main():
                 noise=filetable["noisemap"].getFull(),
             )
             nii_rician_name = "r" + filetable["HEAD"].getName() + ".nii"
-            nii_rician_full = op.join(outpath, nii_rician_name)
+            op.join(outpath, nii_rician_name)
             mrpreproc.miftonii(
                 input=mif_rician,
                 output=nii_rician,

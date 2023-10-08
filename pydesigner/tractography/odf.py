@@ -68,15 +68,15 @@ class odfmodel:
         """
         if not op.exists(dt):
             raise OSError("Input DT path does not exist. Please ensure that " "the folder or file specified exists.")
-        if not kt is None:
+        if kt is not None:
             if not op.exists(kt):
                 raise OSError(
                     "Input KT path does not exist. Please ensure that " "the folder or file specified exists."
                 )
-        if not mask is None:
+        if mask is not None:
             if not op.exists(mask):
                 raise OSError("Path to brain mask does not exist. Please " "ensure that the file specified exists.")
-        if not scale is None:
+        if scale is not None:
             if not op.exists(scale):
                 raise OSError("Path to scale image does not exist. Please " "ensure that the file specified exists.")
         if not isinstance(res, str):
@@ -84,15 +84,15 @@ class odfmodel:
         # Load images
         self.hdr = nib.load(dt)
         self.DT = self.hdr.get_fdata()
-        if not kt is None:
+        if kt is not None:
             self.KT = nib.load(kt).get_fdata()
         else:
             self.KT = None
-        if not mask is None:
+        if mask is not None:
             self.mask_img = nib.load(mask).get_fdata()
         else:
             self.mask_img = None
-        if not scale is None:
+        if scale is not None:
             self.scale_img = nib.load(scale).get_fdata()
         else:
             self.scale_img = np.ones(self.DT.shape[0:3])
@@ -112,7 +112,7 @@ class odfmodel:
             self.faces,
             self.separation_angle,
         ) = sphericalsampling.odfgrid(res)
-        if not nthreads is None:
+        if nthreads is not None:
             if nthreads > multiprocessing.cpu_count():
                 warnings.warn(
                     "Number of workers/threads specified exceed more "
@@ -238,7 +238,7 @@ class odfmodel:
         W[2, 2, 1, 0] = W[0, 1, 2, 2]
 
         # Reglarize tensor if fa is more than threshold specified (fa_t)
-        if not fa_t is None:
+        if fa_t is not None:
             L, V = np.linalg.eig(D)
             L[L < __minZero__] = __minZero__
             idx = np.argsort(L)[::-1]
@@ -472,7 +472,7 @@ class odfmodel:
         -------
         DKI ODF in defined form
         """
-        if not form in ["spherical", "cartesian", "coefficient"]:
+        if form not in ["spherical", "cartesian", "coefficient"]:
             raise Exception("Please select a valid form of ODF to receive")
         if self.KT is None:
             raise AttributeError(
@@ -897,7 +897,7 @@ def dtiodfspherical(odf, phi, theta, radial_weight=4) -> np.ndarray[float]:
             )
         ) ** ((radial_weight + 1) / 2)
     except:
-        sherical = np.full(phi.shape, __minZero__)
+        np.full(phi.shape, __minZero__)
     return spherical
 
 
@@ -929,7 +929,7 @@ def shbasis(deg, phi, theta, method="scipy") -> np.ndarray[complex]:
             raise TypeError("Please supply degree of " "shperical harmonic as an integer")
     if not isinstance(method, str):
         raise TypeError("Please enter method as a string")
-    if not method in ["scipy", "tournier", "descoteaux"]:
+    if method not in ["scipy", "tournier", "descoteaux"]:
         raise Exception("Please select a valid method for SH basis set")
     SH = []
     for n in deg:
@@ -975,7 +975,7 @@ def odf_conversion(odf, target="tournier"):
     """
     if not isinstance(target, str):
         raise TypeError("Please enter method as a string")
-    if not target in ["tournier", "descoteaux"]:
+    if target not in ["tournier", "descoteaux"]:
         raise Exception("Please select a valid method for SH basis set")
     l_max_table = np.arange(0, 42, 2, dtype=int)  # create array of even l_max allowed
     vol_table = np.array([0.5 * (x + 1) * (x + 2) for x in l_max_table], dtype=int)

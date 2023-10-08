@@ -5,15 +5,12 @@
 Adds utilities for preparing the data for eddy and analysis
 """
 
-import json  # decode
 import os  # mkdir
 import os.path as op  # dirname, basename, join, splitext
 import re  # regex substitution
 import shutil  # rmtree
 import subprocess
-from enum import Enum
 
-import nibabel as nib  # various utilities for reading Nifti images
 
 from pydesigner.preprocessing import util  # preprocessing
 
@@ -183,7 +180,7 @@ def make_se_epi(filetable):
 
     # separate b0 images into individual files
     # start by getting number of volumes in each image
-    b0_info = op.join(outpath, "b0x.txt")
+    op.join(outpath, "b0x.txt")
     get_dwi_b0_info_args = ["mrinfo", "-size", b0extracted]
     completion = subprocess.run(get_dwi_b0_info_args, capture_output=True)
     if completion.returncode != 0:
@@ -194,7 +191,7 @@ def make_se_epi(filetable):
     ndb0x = int(ndb0xstr.rstrip('"'))
 
     # repeat for rpe
-    rpe_info = op.join(outpath, "rpex.txt")
+    op.join(outpath, "rpex.txt")
     get_rpe_info_args = ["mrinfo", "-size", tmp_tp]
     completion = subprocess.run(get_rpe_info_args, capture_output=True)
     if completion.returncode != 0:
@@ -213,7 +210,7 @@ def make_se_epi(filetable):
         i = str(ii)
         extracted_name = b0_basename + i + ".mif"
         reg_txt = b0_basename + i + "to0.txt"
-        reg_mif = b0_basename + i + "to0.mif"
+        b0_basename + i + "to0.mif"
         xfm_b0 = b0_basename + i + ".mif"
         extract_args = [
             "mrconvert",
@@ -247,8 +244,7 @@ def make_se_epi(filetable):
         if completion.returncode != 0:
             raise Exception("Failed registering volume " + i + " to b0")
         # apply transform
-        transformed_basename = op.join(outpath, "dwib0")
-        transform_args = ["mrtransform", "-linear", reg_txt, reg_mif, "-quiet", xfm_b0]
+        op.join(outpath, "dwib0")
         to_cat.append(xfm_b0)
 
     # Repeat for RPE
@@ -259,7 +255,7 @@ def make_se_epi(filetable):
         i = str(ii)
         extracted_name = rpe_basename + i + ".mif"
         reg_txt = rpe_basename + i + "to0.txt"
-        reg_mif = rpe_basename + i + "to0.mif"
+        rpe_basename + i + "to0.mif"
         xfm_rpe = rpe_basename + i + ".mif"
         extract_args = [
             "mrconvert",
@@ -290,8 +286,7 @@ def make_se_epi(filetable):
         if completion.returncode != 0:
             raise Exception("Failed registering volume " + i + "  to rpe")
         # apply transform
-        transformed_basename = op.join(outpath, "dwirpe")
-        transform_args = ["mrtransform", "-linear", reg_txt, reg_mif, "-quiet", xfm_rpe]
+        op.join(outpath, "dwirpe")
         to_cat.append(xfm_rpe)
 
     # Concatenate all b0 into one se-epi

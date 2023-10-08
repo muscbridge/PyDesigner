@@ -65,7 +65,6 @@ class makesnr:
         self.DWInames = [op.split(i)[-1] for i in dwilist]
         # Open the first image in list
         self.hdr = nib.load(dwilist[0])
-        sDWI = self.hdr.shape  # Shape of input DWIs
         if self.hdr.ndim != 4:
             raise IOError("Input DWIs need are not 4D. Please ensure you " "use 4D NifTi files only.")
         # Load image into 2D array
