@@ -9,6 +9,8 @@ __pycache__/
 dist/
 .python-version
 .venv/
+docs/html/
+docs/doctrees/
 
 # Files to ignore
 .DS_Store

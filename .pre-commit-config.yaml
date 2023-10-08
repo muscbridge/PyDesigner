@@ -1,19 +1,27 @@
 repos:
 -   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: 'v4.5.0'
     hooks:
     -   id: check-yaml
     -   id: end-of-file-fixer
     -   id: trailing-whitespace
-- repo: https://github.com/Lucas-C/pre-commit-hooks-markup
-  rev: v1.0.1
-  hooks:
-  - id: rst-linter
 - repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: 0.27.0
+  rev: '0.27.0'
   hooks:
     - id: check-readthedocs
+- repo: https://github.com/thclark/pre-commit-sphinx
+  rev: '0.0.3'
+  hooks:
+    - id: build-docs
+      args: ['--cache-dir', 'docs/doctrees', '--html-dir', 'docs/html', '--source-dir', 'docs/source']
+      language_version: python3
 -   repo: https://github.com/psf/black
-    rev: 23.9.1
+    rev: '23.9.1'
     hooks:
     -   id: black
+-   repo: https://github.com/python-poetry/poetry
+    rev: '1.6.0'
+    hooks:
+    -   id: poetry-check
+    -   id: poetry-lock
+    -   id: poetry-export
