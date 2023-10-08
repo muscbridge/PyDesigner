@@ -47,8 +47,7 @@ def plot(
         raise OSError("Input file {} is not nifti type".format(input))
     if op.isdir(output):
         raise OSError(
-            "Output {} cannot be a directory. Please "
-            "define the output to be an image file.".format(output)
+            "Output {} cannot be a directory. Please " "define the output to be an image file.".format(output)
         )
     if op.splitext(output)[-1] != ".png":
         raise OSError("Output path {} does not indicate a PNG file" "".format(input))
@@ -60,9 +59,7 @@ def plot(
     nvox = dims[0] * dims[1] * dims[2]  # no. of voxels
     vols = dims[-1]  # number of volumes
     if np.ndim(img) != 4:
-        raise Exception(
-            "Only 4D nifti files can be read. " "User-supplied file is not a 4D nifti."
-        )
+        raise Exception("Only 4D nifti files can be read. " "User-supplied file is not a 4D nifti.")
     if mask is not None:
         if op.exists(mask):
             if op.splitext(mask)[-1] != ".nii":

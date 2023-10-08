@@ -90,20 +90,9 @@ def median(input: str, output: str, mask: Union[str, None] = None) -> None:
     conn = generate_binary_structure(rank=3, connectivity=1)
     if np.ndim(img) == 4:
         for i in range(img.shape[-1]):
-            img[:, :, :, i] = (
-                median_filter(
-                    img[:, :, :, i], footprint=conn, mode="constant", cval=float("nan")
-                )
-                * mask
-            )
+            img[:, :, :, i] = median_filter(img[:, :, :, i], footprint=conn, mode="constant", cval=float("nan")) * mask
     elif np.ndim(img) == 3:
-        img = (
-            median_filter(img, footprint=conn, mode="constant", cval=float("nan"))
-            * mask
-        )
+        img = median_filter(img, footprint=conn, mode="constant", cval=float("nan")) * mask
     else:
-        raise Exception(
-            "Input nifti image needs to be either 3D or "
-            "4D. Please check the file provided."
-        )
+        raise Exception("Input nifti image needs to be either 3D or " "4D. Please check the file provided.")
     writenii(hdr, img, output)

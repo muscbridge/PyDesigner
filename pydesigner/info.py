@@ -1,15 +1,11 @@
 import inspect
 import os
 
-__execdir__ = os.path.basename(
-    os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-)
+__execdir__ = os.path.basename(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
 __packagename__ = "PyDesigner-DWI"
 __version__ = "v1.0.0"
 __author__ = "PyDesigner developers"
-__copyright__ = (
-    "Copyright 2023, PyDesigner developers, MUSC Advanced Image Analysis (MAMA)"
-)
+__copyright__ = "Copyright 2023, PyDesigner developers, MUSC Advanced Image Analysis (MAMA)"
 __credits__ = [
     "Siddhartha Dhiman",
     "Joshua Teves",
@@ -28,9 +24,7 @@ __url__ = "https://github.com/m-ama/PyDesigner"
 __license__ = "CUSTOM"
 __description__ = "Python Port of NYU's Designer pipeline for dMRI " "processing"
 # Gets folder name where this file resides
-__execdir__ = os.path.basename(
-    os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-)
+__execdir__ = os.path.basename(os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe()))))
 
 # PyPi package requirements
 REQUIRES = [

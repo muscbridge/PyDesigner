@@ -158,11 +158,7 @@ class DWIFile:
             raise Exception("File " + name + " is not a valid file.")
 
         # Figure out if dwi acquisition
-        if (
-            (".bval" in self.ext)
-            and (".bvec" in self.ext)
-            and ((".nii.gz" in self.ext) or (".nii" in self.ext))
-        ):
+        if (".bval" in self.ext) and (".bvec" in self.ext) and ((".nii.gz" in self.ext) or (".nii" in self.ext)):
             self.acquisition = True
         else:
             self.acquisition = False
@@ -312,9 +308,7 @@ class DWIFile:
                         return True
                     else:
                         return False
-                elif ("PhaseEncodingSteps" in self.json) and (
-                    "AcquisitionMatrixPE" in self.json
-                ):
+                elif ("PhaseEncodingSteps" in self.json) and ("AcquisitionMatrixPE" in self.json):
                     steps = int(self.json["PhaseEncodingSteps"])
                     acqmat = int(self.json["AcquisitionMatrixPE"])
                     if steps != acqmat:
@@ -460,16 +454,12 @@ class DWIParser:
             echotime = []
             for idx, i in enumerate(self.DWIlist):
                 if "nifti" in self.InputType and (
-                    not (op.exists(self.BVEClist[idx]))
-                    or (op.exists(self.BVALlist[idx]))
+                    not (op.exists(self.BVEClist[idx])) or (op.exists(self.BVALlist[idx]))
                 ):
                     try:
                         json2fslgrad(i)
                     except:
-                        raise IOError(
-                            "Please supply a valid JSON file "
-                            "accompanying {}".format(i)
-                        )
+                        raise IOError("Please supply a valid JSON file " "accompanying {}".format(i))
                 convert_args = ["mrconvert"]
                 if verbose is False:
                     convert_args.append("-quiet")
