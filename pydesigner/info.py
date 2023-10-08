@@ -1,4 +1,5 @@
-import inspect, os
+import inspect
+import os
 
 __execdir__ = os.path.basename(
     os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))

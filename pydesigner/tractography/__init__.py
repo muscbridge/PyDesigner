@@ -1,3 +1,1 @@
-from . import dsistudio
-from . import odf
-from . import sphericalsampling
+from . import dsistudio, odf, sphericalsampling

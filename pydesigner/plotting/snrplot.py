@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import nibabel as nib
 import os.path as op
-from typing import Union, Tuple, List, Self
-import numpy as np
+from typing import List, Self, Tuple, Union
+
 import matplotlib.pyplot as plt
+import nibabel as nib
+import numpy as np
 from scipy.interpolate import make_interp_spline
+
 from ..system.utils import vectorize
 
 minZero = 1e-8

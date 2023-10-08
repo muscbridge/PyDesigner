@@ -2,25 +2,28 @@
 Runs the PyDesigner pipeline
 """
 
+import argparse  # ArgumentParser, add_argument
+import glob  # recursive file search
+import gzip  # handles fsl's .gz suffix
+import json
+import os  # mkdir
+import os.path as op  # path
+import shutil  # which, rmtree
+import subprocess  # subprocess
+
 # ---------------------------------------------------------------------
 # Package Management
 # ---------------------------------------------------------------------
 import sys as sys
-import subprocess  # subprocess
-import glob  # recursive file search
-import os  # mkdir
-import os.path as op  # path
-import shutil  # which, rmtree
-import gzip  # handles fsl's .gz suffix
-import argparse  # ArgumentParser, add_argument
 import textwrap  # dedent
-import json
+
 import numpy as np  # array, ndarray
-from pydesigner.info import __version__
-from pydesigner.preprocessing import util, mrinfoutil, mrpreproc
-from pydesigner.plotting import snrplot, motionplot
+
 from pydesigner.fitting import dwipy as dp
+from pydesigner.info import __version__
+from pydesigner.plotting import motionplot, snrplot
 from pydesigner.postprocessing import filters
+from pydesigner.preprocessing import mrinfoutil, mrpreproc, util
 
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser

@@ -13,16 +13,18 @@ References:
 
 import os
 import os.path as op
-from typing import Tuple
 import subprocess
-import numpy as np
+from typing import Tuple
+
 import nibabel as nib
+import numpy as np
 from dipy.core.geometry import cart2sphere
 from dipy.core.sphere import HemiSphere
-from dipy.direction import peak_directions, gfa
+from dipy.direction import gfa, peak_directions
 from scipy.io.matlab import loadmat, savemat
-from pydesigner.tractography import sphericalsampling
 from tqdm import tqdm
+
+from pydesigner.tractography import sphericalsampling
 
 ODF_COLS = 20000  # Number of columns in DSI Studio odf split
 tqdmWidth = 70

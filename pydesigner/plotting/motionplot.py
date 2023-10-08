@@ -2,9 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import os.path as op
-from typing import Union, Tuple
-import numpy as np
+from typing import Tuple, Union
+
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.ticker import AutoMinorLocator, FormatStrFormatter
 
 

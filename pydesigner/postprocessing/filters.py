@@ -10,9 +10,10 @@ This module contains filter(s) for postprocessing DTI/DKI maps
 # ---------------------------------------------------------------------
 import os.path as op
 from typing import Union
-import numpy as np
-from scipy.ndimage import median_filter, generate_binary_structure
+
 import nibabel as nib
+import numpy as np
+from scipy.ndimage import generate_binary_structure, median_filter
 
 
 # ---------------------------------------------------------------------
