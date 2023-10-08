@@ -137,13 +137,13 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
         raise IOError("Input file needs to specified as a NifTI " "(.nii)")
     if op.splitext(output)[-1] != ".fib":
         raise IOError("Output file needs to specified as a .fib file")
-    if not map is None:
+    if map is not None:
         if not op.exists(map):
             raise OSError("Path to map image does not exist. Please " "ensure that the folder specified exists.")
-    if not mask is None:
+    if mask is not None:
         if not op.exists(mask):
             raise OSError("Path to brain mask does not exist. Please " "ensure that the folder specified exists.")
-    if type(other_maps) == list or other_maps == None:
+    if type(other_maps) == list or other_maps is None:
         if type(other_maps) == list:
             if any([not op.exists(x) for x in other_maps]):
                 raise OSError("One of the paths defined in other maps does not " "exist Please ensure all files exist.")
@@ -157,12 +157,12 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
     fname = fname + "_lps"
     input_ = op.join(outdir, fname + ext)
     convertLPS(input, input_)
-    if not map is None:
+    if map is not None:
         fname, ext = op.splitext(op.basename(map))
         fname = fname + "_lps"
         map_ = op.join(outdir, fname + ext)
         convertLPS(map, map_)
-    if not mask is None:
+    if mask is not None:
         fname, ext = op.splitext(op.basename(mask))
         fname = fname + "_lps"
         mask_ = op.join(outdir, fname + ext)
@@ -194,7 +194,7 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
     # Load images
     amplitudes_img = nib.load(odf_amplitudes_nii)
     ampl_data = amplitudes_img.get_fdata()
-    if not mask is None:
+    if mask is not None:
         mask_img = nib.load(mask_)
         if not np.allclose(mask_img.affine, amplitudes_img.affine):
             raise ValueError("Differing orientation between mask and " "amplitudes.")
@@ -208,7 +208,7 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
     odf_array = ampl_data.reshape(-1, ampl_data.shape[3], order="F")
     masked_odfs = odf_array[flat_mask, :]
     masked_odfs = np.nan_to_num(masked_odfs)
-    if not map is None:
+    if map is not None:
         map_img = nib.load(map_)
         if not np.allclose(map_img.affine, amplitudes_img.affine):
             raise ValueError("Differing orientation between map image and " "amplitudes.")
@@ -235,14 +235,14 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
     # Remove voxels possibly containing errors in ODF calculations. This is
     # particularly important for volumes that were co-registered as it fixes
     # large amplitudes ODF amplitude at border voxels
-    if not map is None:
+    if map is not None:
         idx = np.logical_or(masked_map == 0, np.sum(masked_odfs, axis=1) == 0)
         masked_map[idx] = 0
     else:
         idx = np.sum(masked_odfs, axis=1) == 0
     masked_odfs[idx, :] = 0
     masked_gfa[idx] = 0
-    if not map is None:
+    if map is not None:
         masked_map[idx] = 0
 
     n_odfs = masked_odfs.shape[0]
@@ -269,7 +269,7 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
     for nfib in range(n_fibers):
         # fill in the "fa" values
         fa_n = np.zeros(n_voxels)
-        if not map is None:
+        if map is not None:
             fa_fromidx = np.zeros(masked_map.shape)
             np.putmask(fa_fromidx, peak_vals[:, nfib] != 0, masked_map)
             fa_n[flat_mask] = fa_fromidx
@@ -294,7 +294,7 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
     g_fa[flat_mask] = masked_gfa
     dsi_mat["gfa"] = g_fa.astype(np.float32)
     # Fill in other metrics maps
-    if not other_maps is None:
+    if other_maps is not None:
         for path_map in other_maps:
             map_name, ext = op.splitext(op.basename(path_map))
             map_dir = op.dirname(path_map)
@@ -309,9 +309,9 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
     savemat(output, dsi_mat, format="4", appendmat=False)
     # Remove unwanted files
     os.remove(input_)
-    if not mask is None:
+    if mask is not None:
         os.remove(mask_)
-    if not map is None:
+    if map is not None:
         os.remove(map_)
     os.remove(dirs_txt)
     os.remove(odf_amplitudes_nii)

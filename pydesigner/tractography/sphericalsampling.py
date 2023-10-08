@@ -3,7 +3,6 @@
 """
 Various definitions of spherical sampling
 """
-import os.path as op
 
 import numpy as np
 

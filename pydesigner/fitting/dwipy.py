@@ -1719,8 +1719,8 @@ class DWI(object):
             )
             l_max = self.optimal_lmax()
         img = self.img
-        bt_unique = np.unique(self.grad[:, -1])
-        order = self.optimal_lmax()
+        np.unique(self.grad[:, -1])
+        self.optimal_lmax()
         b0 = np.nanmean(img[:, :, :, self.idxb0()], axis=3)
         b0 = np.nan_to_num(b0, nan=0, posinf=0, neginf=0)
         # Vectorize images
@@ -2347,7 +2347,7 @@ class DWI(object):
             else:
                 b0_pos = b < 10
         reject = np.zeros(dwi.shape, dtype=bool, order="F")
-        conv = np.zeros((nvox, 1))
+        np.zeros((nvox, 1))
         dt = np.zeros((nparam, nvox))
         # Attempt basic noise estimation
         try:
@@ -2488,7 +2488,6 @@ class DWI(object):
                 # Convergence check
                 iter = iter + 1
                 gof = np.linalg.norm(dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
-                conv = iter
             np.seterr(**defaultErrorState)
             # Outlier detection
             if ~gof2:

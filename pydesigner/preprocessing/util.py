@@ -3,12 +3,10 @@ Adds utilities for the command-line interface
 """
 
 import json  # decode
-import math
 import os
 import os.path as op  # dirname, basename, join, splitext
 import pprint  # pprint
 import subprocess
-import sys  # exit
 import warnings
 
 import numpy as np
@@ -83,7 +81,7 @@ def json2fslgrad(path):
         if nDWI <= 15:
             bval = np.zeros((1, nDWI), dtype=int)
             bvec = np.zeros((3, nDWI), dtype=int)
-            fPath = op.splitext(path)[0]
+            op.splitext(path)[0]
             np.savetxt(
                 op.join(image.getPath(), image.getName() + ".bvec"),
                 bvec,

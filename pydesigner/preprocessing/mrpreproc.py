@@ -12,7 +12,7 @@ from shutil import copyfile, which
 
 import numpy as np
 
-from pydesigner.preprocessing import mrinfoutil, preparation, rician, smoothing, util
+from pydesigner.preprocessing import mrinfoutil, rician, smoothing
 
 
 def miftonii(input, output, nthreads=None, force=True, verbose=False):
@@ -52,7 +52,7 @@ def miftonii(input, output, nthreads=None, force=True, verbose=False):
         )
     if op.splitext(output)[-1] != ".nii":
         raise OSError("Output specified does not possess the .nii " "extension.")
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -64,7 +64,7 @@ def miftonii(input, output, nthreads=None, force=True, verbose=False):
         arg.append("-force")
     if not verbose:
         arg.append("-quiet")
-    if not (nthreads is None):
+    if nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     arg.extend(
         [
@@ -124,7 +124,7 @@ def niitomif(input, output, nthreads=None, force=True, verbose=False):
         raise OSError('Unable to locate BVAL file" {}'.format(op.splitext(output)[0] + ".bval"))
     if not op.exists(op.splitext(input)[0] + ".json"):
         raise OSError('Unable to locate JSON file" {}'.format(op.splitext(output)[0] + ".json"))
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -136,7 +136,7 @@ def niitomif(input, output, nthreads=None, force=True, verbose=False):
         arg.append("-force")
     if not verbose:
         arg.append("-quiet")
-    if not (nthreads is None):
+    if nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     arg.extend(["-fslgrad", op.splitext(input)[0] + ".bvec", op.splitext(input)[0] + ".bval"])
     arg.extend(["-json_import", op.splitext(input)[0] + ".json"])
@@ -188,7 +188,7 @@ def stride_match(target, moving, output, nthreads=None, force=True, verbose=Fals
         )
     if op.splitext(output)[-1] not in [".nii", ".mif"]:
         raise OSError("Output specified does not possess the .nii " "extension.")
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -200,7 +200,7 @@ def stride_match(target, moving, output, nthreads=None, force=True, verbose=Fals
         arg.append("-force")
     if not verbose:
         arg.append("-quiet")
-    if not (nthreads is None):
+    if nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     arg.extend(["-strides", target, moving, output])
     completion = subprocess.run(arg)
@@ -258,7 +258,7 @@ def denoise(
         raise Exception("Please specify whether noisemap generation " "is True or False.")
     if not isinstance(extent, str):
         raise Exception("Please specify extent as a string formatted as " '"n,n,n".')
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -271,11 +271,11 @@ def denoise(
         arg.append("-force")
     if not verbose:
         arg.append("-quiet")
-    if not (nthreads is None):
+    if nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     if noisemap:
         arg.extend(["-noise", noisemap_path])
-    if not (extent is None):
+    if extent is not None:
         arg.extend(["-extent", extent])
     arg.extend([input, output])
     completion = subprocess.run(arg)
@@ -315,7 +315,7 @@ def degibbs(input, output, nthreads=None, force=False, verbose=False):
             "exist. Please ensure that this is a valid "
             "directory.".format(op.dirname(output))
         )
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -327,7 +327,7 @@ def degibbs(input, output, nthreads=None, force=False, verbose=False):
         arg.append("-force")
     if not verbose:
         arg.append("-quiet")
-    if not (nthreads is None):
+    if nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     arg.extend([input, output])
     completion = subprocess.run(arg)
@@ -383,7 +383,7 @@ def undistort(
             "exist. Please ensure that this is a valid "
             "directory.".format(op.dirname(output))
         )
-    if not rpe in ["rpe_none", "rpe_pair", "rpe_all", "rpe_header"]:
+    if rpe not in ["rpe_none", "rpe_pair", "rpe_all", "rpe_header"]:
         raise Exception(
             "Entered RPE selection is not valid. Please "
             'choose either "rpe_none", "rpe_pair", '
@@ -391,12 +391,12 @@ def undistort(
         )
     if not isinstance(epib0, int):
         raise Exception("Number of TOPUP B0s need to be specified as " "as an integer.")
-    if not qc is None:
+    if qc is not None:
         if not isinstance(qc, str):
             raise Exception("Please specify QC directory as a string")
         if not op.exists(qc):
             raise OSError("Specified QC directory does not exist. " "Please ensure that this is a valid " "directory.")
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -431,7 +431,7 @@ def undistort(
         arg.append("-force")
     if not verbose:
         arg.append("-quiet")
-    if not (nthreads is None):
+    if nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     # Determine whether half or full sphere sampling
     repol_string = "--repol "
@@ -463,7 +463,7 @@ def undistort(
                 pass
     arg.extend(["-eddy_options", repol_string])
     arg.append(rpe)
-    if not qc is None:
+    if qc is not None:
         arg.extend(["-eddyqc_all", qc])
     arg.extend([input, output])
     completion = subprocess.run(arg, cwd=outdir)
@@ -515,7 +515,7 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False, verbose=Fa
         )
     if (thresh < 0) or (thresh > 1):
         raise ValueError("BET Threshold needs to be within 0 to 1 range.")
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -602,7 +602,7 @@ def csfmask(
         raise IOError("Output filename {} must be specified as a " "NifTi (.nii) file.")
     if (thresh < 0) or (thresh > 1):
         raise ValueError("BET Threshold needs to be within 0 to 1 range.")
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -720,7 +720,7 @@ def csfmask(
             arg.append("-force")
         if not verbose:
             arg.append("-quiet")
-        if not (nthreads is None):
+        if nthreads is not None:
             arg.extend(["-nthreads", str(nthreads)])
         arg.extend(
             [
@@ -770,7 +770,7 @@ def smooth(input, output, csfname=None, fwhm=1.25, size=5):
             "exist. Please ensure that this is a valid "
             "directory.".format(op.dirname(output))
         )
-    if not (csfname is None):
+    if csfname is not None:
         if not op.exists(csfname):
             raise OSError("Path to CSF mask does not exist. Please " "ensure that the file specified exists.")
     if fwhm < 0:
@@ -870,7 +870,7 @@ def extractbzero(input, output, nthreads=None, force=False, verbose=False):
             "exist. Please ensure that this is a valid "
             "directory.".format(op.dirname(output))
         )
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -882,7 +882,7 @@ def extractbzero(input, output, nthreads=None, force=False, verbose=False):
         arg.append("-force")
     if not verbose:
         arg.append("-quiet")
-    if not (nthreads is None):
+    if nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     arg.extend(["-bzero", input, output])
     completion = subprocess.run(arg)
@@ -921,7 +921,7 @@ def extractmeanbzero(input, output, nthreads=None, force=False, verbose=False):
             "exist. Please ensure that this is a valid "
             "directory.".format(op.dirname(output))
         )
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -977,7 +977,7 @@ def extractnonbzero(input, output, nthreads=None, force=False, verbose=False):
             "exist. Please ensure that this is a valid "
             "directory.".format(op.dirname(output))
         )
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -989,7 +989,7 @@ def extractnonbzero(input, output, nthreads=None, force=False, verbose=False):
         arg.append("-force")
     if not verbose:
         arg.append("-quiet")
-    if not (nthreads is None):
+    if nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     arg.extend(["-no_bzero", input, output])
     completion = subprocess.run(arg)
@@ -1034,7 +1034,7 @@ def extractshell(input, output, shell, nthreads=None, force=False, verbose=False
         raise Exception("Please specify the shell to extract as an " "integer.")
     if shell < 0:
         raise Exception("Please specify the shell to extract as a " "positive (more than 0) integer.")
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -1046,7 +1046,7 @@ def extractshell(input, output, shell, nthreads=None, force=False, verbose=False
         arg.append("-force")
     if not verbose:
         arg.append("-quiet")
-    if not (nthreads is None):
+    if nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     arg.extend(["-no_bzero", "-singleshell", "-shell", str(shell), input, output])
     completion = subprocess.run(arg)
@@ -1091,7 +1091,7 @@ def extractmeanshell(input, output, shell, nthreads=None, force=False, verbose=F
         raise Exception("Please specify the shell to extract as an " "integer.")
     if shell < 0:
         raise Exception("Please specify the shell to extract as a " "positive (more than 0) integer.")
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -1161,7 +1161,7 @@ def epiboost(input, output, num=1, nthreads=None, force=False, verbose=False):
         raise Exception("Number of B0s to use needs to be specified " "as an integer.")
     if not num > 0:
         raise Exception("Number of B0s to use needs to be a positive " "integer greater than 0.")
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -1216,7 +1216,7 @@ def epiboost(input, output, num=1, nthreads=None, force=False, verbose=False):
         arg_epi.append("-force")
     if not verbose:
         arg_epi.append("-quiet")
-    if not (nthreads is None):
+    if nthreads is not None:
         arg_epi.extend(["-nthreads", str(nthreads)])
     arg_epi.extend(["-coord", "3", ",".join(str_extract)])
     arg_epi.extend([fname_bzero, output])
@@ -1290,7 +1290,7 @@ def reslice(input, output, size, interp="linear", nthreads=None, force=False, ve
         raise Exception("Interpolation method needs to be specified " "as a string")
     if interp not in ("linear", "nearest", "cubic", "sinc"):
         raise Exception("User specified interpoaltion method {} is " "not a valid option".format(interp))
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -1319,7 +1319,7 @@ def reslice(input, output, size, interp="linear", nthreads=None, force=False, ve
         arg.append("-force")
     if not verbose:
         arg.append("-quiet")
-    if not (nthreads is None):
+    if nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
@@ -1360,7 +1360,7 @@ def dwiextract(input, output, start, end, nthreads=None, force=False, verbose=Fa
         raise Exception("Starting index is needs to be an integer.")
     if not isinstance(end, int):
         raise Exception("Ending index is needs to be an integer.")
-    if not (nthreads is None):
+    if nthreads is not None:
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
@@ -1376,10 +1376,10 @@ def dwiextract(input, output, start, end, nthreads=None, force=False, verbose=Fa
         arg.append("-force")
     if not verbose:
         arg.append("-quiet")
-    if not (nthreads is None):
+    if nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     arg.extend([input, output, "-coord", "3", str(start) + ":" + str(end)])
-    if not ".mif" in ext:
+    if ".mif" not in ext:
         arg.extend(
             [
                 "-json_export",

@@ -56,7 +56,7 @@ def plot(
     truncateIdx = np.isnan(img)
     img[truncateIdx] = 0
     dims = img.shape  # size per dimension
-    nvox = dims[0] * dims[1] * dims[2]  # no. of voxels
+    dims[0] * dims[1] * dims[2]  # no. of voxels
     vols = dims[-1]  # number of volumes
     if np.ndim(img) != 4:
         raise Exception("Only 4D nifti files can be read. " "User-supplied file is not a 4D nifti.")
