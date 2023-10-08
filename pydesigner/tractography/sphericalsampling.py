@@ -61900,15 +61900,9 @@ def odfgrid(res="med") -> np.ndarray[float]:
         Average separation angle between each peak and its nearest neighbors.
     """
     if not isinstance(res, str):
-        raise Exception(
-            "Please specify resolution as a string. Possible "
-            'choices are "low", "med", or "high"'
-        )
+        raise Exception("Please specify resolution as a string. Possible " 'choices are "low", "med", or "high"')
     if res not in ["low", "med", "high"]:
-        raise Exception(
-            ". Invalid ODF resolution. Possible resolution choices "
-            'are "low", "med", or "high"'
-        )
+        raise Exception(". Invalid ODF resolution. Possible resolution choices " 'are "low", "med", or "high"')
     if res == "low":
         S = np.array(
             [
