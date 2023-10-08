@@ -36,8 +36,7 @@ def plot(input: str, output: str, voxel: Union[Tuple[float], None] = None) -> No
         raise OSError("Input file {} does not exist".format(input))
     if op.isdir(output):
         raise OSError(
-            "Output {} cannot be a directory. Please "
-            "define the output to be an image file.".format(output)
+            "Output {} cannot be a directory. Please " "define the output to be an image file.".format(output)
         )
     if op.splitext(output)[-1] != ".png":
         raise OSError("Output path {} does not indicate a PNG file" " ".format(input))

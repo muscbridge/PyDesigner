@@ -69,10 +69,7 @@ def convertLPS(input, output) -> None:
     None, writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -86,14 +83,10 @@ def convertLPS(input, output) -> None:
     arg = ["mrconvert", "-quiet", "-force", input, "-strides", "-1,-2,3,4", output]
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception(
-            "Conversion of NifTI file to LPS failed. " "Check above for errors."
-        )
+        raise Exception("Conversion of NifTI file to LPS failed. " "Check above for errors.")
 
 
-def makefib(
-    input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=None
-) -> None:
+def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=None) -> None:
     """
     Converts a NifTi ``.nii`` file containing sh coefficients to a DSI
     Studio fib file
@@ -133,10 +126,7 @@ def makefib(
     None, writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -149,27 +139,17 @@ def makefib(
         raise IOError("Output file needs to specified as a .fib file")
     if not map is None:
         if not op.exists(map):
-            raise OSError(
-                "Path to map image does not exist. Please "
-                "ensure that the folder specified exists."
-            )
+            raise OSError("Path to map image does not exist. Please " "ensure that the folder specified exists.")
     if not mask is None:
         if not op.exists(mask):
-            raise OSError(
-                "Path to brain mask does not exist. Please "
-                "ensure that the folder specified exists."
-            )
+            raise OSError("Path to brain mask does not exist. Please " "ensure that the folder specified exists.")
     if type(other_maps) == list or other_maps == None:
         if type(other_maps) == list:
             if any([not op.exists(x) for x in other_maps]):
-                raise OSError(
-                    "One of the paths defined in other maps does not "
-                    "exist Please ensure all files exist."
-                )
+                raise OSError("One of the paths defined in other maps does not " "exist Please ensure all files exist.")
     else:
         raise TypeError(
-            "Path to other maps needs to be entered as a list of "
-            "strings defining paths to other metric files."
+            "Path to other maps needs to be entered as a list of " "strings defining paths to other metric files."
         )
     outdir = op.dirname(output)
     # Convert to LPS
@@ -210,10 +190,7 @@ def makefib(
     ]
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception(
-            "Failed to determine amplitude of SH "
-            "coefficients. Check above for errors."
-        )
+        raise Exception("Failed to determine amplitude of SH " "coefficients. Check above for errors.")
     # Load images
     amplitudes_img = nib.load(odf_amplitudes_nii)
     ampl_data = amplitudes_img.get_fdata()
@@ -225,9 +202,7 @@ def makefib(
             raise ValueError("Differing grid between mask and " "amplitudes")
         mask_img = mask_img.get_fdata()
     else:
-        mask_img = np.ones(
-            (ampl_data.shape[0], ampl_data.shape[1], ampl_data.shape[2]), order="F"
-        )
+        mask_img = np.ones((ampl_data.shape[0], ampl_data.shape[1], ampl_data.shape[2]), order="F")
     # Make flat mask
     flat_mask = mask_img.flatten(order="F") > 0
     odf_array = ampl_data.reshape(-1, ampl_data.shape[3], order="F")
@@ -236,9 +211,7 @@ def makefib(
     if not map is None:
         map_img = nib.load(map_)
         if not np.allclose(map_img.affine, amplitudes_img.affine):
-            raise ValueError(
-                "Differing orientation between map image and " "amplitudes."
-            )
+            raise ValueError("Differing orientation between map image and " "amplitudes.")
         if not map_img.shape == amplitudes_img.shape[:3]:
             raise ValueError("Differing grid between map image and " "amplitudes")
         map_img = map_img.get_fdata().flatten(order="F")
@@ -329,10 +302,7 @@ def makefib(
             convertLPS(path_map, map_lps)
             other_img = nib.load(map_lps)
             if not other_img.shape == amplitudes_img.shape[:3]:
-                raise ValueError(
-                    "Differing grid between other map image: {} "
-                    "and amplitudes".format(path_map)
-                )
+                raise ValueError("Differing grid between other map image: {} " "and amplitudes".format(path_map))
             gmap = other_img.get_fdata().flatten(order="F")
             dsi_mat[map_name] = gmap.astype(np.float32)
             os.remove(map_lps)

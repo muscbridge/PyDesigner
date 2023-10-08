@@ -67,33 +67,20 @@ class odfmodel:
             (Default: 4)
         """
         if not op.exists(dt):
-            raise OSError(
-                "Input DT path does not exist. Please ensure that "
-                "the folder or file specified exists."
-            )
+            raise OSError("Input DT path does not exist. Please ensure that " "the folder or file specified exists.")
         if not kt is None:
             if not op.exists(kt):
                 raise OSError(
-                    "Input KT path does not exist. Please ensure that "
-                    "the folder or file specified exists."
+                    "Input KT path does not exist. Please ensure that " "the folder or file specified exists."
                 )
         if not mask is None:
             if not op.exists(mask):
-                raise OSError(
-                    "Path to brain mask does not exist. Please "
-                    "ensure that the file specified exists."
-                )
+                raise OSError("Path to brain mask does not exist. Please " "ensure that the file specified exists.")
         if not scale is None:
             if not op.exists(scale):
-                raise OSError(
-                    "Path to scale image does not exist. Please "
-                    "ensure that the file specified exists."
-                )
+                raise OSError("Path to scale image does not exist. Please " "ensure that the file specified exists.")
         if not isinstance(res, str):
-            raise Exception(
-                "Please specify resolution as a string. Possible "
-                'choices are "low", "med", or "high"'
-            )
+            raise Exception("Please specify resolution as a string. Possible " 'choices are "low", "med", or "high"')
         # Load images
         self.hdr = nib.load(dt)
         self.DT = self.hdr.get_fdata()
@@ -113,10 +100,7 @@ class odfmodel:
             raise Exception("Please provide l_max as a postive " "and even integer")
         self.l_max = l_max
         if radial_weight is None:
-            warnings.warn(
-                "Radial weight for dODF computation not specified. "
-                "Using default value of 4."
-            )
+            warnings.warn("Radial weight for dODF computation not specified. " "Using default value of 4.")
             self.radial_weight = 4
         else:
             self.radial_weight = radial_weight
@@ -140,9 +124,7 @@ class odfmodel:
         else:
             self.workers = nthreads
 
-    def dkiodfhelper(
-        self, dt, kt, radial_weight=4, fa_t=None, form="spherical"
-    ) -> np.ndarray[float]:
+    def dkiodfhelper(self, dt, kt, radial_weight=4, fa_t=None, form="spherical") -> np.ndarray[float]:
         """
         Computes DKI fODF coefficient at a voxel. This function is intended to
         parallelize computations across the brain.
@@ -170,9 +152,7 @@ class odfmodel:
         odf : array_like(dtype=float)
             DKI ODFs in either coefficient, spherical, or cartesian form
         """
-        D = np.array(
-            [[dt[0], dt[3], dt[4]], [dt[3], dt[1], dt[5]], [dt[4], dt[5], dt[2]]]
-        )
+        D = np.array([[dt[0], dt[3], dt[4]], [dt[3], dt[1], dt[5]], [dt[4], dt[5], dt[2]]])
 
         W = np.zeros((3, 3, 3, 3))
         W[0, 0, 0, 0] = kt[0]
@@ -264,10 +244,7 @@ class odfmodel:
             idx = np.argsort(L)[::-1]
             L = L[idx]
             V = V[:, idx]
-            fa = np.sqrt(
-                ((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2)
-                / (2 * (np.sum(L**2)))
-            )
+            fa = np.sqrt(((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2) / (2 * (np.sum(L**2))))
             if fa > fa_t:
                 x = np.roots(
                     [
@@ -499,8 +476,7 @@ class odfmodel:
             raise Exception("Please select a valid form of ODF to receive")
         if self.KT is None:
             raise AttributeError(
-                "WOAH! Cannot compute DKI ODFs without "
-                "kurtosis tensor (KT). Try using dtiodf(), Jumbo."
+                "WOAH! Cannot compute DKI ODFs without " "kurtosis tensor (KT). Try using dtiodf(), Jumbo."
             )
         # Vectorize images
         DT = vectorize(self.DT, self.mask_img)
@@ -514,10 +490,7 @@ class odfmodel:
             ncols=70,
         )
         odf = Parallel(n_jobs=self.workers, prefer="processes")(
-            delayed(self.dkiodfhelper)(
-                DT[:, i], KT[:, i], self.radial_weight, fa_t, form
-            )
-            for i in inputs
+            delayed(self.dkiodfhelper)(DT[:, i], KT[:, i], self.radial_weight, fa_t, form) for i in inputs
         )
         odf = np.array(odf).T
         odf = vectorize(odf, self.mask_img)
@@ -544,9 +517,7 @@ class odfmodel:
         odf : array_like(dtype=float)
             DKI ODFs in either coefficient, spherical, or cartesian form
         """
-        D = np.array(
-            [[dt[0], dt[3], dt[4]], [dt[3], dt[1], dt[5]], [dt[4], dt[5], dt[2]]]
-        )
+        D = np.array([[dt[0], dt[3], dt[4]], [dt[3], dt[1], dt[5]], [dt[4], dt[5], dt[2]]])
         Davg = np.trace(D) / 3
         try:
             U = Davg * np.linalg.inv(D)
@@ -562,9 +533,7 @@ class odfmodel:
         if form == "coefficient":
             odf = coeff
         if form == "spherical":
-            odf = dtiodfspherical(
-                coeff, self.vertices[:, 0], self.vertices[:, 1], self.radial_weight
-            )
+            odf = dtiodfspherical(coeff, self.vertices[:, 0], self.vertices[:, 1], self.radial_weight)
         return odf
 
     def dtiodf(self, form="spherical") -> np.ndarray[float]:
@@ -581,9 +550,7 @@ class odfmodel:
         DTI ODF in defined form
         """
         if self.DT is None:
-            raise AttributeError(
-                "WOAH! Cannot compute DTI ODFs without " "diffusion tensor (DT), Jumbo."
-            )
+            raise AttributeError("WOAH! Cannot compute DTI ODFs without " "diffusion tensor (DT), Jumbo.")
         # Vectorize images
         DT = vectorize(self.DT, self.mask_img)
         nvox = DT.shape[-1]
@@ -747,10 +714,7 @@ def dkiodfspherical(odf, phi, theta) -> np.ndarray[float]:
                 (np.sin(phi) * np.cos(theta)) ** 2 * odf[22]
                 + (np.sin(phi) * np.sin(theta)) ** 2 * odf[23]
                 + np.cos(phi) ** 2 * odf[24]
-                + 2
-                * (np.sin(phi) * np.cos(theta))
-                * (np.sin(phi) * np.sin(theta))
-                * odf[25]
+                + 2 * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) * odf[25]
                 + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) * odf[26]
                 + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) * odf[27]
             )
@@ -760,9 +724,7 @@ def dkiodfspherical(odf, phi, theta) -> np.ndarray[float]:
                 odf[0]
                 + (
                     odf[1] * (np.sin(phi) * np.cos(theta)) ** 2
-                    + odf[2]
-                    * (np.sin(phi) * np.cos(theta))
-                    * (np.sin(phi) * np.sin(theta))
+                    + odf[2] * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta))
                     + odf[3] * (np.sin(phi) * np.cos(theta)) * np.cos(phi)
                     + odf[4] * (np.sin(phi) * np.sin(theta)) ** 2
                     + odf[5] * (np.sin(phi) * np.sin(theta)) * np.cos(phi)
@@ -772,38 +734,20 @@ def dkiodfspherical(odf, phi, theta) -> np.ndarray[float]:
                     (np.sin(phi) * np.cos(theta)) ** 2 * odf[22]
                     + (np.sin(phi) * np.sin(theta)) ** 2 * odf[23]
                     + np.cos(phi) ** 2 * odf[24]
-                    + 2
-                    * (np.sin(phi) * np.cos(theta))
-                    * (np.sin(phi) * np.sin(theta))
-                    * odf[25]
+                    + 2 * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) * odf[25]
                     + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) * odf[26]
                     + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) * odf[27]
                 )
                 + (
                     odf[7] * (np.sin(phi) * np.cos(theta)) ** 4
-                    + odf[8]
-                    * (np.sin(phi) * np.cos(theta)) ** 3
-                    * (np.sin(phi) * np.sin(theta))
+                    + odf[8] * (np.sin(phi) * np.cos(theta)) ** 3 * (np.sin(phi) * np.sin(theta))
                     + odf[9] * (np.sin(phi) * np.cos(theta)) ** 3 * np.cos(phi)
-                    + odf[10]
-                    * (np.sin(phi) * np.cos(theta)) ** 2
-                    * (np.sin(phi) * np.sin(theta)) ** 2
-                    + odf[11]
-                    * (np.sin(phi) * np.cos(theta)) ** 2
-                    * (np.sin(phi) * np.sin(theta))
-                    * np.cos(phi)
+                    + odf[10] * (np.sin(phi) * np.cos(theta)) ** 2 * (np.sin(phi) * np.sin(theta)) ** 2
+                    + odf[11] * (np.sin(phi) * np.cos(theta)) ** 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi)
                     + odf[12] * (np.sin(phi) * np.cos(theta)) ** 2 * np.cos(phi) ** 2
-                    + odf[13]
-                    * (np.sin(phi) * np.cos(theta))
-                    * (np.sin(phi) * np.sin(theta)) ** 3
-                    + odf[14]
-                    * (np.sin(phi) * np.cos(theta))
-                    * (np.sin(phi) * np.sin(theta)) ** 2
-                    * np.cos(phi)
-                    + odf[15]
-                    * (np.sin(phi) * np.cos(theta))
-                    * (np.sin(phi) * np.sin(theta))
-                    * np.cos(phi) ** 2
+                    + odf[13] * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) ** 3
+                    + odf[14] * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) ** 2 * np.cos(phi)
+                    + odf[15] * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) * np.cos(phi) ** 2
                     + odf[16] * (np.sin(phi) * np.cos(theta)) * np.cos(phi) ** 3
                     + odf[17] * (np.sin(phi) * np.sin(theta)) ** 4
                     + odf[18] * (np.sin(phi) * np.sin(theta)) ** 3 * np.cos(phi)
@@ -815,10 +759,7 @@ def dkiodfspherical(odf, phi, theta) -> np.ndarray[float]:
                     (np.sin(phi) * np.cos(theta)) ** 2 * odf[22]
                     + (np.sin(phi) * np.sin(theta)) ** 2 * odf[23]
                     + np.cos(phi) ** 2 * odf[24]
-                    + 2
-                    * (np.sin(phi) * np.cos(theta))
-                    * (np.sin(phi) * np.sin(theta))
-                    * odf[25]
+                    + 2 * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) * odf[25]
                     + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) * odf[26]
                     + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) * odf[27]
                 )
@@ -950,10 +891,7 @@ def dtiodfspherical(odf, phi, theta, radial_weight=4) -> np.ndarray[float]:
                 (np.sin(phi) * np.cos(theta)) ** 2 * odf[0]
                 + (np.sin(phi) * np.sin(theta)) ** 2 * odf[3]
                 + np.cos(phi) ** 2 * odf[5]
-                + 2
-                * (np.sin(phi) * np.cos(theta))
-                * (np.sin(phi) * np.sin(theta))
-                * odf[1]
+                + 2 * (np.sin(phi) * np.cos(theta)) * (np.sin(phi) * np.sin(theta)) * odf[1]
                 + 2 * (np.sin(phi) * np.cos(theta)) * np.cos(phi) * odf[2]
                 + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) * odf[4]
             )
@@ -988,9 +926,7 @@ def shbasis(deg, phi, theta, method="scipy") -> np.ndarray[complex]:
         try:
             deg = [int(x) for x in deg]
         except:
-            raise TypeError(
-                "Please supply degree of " "shperical harmonic as an integer"
-            )
+            raise TypeError("Please supply degree of " "shperical harmonic as an integer")
     if not isinstance(method, str):
         raise TypeError("Please enter method as a string")
     if not method in ["scipy", "tournier", "descoteaux"]:

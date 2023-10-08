@@ -67,10 +67,7 @@ class makesnr:
         self.hdr = nib.load(dwilist[0])
         sDWI = self.hdr.shape  # Shape of input DWIs
         if self.hdr.ndim != 4:
-            raise IOError(
-                "Input DWIs need are not 4D. Please ensure you "
-                "use 4D NifTi files only."
-            )
+            raise IOError("Input DWIs need are not 4D. Please ensure you " "use 4D NifTi files only.")
         # Load image into 2D array
         self.img = np.array(self.hdr.dataobj)
         # Load noise into a vector
@@ -86,9 +83,7 @@ class makesnr:
             self.mask = np.array(nib.load(maskpath).dataobj).astype(bool)
             self.maskStatus = True
         else:
-            self.mask = np.ones(
-                (self.img.shape[0], self.img.shape[1], self.img.shape[2]), order="F"
-            )
+            self.mask = np.ones((self.img.shape[0], self.img.shape[1], self.img.shape[2]), order="F")
             self.maskStatus = False
         # Vectorize images
         self.img = vectorize(self.img, self.mask)
@@ -105,13 +100,9 @@ class makesnr:
                 try:
                     fName = op.splitext(dwilist[i])[0]
                     bvalPath = op.join(fName + ".bval")
-                    self.bval = np.stack(
-                        (self.bval, np.rint(np.loadtxt(bvalPath) / 1000))
-                    )
+                    self.bval = np.stack((self.bval, np.rint(np.loadtxt(bvalPath) / 1000)))
                 except:
-                    raise IOError(
-                        "Unable to locate BVAL file for image: {" "}".format(dwilist[i])
-                    )
+                    raise IOError("Unable to locate BVAL file for image: {" "}".format(dwilist[i]))
         truncateIdx = np.logical_or(np.isnan(self.img), (self.img < minZero))
         self.img[truncateIdx] = minZero
 
@@ -176,22 +167,16 @@ class makesnr:
                 idx_list = np.where(np.isin(bval_list[i, :], bval))[-1]
                 img = self.img[idx_bval, :, i]
                 if bval != 0:
-                    snr_dwi[:, idx_list, i] = np.mean(
-                        (img / self.noise), axis=0
-                    ).reshape((self.nvox, 1))
+                    snr_dwi[:, idx_list, i] = np.mean((img / self.noise), axis=0).reshape((self.nvox, 1))
                 else:
                     # Appends '0' to bval_list n countb0 number of times
                     for countb in range(img.shape[0]):
-                        snr_dwi[:, idx_list, i] = np.divide(img, self.noise).reshape(
-                            (self.nvox, idx_list.size)
-                        )
+                        snr_dwi[:, idx_list, i] = np.divide(img, self.noise).reshape((self.nvox, idx_list.size))
         truncateIdx = np.logical_or(np.isnan(snr_dwi), (snr_dwi < minZero))
         snr_dwi[truncateIdx] = minZero
         return snr_dwi
 
-    def histcount(
-        self, nbins: int = 100
-    ) -> Tuple[np.ndarray[int], np.ndarray[float], np.ndarray[float]]:
+    def histcount(self, nbins: int = 100) -> Tuple[np.ndarray[int], np.ndarray[float], np.ndarray[float]]:
         """
         Bins SNR into nbins and returns various counting properties.
 
@@ -210,10 +195,7 @@ class makesnr:
             Array containing all unique B-values detected.
         """
         if not isinstance(nbins, int):
-            raise ValueError(
-                "Number of bins (nbins) entered is not an "
-                "integer. Please specify and integer."
-            )
+            raise ValueError("Number of bins (nbins) entered is not an " "integer. Please specify and integer.")
         bval_list = self.getuniquebval()
         snr = self.computesnr()
         # Get min and max values of SNR
@@ -228,15 +210,11 @@ class makesnr:
                 bval = unibvals[i]
                 idx_list = np.where(np.isin(bval_list[j, :], bval))[-1]
                 vals = snr[:, idx_list, j]
-                (count[:, i, j], edges[:, i, j]) = np.histogram(
-                    vals, bins=nbins, range=(minVal, maxVal), density=True
-                )
+                (count[:, i, j], edges[:, i, j]) = np.histogram(vals, bins=nbins, range=(minVal, maxVal), density=True)
         edges = np.unique(edges)
         if edges.size != nbins + 1:
             raise Exception(
-                "Number of binning edges across B-values and "
-                "DWIs is not consistent. Aborting SNR "
-                "binning."
+                "Number of binning edges across B-values and " "DWIs is not consistent. Aborting SNR " "binning."
             )
         binval = np.zeros((nbins))
         for i in range(binval.size):
@@ -294,9 +272,7 @@ class makesnr:
             bval = unibvals[i]
             ax.set_xlabel("SNR")
             ax.set_ylabel("% of voxels")
-            ax.set_ylim(
-                count[np.isfinite(count)].min(), count[np.isfinite(count)].max()
-            )
+            ax.set_ylim(count[np.isfinite(count)].min(), count[np.isfinite(count)].max())
             if bval == 0:
                 ax.set_xlim(0, 200)
             elif bval == 1:

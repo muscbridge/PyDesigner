@@ -43,10 +43,7 @@ def miftonii(input, output, nthreads=None, force=True, verbose=False):
     niitomif
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -80,9 +77,7 @@ def miftonii(input, output, nthreads=None, force=True, verbose=False):
     arg.extend([input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception(
-            "Conversion from .mif to .nii failed; check " "above for errors."
-        )
+        raise Exception("Conversion from .mif to .nii failed; check " "above for errors.")
 
 
 def niitomif(input, output, nthreads=None, force=True, verbose=False):
@@ -114,10 +109,7 @@ def niitomif(input, output, nthreads=None, force=True, verbose=False):
     miftonii
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -127,17 +119,11 @@ def niitomif(input, output, nthreads=None, force=True, verbose=False):
     if op.splitext(output)[-1] != ".mif":
         raise OSError("Output specified does not possess the .mif " "extension.")
     if not op.exists(op.splitext(input)[0] + ".bvec"):
-        raise OSError(
-            'Unable to locate BVEC file" {}'.format(op.splitext(output)[0] + ".bvec")
-        )
+        raise OSError('Unable to locate BVEC file" {}'.format(op.splitext(output)[0] + ".bvec"))
     if not op.exists(op.splitext(input)[0] + ".bval"):
-        raise OSError(
-            'Unable to locate BVAL file" {}'.format(op.splitext(output)[0] + ".bval")
-        )
+        raise OSError('Unable to locate BVAL file" {}'.format(op.splitext(output)[0] + ".bval"))
     if not op.exists(op.splitext(input)[0] + ".json"):
-        raise OSError(
-            'Unable to locate JSON file" {}'.format(op.splitext(output)[0] + ".json")
-        )
+        raise OSError('Unable to locate JSON file" {}'.format(op.splitext(output)[0] + ".json"))
     if not (nthreads is None):
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
@@ -152,16 +138,12 @@ def niitomif(input, output, nthreads=None, force=True, verbose=False):
         arg.append("-quiet")
     if not (nthreads is None):
         arg.extend(["-nthreads", str(nthreads)])
-    arg.extend(
-        ["-fslgrad", op.splitext(input)[0] + ".bvec", op.splitext(input)[0] + ".bval"]
-    )
+    arg.extend(["-fslgrad", op.splitext(input)[0] + ".bvec", op.splitext(input)[0] + ".bval"])
     arg.extend(["-json_import", op.splitext(input)[0] + ".json"])
     arg.extend([input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception(
-            "Conversion from .nii to .mif failed; check " "above for errors."
-        )
+        raise Exception("Conversion from .nii to .mif failed; check " "above for errors.")
 
 
 def stride_match(target, moving, output, nthreads=None, force=True, verbose=False):
@@ -191,17 +173,11 @@ def stride_match(target, moving, output, nthreads=None, force=True, verbose=Fals
     None; writes out file
     """
     if not op.exists(target):
-        raise OSError(
-            "Input target path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input target path does not exist. Please ensure that " "the folder or file specified exists.")
     if op.splitext(target)[-1] not in [".nii", ".mif"]:
         raise OSError("Input target image needs to be a .nii or .mif file")
     if not op.exists(moving):
-        raise OSError(
-            "Input moving path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input moving path does not exist. Please ensure that " "the folder or file specified exists.")
     if op.splitext(moving)[-1] not in [".nii", ".mif"]:
         raise OSError("Input moving image needs to be a .nii or .mif file")
     if not op.exists(op.dirname(output)):
@@ -271,10 +247,7 @@ def denoise(
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -282,9 +255,7 @@ def denoise(
             "directory.".format(op.dirname(output))
         )
     if not isinstance(noisemap, bool):
-        raise Exception(
-            "Please specify whether noisemap generation " "is True or False."
-        )
+        raise Exception("Please specify whether noisemap generation " "is True or False.")
     if not isinstance(extent, str):
         raise Exception("Please specify extent as a string formatted as " '"n,n,n".')
     if not (nthreads is None):
@@ -337,10 +308,7 @@ def degibbs(input, output, nthreads=None, force=False, verbose=False):
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -408,10 +376,7 @@ def undistort(
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -430,11 +395,7 @@ def undistort(
         if not isinstance(qc, str):
             raise Exception("Please specify QC directory as a string")
         if not op.exists(qc):
-            raise OSError(
-                "Specified QC directory does not exist. "
-                "Please ensure that this is a valid "
-                "directory."
-            )
+            raise OSError("Specified QC directory does not exist. " "Please ensure that this is a valid " "directory.")
     if not (nthreads is None):
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
@@ -458,9 +419,7 @@ def undistort(
     completion = subprocess.run(arg_extract)
     if completion.returncode != 0:
         raise Exception(
-            "extracting FSL BVEC and BVEC gradients "
-            "failed during undistortion, please look "
-            "above for errors."
+            "extracting FSL BVEC and BVEC gradients " "failed during undistortion, please look " "above for errors."
         )
     # Form main undistortion argument
     arg = []
@@ -495,10 +454,7 @@ def undistort(
             )
             arg.extend(["-se_epi", epi_path])
         except:
-            print(
-                "[WARNING] Unable to apply TOPUPBOOST because DWI "
-                "consists of single PE direction."
-            )
+            print("[WARNING] Unable to apply TOPUPBOOST because DWI " "consists of single PE direction.")
             # Remove the B0_ALL.mif file that is created when epiboost
             # function fails
             try:
@@ -520,10 +476,7 @@ def undistort(
         try:
             os.remove(epi_path)
         except:
-            print(
-                "[Warning] unable to remove {} because it does not "
-                "exist".format(epi_path)
-            )
+            print("[Warning] unable to remove {} because it does not " "exist".format(epi_path))
 
 
 def brainmask(input, output, thresh=0.25, nthreads=None, force=False, verbose=False):
@@ -553,10 +506,7 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False, verbose=Fa
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -587,9 +537,7 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False, verbose=Fa
     mask = op.join(outdir, "brain")
     tmp_brain = op.join(outdir, "brain.nii")
     # Extract averaged B0 from DWI
-    extractmeanbzero(
-        input=input, output=B0_nan, nthreads=nthreads, force=force, verbose=verbose
-    )
+    extractmeanbzero(input=input, output=B0_nan, nthreads=nthreads, force=force, verbose=verbose)
     # Compute brain mask
     arg_mask = ["bet", B0_nan, mask, "-m", "-f", str(thresh)]
     completion = subprocess.run(arg_mask)
@@ -643,10 +591,7 @@ def csfmask(
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -682,25 +627,19 @@ def csfmask(
         path_tissue = op.join(outdir, "tissue")
 
         # Extract averaged B0 from DWI
-        extractmeanbzero(
-            input=input, output=B0_nan, nthreads=nthreads, force=force, verbose=verbose
-        )
+        extractmeanbzero(input=input, output=B0_nan, nthreads=nthreads, force=force, verbose=verbose)
         # Compute brain mask
         arg_mask = ["bet", B0_nan, path_brain, "-m", "-f", str(thresh)]
         completion = subprocess.run(arg_mask)
         if completion.returncode != 0:
-            raise Exception(
-                "Unable to compute brain mask from B0. See above " "for errors"
-            )
+            raise Exception("Unable to compute brain mask from B0. See above " "for errors")
         arg = ["fast"]
         if verbose:
             arg.append("-v")
         arg.extend(["-n", "4", "-t", "2", "-o", path_tissue, path_brain + f_suffix])
         completion = subprocess.run(arg)
         if completion.returncode != 0:
-            raise Exception(
-                "FSL FAST segmentation of brain tissue failed. " "See above for errors."
-            )
+            raise Exception("FSL FAST segmentation of brain tissue failed. " "See above for errors.")
         csfclass = []
         for i in range(4):
             arg = [
@@ -713,9 +652,7 @@ def csfmask(
             ]
             completion = subprocess.run(arg)
             if completion.returncode != 0:
-                raise Exception(
-                    "FSLMATHS tissue thresholding failed. " "See above for errors."
-                )
+                raise Exception("FSLMATHS tissue thresholding failed. " "See above for errors.")
             arg = [
                 "fslstats",
                 path_brain + ".nii",
@@ -726,9 +663,7 @@ def csfmask(
             ]
             completion = subprocess.run(arg, stdout=subprocess.PIPE)
             if completion.returncode != 0:
-                raise Exception(
-                    "FSLSTATS tissue thresholding failed. " "See above for errors."
-                )
+                raise Exception("FSLSTATS tissue thresholding failed. " "See above for errors.")
             console = str(completion.stdout).split("\\n")[0]
             console = console.split("b")[-1]
             console = console.replace("'", "")
@@ -768,9 +703,7 @@ def csfmask(
         path_shell = op.join(outdir, "S1000.mif")
         # Extract mean B
         # Extract averaged B0 from DWI
-        extractmeanbzero(
-            input=input, output=path_b0, nthreads=nthreads, force=force, verbose=verbose
-        )
+        extractmeanbzero(input=input, output=path_b0, nthreads=nthreads, force=force, verbose=verbose)
         # Extract mean of indexed b=1000 shell
         extractmeanshell(
             input=input,
@@ -830,10 +763,7 @@ def smooth(input, output, csfname=None, fwhm=1.25, size=5):
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -842,17 +772,11 @@ def smooth(input, output, csfname=None, fwhm=1.25, size=5):
         )
     if not (csfname is None):
         if not op.exists(csfname):
-            raise OSError(
-                "Path to CSF mask does not exist. Please "
-                "ensure that the file specified exists."
-            )
+            raise OSError("Path to CSF mask does not exist. Please " "ensure that the file specified exists.")
     if fwhm < 0:
         raise Exception("FWHM cannot be less than zero.")
     if size < 0:
-        raise Exception(
-            "Size cannot be less than zero. Please "
-            "specify size as a positive integer."
-        )
+        raise Exception("Size cannot be less than zero. Please " "specify size as a positive integer.")
     # Convert input .mif to .nii
     outdir = op.dirname(output)
     nii_path = op.join(outdir, "dwism.nii")
@@ -886,10 +810,7 @@ def riciancorrect(input, output, noise=None):
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -942,10 +863,7 @@ def extractbzero(input, output, nthreads=None, force=False, verbose=False):
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -969,10 +887,7 @@ def extractbzero(input, output, nthreads=None, force=False, verbose=False):
     arg.extend(["-bzero", input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception(
-            "Unable to extract B0s from DWI for computation "
-            "of brain mask. See above for errors."
-        )
+        raise Exception("Unable to extract B0s from DWI for computation " "of brain mask. See above for errors.")
 
 
 def extractmeanbzero(input, output, nthreads=None, force=False, verbose=False):
@@ -999,10 +914,7 @@ def extractmeanbzero(input, output, nthreads=None, force=False, verbose=False):
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -1028,9 +940,7 @@ def extractmeanbzero(input, output, nthreads=None, force=False, verbose=False):
     arg_nan = ["mrcalc", fname_mean, "-finite", fname_mean, "0", "-if", output]
     completion = subprocess.run(arg_nan)
     if completion.returncode != 0:
-        raise Exception(
-            "Unable to remove NaNs from averaged B0. See " "above for errors."
-        )
+        raise Exception("Unable to remove NaNs from averaged B0. See " "above for errors.")
     # Remove non-essential files
     os.remove(fname_bzero)
     os.remove(fname_mean)
@@ -1060,10 +970,7 @@ def extractnonbzero(input, output, nthreads=None, force=False, verbose=False):
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -1087,10 +994,7 @@ def extractnonbzero(input, output, nthreads=None, force=False, verbose=False):
     arg.extend(["-no_bzero", input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception(
-            "Unable to extract B0s from DWI for computation "
-            "of brain mask. See above for errors."
-        )
+        raise Exception("Unable to extract B0s from DWI for computation " "of brain mask. See above for errors.")
 
 
 def extractshell(input, output, shell, nthreads=None, force=False, verbose=False):
@@ -1119,10 +1023,7 @@ def extractshell(input, output, shell, nthreads=None, force=False, verbose=False
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -1132,10 +1033,7 @@ def extractshell(input, output, shell, nthreads=None, force=False, verbose=False
     if not isinstance(shell, int):
         raise Exception("Please specify the shell to extract as an " "integer.")
     if shell < 0:
-        raise Exception(
-            "Please specify the shell to extract as a "
-            "positive (more than 0) integer."
-        )
+        raise Exception("Please specify the shell to extract as a " "positive (more than 0) integer.")
     if not (nthreads is None):
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
@@ -1153,9 +1051,7 @@ def extractshell(input, output, shell, nthreads=None, force=False, verbose=False
     arg.extend(["-no_bzero", "-singleshell", "-shell", str(shell), input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception(
-            "Unable to extract specified shells from DWI. " "See above for errors."
-        )
+        raise Exception("Unable to extract specified shells from DWI. " "See above for errors.")
 
 
 def extractmeanshell(input, output, shell, nthreads=None, force=False, verbose=False):
@@ -1184,10 +1080,7 @@ def extractmeanshell(input, output, shell, nthreads=None, force=False, verbose=F
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -1197,10 +1090,7 @@ def extractmeanshell(input, output, shell, nthreads=None, force=False, verbose=F
     if not isinstance(shell, int):
         raise Exception("Please specify the shell to extract as an " "integer.")
     if shell < 0:
-        raise Exception(
-            "Please specify the shell to extract as a "
-            "positive (more than 0) integer."
-        )
+        raise Exception("Please specify the shell to extract as a " "positive (more than 0) integer.")
     if not (nthreads is None):
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
@@ -1212,9 +1102,7 @@ def extractmeanshell(input, output, shell, nthreads=None, force=False, verbose=F
     fname_shell = op.join(outdir, "b" + str(shell) + "_ALL.mif")
     fname_mean = op.join(outdir, "b" + str(shell) + "_MEAN.mif")
     # Extract all specified shells
-    extractshell(
-        input, fname_shell, shell=shell, nthreads=nthreads, force=force, verbose=verbose
-    )
+    extractshell(input, fname_shell, shell=shell, nthreads=nthreads, force=force, verbose=verbose)
     # Compute mean
     arg_mean = ["mrmath", "-axis", "3", fname_shell, "mean", fname_mean]
     completion = subprocess.run(arg_mean)
@@ -1223,9 +1111,7 @@ def extractmeanshell(input, output, shell, nthreads=None, force=False, verbose=F
     arg_nan = ["mrcalc", fname_mean, "-finite", fname_mean, "0", "-if", output]
     completion = subprocess.run(arg_nan)
     if completion.returncode != 0:
-        raise Exception(
-            "Unable to remove NaNs from averaged shell " "image. See above for errors."
-        )
+        raise Exception("Unable to remove NaNs from averaged shell " "image. See above for errors.")
     # Remove non-essential files
     os.remove(fname_shell)
     os.remove(fname_mean)
@@ -1262,10 +1148,7 @@ def epiboost(input, output, num=1, nthreads=None, force=False, verbose=False):
     """
     print("Applying EPIBOOST")
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if op.splitext(output)[-1] != ".mif":
         raise OSError("Output should be specified as a .mif file.")
     if not op.exists(op.dirname(output)):
@@ -1277,9 +1160,7 @@ def epiboost(input, output, num=1, nthreads=None, force=False, verbose=False):
     if not isinstance(num, int):
         raise Exception("Number of B0s to use needs to be specified " "as an integer.")
     if not num > 0:
-        raise Exception(
-            "Number of B0s to use needs to be a positive " "integer greater than 0."
-        )
+        raise Exception("Number of B0s to use needs to be a positive " "integer greater than 0.")
     if not (nthreads is None):
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
@@ -1302,18 +1183,12 @@ def epiboost(input, output, num=1, nthreads=None, force=False, verbose=False):
             "It appears that the input volume possesses a "
             "dw_scheme of length {}, and pe_scheme of length "
             "{}. These number need to match. Please check "
-            "your dataset or contact us on GitHub".format(
-                len(dw_scheme), len(pe_scheme)
-            )
+            "your dataset or contact us on GitHub".format(len(dw_scheme), len(pe_scheme))
         )
-    uPE, indPE, iPE = np.unique(
-        pe_scheme, axis=0, return_index=True, return_inverse=True
-    )
+    uPE, indPE, iPE = np.unique(pe_scheme, axis=0, return_index=True, return_inverse=True)
     nPE = len(uPE)
     if nPE < 2:
-        raise Exception(
-            "DWI consists of just one PE direction. " "Unable to extract B0s."
-        )
+        raise Exception("DWI consists of just one PE direction. " "Unable to extract B0s.")
     # Index unique PE directions
     bval = []
     bind = []
@@ -1327,9 +1202,7 @@ def epiboost(input, output, num=1, nthreads=None, force=False, verbose=False):
             "Specified number of B0s pairs to extract "
             "({}) exceed those physically present in DWI "
             "({}), please ensure that variable `num` "
-            "suitably represents the number of B0s in DWI.".format(
-                num, min([len(x) for x in bval])
-            )
+            "suitably represents the number of B0s in DWI.".format(num, min([len(x) for x in bval]))
         )
     # Extract the first `num` pairs from each PE direction
     num = np.arange(0, num, dtype=int).tolist()
@@ -1349,17 +1222,12 @@ def epiboost(input, output, num=1, nthreads=None, force=False, verbose=False):
     arg_epi.extend([fname_bzero, output])
     completion = subprocess.run(arg_epi)
     if completion.returncode != 0:
-        raise Exception(
-            "EPIBOOST: failed to extract specified "
-            "TOPUP B0 indices. See above for errors."
-        )
+        raise Exception("EPIBOOST: failed to extract specified " "TOPUP B0 indices. See above for errors.")
     # Remove temp files
     os.remove(fname_bzero)
 
 
-def reslice(
-    input, output, size, interp="linear", nthreads=None, force=False, verbose=False
-):
+def reslice(input, output, size, interp="linear", nthreads=None, force=False, verbose=False):
     """
     Reslices input image to target voxel size
 
@@ -1400,10 +1268,7 @@ def reslice(
     """
     dim_str = "-voxel"
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -1411,9 +1276,7 @@ def reslice(
             "directory.".format(op.dirname(output))
         )
     if not isinstance(size, str):
-        raise Exception(
-            "Voxel size needs to be defined as a string " " of three values"
-        )
+        raise Exception("Voxel size needs to be defined as a string " " of three values")
     if len(size.split(",")) != 3:
         raise Exception(
             "Please specify voxel size for each axis or "
@@ -1426,10 +1289,7 @@ def reslice(
     if not isinstance(interp, str):
         raise Exception("Interpolation method needs to be specified " "as a string")
     if interp not in ("linear", "nearest", "cubic", "sinc"):
-        raise Exception(
-            "User specified interpoaltion method {} is "
-            "not a valid option".format(interp)
-        )
+        raise Exception("User specified interpoaltion method {} is " "not a valid option".format(interp))
     if not (nthreads is None):
         if not isinstance(nthreads, int):
             raise Exception("Please specify the number of threads as an " "integer.")
@@ -1452,9 +1312,7 @@ def reslice(
         return
     arg = []
     if which("mrresize") is None:
-        arg.extend(
-            ["mrgrid", input, "regrid", dim_str, size, "-interp", interp, output]
-        )
+        arg.extend(["mrgrid", input, "regrid", dim_str, size, "-interp", interp, output])
     else:
         arg.extend(["mrresize", dim_str, size, "-interp", interp, input, output])
     if force:
@@ -1497,10 +1355,7 @@ def dwiextract(input, output, start, end, nthreads=None, force=False, verbose=Fa
     None; writes out file
     """
     if not op.exists(input):
-        raise OSError(
-            "Input path does not exist. Please ensure that "
-            "the folder or file specified exists."
-        )
+        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not isinstance(start, int):
         raise Exception("Starting index is needs to be an integer.")
     if not isinstance(end, int):
@@ -1536,6 +1391,4 @@ def dwiextract(input, output, start, end, nthreads=None, force=False, verbose=Fa
         )
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception(
-            "Failed to extract indexed DWI volumes. See " "above for errors."
-        )
+        raise Exception("Failed to extract indexed DWI volumes. See " "above for errors.")
