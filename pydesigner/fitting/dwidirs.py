@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import os
+
 import numpy as np
 
 working_dir = os.path.abspath(os.path.dirname(__file__))

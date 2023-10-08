@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy as np
 import nibabel as nib
+import numpy as np
 
 # import scipy as sc
 from scipy.ndimage import gaussian_filter

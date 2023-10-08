@@ -2,15 +2,17 @@
 Adds utilities for the command-line interface
 """
 
-import os.path as op  # dirname, basename, join, splitext
-import os
-import sys  # exit
-import subprocess
 import json  # decode
-import pprint  # pprint
-import numpy as np
 import math
+import os
+import os.path as op  # dirname, basename, join, splitext
+import pprint  # pprint
+import subprocess
+import sys  # exit
 import warnings
+
+import numpy as np
+
 from pydesigner.preprocessing import mrinfoutil
 
 

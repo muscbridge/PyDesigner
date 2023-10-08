@@ -5,14 +5,16 @@
 Adds utilities for preparing the data for eddy and analysis
 """
 
+import json  # decode
 import os  # mkdir
 import os.path as op  # dirname, basename, join, splitext
-import shutil  # rmtree
-import json  # decode
-from enum import Enum
-import nibabel as nib  # various utilities for reading Nifti images
-import subprocess
 import re  # regex substitution
+import shutil  # rmtree
+import subprocess
+from enum import Enum
+
+import nibabel as nib  # various utilities for reading Nifti images
+
 from pydesigner.preprocessing import util  # preprocessing
 
 DWIFile = util.DWIFile

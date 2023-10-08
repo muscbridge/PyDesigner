@@ -1,3 +1,1 @@
-from . import motionplot
-from . import outlierplot
-from . import snrplot
+from . import motionplot, outlierplot, snrplot

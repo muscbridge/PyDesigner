@@ -1,6 +1,1 @@
-from . import mrinfoutil
-from . import mrpreproc
-from . import preparation
-from . import rician
-from . import smoothing
-from . import util
+from . import mrinfoutil, mrpreproc, preparation, rician, smoothing, util

@@ -7,10 +7,12 @@ Utilities for running various MRtrix3's DWI preprocessing tools
 
 import os
 import os.path as op
-from shutil import copyfile, which
 import subprocess
+from shutil import copyfile, which
+
 import numpy as np
-from pydesigner.preprocessing import preparation, util, smoothing, rician, mrinfoutil
+
+from pydesigner.preprocessing import mrinfoutil, preparation, rician, smoothing, util
 
 
 def miftonii(input, output, nthreads=None, force=True, verbose=False):

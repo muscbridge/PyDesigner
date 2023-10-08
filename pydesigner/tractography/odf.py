@@ -5,19 +5,21 @@
 Function for computing DTI and DKI spherical harmonics from diffusion and
 kurtosis tensors
 """
-import warnings
-from typing import Tuple, Self
 import multiprocessing
 import os.path as op
-from joblib import Parallel, delayed
-import numpy as np
+import warnings
+from typing import Self, Tuple
+
 import nibabel as nib
-from scipy.special import sph_harm
+import numpy as np
 from dipy.core.geometry import sphere2cart
+from joblib import Parallel, delayed
+from scipy.special import sph_harm
+from tqdm import tqdm
+
+from pydesigner.fitting.thresholds import __minZero__
 from pydesigner.system.utils import vectorize, writeNii
 from pydesigner.tractography import sphericalsampling
-from pydesigner.fitting.thresholds import __minZero__
-from tqdm import tqdm
 
 
 class odfmodel:

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy as np
+import os.path as op
+
 import nibabel as nib
+import numpy as np
 import scipy as sc
 from scipy import ndimage
-import os.path as op
 
 
 def rician_img_correct(dwiname, noisemapname, outpath=None):

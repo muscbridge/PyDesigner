@@ -8,9 +8,9 @@ types.
 """
 
 import os.path as op
-from typing import Tuple, List, Union
-import subprocess
 import re
+import subprocess
+from typing import List, Tuple, Union
 
 
 def getconsole(path: int, flag: str) -> str:

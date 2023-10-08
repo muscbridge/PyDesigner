@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy as np
 import nibabel as nib
+import numpy as np
 
 
 def vectorize(img, mask) -> np.ndarray[float]:

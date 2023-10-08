@@ -5,21 +5,22 @@ import multiprocessing
 import os
 import os.path as op
 import random
-from typing import Union, Tuple, List, Self
+from typing import List, Self, Tuple, Union
+
 import cvxpy as cvx
 import nibabel as nib
 import numpy as np
 import numpy.matlib as npm
-from joblib import Parallel, delayed
 import scipy.linalg as sla
-from scipy.special import sph_harm, gamma, hyp1f1, factorial
+from joblib import Parallel, delayed
+from scipy.special import factorial, gamma, hyp1f1, sph_harm
 from tqdm import tqdm
-from . import dwidirs
-from . import thresholds as th
-from . import dwi_fnames
+
 from ..plotting import outlierplot
-from ..tractography import odf, sphericalsampling, dsistudio
-from ..system.utils import vectorize, writeNii, highprecisionexp, highprecisionpower
+from ..system.utils import highprecisionexp, highprecisionpower, vectorize, writeNii
+from ..tractography import dsistudio, odf, sphericalsampling
+from . import dwi_fnames, dwidirs
+from . import thresholds as th
 
 # Define the lowest number possible before it is considered a zero
 minZero = th.__minZero__

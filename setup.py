@@ -1,19 +1,20 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
+
 from pydesigner.info import (
-    __packagename__,
-    __version__,
+    CLASSIFIERS,
+    PYTHON_REQUIRES,
+    REQUIRES,
     __author__,
     __copyright__,
     __credits__,
-    __execdir__,
-    __maintainer__,
-    __email__,
-    __url__,
-    __license__,
     __description__,
-    REQUIRES,
-    PYTHON_REQUIRES,
-    CLASSIFIERS,
+    __email__,
+    __execdir__,
+    __license__,
+    __maintainer__,
+    __packagename__,
+    __url__,
+    __version__,
 )
 
 with open("README.rst", "r") as fh:

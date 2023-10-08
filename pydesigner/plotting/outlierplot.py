@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import nibabel as nib
 import os.path as op
 from typing import Union
-import numpy as np
+
 import matplotlib.pyplot as plt
+import nibabel as nib
+import numpy as np
 from matplotlib.ticker import AutoMinorLocator
 
 
