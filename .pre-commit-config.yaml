@@ -13,7 +13,7 @@ repos:
   rev: '0.0.3'
   hooks:
     - id: build-docs
-      args: ['--cache-dir', 'docs/doctrees', '--html-dir', 'docs/html', '--source-dir', 'docs/source']
+      args: ['--html-dir', 'docs/html', '--source-dir', 'docs/source']
       language_version: python3
 -   repo: https://github.com/psf/black
     rev: '23.9.1'
