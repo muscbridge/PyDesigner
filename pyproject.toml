@@ -55,7 +55,6 @@ build-backend = "poetry.core.masonry.api"
 select = ["E", "F", "I"]
 ignore = []
 
-
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
 unfixable = []
