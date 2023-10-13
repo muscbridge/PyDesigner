@@ -1,10 +1,30 @@
 [tool.poetry]
 name = "pydesigner"
-version = "1.1.0"
+version = "2.0.0"
 description = "A hands-free DTI, DKI, FBI and FBWM preprocessing pipeline"
 license = "Proprietary"
-authors = ["Siddhartha Dhiman <sid.kill3r@gmail.com>"]
+authors = ["MUSC Brain Imaging Diffusion Group (BRIDGE) Lab <bridge@musc.edu>"]
+maintainers = [
+    "Siddhartha Dhiman <sid.kill3r@gmail.com>",
+    "Ryn Thorn <keithka@musc.edu>",
+    "Hunter Moss <mossh@musc.edu>"
+]
 readme = "README.rst"
+homepage = "https://pypi.org/project/PyDesigner-DWI/"
+repository = "https://github.com/muscbridge/PyDesigner"
+documentation = "https://pydesigner.readthedocs.io/en/latest/"
+keywords = ["python", "mrtrix", "dipy", "diffusion", "imaging", "dti", "dki", "fbi", "fbwm"]
+classifiers = [
+    "Programming Language :: Python",
+    "License :: Free To Use But Restricted",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
 
 [tool.poetry.dependencies]
 python = ">=3.11, <4.0"
