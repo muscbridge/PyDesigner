@@ -24,11 +24,6 @@ repos:
     - id: ruff
       args: [--fix, --exit-non-zero-on-fix]
 
-# -   repo: https://github.com/pycqa/isort
-#     rev: 5.12.0
-#     hooks:
-#       - id: isort
-
 - repo: https://github.com/psf/black
   rev: '23.9.1'
   hooks:
@@ -40,4 +35,4 @@ repos:
   hooks:
     - id: poetry-check
     - id: poetry-lock
-    - id: poetry-export
+    # - id: poetry-export
