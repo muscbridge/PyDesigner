@@ -9,20 +9,16 @@ import os  # mkdir
 import os.path as op  # path
 import shutil  # which, rmtree
 import subprocess  # subprocess
-
-# ---------------------------------------------------------------------
-# Package Management
-# ---------------------------------------------------------------------
 import sys as sys
 import textwrap  # dedent
 
 import numpy as np  # array, ndarray
 
-from pydesigner.fitting import dwipy as dp
-from pydesigner.info import __version__
-from pydesigner.plotting import motionplot, snrplot
-from pydesigner.postprocessing import filters
-from pydesigner.preprocessing import mrinfoutil, mrpreproc, util
+from .fitting import dwipy as dp
+from .info import __version__
+from .plotting import motionplot, snrplot
+from .postprocessing import filters
+from .preprocessing import mrinfoutil, mrpreproc, util
 
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
@@ -509,11 +505,11 @@ def main():
             try:
                 os.makedirs(args.output, exist_ok=True)
             except:  # noqa: E722
-                errmsg += "Output directory does not exist and cannot " "be made."
+                errmsg += "Output directory does not exist and cannot be made."
 
     # Check whether tractography variables are parsed correctly
     if args.t_res not in ["low", "med", "high"]:
-        warningmsg += "Specified ODF resolution not understoor. Defaulting to " '"med"\n'
+        warningmsg += "Specified ODF resolution not understoord. Defaulting to med\n"
 
     # Print warnings
     if warningmsg != "":
@@ -521,12 +517,12 @@ def main():
 
     # If things are unsalvageable, point out all errors and quit
     if errmsg != "":
-        raise Exception(errmsg)
+        print(errmsg)
 
     # Begin keeping track of nifti files
     filetable = {"dwi": DWIFile(init_nii)}
     if not filetable["dwi"].isAcquisition():
-        raise Exception("Input dwi does not have .bval/.bvec pair")
+        raise FileNotFoundError("Input dwi does not have .bval/.bvec pair")
 
     # Begin composing command history
     cmdtable = {"HEAD": "none"}

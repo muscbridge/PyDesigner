@@ -12,7 +12,7 @@ from shutil import copyfile, which
 
 import numpy as np
 
-from pydesigner.preprocessing import mrinfoutil, rician, smoothing
+from ..preprocessing import mrinfoutil, rician, smoothing
 
 
 def miftonii(input, output, nthreads=None, force=True, verbose=False):

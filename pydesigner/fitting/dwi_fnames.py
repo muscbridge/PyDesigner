@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 _dti_ = {
     "md": "dti_md",
     "rd": "dti_rd",

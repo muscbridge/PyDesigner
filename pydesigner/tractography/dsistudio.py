@@ -24,7 +24,7 @@ from dipy.direction import gfa, peak_directions
 from scipy.io.matlab import loadmat, savemat
 from tqdm import tqdm
 
-from pydesigner.tractography import sphericalsampling
+from . import sphericalsampling
 
 ODF_COLS = 20000  # Number of columns in DSI Studio odf split
 tqdmWidth = 70

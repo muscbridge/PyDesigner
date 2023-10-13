@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import multiprocessing
 import os
 import os.path as op
@@ -21,6 +18,7 @@ from ..system.utils import highprecisionexp, highprecisionpower, vectorize, writ
 from ..tractography import dsistudio, odf, sphericalsampling
 from . import dwi_fnames, dwidirs
 from . import thresholds as th
+
 
 # Define the lowest number possible before it is considered a zero
 minZero = th.__minZero__
