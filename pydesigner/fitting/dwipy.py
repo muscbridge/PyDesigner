@@ -19,7 +19,6 @@ from ..tractography import dsistudio, odf, sphericalsampling
 from . import dwi_fnames, dwidirs
 from . import thresholds as th
 
-
 # Define the lowest number possible before it is considered a zero
 minZero = th.__minZero__
 # Define number of directions to resample after computing all tensors
