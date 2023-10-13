@@ -264,7 +264,7 @@ class odfmodel:
         Davg = np.trace(D) / 3
         try:
             U = Davg * np.linalg.inv(D)
-        except:
+        except:  # noqa: E722
             U = Davg * np.linalg.pinv(D)
         A1 = 0
         B11 = 0
@@ -292,7 +292,7 @@ class odfmodel:
         for i in [0, 1, 2]:
             for j in [0, 1, 2]:
                 for k in [0, 1, 2]:
-                    for l in [0, 1, 2]:
+                    for l in [0, 1, 2]:  # noqa: E741
                         # Coefficients for: 3UijWijklUkl
                         A1 = A1 + 3 * U[i, j] * W[i, j, k, l] * U[k, l]
                         # Coefficients for: -6(a+1)UijWijklVkl
@@ -521,7 +521,7 @@ class odfmodel:
         Davg = np.trace(D) / 3
         try:
             U = Davg * np.linalg.inv(D)
-        except:
+        except:  # noqa: E722
             U = Davg * np.linalg.pinv(D)
         U11 = U[0, 0]
         U22 = U[1, 1]
@@ -767,7 +767,7 @@ def dkiodfspherical(odf, phi, theta) -> np.ndarray[float]:
             )
             / 24
         )
-    except:
+    except:  # noqa: E722
         spherical = np.full(phi.shape, __minZero__)
     return spherical
 
@@ -856,7 +856,7 @@ def dkiodfcartesian(odf, x, y, z) -> np.ndarray[float]:
             )
             / 24
         )
-    except:
+    except:  # noqa: E722
         cart = np.full(x.shape, __minZero__)
     return cart
 
@@ -896,7 +896,7 @@ def dtiodfspherical(odf, phi, theta, radial_weight=4) -> np.ndarray[float]:
                 + 2 * (np.sin(phi) * np.sin(theta)) * np.cos(phi) * odf[4]
             )
         ) ** ((radial_weight + 1) / 2)
-    except:
+    except:  # noqa: E722
         np.full(phi.shape, __minZero__)
     return spherical
 
@@ -925,7 +925,7 @@ def shbasis(deg, phi, theta, method="scipy") -> np.ndarray[complex]:
     if not any([isinstance(x, int) for x in deg]):
         try:
             deg = [int(x) for x in deg]
-        except:
+        except:  # noqa: E722
             raise TypeError("Please supply degree of " "shperical harmonic as an integer")
     if not isinstance(method, str):
         raise TypeError("Please enter method as a string")

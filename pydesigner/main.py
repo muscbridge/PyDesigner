@@ -486,7 +486,7 @@ def main():
         if not op.exists(args.output):
             try:
                 os.makedirs(args.output, exist_ok=True)
-            except:
+            except:  # noqa: E722
                 errmsg += "Cannot find or create output directory"
 
     # Check that --fit_constraints can be converted to int array
@@ -508,7 +508,7 @@ def main():
         if not op.isdir(args.output):
             try:
                 os.makedirs(args.output, exist_ok=True)
-            except:
+            except:  # noqa: E722
                 errmsg += "Output directory does not exist and cannot " "be made."
 
     # Check whether tractography variables are parsed correctly
@@ -1060,7 +1060,7 @@ def main():
                     maskpath=None,
                 )
             snr.makeplot(path=qcpath, smooth=True, smoothfactor=3)
-        except:
+        except:  # noqa: E722
             print("[WARNING] SNR plotting failed, see above. " "Proceeding with processing.")
 
     # -----------------------------------------------------------------

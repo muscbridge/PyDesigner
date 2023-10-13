@@ -456,7 +456,7 @@ class DWIParser:
                 ):
                     try:
                         json2fslgrad(i)
-                    except:
+                    except:  # noqa: E722
                         raise IOError("Please supply a valid JSON file " "accompanying {}".format(i))
                 convert_args = ["mrconvert"]
                 if verbose is False:
@@ -484,7 +484,7 @@ class DWIParser:
                             "JSON file(s) {} not found. "
                             "Attempting to process without. "
                             "If processing fails, please use the "
-                            '"--adv" flag'.format(JSONlist)
+                            '"--adv" flag'.format(self.JSONlist)
                         )
                 convert_args.append(i)
                 convert_args.append(op.join(path, ("dwi" + str(idx) + ".mif")))

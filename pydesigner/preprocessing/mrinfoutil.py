@@ -578,6 +578,6 @@ def echotime(path: str) -> Union[int, str]:
     try:
         console = float(console)
         console = int(round(console * 1000, 0))
-    except:
+    except:  # noqa: E722
         console = "variable"
     return console

@@ -94,13 +94,13 @@ class makesnr:
                 try:
                     tmp = vectorize(np.array(nib.load(dwilist[i]).dataobj), self.mask)
                     self.img = np.dstack((self.img, tmp))
-                except:
+                except:  # noqa: E722
                     raise ValueError("all input DWIs must have the same " "shape.")
                 try:
                     fName = op.splitext(dwilist[i])[0]
                     bvalPath = op.join(fName + ".bval")
                     self.bval = np.stack((self.bval, np.rint(np.loadtxt(bvalPath) / 1000)))
-                except:
+                except:  # noqa: E722
                     raise IOError("Unable to locate BVAL file for image: {" "}".format(dwilist[i]))
         truncateIdx = np.logical_or(np.isnan(self.img), (self.img < minZero))
         self.img[truncateIdx] = minZero
