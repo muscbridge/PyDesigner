@@ -21,6 +21,9 @@ matplotlib = ">=3.7.0, <4.0.0"
 [tool.poetry.scripts]
 pydesigner = "pydesigner.main:main"
 
+[tool.poetry.group.dev.dependencies]
+pytest = ">=7.4.0, <8.0.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
@@ -31,6 +34,7 @@ build-backend = "poetry.core.masonry.api"
 # McCabe complexity (`C901`) by default.
 select = ["E", "F", "I"]
 ignore = []
+
 
 # Allow fix for all enabled rules (when `--fix`) is provided.
 fixable = ["ALL"]
@@ -59,9 +63,9 @@ exclude = [
     "dist",
     "node_modules",
     "venv",
-    "docs"
+    "docs",
+    "setup.py",
 ]
-per-file-ignores = {}
 
 # Same as Black
 line-length = 120
@@ -71,3 +75,12 @@ dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 # Assume Python 3.11
 target-version = "py311"
+
+[tool.ruff.per-file-ignores]
+"pydesigner/fitting/__init__.py" = ["F401"]
+"pydesigner/plotting/__init__.py" = ["F401"]
+"pydesigner/postprocessing/__init__.py" = ["F401"]
+"pydesigner/preprocessing/__init__.py" = ["F401"]
+"pydesigner/system/__init__.py" = ["F401"]
+"pydesigner/tractography/__init__.py" = ["F401"]
+"tests/test_preprocessing_mrinfoutil.py" = ["E501"]

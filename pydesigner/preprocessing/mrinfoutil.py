@@ -33,7 +33,7 @@ def getconsole(path: int, flag: str) -> str:
     if not op.exists(path):
         raise OSError("Input path does not exist. Please ensure that the " "folder or file specified exists.")
     if not isinstance(flag, str):
-        raise Exception("Input flag is not a string")
+        raise TypeError("Input flag is not a string")
     arg = ["mrinfo", flag]
     arg.append(path)
     completion = subprocess.run(arg, stdout=subprocess.PIPE)
