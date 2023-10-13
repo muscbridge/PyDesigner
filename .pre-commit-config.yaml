@@ -34,5 +34,5 @@ repos:
   rev: '1.6.0'
   hooks:
     - id: poetry-check
-    - id: poetry-lock
-    # - id: poetry-export
+    # - id: poetry-lock
+    - id: poetry-export
