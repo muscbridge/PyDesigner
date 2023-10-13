@@ -453,7 +453,7 @@ def undistort(
                 verbose=verbose,
             )
             arg.extend(["-se_epi", epi_path])
-        except:
+        except:  # noqa: E722
             print("[WARNING] Unable to apply TOPUPBOOST because DWI " "consists of single PE direction.")
             # Remove the B0_ALL.mif file that is created when epiboost
             # function fails
@@ -475,7 +475,7 @@ def undistort(
     if epib0 > 0:
         try:
             os.remove(epi_path)
-        except:
+        except:  # noqa: E722
             print("[Warning] unable to remove {} because it does not " "exist".format(epi_path))
 
 

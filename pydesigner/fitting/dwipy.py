@@ -1588,40 +1588,44 @@ class DWI(object):
                         BT[b] * np.power(f_grid, 2) * np.power(zeta, -2) < 20
                     )  # when should hypergeometric function be implemented? When b*D is small
                     idx_Y = 0
-                    for l in degs[::2]:
+                    for l_num in degs[::2]:
                         hypergeom_opt = np.sum(
                             (
-                                gamma((l + 1) / 2 + int_grid)
-                                * gamma(l + (3 / 2))
+                                gamma((l_num + 1) / 2 + int_grid)
+                                * gamma(l_num + (3 / 2))
                                 * (
                                     (-BT[b] * f_grid[idx_hyper] ** 2 * zeta**-2)
                                     * np.ones((1, len(f_grid[idx_hyper])))
                                 ).T
                                 ** int_grid
-                                / (factorial(int_grid) * gamma(l + (3 / 2) + int_grid) * gamma((l + 1) / 2))
+                                / (factorial(int_grid) * gamma(l_num + (3 / 2) + int_grid) * gamma((l_num + 1) / 2))
                             ),
                             1,
                         ) * np.ones((1, len(f_grid[idx_hyper])))
-                        g2l_fa_R[idx_Y : idx_Y + (2 * l + 1), np.squeeze(idx_hyper)] = npm.repmat(
+                        g2l_fa_R[idx_Y : idx_Y + (2 * l_num + 1), np.squeeze(idx_hyper)] = npm.repmat(
                             (
-                                factorial(l // 2)
-                                * (BT[b] * f_grid[idx_hyper] ** 2 * zeta**-2) ** ((l + 1) / 2)
-                                / gamma(l + (3 / 2))
+                                factorial(l_num // 2)
+                                * (BT[b] * f_grid[idx_hyper] ** 2 * zeta**-2) ** ((l_num + 1) / 2)
+                                / gamma(l_num + (3 / 2))
                                 * hypergeom_opt
                             ),
-                            (2 * l + 1),
+                            (2 * l_num + 1),
                             1,
                         )  # Eq. 9 FBWM paper
-                        idx_Y = idx_Y + (2 * l + 1)
+                        idx_Y = idx_Y + (2 * l_num + 1)
                     g2l_fa_R_b[b, np.squeeze(idx_hyper), :] = g2l_fa_R[:, np.squeeze(idx_hyper)].T
                     idx_Y = 0
-                    for l in degs[::2]:
-                        g2l_fa_R_large[idx_Y : idx_Y + (2 * l + 1), np.squeeze(~idx_hyper)] = npm.repmat(
-                            (np.exp(-l // 2 * (l + 1) / ((2 * BT[b] * (f_grid[~idx_hyper] ** 2 * zeta**-2))))),
-                            (2 * l + 1),
+                    for l_num in degs[::2]:
+                        g2l_fa_R_large[idx_Y : idx_Y + (2 * l_num + 1), np.squeeze(~idx_hyper)] = npm.repmat(
+                            (
+                                np.exp(
+                                    -l_num // 2 * (l_num + 1) / ((2 * BT[b] * (f_grid[~idx_hyper] ** 2 * zeta**-2)))
+                                )
+                            ),
+                            (2 * l_num + 1),
                             1,
                         )  # Eq. 20 FBI paper
-                        idx_Y = idx_Y + (2 * l + 1)
+                        idx_Y = idx_Y + (2 * l_num + 1)
                     g2l_fa_R_b[b, np.squeeze(~idx_hyper), :] = g2l_fa_R_large[:, np.squeeze(~idx_hyper)].T
                 cost_fn = __costCalculator(
                     awf_grid,
@@ -1762,19 +1766,19 @@ class DWI(object):
         gl = np.zeros(
             (len(harmonics), 1), order="F"
         )  # calculate correction factor (see original FBI paper, Jensen 2016)
-        for l in degs[::2]:
-            Pl0[idx_Y : idx_Y + (2 * l + 1), :] = (
-                (np.power(-1, l // 2) * np.math.factorial(l))
-                / (np.power(4, l // 2) * np.power(np.math.factorial(l // 2), 2))
-                * np.ones((2 * l + 1, 1))
+        for l_num in degs[::2]:
+            Pl0[idx_Y : idx_Y + (2 * l_num + 1), :] = (
+                (np.power(-1, l_num // 2) * np.math.factorial(l_num))
+                / (np.power(4, l_num // 2) * np.power(np.math.factorial(l_num // 2), 2))
+                * np.ones((2 * l_num + 1, 1))
             )
-            gl[idx_Y : idx_Y + (2 * l + 1), :] = (
-                (np.math.factorial(l // 2) * np.power(self.maxBval() * th.__d0__, (l + 1) / 2))
-                / gamma(l + 3 / 2)
-                * hyp1f1((l + 1) / 2, l + 3 / 2, -self.maxBval() * th.__d0__)
-                * np.ones((2 * l + 1, 1))
+            gl[idx_Y : idx_Y + (2 * l_num + 1), :] = (
+                (np.math.factorial(l_num // 2) * np.power(self.maxBval() * th.__d0__, (l_num + 1) / 2))
+                / gamma(l_num + 3 / 2)
+                * hyp1f1((l_num + 1) / 2, l_num + 3 / 2, -self.maxBval() * th.__d0__)
+                * np.ones((2 * l_num + 1, 1))
             )
-            idx_Y = idx_Y + (2 * l + 1)
+            idx_Y = idx_Y + (2 * l_num + 1)
         Pl0 = np.squeeze(Pl0)
         gl = np.squeeze(gl)
         inputs = tqdm(
@@ -1964,9 +1968,9 @@ class DWI(object):
                 eas_rd = 0.5 * (eigval[1] + eigval[2])
                 try:
                     eas_tort = eas_ad / eas_rd
-                except:
+                except:  # noqa: E722
                     eas_tort = minZero
-            except:
+            except:  # noqa: E722
                 eas_ad = minZero
                 eas_rd = minZero
                 eas_tort = minZero
@@ -1980,7 +1984,7 @@ class DWI(object):
                 eigval = np.sort(eigval)[::-1]
                 ias_da = np.sum(eigval)
                 np.seterr(invalid="raise")
-            except:
+            except:  # noqa: E722
                 ias_da = minZero
             return eas_ad, eas_rd, eas_tort, ias_da
 
@@ -2360,7 +2364,7 @@ class DWI(object):
                     dt_ = np.linalg.lstsq(bmat, np.log(dwi), rcond=None)[0]
                     # dt_ = np.linalg.solve(np.dot(bmat.T, bmat), np.dot(
                     #     bmat.T, np.log(dwi)))
-                except:
+                except:  # noqa: E722
                     dt_ = np.full((bmat.shape[1], 1), minZero)
                 w = highprecisionexp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
                 try:
@@ -2370,13 +2374,13 @@ class DWI(object):
                     #         (bmat * np.tile(w, (1, nparam)))), \
                     #     np.dot((bmat * np.tile(w, (1, nparam))).T, (np.log(
                     #         dwi) * w)))
-                except:
+                except:  # noqa: E722
                     dt_ = np.full((bmat.shape[1], 1), minZero)
                 e = np.log(dwi) - np.matmul(bmat, dt_)
                 m = np.median(np.abs((e * w) - np.median(e * w)))
                 try:
                     sigma_ = np.sqrt(ndwi / ndof) * 1.4826 * m
-                except:
+                except:  # noqa: E722
                     sigma_ = minZero
                 return sigma_
 
@@ -2413,7 +2417,7 @@ class DWI(object):
                 dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
                 # dt_i = np.linalg.solve(np.dot(bmat_i.T, bmat_i),
                 #                        np.dot(bmat_i.T, np.log(dwi_i)))
-            except:
+            except:  # noqa: E722
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
             w = highprecisionexp(np.matmul(bmat_i, dt_i))
             try:
@@ -2428,7 +2432,7 @@ class DWI(object):
                 #     np.dot((bmat_i * np.tile(w, (1, nparam))).T,
                 #            (np.log(dwi_i).reshape(
                 #                (dwi_i.shape[0], 1)) * w)))
-            except:
+            except:  # noqa: E722
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
             dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
             # Goodness-of-fit
@@ -2437,11 +2441,11 @@ class DWI(object):
 
             try:
                 chi2 = np.sum((residu_ * residu_) / np.square(sigma)) / (ndof_i) - 1
-            except:
+            except:  # noqa: E722
                 chi2 = minZero
             try:
                 gof = np.abs(chi2) < 3 * np.sqrt(2 / ndof_i)
-            except:
+            except:  # noqa: E722
                 gof = True  # If ndof_i = 0, right inequality becomes inf
                 # and makes the logic True
             gof2 = gof
@@ -2456,11 +2460,11 @@ class DWI(object):
                         * np.median(np.abs(residu_ - np.median(residu_)))
                         / dwi_hat
                     )
-                except:
+                except:  # noqa: E722
                     C = np.full(dwi_hat.shape, minZero)
                 try:
                     GMM = np.square(C) / np.square(np.square(residu) + np.square(C))
-                except:
+                except:  # noqa: E722
                     # The following line produces a lot of Intel MKL
                     # warnings that should be ignored. This is a known
                     # Intel and Numpy bug that has not yet been resolved.
@@ -2479,7 +2483,7 @@ class DWI(object):
                     #     np.dot((bmat_i * np.tile(w, (1, nparam))).T,
                     #            (np.log(dwi_i).reshape(
                     #                (dwi_i.shape[0], 1)) * w)))
-                except:
+                except:  # noqa: E722
                     dt_i = np.full((bmat_i.shape[1], 1), minZero)
                 dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
                 dwi_hat[dwi_hat < 1] = 1
@@ -2508,22 +2512,16 @@ class DWI(object):
                             )[0],
                         )
                     )
-                    # lev_helper = np.linalg.solve(\
-                    #                 np.dot((np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i))).T, \
-                    #                         (np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i)))), \
-                    #                 np.dot((np.matmul(np.transpose(bmat_i), np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i))).T, \
-                    #                         np.matmul(np.transpose(bmat_i), np.diag(np.square(w.reshape(-1))))))
-                    # lev = np.diag(np.matmul(bmat_i, lev_helper))
-                except:
+                except:  # noqa: E722
                     lev = np.full(residu.shape, minZero)
                 lev = lev.reshape((lev.shape[0], 1))
                 try:
                     lowerbound_linear = -bounds * np.lib.scimath.sqrt(1 - lev) * sigma / dwi_hat
-                except:
+                except:  # noqa: E722
                     lowerbound_linear = np.full(lev.shape, minZero)
                 try:
                     upperbound_nonlinear = bounds * np.lib.scimath.sqrt(1 - lev) * sigma
-                except:
+                except:  # noqa: E722
                     upperbound_nonlinear = np.full(lev.shape, minZero)
                 tmp = np.zeros(residu.shape, dtype=bool, order="F")
                 tmp[residu < lowerbound_linear] = True
@@ -2543,9 +2541,7 @@ class DWI(object):
             dwi_i = dwi[keep]
             try:
                 dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
-                # dt_ = np.linalg.solve(np.dot(bmat_i.T, bmat_i), \
-                #                     np.dot(bmat_i.T, np.log(dwi_i)))
-            except:
+            except:  # noqa: E722
                 dt_ = np.full((bmat_i.shape[1], 1), minZero)
             w = highprecisionexp(np.matmul(bmat_i, dt_))
             try:
@@ -2554,21 +2550,8 @@ class DWI(object):
                     (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w), 1))),
                     rcond=None,
                 )[0]
-                # dt = np.linalg.solve(\
-                #     np.dot((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))).T, (bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam)))), \
-                #     np.dot((bmat_i * np.tile(w.reshape((len(w),1)), (1, nparam))).T, \
-                #         (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w),1)))))
-            except:
+            except:  # noqa: E722
                 dt = np.full((bmat_i.shape[1], 1), minZero)
-            # dt_tmp = dt.reshape(-1)
-            # dt2 = np.array([[dt_tmp[1], dt_tmp[2]/2, dt_tmp[3]],
-            #        [dt_tmp[2]/2, dt_tmp[4], dt_tmp[5]/2],
-            #        [dt_tmp[3]/2, dt_tmp[5]/2, dt_tmp[6]]])
-            # eigv, tmp = np.linalg.eig(dt2)
-            # fa = np.sqrt(1/2) * \
-            #      (np.sqrt(np.square(eigv[0] - eigv[1]) + np.square(eigv[0] - eigv[2]) + np.square(eigv[1] - eigv[2])) / \
-            #      np.sqrt(np.square(eigv[0]) + np.square(eigv[1]) + np.square(eigv[2])))
-            # md = np.sum(eigv)/3
             return reject.reshape(-1), dt.reshape(-1)  # , fa, md
 
         inputs = tqdm(

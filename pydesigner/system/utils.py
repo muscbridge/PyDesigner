@@ -143,7 +143,7 @@ def highprecisionexp(array, maxp=1e32) -> np.ndarray[float]:
     np.seterr(over="raise", invalid="raise")
     try:
         ans = np.exp(array)
-    except:
+    except:  # noqa: E722
         ans = np.full(array.shape, maxp)
     np.seterr(**defaultErrorState)
     return ans
@@ -177,7 +177,7 @@ def highprecisionpower(x1, x2, maxp=1e32) -> np.ndarray[float]:
     np.seterr(over="raise", invalid="raise")
     try:
         ans = np.power(x1, x2)
-    except:
+    except:  # noqa: E722
         ans = np.full(x1.shape, maxp)
     np.seterr(**defaultErrorState)
     return ans
