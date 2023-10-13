@@ -11,8 +11,7 @@ import re  # regex substitution
 import shutil  # rmtree
 import subprocess
 
-
-from pydesigner.preprocessing import util  # preprocessing
+from ..preprocessing import util  # preprocessing
 
 DWIFile = util.DWIFile
 

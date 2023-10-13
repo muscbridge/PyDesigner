@@ -17,9 +17,9 @@ from joblib import Parallel, delayed
 from scipy.special import sph_harm
 from tqdm import tqdm
 
-from pydesigner.fitting.thresholds import __minZero__
-from pydesigner.system.utils import vectorize, writeNii
-from pydesigner.tractography import sphericalsampling
+from ..fitting.thresholds import __minZero__
+from ..system.utils import vectorize, writeNii
+from . import sphericalsampling
 
 
 class odfmodel:
