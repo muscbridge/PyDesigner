@@ -1,0 +1,789 @@
+mrtrix image
+dim: 2,2,2,337
+vox: 3,3,3,3.9
+layout: +0,+1,+2,+3
+datatype: Float32LE
+transform: 0.994345310289832, 2.73896740248844e-08, -0.106195121171422, -7.16012287139893
+transform: -0.0163522207646128, 0.988073569252652, -0.153111814252808, -15.8305568695068
+transform: 0.104928588957842, 0.153982537140822, 0.982486319790561, -10.7536220550537
+AcquisitionMatrixPE: 74
+AcquisitionNumber: 1
+AcquisitionTime: variable
+BandwidthPerPixelPhaseEncode: 36.5229988
+BaseResolution: 74
+BodyPartExamined: BRAIN
+ConsistencyInfo: N4_VE11C_LATEST_20160120
+ConversionSoftware: dcm2niix
+ConversionSoftwareVersion: v1.0.20190902
+DerivedVendorReportedEchoSpacing: 0.000739999989
+DeviceSerialNumber: 167021
+DiffusionScheme: Monopolar
+DwellTime: 4.39999985e-06
+EchoTime: 0.0989999995
+EchoTrainLength: 37
+EffectiveEchoSpacing: 0.000369999994
+FlipAngle: 90
+ImageOrientationPatientDICOM: 0.994345,-0.0163522,-0.104929,2.73897e-08,0.988074,-0.153983
+ImageType: variable
+ImagingFrequency: 123.230003
+InPlanePhaseEncodingDirectionDICOM: COL
+InstitutionAddress: XXXXX
+InstitutionName: XXXXX
+InstitutionalDepartmentName: XXXXX
+MRAcquisitionType: 2D
+MagneticFieldStrength: 3
+Manufacturer: Siemens
+ManufacturersModelName: Prisma_fit
+Modality: MR
+ParallelReductionFactorInPlane: 2
+PartialFourier: 1
+PatientPosition: HFS
+PercentPhaseFOV: 100
+PhaseEncodingSteps: 74
+PhaseResolution: 1
+PixelBandwidth: 1535
+ProcedureStepDescription: XXXXX
+ProtocolName: variable
+PulseSequenceDetails: %SiemensSeq%_ep2d_diff
+ReceiveCoilActiveElements: HEA;HEP
+ReceiveCoilName: Head_32
+ReconMatrixPE: 74
+RefLinesPE: 24
+RepetitionTime: 3.9000001
+SAR: variable
+ScanOptions: FS
+ScanningSequence: EP
+SequenceName: _ep_b0
+SequenceVariant: SK_SP
+SeriesDescription: variable
+SeriesNumber: variable
+ShimSetting: 3695,-10046,2626,292,83,-279,-134,102
+SliceThickness: 3
+SoftwareVersions: syngo_MR_E11
+SpacingBetweenSlices: 3
+StationName: MRC35104
+TxRefAmp: 222.089005
+command_history: variable
+command_history: mrcat -axis 3 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi0.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi1.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi2.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif  (version=3.0.1-24-g62bb3c69)
+command_history: dwidenoise -noise /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/noisemap.nii -extent '5,5,5' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/1_dwi_denoised.mif  (version=3.0.1-24-g62bb3c69)
+command_history: mrdegibbs /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/2_dwi_degibbs.mif  (version=3.0.1-24-g62bb3c69)
+command_history: /usr/local/mrtrix3/bin/dwifslpreproc -se_epi /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/B0_EPI.mif -eddy_options '--repol --data_is_shelled' -rpe_header -eddyqc_all /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/metrics_qc/eddy /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/3_dwi_undistorted.mif  (version=3.0.1-24-g62bb3c69)
+command_history: mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/4_dwi_smoothed.mif  (version=3.0.1-24-g62bb3c69)
+command_history: mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/5_dwi_rician.mif  (version=3.0.1-24-g62bb3c69)
+command_history: mrconvert -json_import /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.json -fslgrad /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.bvec /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.bval /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.nii /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.mif  (version=3.0.4)
+comments: TE=99;Time=104142.333;phase=1;mb=2
+comments: TE=99;Time=104634.188;phase=0;mb=2
+comments: TE=99;Time=102301.625;phase=1;mb=2
+comments: TE=99;Time=104142
+comments: TE=99;Time=104142
+comments: TE=99;Time=104142
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.2041193387,0.5137031909,-0.833333263,1000.0
+dw_scheme: -0.1977141975,0.5146343525,-0.8343024508,1000.0
+dw_scheme: -0.3999621792,0.1718072214,-0.900284696,1000.0
+dw_scheme: 0.4037001972,0.7264234052,-0.5561790963,1000.0
+dw_scheme: 0.2032804557,0.9391539284,-0.2768879831,1000.0
+dw_scheme: 0.8546867084,0.5149137883,-0.06613940621,1000.0
+dw_scheme: 0.7310855427,0.5144020839,-0.4482236331,1000.0
+dw_scheme: 0.4058203992,0.1702779517,-0.8979505681,1000.0
+dw_scheme: 0.7299824555,0.1701815673,-0.6619394601,1000.0
+dw_scheme: 0.6526334818,0.7283765637,0.2086555051,1000.0
+dw_scheme: 0.3244365682,0.9401997848,0.1037558568,1000.0
+dw_scheme: 0.3253184522,0.5170243383,0.791740954,1000.0
+dw_scheme: 0.6514813496,0.5175849347,0.554687197,1000.0
+dw_scheme: 0.9790823445,0.1727878311,0.1074342964,1000.0
+dw_scheme: 0.8540502963,0.1734394521,0.4904251705,1000.0
+dw_scheme: -0.002259620983,0.7302636963,0.6831616412,1000.0
+dw_scheme: -0.002591339745,0.9415239344,0.3369361451,1000.0
+dw_scheme: -0.6554853118,0.5169442435,0.5505521367,1000.0
+dw_scheme: -0.3308567768,0.5183798452,0.7885531874,1000.0
+dw_scheme: 0.1972617938,0.1747377061,0.9646525378,1000.0
+dw_scheme: -0.2056872366,0.1740635009,0.963013322,1000.0
+dw_scheme: -0.6527536174,0.7289013255,0.2064353957,1000.0
+dw_scheme: -0.3254198893,0.9404517877,0.09824627548,1000.0
+dw_scheme: -0.1993994297,0.9378278089,-0.2841106622,1000.0
+dw_scheme: -0.402190306,0.7259439266,-0.5578963821,1000.0
+dw_scheme: -0.7282749406,0.170845989,-0.6636469384,1000.0
+dw_scheme: -0.7269286759,0.5136962899,-0.455731085,1000.0
+dw_scheme: -0.8535207681,0.5157749553,-0.07401684809,1000.0
+dw_scheme: -0.8581097023,0.1742568347,0.4829930584,1000.0
+dw_scheme: -0.9798602664,0.1731730579,0.09942308757,1000.0
+dw_scheme: 0.204978745,0.5120461773,-0.8341417304,2000.0
+dw_scheme: -0.1965293814,0.5127992738,-0.8357111385,2000.0
+dw_scheme: -0.3998713053,0.1699687211,-0.9006739549,2000.0
+dw_scheme: 0.4048534043,0.7250704832,-0.5571054796,2000.0
+dw_scheme: 0.2036165985,0.9386839084,-0.2782315599,2000.0
+dw_scheme: 0.8549558168,0.5145177471,-0.06574221798,2000.0
+dw_scheme: 0.7315589065,0.5138347744,-0.4481019872,2000.0
+dw_scheme: 0.4072249602,0.1696576375,-0.8974319572,2000.0
+dw_scheme: 0.7309258671,0.1700521269,-0.6609308972,2000.0
+dw_scheme: 0.6524868782,0.7278674133,0.2108788811,2000.0
+dw_scheme: 0.3242097053,0.9401930644,0.1045230534,2000.0
+dw_scheme: 0.3238402283,0.5170630515,0.7923214671,2000.0
+dw_scheme: 0.6502088878,0.516892536,0.5568217924,2000.0
+dw_scheme: 0.9790345074,0.1722952772,0.1086543635,2000.0
+dw_scheme: 0.8532894718,0.1731874673,0.4918365364,2000.0
+dw_scheme: -0.001974410286,0.7298582035,0.6835957171,2000.0
+dw_scheme: -0.00310387162,0.9412377457,0.3377304724,2000.0
+dw_scheme: -0.655638689,0.5168712665,0.5504380105,2000.0
+dw_scheme: -0.331102832,0.5175902144,0.788968494,2000.0
+dw_scheme: 0.1965814308,0.1742203798,0.9648849674,2000.0
+dw_scheme: -0.2059179905,0.1740199847,0.9629718719,2000.0
+dw_scheme: -0.6533703702,0.7283237759,0.2065227271,2000.0
+dw_scheme: -0.3258404176,0.9402721635,0.09857119676,2000.0
+dw_scheme: -0.1997946014,0.9376822071,-0.2843135519,2000.0
+dw_scheme: -0.4019648303,0.7255111928,-0.5586213246,2000.0
+dw_scheme: -0.7282631119,0.1706087558,-0.6637209446,2000.0
+dw_scheme: -0.7267950678,0.513986761,-0.4556166579,2000.0
+dw_scheme: -0.8535307738,0.5158325871,-0.07349802909,2000.0
+dw_scheme: -0.8578799975,0.1738247724,0.4835564687,2000.0
+dw_scheme: -0.9799128072,0.1724960796,0.1000799318,2000.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.06332081897,0.01444310468,0.9978887065,8000.0
+dw_scheme: -0.07417404809,0.1564827949,-0.98489154,8000.0
+dw_scheme: -0.07409180858,-0.08248148301,0.9938345983,8000.0
+dw_scheme: -0.08880178295,0.08731895646,0.9922145147,8000.0
+dw_scheme: 0.05085716826,0.1788560869,0.9825599466,8000.0
+dw_scheme: 0.2048379922,0.1092212416,0.972682948,8000.0
+dw_scheme: 0.2154325352,-0.05118067635,0.9751765795,8000.0
+dw_scheme: -0.2138596396,0.2139010684,-0.9531581125,8000.0
+dw_scheme: 0.0482117501,0.2505349565,-0.9669063361,8000.0
+dw_scheme: 0.2049114349,0.1863776562,-0.9608718297,8000.0
+dw_scheme: -0.3529281357,-0.1188557216,0.9280706053,8000.0
+dw_scheme: -0.223297512,-0.01561593684,0.9746252427,8000.0
+dw_scheme: -0.2384915225,0.1570689408,0.9583585663,8000.0
+dw_scheme: -0.1054733643,0.2532084332,0.9616448714,8000.0
+dw_scheme: 0.03320362423,0.3381202338,0.9405169997,8000.0
+dw_scheme: 0.1935410102,0.2674794086,0.9439261853,8000.0
+dw_scheme: 0.3350161077,0.2010768489,0.9205065499,8000.0
+dw_scheme: 0.3523850069,0.03295309449,0.9352747727,8000.0
+dw_scheme: 0.3568902721,-0.1325617364,0.9246927705,8000.0
+dw_scheme: -0.3226246533,0.3043923819,-0.8962469587,8000.0
+dw_scheme: -0.1253864024,0.3382875593,-0.932652013,8000.0
+dw_scheme: 0.02618126578,0.3950301729,-0.9182949982,8000.0
+dw_scheme: 0.1879427584,0.343759089,-0.9200582635,8000.0
+dw_scheme: 0.3389068547,0.2822803585,-0.8974742019,8000.0
+dw_scheme: 0.4806508488,0.2138671441,-0.8504325994,8000.0
+dw_scheme: -0.4906817579,-0.05222510449,0.8697723558,8000.0
+dw_scheme: -0.3638629425,0.04948088767,0.9301373021,8000.0
+dw_scheme: -0.3758752589,0.2264993174,0.8985632137,8000.0
+dw_scheme: -0.2501143667,0.3262073881,0.9116093152,8000.0
+dw_scheme: -0.11469697,0.4144088082,0.902834395,8000.0
+dw_scheme: 0.02856305646,0.4899053085,0.8713076038,8000.0
+dw_scheme: 0.1772886584,0.4119213007,0.8938062283,8000.0
+dw_scheme: 0.3262734121,0.3807595781,0.8651981301,8000.0
+dw_scheme: 0.454391951,0.272429718,0.8481214557,8000.0
+dw_scheme: 0.4809612063,0.1052273006,0.8704042355,8000.0
+dw_scheme: 0.4913592531,-0.06113377373,0.8688088087,8000.0
+dw_scheme: -0.4703498943,0.2325802215,-0.8512798702,8000.0
+dw_scheme: -0.4284839936,0.3954535384,-0.8124148978,8000.0
+dw_scheme: -0.269230545,0.4444057824,-0.8544111506,8000.0
+dw_scheme: -0.12290081,0.4872007472,-0.8645986484,8000.0
+dw_scheme: 0.02310278889,0.5349069715,-0.8445950468,8000.0
+dw_scheme: 0.1738345832,0.4919811729,-0.8530744769,8000.0
+dw_scheme: 0.3204745421,0.4381379528,-0.8398399861,8000.0
+dw_scheme: 0.4611122499,0.3725046699,-0.8053668505,8000.0
+dw_scheme: 0.6111564904,0.1407586621,-0.7788932811,8000.0
+dw_scheme: -0.6164448666,0.0182915636,0.7871855849,8000.0
+dw_scheme: -0.491308456,0.1153364724,0.8633154112,8000.0
+dw_scheme: -0.5021993072,0.2917622033,0.8140458664,8000.0
+dw_scheme: -0.3822782783,0.3934250602,0.8361100645,8000.0
+dw_scheme: -0.2521442149,0.4854616575,0.8371082809,8000.0
+dw_scheme: -0.1129679822,0.5642476573,0.8178403366,8000.0
+dw_scheme: 0.03941977651,0.6247156598,0.77985667,8000.0
+dw_scheme: 0.185218657,0.5425577119,0.8193443588,8000.0
+dw_scheme: 0.3310889531,0.5432284415,0.7715458285,8000.0
+dw_scheme: 0.4491133268,0.436742144,0.7794571954,8000.0
+dw_scheme: 0.5684476951,0.319874619,0.7579890804,8000.0
+dw_scheme: 0.5980293927,0.1620609684,0.7849185232,8000.0
+dw_scheme: 0.6149706868,0.0009513636549,0.7885493956,8000.0
+dw_scheme: -0.6024246598,0.1645783385,-0.7810240071,8000.0
+dw_scheme: -0.5704450247,0.3264348418,-0.7536794862,8000.0
+dw_scheme: -0.5144035982,0.482909799,-0.7086515816,8000.0
+dw_scheme: -0.3644130073,0.5444430013,-0.7555031294,8000.0
+dw_scheme: -0.2130411425,0.5955142482,-0.7745813397,8000.0
+dw_scheme: -0.06001856711,0.641344364,-0.7649020711,8000.0
+dw_scheme: 0.1167986839,0.6382102822,-0.7609505261,8000.0
+dw_scheme: 0.2708287664,0.5908007885,-0.7600040839,8000.0
+dw_scheme: 0.419013,0.5286408254,-0.7382187911,8000.0
+dw_scheme: 0.5569609966,0.455047383,-0.6947850945,8000.0
+dw_scheme: 0.5948040245,0.3000380191,-0.7457783582,8000.0
+dw_scheme: -0.7280700238,-0.04582590336,0.6839693173,8000.0
+dw_scheme: -0.7176359257,0.1226390699,0.6855350733,8000.0
+dw_scheme: -0.6066098645,0.1800032163,0.7743534816,8000.0
+dw_scheme: -0.6428185047,0.3099967155,0.7004901187,8000.0
+dw_scheme: -0.5237393276,0.4318488107,0.734304924,8000.0
+dw_scheme: -0.3942280895,0.5347683254,0.7474001951,8000.0
+dw_scheme: -0.2555117198,0.6226413207,0.7396158102,8000.0
+dw_scheme: -0.1057790974,0.6926381847,0.7134865995,8000.0
+dw_scheme: 0.05300474118,0.7396424228,0.6709095198,8000.0
+dw_scheme: 0.1994248317,0.6638078249,0.7208251578,8000.0
+dw_scheme: 0.340485266,0.6823473806,0.6468939911,8000.0
+dw_scheme: 0.4578772784,0.5831494363,0.6710328851,8000.0
+dw_scheme: 0.5690836021,0.4758604012,0.6705972952,8000.0
+dw_scheme: 0.6721958221,0.3592127516,0.6473939881,8000.0
+dw_scheme: 0.7062910286,0.2092882899,0.6762776018,8000.0
+dw_scheme: 0.7257541526,0.05640646761,0.6856378201,8000.0
+dw_scheme: 0.7232268738,-0.1017622955,0.6830719759,8000.0
+dw_scheme: -0.6977125493,0.2592782172,-0.667811354,8000.0
+dw_scheme: -0.6522665461,0.4117082555,-0.6364311944,8000.0
+dw_scheme: -0.5849001722,0.5583872161,-0.5882988233,8000.0
+dw_scheme: -0.4432526,0.6299118936,-0.6377602519,8000.0
+dw_scheme: -0.2937871727,0.6865539754,-0.6650809996,8000.0
+dw_scheme: -0.1386295555,0.7340533923,-0.6647912933,8000.0
+dw_scheme: 0.03313822298,0.7447047783,-0.666570815,8000.0
+dw_scheme: 0.2045279417,0.7250875013,-0.6575837867,8000.0
+dw_scheme: 0.3589659154,0.673169997,-0.6465180792,8000.0
+dw_scheme: 0.5040616146,0.6048231825,-0.6165312698,8000.0
+dw_scheme: 0.6385154351,0.5186963987,-0.5685526229,8000.0
+dw_scheme: 0.6882258778,0.3681749577,-0.625133859,8000.0
+dw_scheme: 0.7161919627,0.2092634907,-0.6657911565,8000.0
+dw_scheme: 0.8199740941,0.1128854052,-0.5611589528,8000.0
+dw_scheme: -0.819885839,0.0476596813,0.5705398897,8000.0
+dw_scheme: -0.7868730917,0.2093606719,0.5805160175,8000.0
+dw_scheme: -0.7323024624,0.3510300601,0.5835332043,8000.0
+dw_scheme: -0.6321236638,0.4683934059,0.617274081,8000.0
+dw_scheme: -0.5150729771,0.5747325861,0.6359105933,8000.0
+dw_scheme: -0.3852421309,0.6666535005,0.6380921648,8000.0
+dw_scheme: -0.2441540138,0.7433702255,0.6227274889,8000.0
+dw_scheme: -0.09282097362,0.8007161943,0.5918089583,8000.0
+dw_scheme: 0.06286774212,0.8362776041,0.5446902018,8000.0
+dw_scheme: 0.2076470152,0.7723939575,0.6002418609,8000.0
+dw_scheme: 0.3564213436,0.7827111091,0.5102226431,8000.0
+dw_scheme: 0.4816276925,0.6897290431,0.540655725,8000.0
+dw_scheme: 0.5978744474,0.582455926,0.5507188388,8000.0
+dw_scheme: 0.705565045,0.4624713035,0.5369341307,8000.0
+dw_scheme: 0.7831973251,0.3020716403,0.5434654305,8000.0
+dw_scheme: 0.8139604231,0.1426528656,0.5631328348,8000.0
+dw_scheme: 0.8233406414,-0.02018070931,0.5671886169,8000.0
+dw_scheme: -0.8097333473,0.1790681973,-0.558808095,8000.0
+dw_scheme: -0.7756290022,0.3336803,-0.535777107,8000.0
+dw_scheme: -0.7201623938,0.4793810155,-0.5015575425,8000.0
+dw_scheme: -0.6443097748,0.6170346265,-0.4518110045,8000.0
+dw_scheme: -0.5105673453,0.6984576953,-0.5014756562,8000.0
+dw_scheme: -0.3675039569,0.7591211833,-0.5372856509,8000.0
+dw_scheme: -0.214162085,0.8088383146,-0.5476451243,8000.0
+dw_scheme: -0.04766454497,0.8314585939,-0.5535383435,8000.0
+dw_scheme: 0.1214588272,0.8271395101,-0.5487148478,8000.0
+dw_scheme: 0.2860192726,0.7947013157,-0.5353903198,8000.0
+dw_scheme: 0.4375195625,0.7372610723,-0.5148035972,8000.0
+dw_scheme: 0.5778323019,0.6602265138,-0.4798028567,8000.0
+dw_scheme: 0.7039755117,0.5681861023,-0.4261256061,8000.0
+dw_scheme: 0.7634896137,0.4272225035,-0.4843186371,8000.0
+dw_scheme: 0.7993196384,0.2725635687,-0.535534515,8000.0
+dw_scheme: 0.892023962,0.1644988813,-0.4209909372,8000.0
+dw_scheme: -0.9008095313,-0.00444673563,0.4341916798,8000.0
+dw_scheme: -0.8801383526,0.1566742573,0.4481179056,8000.0
+dw_scheme: -0.833588434,0.3164883212,0.4527311181,8000.0
+dw_scheme: -0.7476996175,0.4671631635,0.471915099,8000.0
+dw_scheme: -0.6384525233,0.584977424,0.5001797566,8000.0
+dw_scheme: -0.5148155306,0.6871896114,0.512577221,8000.0
+dw_scheme: -0.3786273152,0.7727038682,0.5094802138,8000.0
+dw_scheme: -0.2317657191,0.8409689541,0.4889334,8000.0
+dw_scheme: -0.08325846942,0.8881056773,0.4520357654,8000.0
+dw_scheme: 0.07276379679,0.9110191785,0.405893442,8000.0
+dw_scheme: 0.2181698334,0.8595404182,0.4621603546,8000.0
+dw_scheme: 0.3612681501,0.8604875047,0.359230536,8000.0
+dw_scheme: 0.4899333344,0.7774544789,0.3943727438,8000.0
+dw_scheme: 0.6076412517,0.677345114,0.4146995368,8000.0
+dw_scheme: 0.7186929217,0.5589655307,0.4135674307,8000.0
+dw_scheme: 0.8100333253,0.4080585691,0.4211106935,8000.0
+dw_scheme: 0.8710687337,0.2402921623,0.4283677602,8000.0
+dw_scheme: 0.8955631444,0.07453726985,0.4386466115,8000.0
+dw_scheme: -0.8964299798,0.08746374523,-0.4344690837,8000.0
+dw_scheme: -0.8747732604,0.2439653071,-0.4186319049,8000.0
+dw_scheme: -0.8320740318,0.3918674458,-0.3925464438,8000.0
+dw_scheme: -0.7697598404,0.5305679724,-0.3549188847,8000.0
+dw_scheme: -0.6883147697,0.6562741874,-0.3090743742,8000.0
+dw_scheme: -0.5667966036,0.7447687085,-0.3522231976,8000.0
+dw_scheme: -0.4335187154,0.8122232692,-0.3903266379,8000.0
+dw_scheme: -0.2888653644,0.8639301371,-0.4125306285,8000.0
+dw_scheme: -0.1283189259,0.8958558073,-0.4254134762,8000.0
+dw_scheme: 0.03860043854,0.9039295961,-0.4259357833,8000.0
+dw_scheme: 0.2045540783,0.8861204638,-0.4158703557,8000.0
+dw_scheme: 0.3629923696,0.8423047515,-0.398446038,8000.0
+dw_scheme: 0.5091712898,0.7772611108,-0.36960758,8000.0
+dw_scheme: 0.6381868495,0.6971635412,-0.3266198737,8000.0
+dw_scheme: 0.752372513,0.5994685683,-0.2730806426,8000.0
+dw_scheme: 0.8169817446,0.472667973,-0.3303419686,8000.0
+dw_scheme: 0.8617377132,0.3209212823,-0.3929601052,8000.0
+dw_scheme: 0.9375595419,0.2179446082,-0.2710761023,8000.0
+dw_scheme: 0.9555966918,0.05702525674,-0.2891073895,8000.0
+dw_scheme: -0.9471304776,0.1049414681,0.3032014953,8000.0
+dw_scheme: -0.9105876731,0.2658216855,0.3164947411,8000.0
+dw_scheme: -0.840558662,0.4272505338,0.3330437166,8000.0
+dw_scheme: -0.7427197603,0.570761042,0.3501416721,8000.0
+dw_scheme: -0.6268012665,0.6855815813,0.3702675622,8000.0
+dw_scheme: -0.496135299,0.7826243854,0.3759638766,8000.0
+dw_scheme: -0.3557236392,0.8602266998,0.3653364442,8000.0
+dw_scheme: -0.2135046737,0.9174750369,0.3356416407,8000.0
+dw_scheme: -0.06818893746,0.9523916699,0.2971537916,8000.0
+dw_scheme: 0.08411369757,0.9628881513,0.2564591469,8000.0
+dw_scheme: 0.2274177456,0.9236773123,0.3083851355,8000.0
+dw_scheme: 0.3321697904,0.9249732567,0.1846285586,8000.0
+dw_scheme: 0.4665459188,0.8537404989,0.2312186545,8000.0
+dw_scheme: 0.5949481397,0.7602384547,0.2609103353,8000.0
+dw_scheme: 0.7094965346,0.647689679,0.2776918203,8000.0
+dw_scheme: 0.814180146,0.5031101104,0.289811847,8000.0
+dw_scheme: 0.8929068524,0.3382074937,0.2972087551,8000.0
+dw_scheme: 0.9392646018,0.1633776009,0.3018108137,8000.0
+dw_scheme: 0.9545904645,-0.003861267585,0.2978961826,8000.0
+dw_scheme: -0.9440986455,0.1658584334,-0.2849012595,8000.0
+dw_scheme: -0.9101178014,0.3214264192,-0.2614778091,8000.0
+dw_scheme: -0.8531759641,0.4692083556,-0.2278909683,8000.0
+dw_scheme: -0.7721725819,0.607244662,-0.1870920209,8000.0
+dw_scheme: -0.645807238,0.7412639773,-0.1829227356,8000.0
+dw_scheme: -0.513860755,0.8291838007,-0.2200030663,8000.0
+dw_scheme: -0.3742727226,0.8916918008,-0.2545695612,8000.0
+dw_scheme: -0.2199564893,0.9341170799,-0.2811484019,8000.0
+dw_scheme: -0.1488791261,0.9779519823,-0.1464408619,8000.0
+dw_scheme: -0.05190444702,0.9554263089,-0.290631204,8000.0
+dw_scheme: 0.1182897011,0.9511485388,-0.2851736378,8000.0
+dw_scheme: 0.2851026621,0.9194528994,-0.2707819008,8000.0
+dw_scheme: 0.4423647384,0.8630716032,-0.2437639146,8000.0
+dw_scheme: 0.5813417681,0.7883521096,-0.201352179,8000.0
+dw_scheme: 0.7055825937,0.6916730098,-0.1540832602,8000.0
+dw_scheme: 0.8226685514,0.5496269159,-0.1453502938,8000.0
+dw_scheme: 0.894613166,0.3765378384,-0.2405962167,8000.0
+dw_scheme: 0.956140104,0.2694377303,-0.1148886898,8000.0
+dw_scheme: 0.9845220492,0.1117963671,-0.1349737267,8000.0
+dw_scheme: -0.9872926918,0.05066637614,0.15061892,8000.0
+dw_scheme: -0.9629710484,0.2107304325,0.1681649333,8000.0
+dw_scheme: -0.9089156,0.3704065174,0.1914978953,8000.0
+dw_scheme: -0.8246628192,0.5260661652,0.2078115119,8000.0
+dw_scheme: -0.7143233921,0.6634391927,0.2226893107,8000.0
+dw_scheme: -0.5868388963,0.7754107475,0.2331486274,8000.0
+dw_scheme: -0.447517209,0.8646691738,0.2282007178,8000.0
+dw_scheme: -0.3052100428,0.9312358401,0.19911464,8000.0
+dw_scheme: -0.156882597,0.9745527475,0.1601086914,8000.0
+dw_scheme: 0.0012529542,0.992147907,0.1250638269,8000.0
+dw_scheme: 0.103493427,0.9945772314,-0.01025871795,8000.0
+dw_scheme: 0.1833466381,0.9737792427,0.1346773801,8000.0
+dw_scheme: 0.2771711523,0.9607764896,0.009202679436,8000.0
+dw_scheme: 0.4256892524,0.9032464531,0.05417107545,8000.0
+dw_scheme: 0.5595333971,0.8226806043,0.1005932442,8000.0
+dw_scheme: 0.6865561464,0.7165393857,0.1233368017,8000.0
+dw_scheme: 0.7933340115,0.5898145858,0.1507975484,8000.0
+dw_scheme: 0.8870805306,0.431028964,0.165233666,8000.0
+dw_scheme: 0.9515182668,0.2557980704,0.1708225252,8000.0
+dw_scheme: 0.9834626085,0.08625805841,0.1592508873,8000.0
+dw_scheme: -0.9859385825,0.07900435081,-0.1472529258,8000.0
+dw_scheme: -0.9621451618,0.2409599237,-0.1273381437,8000.0
+dw_scheme: -0.9131052483,0.3957468441,-0.09809811843,8000.0
+dw_scheme: -0.8384106194,0.5414064462,-0.06282271332,8000.0
+dw_scheme: -0.7256598187,0.6861416117,-0.05125930337,8000.0
+dw_scheme: -0.5902093395,0.8056551284,-0.05072227971,8000.0
+dw_scheme: -0.4530853873,0.8877269874,-0.08157467544,8000.0
+dw_scheme: -0.3071214675,0.9442886333,-0.1183020761,8000.0
+dw_scheme: -0.2348733933,0.9718218262,0.01992052207,8000.0
+dw_scheme: -0.07369321841,0.9972231773,-0.01073518634,8000.0
+dw_scheme: 0.02545736524,0.9880834471,-0.1517992892,8000.0
+dw_scheme: 0.1990285953,0.9696963233,-0.1416921266,8000.0
+dw_scheme: 0.3651382256,0.9234293502,-0.1181199028,8000.0
+dw_scheme: 0.5105772936,0.8565718699,-0.07480280104,8000.0
+dw_scheme: 0.6408011166,0.7670788095,-0.03104881642,8000.0
+dw_scheme: 0.7651513262,0.6437562058,-0.01101796353,8000.0
+dw_scheme: 0.8577863249,0.5134139191,0.02467323426,8000.0
+dw_scheme: 0.9007738794,0.4232833333,-0.09714750669,8000.0
+dw_scheme: 0.9384675954,0.3433556976,0.03722146364,8000.0
+dw_scheme: 0.9837385072,0.1782771958,0.02181263184,8000.0
+dw_scheme: 0.9998989022,0.01354134724,0.004337901547,8000.0
+dw_scheme: -0.9887006469,0.1494578566,0.01154902032,8000.0
+dw_scheme: -0.9499255232,0.3104793482,0.03527144325,8000.0
+dw_scheme: -0.8837898775,0.4634960663,0.06392846706,8000.0
+dw_scheme: -0.7843304257,0.6155660518,0.07683891774,8000.0
+dw_scheme: -0.6610135002,0.745246834,0.08756888122,8000.0
+dw_scheme: -0.5225877151,0.8481793297,0.08656734195,8000.0
+dw_scheme: -0.3816685677,0.9224450057,0.05851765547,8000.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+dw_scheme: 0.0,0.0,0.0,0.0
+mrtrix_version: 3.0.4
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+prior_pe_scheme: 0.0,-1.0,0.0,0.027
+file: . 35736
+END
+         |K´B9§B∞∞B‰A¨BE_ΩBÜò¿B˚∆≠BØ∆±B˙B·ÏàBklgB∏{B\A`Bb‰[B5xBóÑÉBE
+rBbÌJBTfB≈ÔCBƒÆlBQJ.BêHáBòJaB5TBº˘<BtMB~[5Br∞7B	˙B8 \Bø±3BûGWB6-ÄB6N8BòcBãÄ9Bı›XBw/FB®†BO3kBÃ∞}BçÀPBM+jB=õFB![B¶siB/HâB˚{±A«`	BÛ”†AÌ1BßÂ∞AclBÙÛúA±˛A∑Ô˚AKˇ4BàD‡Aå"B√˙A‰7B˝‡A4BAÁwBñﬁÜBuí\BÁ˝vBÔ=VB∑ûeBì√jB±ÜBúB¬J3BtƒBﬂ(Bœ$B˛Ω3BE¸B´.B•ÊBK·>BÙA~Ü6BRÈ“Az1#Bk¨ËA</B⁄UBmB„º<BxlBr+BÓ´YBQUBÑEáBìWSBQFlB=NBﬁ¥pB˜á"BØç<BÓGXB5rBy† B †%B4˙A•w"B„ ÷A#zBXxÍA^BösâAÓ°A≤êÅA8†üAl©ùA√∏üA^}AëAB´A◊[¬A˜k™A≠≥ƒA	U≠AÊ÷≠A0Ú©AA≥≠AœåBòméBTaÖB$>âBÒ°LB˛∑XB
+åBù‚çB†«ÜBï]àB#ŒwBÍœxBtù\B√fBòçBTìB£2BºBæÒBÊBxÉ.Bà+Bñ$.BfB¢ÇÉBâuB–¸|BáˇnBËgBZÊTBUÌâB{ÂÖBäÕkB¬uoBîzrBpxyB·
+CBrèCB˚ˆyBxLtB&ãB‘çB ªáBd äB¡gbB< hBwäBZ[èBï&B•…„A¡`BÕ‹Au˚4B8mÊA°b8Bûv B∏0xBh&CBÇtjBàÕ;BÑÙ`B)â'Bx¡ÉB?ÏPB≈wBW[HBî¨eBm£<B‡LcBûÇ"B:†ÉBìRBáUB≈B∏¨QBt˝B”úDBÅ˙A≈£bB|&B‘ﬂÒAÿ”ÃAÕIÚA#‰æA£”A'≤®A>ÖÁAP°±A_¨˛A√¥£A˚ïB™v£ABB)hÆA∫B◊¬≠Agâ¬A:O}AÎ—A!éADB:s¶A¶ê›AÆñ°A÷Z—Ae◊AÏ÷»AMÃA,ÏAXLÁAﬂ“A	º‘ApÇïA’{A€OóAŒ≤àA∏D AµA™≤•A¬•öAﬁÓZB$sB˘Ù@BJ›YBî<B{:;BèG[BÙwpB%*CB™B¬7BzWB±≤#B*ÆƒAè’EB˛«BO@BT¡AˇñBJ)∆A¡[ÃA¯@nAhªBN≤AΩQBûCB¸ÁÙA7œ4BS3B†2B BtSBa›;BaNTBËÆ!BÊQ=B˛ıB<›#BC3BÃ∆XBöÓÏ@P–AzÃ@ŒmoAÂ¢*ALˆåAAÇzA§©WAjÏA≤ë4A∂¸≈A,ÄcA´ë‘A;r Aπ„…Aé∏%B—)PBBjN=B™B¶Ë/BßJ!BÚ˝LBÍ®ìA‡Æ‚AJxrAøA~åAvóœA6¶sA‡ÇøA´VyA¥	ÌAÃ1cA[˛‹A:9AE√Aä2ZAÔ∆ŒAÄzB
+DBw¸A©—4BWb¿A\BÂﬁBLﬂOB•Bˇø/B|¿BÄè4B ™≈AtÈ˚AóIBåø0BÇHAnJ¥AÎOUA‡Í≥A“HAÿñáAÕ0%ALìAEºj@uÊ≠@XÈq@Ç∫«@ìàA>ÃA&ã¥@ö8Î@¶t	AFs:A|Q˝@.ı%A\ÉAMÎAÎMŸ@ÌºË@<#fBå#oB}‡NBÔ˘WB32!B5ø5B=PpB¸®yBëºUBéçQBIÔFBJ@GBH}'B0Z+B¿ógBQÑlBe“AÒÙxA+sœA“’áAw[⁄Aw•Aﬁ·…AÉ'úA£äSBIÈ2BÉPVBGÒ5B[d4BB,BhM\BoLBD;8B˘`4BªOHB⁄∑CB˝˝Bj˚A‹DB28Bå’jBk#qBªÇeB£÷qBLB¶tIBLzzBÙÑBµΩA|∂RA}ß£Ah1MAûËA~ÃyA @⁄A‹!oA	:BU6ÙA∆»+Bæ÷ÈAfh2Bç€Aî˜SB‘B”MHBvÌ
+Bî0B3åBc∏5Bï◊Aw8^B
+ïB/ºBŒöAQÖB˜∏ûASˆBÀWñA+&BbÿºA≤tYAòéAX¥iA8zA|lpAÇA˛°xA‹wA˘ÄAR˜@ÿnÇAyLÛ@ﬁ=ïAoAu0ëAÅ‹AGŒ6A-¸ÿ@rﬂAAHëÃ@x/yA˘aAÄINA¯ˆ@ôº=A?0A…53A”i.AedjAX¸cAôr4Aù†KAû˙AHÓA·UÍ@Öpª@ñAù·@QÎ“@&®ù@BÖ®BwVßB§∆ÆBÀØ®B«‹πBûê¡B,ì∞B.µBò™BïÆBdØ´Bhk¨B}πB4PøB q≤BïîµBÒì©BÁa¨BÆBYëÆBãT∑B˛ˆªB∞∞B“]≥B¶©B°;®B=eØBÒ≥¨B˘ÒªBZ£øB‚v≥B1‘µBY©B≈ﬂ£B±BØ◊™B¡—ΩBQƒB?<≥B§i∂BÏÒ©Bd©B._∞BÕ	ÆBÜ_πBë†øB¨ˇ±B¸K¥BŸm•BUΩ¢B]Ì≠Bã@®B¬MπBõaΩB¿J∞B9Ò≤Bb•B«_ßB≠B«¨BgºBb¿Bf∑≤B”©¥BïÑßB/’•Bz≤B·v≠B»1æBóê∆BÑ}∏B'ÏªBr‰•B˚B£B!>™B|®BŒ∑B„W≤B∂≤B>‚≤B¡ °Bk∂ùBwå¢B≥"úBø'≤B¨ë´B*£BçÙ£BàcıA……AŒB‹K‹A∏ÛúAº‘ÇA\c„AÒ∫»AƒYÛA\®ºAaA]/¬AÉ4∏A?ÕbAã2ˇAë-√AîˆBá¬˛A¸	Bê˝BGøA^≠ßAtBÛ>˛Aº-B/ÏB‰BÉB¢?‘A5d¬A·ÀB∑ÎBØ‹AÛs‘AKΩ˙A
+. Bô\ñA+õåA«Ù˚A`ŸÂA⁄iîA™∫}AI°±AƒãAµ</A?ˆA8Ñ®AÂzA—“âA+KIAÿ¯ûA∏ﬂYAf©8AÏﬁ@2ìAÃ>BA1’úAàWNAË©AüVAàÿlA∫◊A‰∂•AÕYNAßB<5”AãıAöõÂA:€Az£A˝◊BŸ˘A‡ıAFBERÕAv¸ B›ôAÆ2†A"ﬂÀA†ˇÍA…ë±AüˆA!?íAÅT›A]úèAE¬AÁ†AÁzÁA7èÍA_zB9å’ABúò¬AW—AûÏA
+B…@øAÍ¶A\ÙAD,ˇAF7—A¿ÈÿAÀ†˙AKˇBËBËBCB"JB¿kíAVA∂Aké¯Aw!B ˆÍAdSÁAÊB“=Bˆ-zA%ëAÁ[ˆAÌ™¯Aÿ˛ÅAˆ.ÉA9>ØAY˘∞A®A∂0BA%ßùAz≠ïAıÏAÛ‚CAöø$A%*AÖÆ@HÇì@ê[.A.’Ù@[…#AVYÙ@}øFAﬁ¨@õàÆ@Y@K˚(A®|™@<Œ+AS—@ˇdAGáË@¬*Ù@_Å@Ö¸XAÓc–@ÓFcA·⁄·@M<uA¶œÈ@v◊=AK›ã@°ÉA#èÿ@¸J⁄A”ΩàA≤Ò–A≤AÄAIWòA+ÇA,”Am~~Aˆ˜B…ˆÈAnH¯A‰'‡A “Añ°íA+±˛A*≥ÂA9Ç˝A[dBHWÎA˚©BZ$≥Av¨Aé‚AæeB<BµAzŸ	B>TúA ÙA∆œêAöú÷A¨l•A› ˙AÌXAkOΩA0Ö0AFØ¨AGq^A≤≤A+)BA!!µAí‘@AàeáA—xA?§ÅAeçFAjπìAÆ4AuMçA-èAçïAø•AWO¬A¢*õA_…AOq¶Ar°⁄APÎ´A∑Ÿ¢AŸÒéA}DóAnÀèA÷≤ôA‡ﬁïA Â§At$›Añ¨ÕA¢‚A∫„ŸA¨-“A˝◊A ≥˝AÃi	BzÁBï1B‰>BæÈB√”¶A–AÖçB¨BhGıAöGB—£B9BùæÉAÙ{¿ALàBBíÌwA≥«ÄAupπA≠˛∆A‚Ã+A–'qA_]™A}è√Aè©A ◊AÔ5A°FAÀ‹ñ@°€@›vAµ)AÀrà@m∆◊@%©ƒ@
+Õ¯@p£d@2D°@·≠@ÙÂø@Z√@ √Õ@/Ô”@’À≠@8®Ú?ÊÑ7@&q•@uû"@‚á±@ßJB@◊ı@6úé@î°@Â?ıQ∑@ó±	@¸ª@
+Ü ?° A≠Ñ@‘†œ@˛5Ö@_)A §ü@º6%A¸©Y@|-KA@{@ı¸
+AÉà=@>?AÛ~~@ıEâA{cÀ@7_âA‰[Ω@‰Aé0@¿‘pA'<Ã@◊ ⁄A[VjAb4ÀAA|A$ºA∑‡(Aä≈ÂA òÑA∆ˇ·AﬂNÆAmÜ–AÊ©AT≈ŒA=A|A†ÚA‚Ü”AÇ~¯AÛ˛BU’Aº|ÈAÚëîA«√ÖA[œA⁄q›Af∑æA¶B ﬂ°A…FÛAÊ„|A røA§öArÛA∂¥]Aªm«AÃ≥CA’Q¥Aª-AŒñ§AJHAàE∫AÈ≈Ù@Bø4A¸‘§@“'A6ÎÁ@’+EAmæ@|86AÎ™ﬂ@™ò@√ø@ä±AêÀ@ı$9AGJÆ@_Ag`AW-pAò‚)A◊sPA¿NAÀNåAñBA6Å~Aì˝HA‚A(_0A>AÑ9AÃ¿+A+9AgÖA˘F¢A:≠êAèøáAÆYaA EôA≤¯óAÛßûAk2êAñÜÛAX ÷ALÊ¸AÑE«Ab∑¡AØïŸA&B#O¸AB¨›A# “Aø]BÇ˚A#√A4Ó‰AÜòB3∂B)ÿƒAÿAF·ËAƒü¸AP!bA†FæAÁA~lB{ãêA”ÚæAJd•A|*’AìëÍ@¬¿jAßßìA7§ÕAS  Az∞PA£PLAë%âAE£}@Ú=A‘A- XAπ∆∂@ (Ag∑@~»
+A%t@>òì@ÔŸÖ@!ôƒ@˝{S@÷î@ÎES@b´©@s7@â,Ä@ó<@È0{@C@I§9@É2T@*ñ0@Ü¥?W0@ãø@SÍ©?π§@˝vß?¿d@M£ @•0@§@7ÆY@…Ê¯?˙€X@Ò	4@ÇIî@∞6Û?3¡?@uãa?[®¶@’[“?’Lû@q˘@yÔÕ@qö@@â@K◊?ılr@¨ç∆?¶˛AÔj@Ô›A"ÎQ@y‹@≥U%@»∫A®{N@ÕäTAzÕ∑@©“ÄA¬R˜@‚4KAû®à@sÄAel A[PîA≈–◊@OOüANAg´≤AïÁA`ÛœA&ùhAÕÊAñA-[“A√9öAA¢ùAøAÊ÷A-ÄöAœ%A]¶ËA*ˇ’A∆ôœA;yØAgpöA‡>ÈAIGÒAº\«A»-BgL™AÍ–‚AˆXêAKπA=SºA°˚A•`A¸‹€AyöVAb…AvÉA≠òA8å:Aw≠ΩA¶0˜@CÉèAJÜæ@∏L|A{_ﬂ@öíAƒF∞@ƒ€wAŒ¡÷@>JA+∆Ô@Û)dAë!æ@ÌhÄA|∞è@˙åmA
+R@%Ñº@ΩÅ@í¢û@'≤Ñ@\†Û@axG@≈¨@Ñ∆@Ô”•@{¡u@æ$b@kXì@ë.ù@#ﬂ@¶∞<@DXŸ@2h†@Q;≈@ıQü@´œAÂ3AZﬁA¢˜˚@‘›ﬁ@Ñb@¸„@Õﬂì@ ÍÚ@;æÕ@≈A∫@O˛®@%XAnxAoπGAy`A∑∑ZA∏ö.A€	8AóôA≈“ëADAÊ^åA>?*A
+˜ÆA[pwACªAÖQsAe≈ÛAÔé¬AR”ÚA∆J®Aﬂ∂∑AÙ·ØAáıB$®–A£§ŸAøõA'⁄BnëËAI ≈A¸ ﬁA/BÃ‘B◊ÁA´%B®åÈA	B ıpA≥ÆÕAtΩıAˇ„Bh@ùAt–A-k§Aﬂ£‡AqˆAèpóA*çA1ÈA|⁄Ae=vAOzJABõA6Ôâ@‰?A·FA àìA	Û~@âªA“˜¬@dü>A`z@ìÓA¡fé@–A≤˜?”◊@ ~Ô?„@nk)@zé•@"x;@ÂÓ¶@™H&@ﬁë#@/À.@l´?@Ù
+‡?ñn¸?X¯ì>ö∫ @#ó4@#ñJ@è
+B@§#@Ä1›?u¨@ù+@ÍØ@Løú?T°V?è¶@˝?!ª¬?¶¿⁄?Ã´§?!ûÕ?U‹@à‡?!3T@Ê<#@BcS@`U@Î¬a@ëëX@d@—E§?r?Y@w*Ã?d?2@‰øù?∑ôj@ª˚Í?/óó@f[?Í”¿@Ôñ+?#Å@<Äƒ?-çò@4xﬁ?3&·@ùΩ6@é+AÅk@©ÊŸ@Èì3@Ò¿Ë@ví@@˜Î:Aıét@Œ<\A|˝ö@VøJA%‹]@8B{AáÙ°@±ÙóAmŸ@dçAˆWú@ìA’Dπ@˜‹¥A"ìA%D A…2TAte∑Aú∫SA˘™AœèAs/‹A÷}vA>ÕŒA¨A¥Ã∞An©A≤ΩA_{rA¸Ò‰A∂ZÃAmœŒAD®ËA©AÏ’A'ÜA&†àAF]∫AæI”A~ΩçA~œˆA,ØrAñÜ€A§t%A∆MïA8ØZA@∂œAeaA≥–®Aæ? A&õA≥¢AË•îAë A[	®AÈÉQ@HıVA0gF@µ÷3A-¡¶@∞dOA»eÖ@ÒÄDA˚"õ@ÓaHA‚Ç@•Z%A⁄∏Ä@o&QAà9h@›Ô1AYo@ﬁ—„@™™O@™ @+,√@i A∑æî@L1AËy@?∂h@Â{_?≈)@ZB#@}…Ø@L@@#,@íc@å¸@⁄®/@–8ﬂ?D&o@+÷o@ÀE@c#æ?\›Ç@§K@»&@h@~v}@·Ä@L•}@Ô/%@†Ë]@4q,?D"(@®®«?I÷@ 8W@æî@ï¥:@;–A∑L¬@êM‘@Ô¶ç@Îﬂ A)ÒF@KD‹@[«f@¸ÜIAxÌ˘@©´A>"æ@ﬂˆsA¬AA≥1TAƒ„@O˛¥AL=OAE§õAúAkxõA˘	>Ag·∞Ab∑.Aæ`‰Ac©A·‡AEÊöA;ç±A≈¢èA≤BΩK∞A⁄ÚAÇP≈AﬂàBß‡ﬁAZ∂A÷ABDBã\øAÌ˙‰ADÏ«AEŸÏA◊évAÙ1“Aÿ2„AhÌBãA>ÚŒA‡dëAv‹A_¨Ò@íõAcãxA˛m¯A â+A2†AÙk)A≤‚•Aê≠¶@◊¸hAô6A+Å©AñÓ˝@’„YAÌŸˆ@VvSAg‚J@YÿA‘Ùº@Ü`6Akñt@∫öAé¶n@Õı@ù,@f Œ@ká`@Ä«…@¸}?åç@ß¥ù?’ç@.@ÌÙ?ê€∑?f:‡?XûS@7Å@“£@≈ù @Ù+1@√3√?ÛB@ä—4>,N@ßze@Œ˙Î?d  @J›„?û
+ÿ?$?@~ã?ÿÁ"@&$ı?4≈ı?u¢?∑ë?4é?J¨?3«h?¥Í?∏ı'@’˚õ?ˇÑ¨?ëò@X¬?‚~?6ï0?˚—@ˆ‰ ?ÕµK@$?F@{è/?⁄!@Ë√?›m@™ñ¬?}â®@ﬂq»?kô@˘t@–˜ô@µ@#@ér≠@È#ﬂ?O‘@∆ΩÈ?Â∞@πEq?äåª@Àºˆ>ì8.Aàˆc@Ú∞TAS^ï@∏7A°˘@s◊;Aº§s@ù÷}A8¥∆@—MqAH∑´@ ◊îAJ@#äüA†c˘@w≈A3)>A:ãØANï0AæêA˚¡¡@ÓÀA‚π.A+ÔAﬁÌ£AﬂÁ¬AÑ√õAÈ0¨AÊ¨4A˜˚·A≤z£Ar…A”‘A∞A⁄˛∆A;†AúíÑA®™⁄ArÕ·Aï°Aá◊“Aê£ãAÃÙ…AÅE=Aë¢A8€âATV„AoóCAY”Aí 0Ah ∂A€PA≥r©A∏É-AP>…A}ã[@v;rA3Èù@+ñvA`π@{ÄAıóÑ@,4ÜA¢›*@sÇ)A€D˛?äA∂¸ë@Ÿ·KAßÇ@•l2A∂úâ@‘A]Á/@€Ã@˚˛.@∏ Ã@⁄w*@±D√@¿≠ê?¶Kñ@wçó?6Zg@>ö8@ÂÎ@Çñ@º®ü@^Ú@nŸb@ı‚”?’Ø(@ÒVB?÷0L@±òØ?â\@‹∫Ã?i@ÿ/@Q°@Wõó?§~>z‘L?O∫?ﬁë?HÕØ?gÔ)?Qƒ??êù%@.dÖ?Q·?Ä=§@A\*@áxn@?ù@®jU@|%@f#P@\¬@bÜ®@ahã@%ô@
+vp@‘k¿@˝Ü@mSú@R¶å@ñLA›˚@´Ó‚@Cd@#Anã@)—@’Å@ÂWAô @∆ÕQAkt»@¡B[AíQ°@‹µTA†ß@e®£AÃu	A±øûAA›AE;§AˆóAƒà—A/ˆ'A≤=„AùÿóAD›AmÓîA¶ﬂªA⁄hÑAêÛB…ã≥A°‚ÔA{Ω‹A¿Q‹A¬∞æAà¿¢A∫F•A"ãB{4ËAIä¡AÇ„ﬂA0$√AaËÿAkÙlAE∏A˜o’AZ°
+B∆ÇA–F¡A¢ãA©bœAjî„@—πûA¸\A∂õÓA‰K#Ax›úAä;3Aª™AÎ…®@Œ-ÅA"ÂÌ@ÒÅ∑Aì˙@ÉAb Ú@	ÖAh˙(@œÊA_wê@i;[AºâÖ@’åAkã£@®ò
+A4πS?9—@#}%@õ®—@dËÇ@Õ|∞@èÕA@5aÅ@"√”?êD@ËH$@¸5'@ªjC@åu@ÿh@¿¯L@“˝®?jx>ñpq?∫¸å?˚◊ì?å¢∑?-»R?*ÜÇ?=Áß?F»Ü?4 €?ãÍo?+7>@3d?˝IT@ˇ,ê?K?d6£?î6@Ht–?§8
+@eéŸ?Â©
+@ı'?ÃZ¨?L@ÄÌø?î√?Nb?˜˘ﬁ?…Æ&?MÎ@ 7–?⁄Rã?ÌI?Ód‹?Ω<^@Â¡??$5@´Ü•?{e@£Ë?	dE@ﬁŸé?ÛLl@ÜÑ∏?∫äò@ÍY@ø≥S@œÃN?¯ l@¯Cˇ>Oƒ£@'@¢ﬁ—@µH@LAö@{}ﬂ? »º@û|@…AO‰e@≥„ A‰1N@&£AÎÛí@0A∆'s@3SAú~+@ñ8kA	ß@TtlA\–3@W©âA˙0û@öõ≥A˜%	AX«ñAÉW¯@}´AÖßÛ@¬<ÃA(·%A§•‹A‹zzA ø∫A@sAùìΩAA≥ùA+üáAtŒÓA∫Ö”Aö4µA,⁄ÆANQÜAœgiAÆD»A“à∫A¨ªºA€ÄÊA©êòA> øA‹@5AMeAÀ„ëAÉKπA¡i]A;µAÜ@CA¢Œ©Aç(ˇ@i®yAPï/AW®A42∞@Ò≠ãA†{Ì@øêÜA∞ Æ@€HòAìñ…@É"™A<&#@EHAQ∑◊?|"A~Ûã@•3HA±èÑ@l7FA»~2@°˚@•ÿh@Ã.A5.A@≥≈ﬂ@7∂<@jÊÂ@Q».?Ûó@k|@ÿü@ß¨6@f[£@84©?n∏õ@Å…¨?rÃi@UŸ?u†n@ç=@∏q@Mâ?sÉ@@.c@øy0@ò∞€?møÛ?í±’?Œ<î?7ôb?öcœ>¥∏d@ådQ@fæÎ?çö√?Û∫>¡À?Ç⁄ñ?ﬁoß?±f@P @Ú:©?⁄|÷?fÓy@1;@T3@Ê(ì?yÜÅ@}ò)@„Ωh@œ_@Ω @_Û
+@Ê¶‹?öü@@,ëk@Ï¸@,A@Ùæ©?µ–Å@!é@ı◊@≥Õﬁ>K∑@üÅ◊?=§©@ZŸ¯?Ï$¨@ôÀ™?⁄m@éø)?)ôAâì@»*A/âé@âANM+@+'Ò@àIF@HßjAu√Ò@êSYA?K”@¸ÇA¯¡∏@,âAMë›@⁄á©A?O$Apm¨A6A2A€2≠Aÿs"A>ê€Aπ∏PACïœAY<áA?ØƒAdÉvAÄs≥Ac}AUìB·˚¢A¯OÌA≠ãÿAR…Aˇ≤A*ôAÕ‡ìA∂> BopÿA	›‘AÂÙAŒÚ∑AÜnŒA
+\AÂ·®Aù–∆Aw¸A˚ˆqA™ı∑ADkîAß±…A
+AD(ΩAÍiA<KBï˙AπŸ§Aög4Aá¶A5dœ@≠JôALò)AÉ√—AƒùA=KîA”Ô@Ã≈íAås.@{NA•ä@?ÃáA…>à@2˙<Aoµ@‹<<A)ª˙?…A{dM@ÒiAm=@¯˜Aèˆ|@Â1Ë@a«g?ë˙i@ﬁÈQ>èNÅ@x[È?òi@œ·U@>ä∞@Ü]@Ñô©@~K[@Ëgâ@ﬁB@É/8@ì¯˙?9¬2@e¿ø?ëıı?◊ò´?ä∑’?5\±?Ö ?Ê2À?O÷Ó?◊â@@l2*@iåD@'"á?X?|Êó?†-”>ÿ“(@`Ú?˝@'ôã?âº?”Ä@—Ò>ÍÀ?ÖcY@?MŸ?÷)@˘°c?Jõ/@pºﬂ?b\@Nv?ˆ’?˚åÊ?◊‘@˙	¸?è«?™‘=@≠N◊?öß"?…`@π∑Î?˘@à$≈?r≤@≥»N@Ò∑Ω@À◊@iì@õÊ?]öï@∂Á@6≈À@)@ç'≈@Ø∑˜?"ËAÂÌt@Ë*‚@îÇ@æ·$ASîV@¿)A÷Y}@«ö\AaU≠@ÿ[`A‹∞á@n˛ëAãÑ¢@èÅÑAk¨√@ÁúA<Ü@^#ØAYFA ¬€A-‚NA0 ∆A—ûTAÙ™AnÆA‰ìÈAï=_Aµ#‚A>ÒãA|êªAxïsA>NôAiÃ7A‘ÓAâ∫ìAyÓÓAÖŸ≤Aå‡ A<~£Aaì†Aª	bA÷íÂAÇó∂A±IªAÖV«A.πÆAﬂq¬A\´áAcπîAs˘»AïÊA≥åçAﬁ—A∫WÄA∞Aú∂˚@Ú{zA⁄f\Aˇ øAòÎˇ@∆ò†A§Ï@VxãAYQÁ@ˆ'óA:
+AvnµAaõ@˘ïÅAEvö@π^qA	Bù@K˚fAèö@oﬂÇAŸpG@±+ AuWc@d∆AﬂI÷?Ÿ,Ù@ÒB‚?–∫AFw@:xΩ@¿"%@
+±ƒ@i9B@∂€⁄@hX=@\,√@à•@Cê%@Ñã?ùg@P$Õ?ˇú?¶¢?‹ˇ®?r∑@õJ7@ÿÕ‘?øÅØ?gö@x…?◊7@Z‰$@
+ˇ?,Q@çq©?/êÓ?úù?DU”?ZÓx?d?r@Vn@N[|?ƒÉ–?Ø®;@Òﬂ@$*@‰^8@Ø¢N>∏;?ÄgÒ?≈ë?4É6@âmæ?<\#@ˆp>É?–∂≥?Kî'?˛éø?{ë@pG@Ó‰ˆ=„>s?S˛Ä@.•@ì“è@dr>@≈Jt@ót’?-∏C@}ÿ@÷NÀ@‚±-@jµ@O◊ @¿Ù‡@¶¥Ù?„©@Ö4@Õ*$As´Ü@+A≤uç@µı8AFW@: AFE@Ã˜}A<°‹@üı}A†Nı@"~èAl€@ˇôüAx—Ò@,…§AgÈAﬁx•Agy+A@L¥Afå@A”KËAÚ√eAB‹Aò°Aé]ÃAH©éAÎq™A≠ÜZAÅÔ˜AÁ"ûA–Ù€Aâ§“AÓj∫A$>∂Aw6ÇAŸ‘ÉAâ·ŸAYâ÷Ar÷ACÈıAë8¿Aa€AˆwjAT®úA∞&ªA™√ÍA¡©A>‡AÀsëAy ∆A∂ñ0AûS´A·úA∆œ BqßáA*ÉÊA'9mArøA«h˜@©PêA≤@fAdx„A| ATDüA¸5A™≥óA4ì@Û“åAß’@êhµAÓ~†@cÈzA¬^≤@]RnA“s'@&MAnG@dA˙YŸ?®îAd•Í?cﬂA∑¸µ>ï:Æ@!´|?IΩ@“ ?O∞≠@ÿÉ∑?Ú1Ø@
+™(@…@u;Ã?«”õ@ôEd?Uã@»˙¨?ﬂà‰?%Àê?Ç @¿4s?3É>|ç@&öx@a±˘>5 @©>i@ˆC1@cq@ú.@Vu`?m‘®?*ˆ/?›HI@◊ w@÷ûQ@=Ñ^@ËW8@#Œv?¸q?ï¿? 	i?…H@Tc,@ö(ˆ?5oÁ?sK∏?lÀ?K#<?Vô>g˝Ó?„^˘?\iá?é¶Ñ?ü•N?äõÒ?9nÀ?ô.>˘ìä?>úö?cÔÈ?zQ¥?$ì@†?“ﬂ{@;Öê>oÒÄ@y`>CÊ2@Ôü”>à ú@[ê˜?KA«@y≠?%µ@√ @Kó@ƒLY?ÅÇA
+‚@iı"AkÜ}@ù1'A£(:@Á´(AÍP@öƒ|A‘œ@*eA
+àÕ@^AâA‚CÍ@™§éAàÈ@§•ßAWåﬁ@}jôAŒäA∫ÂΩA3AÛ⁄AKàHA„"«Añ¯NA"µA8LAÿŒ≤A·| AÊY˙A.g{A˜ïﬁAum≠AÛ∫πAm…òA^âêA“/MA$‡A	 ™A†ΩËAøœAﬁßÃA$p¥A÷àvAmu^AÌ7ÃAÆÙ∫A∞‰†AÚ\”AÀéA9b¿A%≈LA/©AúA™§ÌA¥e2A€¯≥AÜ»'AóÍ£AN2µ@Î∑öA´ÁA˙√Ar£ˇ@3rõAœb˜@2 ãA÷{@∏;A¡ﬂ≥@ƒ@îAOd@˘k-A‰T@#G!A]|@gr.Aòïm@A6AX.E@´ŒÔ@ÈGM@ócÓ@!É}@:Ú@okP@œﬂ@∆¶x@ ‘@Ek7@R@ù@9ß7@úìb@˙ok@Öa@+Â@hç@™◊@ˆá@Ô∑!@góî@\v!@DTZ@"Å?›0@àﬁ?0èı?ü´?Ñ| @Ωÿ¨?ˇ%ª?œÒ?¥5œ?7Â?MÏ?êO>@MÙY@ ]@#¥@∑≠?˝P@áôµ?X˙?£7A@Ô .@p%@8Ëﬁ?‡æƒ?ˆﬁ5?Œπù?õP?JÜI@¿ﬂz@y!@éA_@÷4U@"¨@*Æ?A[û?õU8@R?ù@QÅ}?îí8@©Å#@7±@ä–?CDz?◊G»?)Èé?É®?⁄J@›$@*Î@í|>†6´@à≈	@ vc@-Éo?B«ˇ@˛·à@“áÍ@◊˝o@†˚A/îC@Ül˘@p©O@Ê?UA”ä•@˙cKA…≥∞@íbpA/†@z‹bA£}â@iXòAÀÌË@∏ïAÓrAEé°AMAMªA‚ıAÙôùB2qúB3ï®BÕ”°B"ã∂BKá≥B©‘¶B|;•Bm›£Bx†B°@•B“¯°BT¢µB˛™±Bõ¶BMÙ•B°ûB°‰õB„∑•B™}¢B`∂B‡…∞B˜/•B+^•BdüB™áúBó˛¢B†Bß∞BcØB¸ç°Bƒõ¢BÀ-¢BW©¢B}z§B˚¢B#Ω¥BŒI¥Bñ©B5˝¶B¢L°BˇõüBé¢BÓÂûByÃ∑B7µBH“§B”“™BØC†B¨'üB:Â†BtáüBÔ0ªBûﬂ∫BºKßBp´B¬'†B
+˘õBã‹ßBÍ˘üBÈT∂B€ﬁµB_¢Bâd•B€ÆúBÕPôBÇT£BB†B]¥B»6∑Ba§Bæ©B

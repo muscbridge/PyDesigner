@@ -7,8 +7,7 @@ from matplotlib.ticker import AutoMinorLocator
 
 
 def plot(input: str, output: str, voxel: Union[Tuple[float], None] = None) -> None:
-    """
-    Plots subject motion from eddy_qc output file.
+    """Plots subject motion from eddy_qc output file.
 
     Parameters
     ----------

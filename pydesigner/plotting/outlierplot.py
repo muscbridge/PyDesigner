@@ -13,8 +13,7 @@ def plot(
     bval: Union[str, None] = None,
     mask: Union[str, None] = None,
 ) -> None:
-    """
-    Plots and saves the number of outliers in input 4D irlls output
+    """Plots and saves the number of outliers in input 4D irlls output
     file as a PNG file.
 
     Parameters

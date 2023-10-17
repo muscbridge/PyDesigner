@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding : utf-8 -*-
 
-"""
-Adds utilities for preparing the data for eddy and analysis
+"""Adds utilities for preparing the data for eddy and analysis
 """
 
 import os  # mkdir
@@ -17,8 +16,7 @@ DWIFile = util.DWIFile
 
 
 def fix_bval(bvalfile):
-    """
-    Converts all whitespace into newlines in the file
+    """Converts all whitespace into newlines in the file
 
     Parameters
     ----------
@@ -29,7 +27,6 @@ def fix_bval(bvalfile):
     -------
     None, overwrites bval
     """
-
     if not op.exists(bvalfile):
         raise Exception("File " + bvalfile + " does not exist.")
 
@@ -45,8 +42,7 @@ def fix_bval(bvalfile):
 
 
 def make_simple_mif(filetable):
-    """
-    Makes a single .mif from the HEAD dwi file
+    """Makes a single .mif from the HEAD dwi file
 
     Parameters
     ----------
@@ -86,8 +82,7 @@ def make_simple_mif(filetable):
 
 
 def make_se_epi(filetable):
-    """
-    Makes a single spin-echo epi from the topup and the dwi
+    """Makes a single spin-echo epi from the topup and the dwi
 
     Parameters
     ----------
@@ -98,7 +93,6 @@ def make_se_epi(filetable):
     -------
     None, writes file
     """
-
     # ----------------------------------------------------------------------
     # Check inputs and coerce .bval file
     # ----------------------------------------------------------------------

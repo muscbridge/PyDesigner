@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding : utf-8 -*-
 
-"""
-This module contains filter(s) for postprocessing DTI/DKI maps
+"""This module contains filter(s) for postprocessing DTI/DKI maps
 """
 
 # ---------------------------------------------------------------------
@@ -20,8 +19,7 @@ from scipy.ndimage import generate_binary_structure, median_filter
 # Functions
 # ---------------------------------------------------------------------
 def readnii(input: str):
-    """
-    Reads nifti files and returns header and numpy data array
+    """Reads nifti files and returns header and numpy data array
 
     Parameters
     ----------
@@ -42,8 +40,7 @@ def readnii(input: str):
 
 
 def writenii(hdr, img: np.ndarray[float], output: str) -> None:
-    """
-    Write nupy array to nifti file
+    """Write nupy array to nifti file
 
     Parameters
     ----------
@@ -61,8 +58,7 @@ def writenii(hdr, img: np.ndarray[float], output: str) -> None:
 
 
 def median(input: str, output: str, mask: Union[str, None] = None) -> None:
-    """
-    Applies median filtering to input nifti file
+    """Applies median filtering to input nifti file
 
     Parameters
     ----------
