@@ -6,8 +6,7 @@ from scipy.ndimage import gaussian_filter
 
 
 def smooth_image(dwiname, csfname=None, outname="dwism.nii", width=1.25, size=5):
-    """
-    Smooths a DWI dataset
+    """Smooths a DWI dataset
 
     Parameters
     ----------
@@ -50,8 +49,7 @@ def smooth_image(dwiname, csfname=None, outname="dwism.nii", width=1.25, size=5)
 
 
 def smooth(dwi, csfmask=None, width=1.25, size=5):
-    """
-    Smooths a DWI dataset
+    """Smooths a DWI dataset
 
     Parameters
     ----------
@@ -79,7 +77,6 @@ def smooth(dwi, csfmask=None, width=1.25, size=5):
     given as an additional argument, CSF infiltration in microstructural
     signal is avoided during smoothing.
     """
-
     if dwi.ndim != 4:
         raise ValueError("Input dwi dataset is not 4-D")
 

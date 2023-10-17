@@ -13,8 +13,7 @@ np.seterr(all="ignore")
 
 
 class makesnr:
-    """
-    Class object that computes and prints SNR plots for any number of
+    """Class object that computes and prints SNR plots for any number of
     input DWIs.
 
     Parameters
@@ -27,7 +26,7 @@ class makesnr:
         Path to brain mask.
 
     Methods
-    ----------
+    -------
     __init__: constructs makesnr class
     getuniquebval : creates a list of unique B-values for the purpose of
                     SNR computation.
@@ -43,8 +42,7 @@ class makesnr:
         noisepath: Union[str, None] = None,
         maskpath: Union[str, None] = None,
     ) -> Self:
-        """
-        Constructor for makesnr class
+        """Constructor for makesnr class
 
         Parameters
         ----------
@@ -103,8 +101,7 @@ class makesnr:
         self.img[truncateIdx] = minZero
 
     def getuniquebval(self) -> np.ndarray[float]:
-        """
-        Creates a list of unique B-values for the purpose of SNR
+        """Creates a list of unique B-values for the purpose of SNR
         computation. In the calculation of SNR, B0 signal can be averaged
         becase they are not associated to any direction. This is not true
         for non-B0 values however, because every 3D volume represents a
@@ -119,7 +116,6 @@ class makesnr:
             Numpy vector containing list of B-values to be used in
             SNR calculation.
         """
-
         b_list = []
         for i in range(self.nDWI):
             bvals = self.bval[i, :]
@@ -140,8 +136,7 @@ class makesnr:
         return np.asarray(b_list, dtype=int)
 
     def computesnr(self) -> np.ndarray[float]:
-        """
-        Computes SNR of all DWIs in class object.
+        """Computes SNR of all DWIs in class object.
 
         Returns
         -------
@@ -173,8 +168,7 @@ class makesnr:
         return snr_dwi
 
     def histcount(self, nbins: int = 100) -> Tuple[np.ndarray[int], np.ndarray[float], np.ndarray[float]]:
-        """
-        Bins SNR into nbins and returns various counting properties.
+        """Bins SNR into nbins and returns various counting properties.
 
         Parameters
         ----------
@@ -218,8 +212,7 @@ class makesnr:
         return count, binval, unibvals
 
     def makeplot(self, path: str, smooth: bool = True, smoothfactor: int = 5) -> None:
-        """
-        Creates and saves SNR plot to a path as SNR.png
+        """Creates and saves SNR plot to a path as SNR.png
 
         Parameters
         ----------

@@ -31,8 +31,7 @@ defaultErrorState = np.geterr()
 
 
 class DWI(object):
-    """
-    The DWI object handles tensor estimation and parameter extraction
+    """The DWI object handles tensor estimation and parameter extraction
     of dwiffusion weighted images.
 
     Attributes
@@ -61,8 +60,7 @@ class DWI(object):
         mask: str = None,
         nthreads: int = -1,
     ) -> None:
-        """
-        DWI class initializer
+        """DWI class initializer
 
         Parameters
         ----------
@@ -131,9 +129,9 @@ class DWI(object):
         tqdm.write("Image " + fName + ".nii loaded successfully")
         if nthreads is not None:
             if not isinstance(nthreads, int):
-                raise Exception("Variable nthreads need to be an integer")
+                raise TypeError("Variable nthreads need to be an integer")
             if nthreads < -1 or nthreads == 0:
-                raise Exception("Variable nthreads is a positive integer or " "-1")
+                raise ValueError("Variable nthreads is a positive integer or -1")
         if nthreads is None:
             self.workers = -1
         else:
@@ -144,8 +142,7 @@ class DWI(object):
             tqdm.write("Processing with " + str(self.workers) + " workers...")
 
     def getBvals(self) -> np.ndarray:
-        """
-        Returns a vector of b-values, requires no input arguments.
+        """Returns a vector of b-values, requires no input arguments.
 
         Returns
         -------
@@ -159,8 +156,7 @@ class DWI(object):
         return self.grad[:, 3]
 
     def getBvecs(self) -> np.ndarray:
-        """
-        Returns an array of gradient vectors, requires no input
+        """Returns an array of gradient vectors, requires no input
         parameters.
 
         Returns
@@ -175,8 +171,7 @@ class DWI(object):
         return self.grad[:, 0:3]
 
     def maxBval(self) -> float:
-        """
-        Returns the maximum b-value in a dataset to determine between
+        """Returns the maximum b-value in a dataset to determine between
         DTI and DKI, requires no input parameters.
 
         Returns
@@ -192,8 +187,7 @@ class DWI(object):
         return max(np.unique(self.grad[:, 3])).astype(int)
 
     def maxDTIBval(self) -> float:
-        """
-        Returns the maximum DTI b-value in a dataset.
+        """Returns the maximum DTI b-value in a dataset.
 
         Returns
         -------
@@ -209,8 +203,7 @@ class DWI(object):
         return max(np.unique(self.grad[exclude_idx, 3])).astype(int)
 
     def maxDKIBval(self) -> float:
-        """
-        Returns the maximum DKI b-value in a dataset.
+        """Returns the maximum DKI b-value in a dataset.
 
         Returns
         -------
@@ -226,8 +219,7 @@ class DWI(object):
         return max(np.unique(self.grad[exclude_idx, 3])).astype(int)
 
     def maxFBIBval(self) -> float:
-        """
-        Returns the maximum FBI b-value in a dataset.
+        """Returns the maximum FBI b-value in a dataset.
 
         Returns
         -------
@@ -243,8 +235,7 @@ class DWI(object):
         return max(np.unique(self.grad[exclude_idx, 3])).astype(int)
 
     def idxb0(self) -> np.ndarray[bool]:
-        """
-        Returns the index of all B-zeros according to bvals
+        """Returns the index of all B-zeros according to bvals
         in record.
 
         Returns
@@ -256,8 +247,7 @@ class DWI(object):
         return np.rint(self.grad[:, 3]) == 0
 
     def idxdti(self) -> np.ndarray[bool]:
-        """
-        Returns the index of all DTI/DKI B-values according to bvals
+        """Returns the index of all DTI/DKI B-values according to bvals
         in record.
 
         Returns
@@ -272,8 +262,7 @@ class DWI(object):
         return idx
 
     def idxdki(self) -> np.ndarray[bool]:
-        """
-        Returns the index of all DTI/DKI B-values according to bvals
+        """Returns the index of all DTI/DKI B-values according to bvals
         in record
 
         Returns
@@ -288,8 +277,7 @@ class DWI(object):
         return idx
 
     def idxfbi(self) -> np.ndarray[int]:
-        """
-        Returns the index of all FBI B-values according to bvals
+        """Returns the index of all FBI B-values according to bvals
         in record
 
         Returns
@@ -306,8 +294,7 @@ class DWI(object):
         return idx
 
     def getndirs(self) -> int:
-        """
-        Returns the number of gradient directions acquired from the
+        """Returns the number of gradient directions acquired from the
         scanner
 
         Returns
@@ -322,8 +309,7 @@ class DWI(object):
         return np.sum(self.grad[:, 3] == self.maxDKIBval())
 
     def tensorType(self) -> List[str]:
-        """
-        Returns whether input image is DTI or DKI compatible, requires
+        """Returns whether input image is DTI or DKI compatible, requires
         no input parameters
 
         Returns
@@ -350,8 +336,7 @@ class DWI(object):
         return type
 
     def isdti(self) -> bool:
-        """
-        Returns logical value to answer the mystical question whether
+        """Returns logical value to answer the mystical question whether
         the input image is DTI.
 
         Returns
@@ -370,8 +355,7 @@ class DWI(object):
         return ans
 
     def isdki(self) -> bool:
-        """
-        Returns logical value to answer the mystical question whether
+        """Returns logical value to answer the mystical question whether
         the input image is DKI.
 
         Returns
@@ -390,8 +374,7 @@ class DWI(object):
         return ans
 
     def isfbi(self) -> bool:
-        """
-        Returns bool value to specify whether image input image is
+        """Returns bool value to specify whether image input image is
         FBI.
 
         Returns
@@ -410,8 +393,7 @@ class DWI(object):
         return ans
 
     def isfbwm(self) -> bool:
-        """
-        Returns bool value to specify whether image input image is
+        """Returns bool value to specify whether image input image is
         FBWM.
 
         Returns
@@ -430,8 +412,7 @@ class DWI(object):
         return ans
 
     def createTensorOrder(self, order: Union[int, None] = None) -> Tuple[np.ndarray[int], np.ndarray[int]]:
-        """
-        Creates tensor order array and indices.
+        """Creates tensor order array and indices.
 
         Parameters
         ----------
@@ -542,8 +523,7 @@ class DWI(object):
         return cnt, ind
 
     def fibonacciSphere(self, samples: int = 1, randomize: bool = True) -> np.ndarray[float]:
-        """
-        Returns evenly spaced points on a sphere.
+        """Returns evenly spaced points on a sphere.
 
         Parameters
         ----------
@@ -556,7 +536,7 @@ class DWI(object):
                     (Default: True).
 
         Returns
-        ------
+        -------
         points: ndarray(dtype=float)
             [3 x samples] array containing evenly spaced points
             from a sphere.
@@ -581,8 +561,7 @@ class DWI(object):
         return np.array(points)
 
     def radialSampling(self, dir: np.ndarray[float], n: int) -> np.ndarray[float]:
-        """
-        Get the radial component of a metric from a set of directions.
+        """Get the radial component of a metric from a set of directions.
 
         Parameters
         ----------
@@ -613,10 +592,10 @@ class DWI(object):
         return dirs
 
     def diffusionCoeff(self, dt: np.ndarray[float], dir: np.ndarray[float]) -> np.ndarray[float]:
-        """
-        Computes apparent diffusion coefficient (ADC).
+        """Computes apparent diffusion coefficient (ADC).
 
         Parameters
+        ----------
         ----------S
         dt: ndarray(dtype=float)
             [21 x nvoxel] array containing diffusion tensor.
@@ -639,8 +618,7 @@ class DWI(object):
         return adc
 
     def kurtosisCoeff(self, dt: np.ndarray[float], dir: np.ndarray[float]) -> np.ndarray[float]:
-        """
-        Computes apparent kurtosis coefficient (AKC)
+        """Computes apparent kurtosis coefficient (AKC)
 
         Parameters
         ----------
@@ -650,7 +628,7 @@ class DWI(object):
             [n x 3] array containing gradient directions
 
         Returns
-        ------
+        -------
         adc : ndarray(dtype=float)
             Array containing apparent kurtosis coefficient
 
@@ -671,8 +649,7 @@ class DWI(object):
         return akc
 
     def dtiTensorParams(self, dt: np.ndarray[float]) -> Tuple[np.ndarray[float], np.ndarray[float]]:
-        """
-        Computes sorted DTI tensor eigenvalues and eigenvectors.
+        """Computes sorted DTI tensor eigenvalues and eigenvectors.
 
         Parameters
         ----------
@@ -699,8 +676,7 @@ class DWI(object):
     def dkiTensorParams(
         self, v1: np.ndarray[float], dt: np.ndarray[float]
     ) -> Tuple[np.ndarray[float], np.ndarray[float], np.ndarray[float], np.ndarray[float]]:
-        """
-        Uses average directional statistics to approximate axial
+        """Uses average directional statistics to approximate axial
         kurtosis(AK) and radial kurtosis (RK).
 
         Parameters
@@ -781,8 +757,7 @@ class DWI(object):
         cons: Union[np.ndarray[float], None] = None,
         warmup: bool = None,
     ) -> np.ndarray[float]:
-        """
-        Estimates diffusion and kurtosis tenor at voxel with
+        """Estimates diffusion and kurtosis tenor at voxel with
         unconstrained Moore-Penrose pseudoinverse or constrained
         quadratic convex optimization. This is a helper function for
         dwi.fit() so a multiprocessing parallel loop can be iterated over
@@ -869,8 +844,7 @@ class DWI(object):
         return dt
 
     def fit(self, constraints: Union[np.ndarray[float], None] = None, reject: bool = None) -> Self:
-        """
-        Returns fitted diffusion or kurtosis tensor
+        """Returns fitted diffusion or kurtosis tensor
 
         Parameters
         ----------
@@ -969,8 +943,7 @@ class DWI(object):
         self.dt[6:, :] = self.dt[6:, :] * np.tile(D_apprSq, (15, 1))
 
     def createConstraints(self, constraints: List[int] = [0, 1, 0]) -> np.ndarray[float]:
-        """
-        Generates constraint array for constrained minimization quadratic
+        """Generates constraint array for constrained minimization quadratic
         programming.
 
         Parameters
@@ -1055,8 +1028,7 @@ class DWI(object):
         np.ndarray[float],
         np.ndarray[float],
     ]:
-        """
-        Extract all DTI parameters from DT tensor. Warning, this can
+        """Extract all DTI parameters from DT tensor. Warning, this can
         only be run after tensor fitting dwi.fit().
 
         Returns
@@ -1146,8 +1118,7 @@ class DWI(object):
         np.ndarray[float],
         np.ndarray[float],
     ]:
-        """
-        Extract all DKI parameters from DT tensor. Warning, this can
+        """Extract all DKI parameters from DT tensor. Warning, this can
         only be run after tensor fitting dwi.fit().
 
         Returns
@@ -1207,8 +1178,7 @@ class DWI(object):
         return mk, rk, ak, kfa, mkt, trace
 
     def optimal_lmax(self) -> int:
-        """
-        Computes the highest harmonic order (l_max) for
+        """Computes the highest harmonic order (l_max) for
         spherical harmonic expansion. This is adapted
         from the information posted at
         https://mrtrix.readthedocs.io/en/dev/concepts/sh_basis_lmax.html
@@ -1246,8 +1216,7 @@ class DWI(object):
         np.ndarray[float],
         np.ndarray[float],
     ]:
-        """
-        Perform fiber ball imaging (FBI) and FBI white matter model
+        """Perform fiber ball imaging (FBI) and FBI white matter model
         (FBWM) analyses
 
         Parameters
@@ -1301,8 +1270,7 @@ class DWI(object):
         # --------------------FUNCTION SEPARATOR-----------------------
 
         def __fbi_rectify(fodf, sh_area, iter=1000):
-            """
-            Rectifies fODF values to eliminate all negative values while
+            """Rectifies fODF values to eliminate all negative values while
             reducing the mean square error
 
             Parameters
@@ -1354,8 +1322,7 @@ class DWI(object):
             return odf
 
         def __costCalculator(grid, BT, GT, b0, IMG, iDT, iaDT, zeta, shB, Pl0, g2l_fa_R_b, clm):
-            """
-            Computes the cost function at voxel for FBWM calculations.
+            """Computes the cost function at voxel for FBWM calculations.
             Refer to paper for additional information.
 
             Parameters
@@ -1429,8 +1396,7 @@ class DWI(object):
             fbwm_degs=None,
             sh_area=None,
         ):
-            """
-            Computes FBI calculations for a given voxel. This function
+            """Computes FBI calculations for a given voxel. This function
             will perform FBWM only if all optional FBWM parameters are
             parsed.
 
@@ -1922,8 +1888,7 @@ class DWI(object):
     def extractWMTI(
         self,
     ) -> Tuple[np.ndarray[float], np.ndarray[float], np.ndarray[float], np.ndarray[float], np.ndarray[float],]:
-        """
-        Returns white matter tract integrity (WMTI) parameters. Warning:
+        """Returns white matter tract integrity (WMTI) parameters. Warning:
         this can only be run after fitting and DWI.extractDTI().
 
         Returns
@@ -2043,8 +2008,7 @@ class DWI(object):
         return awf, eas_ad, eas_rd, eas_tort, ias_da
 
     def multiplyMask(self, img: np.ndarray[float]) -> np.ndarray[float]:
-        """
-        Multiplies a 3D image by the brain mask.
+        """Multiplies a 3D image by the brain mask.
 
         Parameters
         ----------
@@ -2061,8 +2025,7 @@ class DWI(object):
         return np.multiply(self.mask.astype(bool), img)
 
     def akcoutliers(self, iter: int = 10) -> np.ndarray[bool]:
-        """
-        Uses 100,000 direction in chunks of 10 to iteratively find
+        """Uses 100,000 direction in chunks of 10 to iteratively find
         outliers. Returns a mask of locations where said violations
         occur. Multiprocessing is disabled because this is a
         memory-intensive task.
@@ -2107,8 +2070,7 @@ class DWI(object):
         return vectorize(akc_out, self.mask)
 
     def akccorrect(self, akc_out: np.ndarray[bool], window: int = 3, connectivity: str = "face") -> Self:
-        """
-        Applies AKC outlier map to DT to replace outliers with a
+        """Applies AKC outlier map to DT to replace outliers with a
         moving median. Run this only after tensor fitting and akc
         outlier detection.
 
@@ -2231,8 +2193,7 @@ class DWI(object):
         leverage: float = 0.85,
         bounds: int = 3,
     ) -> Tuple[np.ndarray[bool], np.ndarray[float]]:
-        """
-        This functions performs outlier detection and robust parameter
+        """This functions performs outlier detection and robust parameter
         estimation for diffusion MRI using the iterative reweigthed
         linear least squares (IRLLS) approach.
 
@@ -2575,8 +2536,7 @@ class DWI(object):
         return reject, dt.T
 
     def tensorReorder(self, dwiType: str) -> Tuple[np.ndarray[float], np.ndarray[float]]:
-        """
-        Reorders tensors in DT to those of MRTRIX in accordance to
+        """Reorders tensors in DT to those of MRTRIX in accordance to
         the table below.
 
         Parameters
@@ -2696,8 +2656,7 @@ class DWI(object):
         return DT, KT
 
     def irllsviolmask(self, reject: np.ndarray[bool]) -> np.ndarray[float]:
-        """
-        Computes 3D violation mask of outliers detected from IRLLS
+        """Computes 3D violation mask of outliers detected from IRLLS
         method.
 
         Parameters
@@ -2743,8 +2702,7 @@ def fit_regime(
     mask: Union[str, None] = None,
     nthreads: Union[int, None] = None,
 ) -> None:
-    """
-    Performs the entire tensor fitting regime and writes out maps.
+    """Performs the entire tensor fitting regime and writes out maps.
     Uses auto-detections methods to determine the types of protocols
     encoded by DWI and extract their metrics.
 

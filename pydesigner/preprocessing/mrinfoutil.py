@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding : utf-8 -*-
 
-"""
-Utilities for extracting information on various input files using
+"""Utilities for extracting information on various input files using
 MRtrix3's mrinfo tool. All values are returned in basic Python data
 types.
 """
@@ -14,8 +13,7 @@ from typing import List, Tuple, Union
 
 
 def getconsole(path: int, flag: str) -> str:
-    """
-    Fetches the console output of MRtrix3's mrinfo with specified
+    """Fetches the console output of MRtrix3's mrinfo with specified
     flag.
 
     Parameters
@@ -46,8 +44,7 @@ def getconsole(path: int, flag: str) -> str:
 
 
 def format(path: str) -> str:
-    """
-    Returns the file format of input DWI.
+    """Returns the file format of input DWI.
 
     Parameters
     ----------
@@ -64,8 +61,7 @@ def format(path: str) -> str:
 
 
 def ndim(path: str) -> int:
-    """
-    Returns the number of image dimensions of input DWI.
+    """Returns the number of image dimensions of input DWI.
 
     Parameters
     ----------
@@ -82,8 +78,7 @@ def ndim(path: str) -> int:
 
 
 def size(path: str) -> Tuple[int]:
-    """
-    Returns the size of input DWI image along each axis.
+    """Returns the size of input DWI image along each axis.
 
     Parameters
     ----------
@@ -101,8 +96,7 @@ def size(path: str) -> Tuple[int]:
 
 
 def spacing(path: str) -> Tuple[int]:
-    """
-    Returns the voxel spacing along each of input DWI's dimensions.
+    """Returns the voxel spacing along each of input DWI's dimensions.
 
     Parameters
     ----------
@@ -120,8 +114,7 @@ def spacing(path: str) -> Tuple[int]:
 
 
 def datatype(path: str) -> str:
-    """
-    Returns the data type used for storing input DWI.
+    """Returns the data type used for storing input DWI.
 
     Parameters
     ----------
@@ -137,8 +130,7 @@ def datatype(path: str) -> str:
 
 
 def strides(path: str) -> Tuple[int]:
-    """
-    Returns data strides of input DWI.
+    """Returns data strides of input DWI.
 
     Parameters
     ----------
@@ -156,8 +148,7 @@ def strides(path: str) -> Tuple[int]:
 
 
 def offset(path: str) -> float:
-    """
-    Returns the input DWI's intensity offset.
+    """Returns the input DWI's intensity offset.
 
     Parameters
     ----------
@@ -175,8 +166,7 @@ def offset(path: str) -> float:
 
 
 def multiplier(path: str) -> float:
-    """
-    Returns the input DWI's intensity multiplier.
+    """Returns the input DWI's intensity multiplier.
 
     Parameters
     ----------
@@ -194,8 +184,7 @@ def multiplier(path: str) -> float:
 
 
 def transform(path: str) -> Tuple[float]:
-    """
-    Returns the input DWI's 4x4 voxel to image transformation matrix.
+    """Returns the input DWI's 4x4 voxel to image transformation matrix.
 
     Parameters
     ----------
@@ -221,8 +210,7 @@ def transform(path: str) -> Tuple[float]:
 
 
 def commandhistory(path: str) -> List[str]:
-    """
-    Returns a list of command history (manipulations or transformations)
+    """Returns a list of command history (manipulations or transformations)
     performed on MRtrix file format .mif
 
     Parameters
@@ -267,8 +255,7 @@ def commandhistory(path: str) -> List[str]:
 
 
 def dwscheme(path: str) -> List[float]:
-    """
-    Returns a list of input DWI's diffusion weighting scheme.
+    """Returns a list of input DWI's diffusion weighting scheme.
 
     Parameters
     ----------
@@ -315,8 +302,7 @@ def dwscheme(path: str) -> List[float]:
 
 
 def pescheme(path: str) -> List[float]:
-    """
-    Returns a list of phase encoding scheme. If len(pescheme) > 1,
+    """Returns a list of phase encoding scheme. If len(pescheme) > 1,
     the .mif DWI contains more than one directons.
 
     Parameters
@@ -364,8 +350,7 @@ def pescheme(path: str) -> List[float]:
 
 
 def shells(path: str) -> int:
-    """
-    Returns the number of b-value shells detected in input file.
+    """Returns the number of b-value shells detected in input file.
 
     Parameters
     ----------
@@ -410,8 +395,7 @@ def shells(path: str) -> int:
 
 
 def num_shells(path: str) -> int:
-    """
-    Returns the number of b-value shells detected in input file.
+    """Returns the number of b-value shells detected in input file.
 
     Parameters
     ----------
@@ -437,8 +421,7 @@ def num_shells(path: str) -> int:
 
 
 def max_shell(path: str) -> int:
-    """
-    Returns the maximum b-value shell in DWI
+    """Returns the maximum b-value shell in DWI
 
     Parameters
     ----------
@@ -483,8 +466,7 @@ def max_shell(path: str) -> int:
 
 
 def is_fullsphere(path: str) -> bool:
-    """
-    Returns boolean value indicating whether input file has full
+    """Returns boolean value indicating whether input file has full
     spherical sampling.
 
     Parameters
@@ -543,8 +525,7 @@ def is_fullsphere(path: str) -> bool:
 
 
 def echotime(path: str) -> Union[int, str]:
-    """
-    Returns the echo time(s) of DWI in miliseconds
+    """Returns the echo time(s) of DWI in miliseconds
 
     Parameters
     ----------

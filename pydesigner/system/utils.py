@@ -3,8 +3,7 @@ import numpy as np
 
 
 def vectorize(img, mask) -> np.ndarray[float]:
-    """
-    Returns vectorized image based on brain mask, requires no input
+    """Returns vectorized image based on brain mask, requires no input
     parameters
     If the input is 1D or 2D, unpatch it to 3D or 4D using a mask
     If the input is 3D or 4D, vectorize it using a mask
@@ -53,8 +52,7 @@ def vectorize(img, mask) -> np.ndarray[float]:
 
 
 def writeNii(map, hdr, outDir, range=None) -> None:
-    """
-    Write clipped NifTi images
+    """Write clipped NifTi images
 
     Parameters
     ----------
@@ -77,6 +75,7 @@ def writeNii(map, hdr, outDir, range=None) -> None:
     writeNii(matrix, header, output_directory, [0, 2])
 
     See Also
+    --------
     clipImage(img, range) : this function is wrapped around
     """
     if range is None:
@@ -88,8 +87,7 @@ def writeNii(map, hdr, outDir, range=None) -> None:
 
 
 def clipImage(img, range) -> np.ndarray[float]:
-    """
-    Clips input matrix within desired range. Min and max values are
+    """Clips input matrix within desired range. Min and max values are
     inclusive of range
     Classification: Function
 
@@ -115,8 +113,7 @@ def clipImage(img, range) -> np.ndarray[float]:
 
 
 def highprecisionexp(array, maxp=1e32) -> np.ndarray[float]:
-    """
-    Prevents overflow warning with numpy.exp by assigning overflows
+    """Prevents overflow warning with numpy.exp by assigning overflows
     to a maxumum precision value
     Classification: Function
 
@@ -147,8 +144,7 @@ def highprecisionexp(array, maxp=1e32) -> np.ndarray[float]:
 
 
 def highprecisionpower(x1, x2, maxp=1e32) -> np.ndarray[float]:
-    """
-    Prevents overflow warning with numpy.powerr by assigning overflows
+    """Prevents overflow warning with numpy.powerr by assigning overflows
     to a maxumum precision value
     Classification: Function
 

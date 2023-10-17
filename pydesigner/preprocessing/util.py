@@ -1,5 +1,4 @@
-"""
-Adds utilities for the command-line interface
+"""Adds utilities for the command-line interface
 """
 
 import json  # decode
@@ -15,8 +14,7 @@ from pydesigner.preprocessing import mrinfoutil
 
 
 def find_valid_ext(pathname):
-    """
-    Finds valid extensions for dwifile, helper function
+    """Finds valid extensions for dwifile, helper function
 
     Parameters
     ----------
@@ -47,8 +45,7 @@ def find_valid_ext(pathname):
 
 
 def json2fslgrad(path):
-    """
-    Creates FSL .bvec and .bval for series missing that information.
+    """Creates FSL .bvec and .bval for series missing that information.
     Some datasets have their B0s separately that do not produce fsl
     gradients upon conversion to NifTi. This function creates those
     missing features for complete concatenation from .json file. Use
@@ -106,8 +103,7 @@ def json2fslgrad(path):
 
 
 class DWIFile:
-    """
-    Diffusion data file object, used for handling paths and extensions.
+    """Diffusion data file object, used for handling paths and extensions.
 
     Helps interface different extensions, group .bval/.bvec seamlessly to
     the programmer. Offers interactive tools to try and locate a file if
@@ -129,8 +125,7 @@ class DWIFile:
     """
 
     def __init__(self, name):
-        """
-        Constructor for dwifile
+        """Constructor for dwifile
 
         Attempts to find the file and launches interactive file-finder if
         it doesn't exist or can't be found.
@@ -169,8 +164,7 @@ class DWIFile:
             self.json = None
 
     def getName(self):
-        """
-        Get the name without the path for this dwifile
+        """Get the name without the path for this dwifile
 
         Returns
         -------
@@ -180,8 +174,7 @@ class DWIFile:
         return self.name
 
     def getPath(self):
-        """
-        Get the path without the name for this dwifile
+        """Get the path without the name for this dwifile
 
         Returns
         -------
@@ -191,35 +184,30 @@ class DWIFile:
         return self.path
 
     def getFull(self):
-        """
-        Get the path and name combined for this dwifile
+        """Get the path and name combined for this dwifile
 
         Returns
         -------
         str
             The full path and filename with extension
         """
-
         if ".nii" in self.ext:
             return op.join(self.path, self.name + ".nii")
         else:
             return op.join(self.path, self.name + ".nii.gz")
 
     def isAcquisition(self):
-        """
-        Check if this object is an acquisition
+        """Check if this object is an acquisition
 
         Returns
         -------
         bool
             True if acquisition, False if not
         """
-
         return self.acquisition
 
     def hasJSON(self):
-        """
-        Checks if this object has a .json file
+        """Checks if this object has a .json file
 
         Returns
         -------
@@ -232,8 +220,7 @@ class DWIFile:
             return False
 
     def getJSON(self):
-        """
-        Returns the .json filename for this DWIFile
+        """Returns the .json filename for this DWIFile
 
         Returns
         -------
@@ -249,8 +236,7 @@ class DWIFile:
             return None
 
     def getBVAL(self):
-        """
-        Returns the .bval filename for this DWIFile
+        """Returns the .bval filename for this DWIFile
 
         Returns
         -------
@@ -266,15 +252,13 @@ class DWIFile:
             return None
 
     def getBVEC(self):
-        """
-        Returns the .bvec filename for this DWIFile
+        """Returns the .bvec filename for this DWIFile
 
         Returns
         -------
         str
             The full path to the .bvec
         """
-
         if self.isAcquisition():
             if self.path:
                 return op.join(self.path, self.name + ".bvec")
@@ -284,15 +268,13 @@ class DWIFile:
             return None
 
     def isPartialFourier(self):
-        """
-        Returns whether the volume is partial fourier encoded
+        """Returns whether the volume is partial fourier encoded
 
         Returns
         -------
         bool
             True if encoding is partial fourier; False otherwise
         """
-
         if not self.isAcquisition():
             raise Exception("Volume is not an acquisition volume.")
         else:
@@ -331,8 +313,7 @@ class DWIFile:
 
 
 class DWIParser:
-    """
-    Parses a list of DWIs and concatenates them into a single 4D NifTi
+    """Parses a list of DWIs and concatenates them into a single 4D NifTi
     with appropriate BVEC, BVALS.
 
     Attributes
@@ -358,8 +339,7 @@ class DWIParser:
     """
 
     def __init__(self, path):
-        """
-        DWIParser class initiator
+        """DWIParser class initiator
 
         Parameters
         ----------
@@ -405,8 +385,7 @@ class DWIParser:
         self.nDWI = len(self.DWIlist)
 
     def cat(self, path, ext=".nii", verbose=False, force=False, resume=False):
-        """
-        Concatenates all input series when nDWI > 1 into a 4D NifTi
+        """Concatenates all input series when nDWI > 1 into a 4D NifTi
         along with a appropriate BVAL, BVEC and JSON files.
         Concatenation of series via MRTRIX3 requires every NifTi file to
         come with BVAL/BVEC to produce a .json with `dw_scheme`.
@@ -568,8 +547,7 @@ class DWIParser:
             self.vols = vols
 
     def getPath(self):
-        """
-        Returns directory where first file in DWI list is stored
+        """Returns directory where first file in DWI list is stored
 
         Returns
         -------

@@ -1,5 +1,4 @@
-"""
-Runs the PyDesigner pipeline
+"""Runs the PyDesigner pipeline
 """
 
 import argparse  # ArgumentParser, add_argument

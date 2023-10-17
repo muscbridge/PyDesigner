@@ -5,8 +5,7 @@ import numpy as np
 
 
 def rician_img_correct(dwiname, noisemapname, outpath=None):
-    """
-    Performs Rician correction on a dataset with a noisemap
+    """Performs Rician correction on a dataset with a noisemap
 
     Parameters
     ----------
@@ -25,7 +24,6 @@ def rician_img_correct(dwiname, noisemapname, outpath=None):
     --------
     rician_correct(dwi, noise) is wrapped by this function
     """
-
     print("Running Rician correction...")
 
     # load files
@@ -57,8 +55,7 @@ def rician_img_correct(dwiname, noisemapname, outpath=None):
 
 
 def rician_correct(dwi, noisemap):
-    """
-    Smooths a DWI dataset
+    """Smooths a DWI dataset
 
     Parameters
     ----------
@@ -75,7 +72,6 @@ def rician_correct(dwi, noisemap):
     corrected : (X x Y x Z x N) array_like or img_like object
         The rician-corrected version of dwi
     """
-
     # Replace NaN with 0
     minZero = 1e-8
     # dwi

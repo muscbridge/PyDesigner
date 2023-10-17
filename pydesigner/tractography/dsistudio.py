@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding : utf-8 -*-
 
-"""
-Tools for exporting DSIStudio-compatible outputs. Adapted from
+"""Tools for exporting DSIStudio-compatible outputs. Adapted from
 mattcieslak/dmri_convert/mrtrix_to_dsistudio.py to suit PyDesigner's
 needs.
 
-References:
+References
+----------
     1. https://github.com/mattcieslak/dmri_convert/blob/master/mrtrix_to_dsistudio.py
+
 """
 
 
@@ -31,8 +32,7 @@ tqdmWidth = 70
 
 
 def get_dsi_studio_ODF_geometry(odf_key) -> Tuple[np.ndarray[int], np.ndarray[float]]:
-    """
-    Reads DSIStudio's ODF geometry in odfs.mat
+    """Reads DSIStudio's ODF geometry in odfs.mat
 
     Parameters
     ----------
@@ -54,8 +54,7 @@ def get_dsi_studio_ODF_geometry(odf_key) -> Tuple[np.ndarray[int], np.ndarray[fl
 
 
 def convertLPS(input, output) -> None:
-    """
-    Converts a nifti file to LPS for compatibility with DSIStudio
+    """Converts a nifti file to LPS for compatibility with DSIStudio
 
     Parameters
     ----------
@@ -87,8 +86,7 @@ def convertLPS(input, output) -> None:
 
 
 def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=None) -> None:
-    """
-    Converts a NifTi ``.nii`` file containing sh coefficients to a DSI
+    """Converts a NifTi ``.nii`` file containing sh coefficients to a DSI
     Studio fib file
 
     This function uses ``sh2amp`` to get amplitude values for each

@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 # -*- coding : utf-8 -*-
-"""
-Various definitions of spherical sampling
+"""Various definitions of spherical sampling
 """
 
 import numpy as np
 
 
 def dsigrid(odf_key="odf8") -> np.ndarray[float]:
-    """
-    Reads DSIStudio's ODF geometry in odfs.mat to use in creation of DSIStudio's
+    """Reads DSIStudio's ODF geometry in odfs.mat to use in creation of DSIStudio's
     .fib file.
 
     Parameters
@@ -61853,8 +61851,7 @@ def dsigrid(odf_key="odf8") -> np.ndarray[float]:
 
 
 def odfgrid(res="med") -> np.ndarray[float]:
-    """
-    Defines the spherical grid defined by quadrisection of the isocahedron.
+    """Defines the spherical grid defined by quadrisection of the isocahedron.
     There are three possible options: 'low', 'med', or 'high', where higher
     resolutions cost more computational time. Use for computation of spherical
     harmonics from ODFs.

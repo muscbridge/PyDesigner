@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding : utf-8 -*-
 
-"""
-Function for computing DTI and DKI spherical harmonics from diffusion and
+"""Function for computing DTI and DKI spherical harmonics from diffusion and
 kurtosis tensors
 """
 import multiprocessing
@@ -23,8 +22,7 @@ from . import sphericalsampling
 
 
 class odfmodel:
-    """
-    DTI/DKI tractograpy class for computing ODFs and preparing spherical
+    """DTI/DKI tractograpy class for computing ODFs and preparing spherical
     harmonics for DTI or DKI fiber tracking.
     """
 
@@ -39,8 +37,7 @@ class odfmodel:
         radial_weight=4,
         nthreads=None,
     ) -> Self:
-        """
-        Parameters
+        """Parameters
         ----------
         dt : str
             Path to diffusion tensor, which is a 4D NifTI volume composed of six (6)
@@ -125,8 +122,7 @@ class odfmodel:
             self.workers = nthreads
 
     def dkiodfhelper(self, dt, kt, radial_weight=4, fa_t=None, form="spherical") -> np.ndarray[float]:
-        """
-        Computes DKI fODF coefficient at a voxel. This function is intended to
+        """Computes DKI fODF coefficient at a voxel. This function is intended to
         parallelize computations across the brain.
 
         Parameters
@@ -453,8 +449,7 @@ class odfmodel:
         return odf
 
     def dkiodf(self, form="spherical", fa_t=0.90) -> np.ndarray[float]:
-        """
-        Computes DKI ODFs for the whole brain.
+        """Computes DKI ODFs for the whole brain.
 
         Parameters
         ----------
@@ -468,6 +463,7 @@ class odfmodel:
             inverse of D. Setting a threshold removes negative eigenvalues while
             preserving principal orientation in voxels where FA >= threshold
             (Default: 0.95)
+
         Returns
         -------
         DKI ODF in defined form
@@ -497,8 +493,7 @@ class odfmodel:
         return odf
 
     def dtiodfhelper(self, dt, form="spherical") -> np.ndarray[float]:
-        """
-        Computes DTI fODF coefficient at a voxel. This function is intended to
+        """Computes DTI fODF coefficient at a voxel. This function is intended to
         parallelize computations across the brain. Use only for diffusion
         ellipsoids.
 
@@ -537,14 +532,14 @@ class odfmodel:
         return odf
 
     def dtiodf(self, form="spherical") -> np.ndarray[float]:
-        """
-        Computed DTI ODFs for the whole brain (ellipsoids)
+        """Computed DTI ODFs for the whole brain (ellipsoids)
 
         Parameters
         ----------
         form : str; optional; {'spherical', 'cartesian', 'coefficient'}
             Form of ODF to return in
             (Default: 'spherical')
+
         Returns
         -------
         DTI ODF in defined form
@@ -569,8 +564,7 @@ class odfmodel:
         return odf
 
     def odfmaxhelper(self, odf) -> Tuple[np.ndarray[float], np.ndarray[float]]:
-        """
-        Find local maxima of ODF over spherical grid at voxel
+        """Find local maxima of ODF over spherical grid at voxel
 
         Parameters
         ----------
@@ -597,8 +591,7 @@ class odfmodel:
         return odfmax, dirmax
 
     def odf2shhelper(self, odf, B, scale) -> np.ndarray[complex]:
-        """
-        Helper function to parallelize computation spherical harmonic expansion
+        """Helper function to parallelize computation spherical harmonic expansion
         at a voxel.
 
         Parameters
@@ -623,8 +616,7 @@ class odfmodel:
         return sh
 
     def odf2sh(self, odf) -> np.ndarray[complex]:
-        """
-        Converts whole-brain ODFs to spherical harmonics sampled at direction
+        """Converts whole-brain ODFs to spherical harmonics sampled at direction
         set specified by resolution. Only the real portion is returned.
 
         Parameters
@@ -669,8 +661,7 @@ class odfmodel:
         return sh
 
     def savenii(self, var, path) -> None:
-        """
-        Write out NifTI output of associated spherical harmonic file
+        """Write out NifTI output of associated spherical harmonic file
 
         Parameters
         ----------
@@ -688,8 +679,7 @@ class odfmodel:
 
 
 def dkiodfspherical(odf, phi, theta) -> np.ndarray[float]:
-    """
-    Convert DKI ODFs coefficients at voxel to spherical form.
+    """Convert DKI ODFs coefficients at voxel to spherical form.
 
     Parameters
     ----------
@@ -773,8 +763,7 @@ def dkiodfspherical(odf, phi, theta) -> np.ndarray[float]:
 
 
 def dkiodfcartesian(odf, x, y, z) -> np.ndarray[float]:
-    """
-    Convert DKI ODF coefficients at voxel to Cartesian form.
+    """Convert DKI ODF coefficients at voxel to Cartesian form.
 
     Parameters
     ----------
@@ -862,8 +851,7 @@ def dkiodfcartesian(odf, x, y, z) -> np.ndarray[float]:
 
 
 def dtiodfspherical(odf, phi, theta, radial_weight=4) -> np.ndarray[float]:
-    """
-    Convert DTI ODFs coefficients at voxel to spherical form.
+    """Convert DTI ODFs coefficients at voxel to spherical form.
 
     Parameters
     ----------
@@ -902,8 +890,7 @@ def dtiodfspherical(odf, phi, theta, radial_weight=4) -> np.ndarray[float]:
 
 
 def shbasis(deg, phi, theta, method="scipy") -> np.ndarray[complex]:
-    """
-    Computes shperical harmonic bases for all orders (even and odd), using
+    """Computes shperical harmonic bases for all orders (even and odd), using
     functions defined by `scipy`, `tournier`, or `descoteaux`.
 
     Parameters

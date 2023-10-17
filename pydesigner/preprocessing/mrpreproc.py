@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding : utf-8 -*-
 
-"""
-Utilities for running various MRtrix3's DWI preprocessing tools
+"""Utilities for running various MRtrix3's DWI preprocessing tools
 """
 
 import os
@@ -16,8 +15,7 @@ from ..preprocessing import mrinfoutil, rician, smoothing
 
 
 def miftonii(input, output, nthreads=None, force=True, verbose=False):
-    """
-    Converts input `.mif` images to output `.nii` images
+    """Converts input `.mif` images to output `.nii` images
 
     Parameters
     ----------
@@ -81,8 +79,7 @@ def miftonii(input, output, nthreads=None, force=True, verbose=False):
 
 
 def niitomif(input, output, nthreads=None, force=True, verbose=False):
-    """
-    Converts input `.nii` images to output `.nif` images provided that
+    """Converts input `.nii` images to output `.nif` images provided that
     all BVEC, BVAL and JSON files are provided and named same as input .nii
 
     Parameters
@@ -147,8 +144,7 @@ def niitomif(input, output, nthreads=None, force=True, verbose=False):
 
 
 def stride_match(target, moving, output, nthreads=None, force=True, verbose=False):
-    """
-    Matches strides on inputs target and moving by converting strides
+    """Matches strides on inputs target and moving by converting strides
     on moving image to those of target image.
 
     Parameters
@@ -217,8 +213,7 @@ def denoise(
     force=True,
     verbose=False,
 ):
-    """
-    Runs MRtrix3's `dwidenoise` command with optimal parameters for
+    """Runs MRtrix3's `dwidenoise` command with optimal parameters for
     PyDesigner.
 
     Parameters
@@ -284,8 +279,7 @@ def denoise(
 
 
 def degibbs(input, output, nthreads=None, force=False, verbose=False):
-    """
-    Runs MRtrix3's `mrdegibbs` command with optimal parameters for
+    """Runs MRtrix3's `mrdegibbs` command with optimal parameters for
     PyDesigner.
 
     Parameters
@@ -345,8 +339,7 @@ def undistort(
     force=False,
     verbose=False,
 ):
-    """
-    Runs MRtrix3's distortion correction command with optimal
+    """Runs MRtrix3's distortion correction command with optimal
     parameters for PyDesigner.
 
     Parameters
@@ -480,8 +473,7 @@ def undistort(
 
 
 def brainmask(input, output, thresh=0.25, nthreads=None, force=False, verbose=False):
-    """
-    Creates a brainmask using FSL's Brain Extraction Tool (BET) and
+    """Creates a brainmask using FSL's Brain Extraction Tool (BET) and
     MRtrix3's file manipulation tools.
 
     Parameters
@@ -559,8 +551,7 @@ def csfmask(
     force=False,
     verbose=False,
 ):
-    """
-    Creates a cerebral spinal fluid (CSF) mask from FSL's FAST tool.
+    """Creates a cerebral spinal fluid (CSF) mask from FSL's FAST tool.
 
     Parameters
     ----------
@@ -743,8 +734,7 @@ def csfmask(
 
 
 def smooth(input, output, csfname=None, fwhm=1.25, size=5):
-    """
-    Performs Gaussian smoothing on input .mif image
+    """Performs Gaussian smoothing on input .mif image
 
     Parameters
     ----------
@@ -793,8 +783,7 @@ def smooth(input, output, csfname=None, fwhm=1.25, size=5):
 
 
 def riciancorrect(input, output, noise=None):
-    """
-    Performs Rician correction on input .mif
+    """Performs Rician correction on input .mif
 
     Parameters
     ----------
@@ -840,8 +829,7 @@ def riciancorrect(input, output, noise=None):
 
 
 def extractbzero(input, output, nthreads=None, force=False, verbose=False):
-    """
-    Extracts only bzero shells from an input mif file.
+    """Extracts only bzero shells from an input mif file.
 
     Parameters
     ----------
@@ -891,8 +879,7 @@ def extractbzero(input, output, nthreads=None, force=False, verbose=False):
 
 
 def extractmeanbzero(input, output, nthreads=None, force=False, verbose=False):
-    """
-    Extracts average B0 from all B0 shells, with NaNs removed.
+    """Extracts average B0 from all B0 shells, with NaNs removed.
 
     Parameters
     ----------
@@ -947,8 +934,7 @@ def extractmeanbzero(input, output, nthreads=None, force=False, verbose=False):
 
 
 def extractnonbzero(input, output, nthreads=None, force=False, verbose=False):
-    """
-    Extracts only non-bzero shells from an input mif file.
+    """Extracts only non-bzero shells from an input mif file.
 
     Parameters
     ----------
@@ -998,8 +984,7 @@ def extractnonbzero(input, output, nthreads=None, force=False, verbose=False):
 
 
 def extractshell(input, output, shell, nthreads=None, force=False, verbose=False):
-    """
-    Extracts specified shell from an input mif file.
+    """Extracts specified shell from an input mif file.
 
     Parameters
     ----------
@@ -1055,8 +1040,7 @@ def extractshell(input, output, shell, nthreads=None, force=False, verbose=False
 
 
 def extractmeanshell(input, output, shell, nthreads=None, force=False, verbose=False):
-    """
-    Extracts mean of specified from an input mif file.
+    """Extracts mean of specified from an input mif file.
 
     Parameters
     ----------
@@ -1118,8 +1102,7 @@ def extractmeanshell(input, output, shell, nthreads=None, force=False, verbose=F
 
 
 def epiboost(input, output, num=1, nthreads=None, force=False, verbose=False):
-    """
-    Analyzes an input .mif's PE direction to split into two different
+    """Analyzes an input .mif's PE direction to split into two different
     phase encoding (PE) DWIs. B0s from opposing PE are then extracted
     and concatenated with the DWI. This reduces the number of B0s used
     in undistortion for a better and speedier estimation of the
@@ -1228,8 +1211,7 @@ def epiboost(input, output, num=1, nthreads=None, force=False, verbose=False):
 
 
 def reslice(input, output, size, interp="linear", nthreads=None, force=False, verbose=False):
-    """
-    Reslices input image to target voxel size
+    """Reslices input image to target voxel size
 
     Parameters
     ----------
@@ -1327,8 +1309,7 @@ def reslice(input, output, size, interp="linear", nthreads=None, force=False, ve
 
 
 def dwiextract(input, output, start, end, nthreads=None, force=False, verbose=False):
-    """
-    Extracts a range of volumes from input .mif file in the start:end
+    """Extracts a range of volumes from input .mif file in the start:end
     range. Take note that the first volume starts with 0.
 
     Parameters
