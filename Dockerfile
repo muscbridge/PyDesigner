@@ -14,61 +14,57 @@
 # ==============================================================================
 
 # Load base Ubuntu image
-FROM debian:buster-slim
+FROM python:3.11-bullseye
 
-# Add LABEL Information
-# ARG BUILD_DATE
-# ARG VCS_REF
-
-# Labels.
-LABEL maintainer="Siddhartha Dhiman (dhiman@musc.edu)"
+# Labels
+LABEL maintainer="Siddhartha Dhiman (siddhartha.dhiman@gmail.com)"
 LABEL org.label-schema.schema-version="1.0.0-rc1"
-LABEL org.label-schema.build-date=$BUILD_DATE
 LABEL org.label-schema.name="dmri/pydesigner"
 LABEL org.label-schema.description="A state-of-the-art difusion and kurtosis MRI processing pipeline"
 LABEL org.label-schema.url="https://github.com/m-ama/"
 LABEL org.label-schema.vcs-url="https://github.com/m-ama/NeuroDock.git"
-LABEL org.label-schema.vcs-ref=$VCS_REF
-LABEL org.label-schema.vendor="MAMA"
+LABEL org.label-schema.vendor="MUSC BRIDGE"
 
-ARG DEBIAN_FRONTEND=noninteractive
+# ARG DEBIAN_FRONTEND=noninteractive
 
 # Initial update
-RUN apt-get update && \
+RUN apt update && \
       apt-get install -y \
       apt-utils \
       wget \
       curl \
       nano \
       software-properties-common \
-      python2.7 python-pip \
+      python3 \
       python3-pip \
       jq \
       libblas-dev \
       liblapack-dev \
       libatlas-base-dev \
-      gfortran
-
-# Install MRTRIX3 dependencies
-RUN apt-get install -y --no-install-recommends \
-      clang \
+      gfortran \
       git \
+      g++ \
+      python \
       libeigen3-dev \
       zlib1g-dev \
-      libqt4-opengl-dev \
+      libqt5opengl5-dev \
+      libqt5svg5-dev \
       libgl1-mesa-dev \
       libfftw3-dev \
       libtiff5-dev \
-      libomp-dev
-
-RUN rm /bin/sh && ln -s /bin/bash /bin/sh
+      libpng-dev
 
 # Copy and install PyDesigner
-RUN mkdir -p /tmp/PyDesigner
-ADD . / /tmp/PyDesigner/
-RUN pip3 install /tmp/PyDesigner
-RUN echo "alias python=python3" >> ~/.bashrc && source ~/.bashrc
-RUN echo "alias pip=pip3" >> ~/.bashrc && source ~/.bashrc
+RUN mkdir -p /pydesigner
+COPY /pydesigner /app/pydesigner
+COPY pyproject.toml app/
+RUN ls
+RUN ls -la /app
+WORKDIR /app
+ENV PYTHONPATH=${PYTHONPATH}:${PWD} 
+RUN pip3 install poetry
+RUN poetry config virtualenvs.create false
+RUN poetry install --no-dev
 
 # Install Python dependencies
 RUN pip3 install --upgrade setuptools && \
@@ -104,3 +100,5 @@ ENV PATH=$PATH:/usr/lib/mrtrix3/bin
 # Remove unwanted packages
 RUN apt-get autoremove && apt-get clean
 RUN rm /tmp/fslinstaller.py && rm -r /tmp/PyDesigner
+
+USER bridge
