@@ -35,3 +35,4 @@ repos:
     - id: poetry-check
     - id: poetry-lock
     - id: poetry-export
+      args: ["--dev", "-f", "requirements-dev.txt", "-o", "requirements.txt"]
