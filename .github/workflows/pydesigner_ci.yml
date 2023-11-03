@@ -13,6 +13,8 @@ jobs:
     - name: Checkout
       id: checkout
       uses: actions/checkout@v3
+      with:
+        token: ${{ secrets.GH_BRIDGE_PAT }}
 
     - name: Set up Python
       id: setup-python
@@ -32,8 +34,7 @@ jobs:
       id: git-auto-commit
       uses: stefanzweifel/git-auto-commit-action@v5
       with:
-        commit_message: "Pre-commit fixes"
-        token: ${{ secrets.GH_BRIDGE_PAT }}
+        commit_message: "Pre-commit autofix"
 
     - name: Return pre-commit response
       if: steps.pre-commit.outcome == 'failure'
