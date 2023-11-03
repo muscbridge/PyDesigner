@@ -34,5 +34,8 @@ repos:
   hooks:
     - id: poetry-check
     - id: poetry-lock
+      args: ["--no-update"]
     - id: poetry-export
-      args: ["--dev", "-f", "requirements-dev.txt", "-o", "requirements.txt"]
+      args: ["--without-hashes", "-f", "requirements.txt", "-o", "requirements.txt"]
+    - id: poetry-export
+      args: ["--without-hashes", "--only", "dev", "-f", "requirements.txt", "-o", "requirements-dev.txt"]
