@@ -20,9 +20,8 @@ jobs:
         pre-commit_version: latest
         python_version: 3.8
         system: true 
-    # - name: Auto-commit changed files
-    #   uses: stefanzweifel/git-auto-commit-action@v5
-    #   with:
-    #     commit_message: "Pre-commit fixes"
-
-    
+    - name: Auto-commit changed files
+      uses: stefanzweifel/git-auto-commit-action@v5
+      with:
+        commit_message: "Pre-commit fixes"
+        tokem: ${{ secrets.GH_BRIDGE_PAT }}
