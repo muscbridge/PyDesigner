@@ -36,4 +36,4 @@ jobs:
             uses: docker/build-push-action@v5
             with:
                 push: true
-                tags: dmri/neurodock:latest,
+                tags: dmri/neurodock:latest,dmri/neurodock:${{ steps.version.outputs.value }}
