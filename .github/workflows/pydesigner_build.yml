@@ -10,7 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
         -
-            name: Fetch PyDesigner version
+            name: Checkout
+            uses: actions/checkout@v3
+        -
+            name: Fetch version
             uses: SebRollen/toml-action@v1.0.2
             id: version
             with:
