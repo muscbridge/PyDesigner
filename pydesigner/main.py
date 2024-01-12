@@ -13,8 +13,8 @@ import textwrap  # dedent
 
 import numpy as np  # array, ndarray
 
+from . import __version__
 from .fitting import dwipy as dp
-from .info import __version__
 from .plotting import motionplot, snrplot
 from .postprocessing import filters
 from .preprocessing import mrinfoutil, mrpreproc, util
