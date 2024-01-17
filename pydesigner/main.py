@@ -13,8 +13,8 @@ import textwrap  # dedent
 
 import numpy as np  # array, ndarray
 
+from . import __version__
 from .fitting import dwipy as dp
-from .info import __version__
 from .plotting import motionplot, snrplot
 from .postprocessing import filters
 from .preprocessing import mrinfoutil, mrpreproc, util
@@ -25,7 +25,7 @@ DWIParser = util.DWIParser
 # Locate mrtrix3 via which-ing dwidenoise
 dwidenoise_location = shutil.which("dwidenoise")
 if dwidenoise_location is None:
-    raise Exception("Cannot find mrtrix3, please see " "https://github.com/m-ama/PyDesigner/wiki" " to troubleshoot.")
+    raise OSError("Cannot find mrtrix3, please see " "https://github.com/m-ama/PyDesigner/wiki" " to troubleshoot.")
 
 # Extract mrtrix3 path from dwidenoise_location
 mrtrix3path = op.dirname(dwidenoise_location)
@@ -33,7 +33,7 @@ mrtrix3path = op.dirname(dwidenoise_location)
 # Locate FSL via which-ing fsl
 fsl_location = shutil.which("fsl")
 if fsl_location is None:
-    raise Exception("Cannot find FSL, please see " "https://github.com/m-ama/PyDesigner/wiki" " to troubleshoot.")
+    raise OSError("Cannot find FSL, please see " "https://github.com/m-ama/PyDesigner/wiki" " to troubleshoot.")
 
 # Extract FSL path from fsl_location
 fslpath = op.dirname(fsl_location)

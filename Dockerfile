@@ -1,104 +1,104 @@
-# ==============================================================================
-# NeuroDock
-# A docker container that contains all PyDesigner dependencies such as MRTRIX3,
-# FSL, and Python to preprocess diffusion MRI images.
-#
-# Maintainer: Siddhartha Dhiman
-# ------------------------------------------------------------------------------
-# Current Dependencies
-#    1.) FSL
-#    2.) MRTRIX3
-#    3.) Python 2.7
-#    4.) Python 3.6
-#    6.) PyDesigner
-# ==============================================================================
+# # ==============================================================================
+# # NeuroDock
+# # A docker container that contains all PyDesigner dependencies such as MRTRIX3,
+# # FSL, and Python to preprocess diffusion MRI images.
+# #
+# # Maintainer: Siddhartha Dhiman
+# # ------------------------------------------------------------------------------
+# # Current Dependencies
+# #    1.) FSL
+# #    2.) MRTRIX3
+# #    3.) Python 2.7
+# #    4.) Python 3.6
+# #    6.) PyDesigner
+# # ==============================================================================
 
-# Load base Ubuntu image
-FROM python:3.11-bullseye
+# # Load base Ubuntu image
+# FROM python:3.11-bullseye
 
-# Labels
-LABEL maintainer="Siddhartha Dhiman (siddhartha.dhiman@gmail.com)"
-LABEL org.label-schema.schema-version="1.0.0-rc1"
-LABEL org.label-schema.name="dmri/pydesigner"
-LABEL org.label-schema.description="A state-of-the-art difusion and kurtosis MRI processing pipeline"
-LABEL org.label-schema.url="https://github.com/m-ama/"
-LABEL org.label-schema.vcs-url="https://github.com/m-ama/NeuroDock.git"
-LABEL org.label-schema.vendor="MUSC BRIDGE"
+# # Labels
+# LABEL maintainer="Siddhartha Dhiman (siddhartha.dhiman@gmail.com)"
+# LABEL org.label-schema.schema-version="1.0.0-rc1"
+# LABEL org.label-schema.name="dmri/pydesigner"
+# LABEL org.label-schema.description="A state-of-the-art difusion and kurtosis MRI processing pipeline"
+# LABEL org.label-schema.url="https://github.com/m-ama/"
+# LABEL org.label-schema.vcs-url="https://github.com/m-ama/NeuroDock.git"
+# LABEL org.label-schema.vendor="MUSC BRIDGE"
 
-# ARG DEBIAN_FRONTEND=noninteractive
+# # ARG DEBIAN_FRONTEND=noninteractive
 
-# Initial update
-RUN apt update && \
-      apt-get install -y \
-      apt-utils \
-      wget \
-      curl \
-      nano \
-      software-properties-common \
-      python3 \
-      python3-pip \
-      jq \
-      libblas-dev \
-      liblapack-dev \
-      libatlas-base-dev \
-      gfortran \
-      git \
-      g++ \
-      python \
-      libeigen3-dev \
-      zlib1g-dev \
-      libqt5opengl5-dev \
-      libqt5svg5-dev \
-      libgl1-mesa-dev \
-      libfftw3-dev \
-      libtiff5-dev \
-      libpng-dev
+# # Initial update
+# RUN apt update && \
+#       apt-get install -y \
+#       apt-utils \
+#       wget \
+#       curl \
+#       nano \
+#       software-properties-common \
+#       python3 \
+#       python3-pip \
+#       jq \
+#       libblas-dev \
+#       liblapack-dev \
+#       libatlas-base-dev \
+#       gfortran \
+#       git \
+#       g++ \
+#       python \
+#       libeigen3-dev \
+#       zlib1g-dev \
+#       libqt5opengl5-dev \
+#       libqt5svg5-dev \
+#       libgl1-mesa-dev \
+#       libfftw3-dev \
+#       libtiff5-dev \
+#       libpng-dev
 
-# Copy and install PyDesigner
-RUN mkdir -p /pydesigner
-COPY /pydesigner /app/pydesigner
-COPY pyproject.toml app/
-RUN ls
-RUN ls -la /app
-WORKDIR /app
-ENV PYTHONPATH=${PYTHONPATH}:${PWD} 
-RUN pip3 install poetry
-RUN poetry config virtualenvs.create false
-RUN poetry install --no-dev
+# # Copy and install PyDesigner
+# RUN mkdir -p /pydesigner
+# COPY /pydesigner /app/pydesigner
+# COPY pyproject.toml app/
+# RUN ls
+# RUN ls -la /app
+# WORKDIR /app
+# ENV PYTHONPATH=${PYTHONPATH}:${PWD}
+# RUN pip3 install poetry
+# RUN poetry config virtualenvs.create false
+# RUN poetry install --no-dev
 
-# Install Python dependencies
-RUN pip3 install --upgrade setuptools && \
-            pip3 install numpy \
-                        pandas \
-                        scipy \
-                        joblib \
-                        multiprocess \
-                        tqdm \
-                        nibabel \
-                        cvxpy
+# # Install Python dependencies
+# RUN pip3 install --upgrade setuptools && \
+#             pip3 install numpy \
+#                         pandas \
+#                         scipy \
+#                         joblib \
+#                         multiprocess \
+#                         tqdm \
+#                         nibabel \
+#                         cvxpy
 
-# Install FSL
-RUN curl https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py -o /tmp/fslinstaller.py
-RUN echo "/usr/local/fsl" | python2 /tmp/fslinstaller.py -V 6.0.3
+# # Install FSL
+# RUN curl https://fsl.fmrib.ox.ac.uk/fsldownloads/fslinstaller.py -o /tmp/fslinstaller.py
+# RUN echo "/usr/local/fsl" | python2 /tmp/fslinstaller.py -V 6.0.3
 
-# Configure FSL Environment
-ENV FSLDIR=/usr/local/fsl
-ENV FSLOUTPUTTYPE=NIFTI_GZ
-ENV PATH=$PATH:$FSLDIR/bin
-ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$FSLDIR
+# # Configure FSL Environment
+# ENV FSLDIR=/usr/local/fsl
+# ENV FSLOUTPUTTYPE=NIFTI_GZ
+# ENV PATH=$PATH:$FSLDIR/bin
+# ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$FSLDIR
 
-# Build and Configure MRTRIX3
-RUN git clone https://github.com/MRtrix3/mrtrix3.git /usr/lib/mrtrix3
-ENV CXX=/usr/bin/clang++
-ENV ARCH=native
-RUN cd /usr/lib/mrtrix3 && \
-      ./configure -nogui -openmp && \
-      ./build && \
-      ./set_path
-ENV PATH=$PATH:/usr/lib/mrtrix3/bin
+# # Build and Configure MRTRIX3
+# RUN git clone https://github.com/MRtrix3/mrtrix3.git /usr/lib/mrtrix3
+# ENV CXX=/usr/bin/clang++
+# ENV ARCH=native
+# RUN cd /usr/lib/mrtrix3 && \
+#       ./configure -nogui -openmp && \
+#       ./build && \
+#       ./set_path
+# ENV PATH=$PATH:/usr/lib/mrtrix3/bin
 
-# Remove unwanted packages
-RUN apt-get autoremove && apt-get clean
-RUN rm /tmp/fslinstaller.py && rm -r /tmp/PyDesigner
+# # Remove unwanted packages
+# RUN apt-get autoremove && apt-get clean
+# RUN rm /tmp/fslinstaller.py && rm -r /tmp/PyDesigner
 
-USER bridge
+# USER bridge
