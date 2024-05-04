@@ -41,7 +41,7 @@ def miftonii(input, output, nthreads=None, force=True, verbose=False):
     niitomif
     """
     if not op.exists(input):
-        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
+        raise IOError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -49,14 +49,14 @@ def miftonii(input, output, nthreads=None, force=True, verbose=False):
             "directory.".format(op.dirname(output))
         )
     if op.splitext(output)[-1] != ".nii":
-        raise OSError("Output specified does not possess the .nii " "extension.")
+        raise IOError("Output specified does not possess the .nii " "extension.")
     if nthreads is not None:
         if not isinstance(nthreads, int):
-            raise Exception("Please specify the number of threads as an " "integer.")
+            raise TypeError("Please specify the number of threads as an " "integer.")
     if not isinstance(force, bool):
-        raise Exception("Please specify whether forced overwrite is True " "or False.")
+        raise TypeError("Please specify whether forced overwrite is True " "or False.")
     if not isinstance(verbose, bool):
-        raise Exception("Please specify whether verbose is True or False.")
+        raise TypeError("Please specify whether verbose is True or False.")
     arg = ["mrconvert"]
     if force:
         arg.append("-force")
