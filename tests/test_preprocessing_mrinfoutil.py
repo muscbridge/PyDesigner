@@ -1,9 +1,6 @@
 from pathlib import Path
 
-import pytest
 from conftest import load_data
-
-from pydesigner.preprocessing import mrinfoutil
 
 TEST_DIR = Path(__file__).parent
 DATA = load_data(type="hifi")

@@ -1,13 +1,13 @@
 import os
-import pytest
 from pathlib import Path
 
 TEST_DIR = Path(__file__).parent
 DATA_DIR = os.path.join(TEST_DIR, "data")
 
-def load_data(type:str="hifi") -> dict:
+
+def load_data(type: str = "hifi") -> dict:
     """Loads sample dataset paths.
-    
+
     Args:
         type (str): Type of data to load. Defaults to "hifi".
 
