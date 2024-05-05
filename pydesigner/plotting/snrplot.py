@@ -246,7 +246,7 @@ class makesnr:
                     count_interp[:, y, z] = spl(binval_interp)
             count = count_interp
             binval = binval_interp
-        plt.style.use("seaborn")
+        plt.style.use("seaborn-v0_8")
         nplots = unibvals.size
         titles = ["B" + str(i * 1000) for i in unibvals]
         fig = plt.figure(figsize=(8, 10))

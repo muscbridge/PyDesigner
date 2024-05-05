@@ -82,7 +82,7 @@ def plot(
     # Normalize to percentage of voxels
     y = (y / np.count_nonzero(bw)) * 100
     # Plot
-    plt.style.use("seaborn")
+    plt.style.use("seaborn-v0_8")
     fig, ax = plt.subplots()
     plt.plot(x, y, "-", lw=1, color="black", alpha=0.40)
     scat = plt.scatter(x, y, c=bvals, s=10, linewidths=0, alpha=1, cmap="Set1")

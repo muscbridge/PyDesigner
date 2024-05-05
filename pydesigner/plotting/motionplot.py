@@ -24,7 +24,7 @@ def plot(input: str, output: str, voxel: Union[Tuple[float], None] = None) -> No
 
     See Also
     --------
-    outlierplot : plots outliers from IRLLS
+    outlierplot : plots outliers from IRLLSp
     snrplot : plots DWI's SNR
     """
     print("Plotting motion...")
@@ -63,7 +63,7 @@ def plot(input: str, output: str, voxel: Union[Tuple[float], None] = None) -> No
     relbef = dat[:, 1]
     x = np.arange(start=1, stop=nvols + 1, step=1)
     # Plot
-    plt.style.use("seaborn")
+    plt.style.use("seaborn-v0_8")
     fig, ax = plt.subplots()
     ax.plot(x, relone, linewidth=1, label="Relative to first volume")
     ax.plot(x, relbef, linewidth=1, label="Relative to previous volume")
