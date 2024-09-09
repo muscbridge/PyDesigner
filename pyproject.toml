@@ -44,15 +44,11 @@ pydesigner = "pydesigner.main:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.4.0, <8.0.0"
+pytest-cov = "^5.0.0"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.black]
-line-length = 120
-target-version = ["py311", "py312"]
-exclude = "docs/"
 
 [tool.ruff]
 # Enable the pycodestyle (`E`) and Pyflakes (`F`) rules by default.
@@ -89,10 +85,10 @@ exclude = [
     "node_modules",
     "venv",
     "docs",
+    "tests",
     "setup.py",
 ]
 
-# Same as Black
 line-length = 120
 
 # Allow unused variables when underscore-prefixed.
