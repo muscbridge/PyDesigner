@@ -1,4 +1,5 @@
 # Folders to ignore
+.coverage
 .idea/
 __pycache__/
 .ipynb_checkpoints/

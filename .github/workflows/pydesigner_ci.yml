@@ -20,7 +20,7 @@ jobs:
 
     - name: Set up Python
       id: setup-python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: 3.12
         architecture: 'x64'
@@ -48,33 +48,38 @@ jobs:
     steps:
       - name: Checkout code
         id: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_BRIDGE_PAT }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3
+
+      - name: Expose GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v3
 
       - name: Build Docker image
-        run: docker build -t pydesigner-test -f tests/Dockerfile .
+        run: docker buildx build -t pydesigner-test -f tests/Dockerfile . \
+          --cache-to "type=gha,mode=max" \
+          --cache-from "type=gha" \
 
       - name: Run tests in Docker container
-        run: docker run --name pydesigner-test
+        run: docker run pydesigner-test
 
       - name: Copy test results
-        run: docker cp pydesigner-test:/tests/ ./test-results
+        run: docker cp pydesigner-test:/test_results/ ./test_results
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: ./test-results
+          path: ./test_results/results.xml
 
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: ./test-results/coverage.xml
+          path: ./test_results/coverage.xml
 
       - name: Clean up
         run: docker rm test-container
