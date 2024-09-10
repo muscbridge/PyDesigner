@@ -110,9 +110,7 @@ jobs:
         if: always()
         with:
           files: |
-            test_results/**/*.xml
-            test-results/**/*.trx
-            test-results/**/*.json
+            test_results/results.xml
 
       - name: Clean up
         run: |
