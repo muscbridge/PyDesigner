@@ -7,7 +7,7 @@
 # ==============================================================================
 
 # Load base Ubuntu image
-FROM dmri/ci-cd AS base
+FROM dmri/ci-cd:e93dd885 AS base
 
 # Labels
 LABEL maintainer="Siddhartha Dhiman (siddhartha.dhiman@gmail.com)"
@@ -21,13 +21,13 @@ LABEL org.label-schema.vendor="MUSC BRIDGE"
 FROM base as dependencies
 WORKDIR /src
 COPY requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
+RUN uv pip install -r requirements.txt
 
 FROM dependencies as development
 COPY requirements-dev.txt ./
-RUN pip install --no-cache-dir -r requirements-dev.txt
+RUN uv pip install -rrequirements-dev.txt
 COPY . .
-RUN pip install --no-cache-dir --no-deps --editable .
+RUN uv pip install --no-deps -e.
 
 FROM dependencies as pyc
 COPY . .
@@ -36,7 +36,7 @@ RUN find . -name "*.py" -not -name "__init__.py" -delete
 
 FROM pyc as production
 COPY --from=pyc /src .
-RUN pip install --no-cache-dir --no-deps --editable .
+RUN uv pip install --no-deps -e.
 
 RUN useradd -ms /bin/bash bridge
 USER bridge
