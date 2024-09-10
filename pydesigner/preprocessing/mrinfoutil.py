@@ -36,7 +36,8 @@ def getconsole(path: int, flag: str) -> str:
     arg.append(path)
     completion = subprocess.run(arg, stdout=subprocess.PIPE)
     if completion.returncode != 0:
-        raise IOError("Input {} is not currently supported by " "PyDesigner.".format(path))
+        msg = "MRtrix error. See below for more information."
+        raise OSError(msg)
     console = str(completion.stdout).split("\\n")[0]
     console = console.split("b")[-1]
     console = console.replace("'", "")

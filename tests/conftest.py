@@ -24,6 +24,9 @@ def load_data(type: str = "hifi") -> dict:
             "json": os.path.join(data_path, "hifi_splenium_4vox.json"),
             "mask": os.path.join(data_path, "brain_mask.nii"),
             "mean_b0": os.path.join(data_path, "mean_b0.mif"),
-            "no_sidecar": os.path.join(data_path, "no_sidecar.nii"),
+            "no_json": os.path.join(data_path, "hifi_splenium_4vox_no_json.nii"),
+            "no_bval": os.path.join(data_path, "hifi_splenium_4vox_no_bval.nii"),
+            "no_bvec": os.path.join(data_path, "hifi_splenium_4vox_no_bvec.nii"),
+            "no_sidecar": os.path.join(data_path, "hifi_splenium_4vox_no_sidecar.nii")
         }
     return data

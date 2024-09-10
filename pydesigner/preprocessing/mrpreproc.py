@@ -40,7 +40,7 @@ def miftonii(input, output, nthreads=None, force=True, verbose=False):
     niitomif
     """
     if not op.exists(input):
-        raise IOError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
+        raise IOError("Input path does not exist. Please ensure that the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -48,12 +48,12 @@ def miftonii(input, output, nthreads=None, force=True, verbose=False):
             "directory.".format(op.dirname(output))
         )
     if op.splitext(output)[-1] != ".nii":
-        raise IOError("Output specified does not possess the .nii " "extension.")
+        raise IOError("Output specified does not possess the .nii extension.")
     if nthreads is not None:
         if not isinstance(nthreads, int):
-            raise TypeError("Please specify the number of threads as an " "integer.")
+            raise TypeError("Please specify the number of threads as an integer.")
     if not isinstance(force, bool):
-        raise TypeError("Please specify whether forced overwrite is True " "or False.")
+        raise TypeError("Please specify whether forced overwrite is True or False.")
     if not isinstance(verbose, bool):
         raise TypeError("Please specify whether verbose is True or False.")
     arg = ["mrconvert"]
@@ -78,7 +78,7 @@ def miftonii(input, output, nthreads=None, force=True, verbose=False):
 
 
 def niitomif(input, output, nthreads=None, force=True, verbose=False):
-    """Converts input `.nii` images to output `.nif` images provided that
+    """Converts input `.nii` images to output `.mif` images provided that
     all BVEC, BVAL and JSON files are provided and named same as input .nii
 
     Parameters
@@ -105,7 +105,7 @@ def niitomif(input, output, nthreads=None, force=True, verbose=False):
     miftonii
     """
     if not op.exists(input):
-        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
+        raise OSError("Input path does not exist. Please ensure that the folder or file specified exists.")
     if not op.exists(op.dirname(output)):
         raise OSError(
             "Specifed directory for output file {} does not "
@@ -113,18 +113,22 @@ def niitomif(input, output, nthreads=None, force=True, verbose=False):
             "directory.".format(op.dirname(output))
         )
     if op.splitext(output)[-1] != ".mif":
-        raise OSError("Output specified does not possess the .mif " "extension.")
+        msg = "Output specified does not possess the .mif extension."
+        raise OSError(msg)
     if not op.exists(op.splitext(input)[0] + ".bvec"):
-        raise OSError('Unable to locate BVEC file" {}'.format(op.splitext(output)[0] + ".bvec"))
+        msg = f"Unable to locate BVEC file {op.splitext(input)[0]}.bvec."
+        raise OSError(msg)
     if not op.exists(op.splitext(input)[0] + ".bval"):
-        raise OSError('Unable to locate BVAL file" {}'.format(op.splitext(output)[0] + ".bval"))
+        msg = f"Unable to locate BVAL file {op.splitext(input)[0]}.bval."
+        raise OSError(msg)
     if not op.exists(op.splitext(input)[0] + ".json"):
-        raise OSError('Unable to locate JSON file" {}'.format(op.splitext(output)[0] + ".json"))
+        msg = f"Unable to locate JSON file {op.splitext(input)[0]}.json"
+        raise OSError(msg)
     if nthreads is not None:
         if not isinstance(nthreads, int):
-            raise Exception("Please specify the number of threads as an " "integer.")
+            raise Exception("Please specify the number of threads as an integer.")
     if not isinstance(force, bool):
-        raise Exception("Please specify whether forced overwrite is True " "or False.")
+        raise Exception("Please specify whether forced overwrite is True or False.")
     if not isinstance(verbose, bool):
         raise Exception("Please specify whether verbose is True or False.")
     arg = ["mrconvert"]
@@ -139,7 +143,7 @@ def niitomif(input, output, nthreads=None, force=True, verbose=False):
     arg.extend([input, output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception("Conversion from .nii to .mif failed; check " "above for errors.")
+        raise Exception("Conversion from .nii to .mif failed; check above for errors.")
 
 
 def stride_match(target, moving, output, nthreads=None, force=True, verbose=False):
