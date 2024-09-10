@@ -79,19 +79,6 @@ def test_modelmrtrix_nthreads_negative():
     assert "nthreads needs to be a valid positive integer" in str(exc.value)
 
 
-def test_input_validator_path_invalid():
-    with pytest.raises(TypeError) as exc:
-        path = input_path_validator(path=10)
-    assert "Please enter path as a string" in str(exc.value)
-
-
-def test_input_validator_path_nonexistent(tmp_path):
-    input_path = str(tmp_path / "input.nii")
-    with pytest.raises(FileNotFoundError) as exc:
-        path = input_path_validator(path=input_path)
-    assert f"Input file ({input_path}) does not exist" in str(exc.value)
-
-
 def test_input_validator_ctype_invalid():
     with pytest.raises(TypeError) as exc:
         path = input_path_validator(path=PATH_DWI, ctype=20)
@@ -109,18 +96,6 @@ def test_input_validator_success():
     assert path == PATH_DWI
 
 
-def test_output_validator_path_invalid():
-    with pytest.raises(TypeError) as exc:
-        path = output_path_validator(path=10)
-    assert "Please enter path as a string" in str(exc.value)
-
-
-def test_output_validator_basepath():
-    with pytest.raises(OSError) as exc:
-        path = output_path_validator(path="nonexistent/output.nii")
-    assert "Pleasure ensure that the output parent directory exists" in str(exc.value)
-
-
 def test_output_validator_ctype_invalid():
     with pytest.raises(TypeError) as exc:
         path = output_path_validator(path=PATH_DWI, ctype=20)
@@ -130,7 +105,7 @@ def test_output_validator_ctype_invalid():
 def test_output_validator_ctype_check_fail():
     with pytest.raises(FileExtensionError) as exc:
         path = output_path_validator(path=PATH_DWI, ctype=".tar")
-    assert f"Input file ({PATH_DWI}) does not posses the required .tar extension" in str(exc.value)
+    assert f"Output file ({PATH_DWI}) does not posses the required .tar extension" in str(exc.value)
 
 
 def test_output_validator_success(tmp_path):

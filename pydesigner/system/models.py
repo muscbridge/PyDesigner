@@ -83,19 +83,13 @@ def input_path_validator(path: str, ctype: str = None):
     --------
     output_path_validator
     """
-    if not isinstance(path, str):
-        msg = f"Entered path ({path}) is not a valid string. "
-        msg += "Please enter path as a string."
-        raise TypeError(msg)
+    opts = modelmrtrix(input=path)
     if not ctype is None:
         if not isinstance(ctype, str):
             msg = f"ctype variable (ctype={ctype}) needs to be a valid string."
             raise(TypeError(msg))
-    if not op.exists(path):
-        msg = f"Input file ({path}) does not exist."
-        raise FileNotFoundError(msg)
     if ctype:
-        if op.splitext(op.basename(path))[-1] != ctype:
+        if op.splitext(op.basename(opts.input))[-1] != ctype:
             msg = f"Input file ({path}) does not posses the required {ctype} extension."
             raise FileExtensionError(msg)
     return str(path)
@@ -119,21 +113,12 @@ def output_path_validator(path: str, ctype: str = None):
     --------
     input_path_validator
     """
-    if not isinstance(path, str):
-        msg = f"Entered path ({path}) is not a valid string. "
-        msg += "Please enter path as a string."
-        raise TypeError(msg)
     if not ctype is None:
         if not isinstance(ctype, str):
             msg = f"ctype variable (ctype={ctype}) needs to be a valid string."
             raise(TypeError(msg))
-    if not op.exists(op.dirname(path)):
-        msg = f"Specified directory ({op.dirname(path)}) for output file "
-        msg += f"({op.basename(path)}) does not exist. "
-        msg += "Pleasure ensure that the output parent directory exists."
-        raise OSError(msg)
     if ctype:
         if op.splitext(op.basename(path))[-1] != ctype:
-            msg = f"Input file ({path}) does not posses the required {ctype} extension."
+            msg = f"Output file ({path}) does not posses the required {ctype} extension."
             raise FileExtensionError(msg)
     return str(path)
