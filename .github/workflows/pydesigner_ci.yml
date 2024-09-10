@@ -78,8 +78,6 @@ jobs:
           push: false
           file: tests/Dockerfile
           tags: pydesigner-test
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
       - name: Run tests in Docker container
         run: docker run pydesigner-test
