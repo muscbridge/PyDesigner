@@ -41,3 +41,42 @@ jobs:
     - name: Return pre-commit response
       if: steps.pre-commit.outcome == 'failure'
       run: exit 1
+
+  pytest:
+    needs: pre-commit
+    runs-on: ubuntu-latest
+    container:
+      image: dmri/ci-cd:latest
+    steps:
+      - name: Checkout code
+        id: checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GH_BRIDGE_PAT }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build Docker image
+        run: docker build -t pydesigner-test -f tests/Dockerfile .
+
+      - name: Run tests in Docker container
+        run: docker run --name pydesigner-test
+
+      - name: Copy test results
+        run: docker cp pydesigner-test:/tests/ ./test-results
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ./test-results
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: ./test-results/coverage.xml
+
+      - name: Clean up
+        run: docker rm test-container
