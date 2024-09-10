@@ -7,7 +7,7 @@
 # ==============================================================================
 
 # Load base Ubuntu image
-FROM dmri/ci-cd:9b5fdb2 AS base
+FROM dmri/ci-cd:9b5fdb22 AS base
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
 # Labels
