@@ -135,4 +135,3 @@ def test_niitomif_output_correctness_image(tmp_path):
     mrpreproc.niitomif(PATH_DWI, output_mif)
     assert mrinfoutil.format(output_mif) == "MRtrix"
     mrinfoutil.size(output_mif) == (2, 2, 2, 337)
-
