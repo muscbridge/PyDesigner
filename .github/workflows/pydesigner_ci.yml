@@ -81,4 +81,6 @@ jobs:
           path: ./test_results/coverage.xml
 
       - name: Clean up
-        run: docker rm test-container
+        run: |
+          docker container rm pydesigner-test-container
+          docker image rm pydesigner-test
