@@ -63,10 +63,10 @@ jobs:
         run: docker build -t pydesigner-test -f tests/Dockerfile .
 
       - name: Run tests in Docker container
-        run: docker run pydesigner-test
+        run: docker run --name pydesigner-test-container pydesigner-test
 
       - name: Copy test results
-        run: docker cp pydesigner-test:/test_results/ ./test_results
+        run: docker cp pydesigner-test-container:/test_results/ ./test_results
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
