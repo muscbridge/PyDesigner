@@ -3,6 +3,7 @@
 import argparse  # ArgumentParser, add_argument
 import glob  # recursive file search
 import json
+import logging
 import os  # mkdir
 import os.path as op  # path
 import shutil  # which, rmtree
@@ -17,6 +18,12 @@ from .fitting import dwipy as dp
 from .plotting import motionplot, snrplot
 from .postprocessing import filters
 from .preprocessing import mrinfoutil, mrpreproc, util
+
+log = logging.getLogger(__name__)
+log.setLevel(logging.DEBUG)
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+log.addHandler(console_handler)
 
 DWIFile = util.DWIFile
 DWIParser = util.DWIParser
@@ -511,11 +518,11 @@ def main():
 
     # Print warnings
     if warningmsg != "":
-        print(warningmsg)
+        log.warn(warningmsg)
 
     # If things are unsalvageable, point out all errors and quit
     if errmsg != "":
-        print(errmsg)
+        log.error(errmsg)
 
     # Begin keeping track of nifti files
     filetable = {"dwi": DWIFile(init_nii)}
@@ -531,7 +538,7 @@ def main():
         args.degibbs = True
     else:
         if args.degibbs and filetable["dwi"].isPartialFourier():
-            print(
+            log.warn(
                 "[WARNING] Given DWI is partial fourier, overriding "
                 "--degibbs; no unringing correction will be done to "
                 'avoid artifacts.Use the "--adv" flag to run forced '

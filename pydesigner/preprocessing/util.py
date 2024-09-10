@@ -1,6 +1,7 @@
 """Adds utilities for the command-line interface"""
 
 import json  # decode
+import logging
 import os
 import os.path as op  # dirname, basename, join, splitext
 import pprint  # pprint
@@ -10,6 +11,8 @@ import warnings
 import numpy as np
 
 from pydesigner.preprocessing import mrinfoutil
+
+log = logging.getLogger(__name__)
 
 
 def find_valid_ext(pathname):
@@ -295,7 +298,7 @@ class DWIFile:
                     else:
                         return True
                 else:
-                    print(
+                    log.warn(
                         "Insufficient information in .json file to "
                         "determine Fourier status. Assuming DWI is "
                         "partial Fourier"

@@ -24,7 +24,8 @@ from dipy.direction import gfa, peak_directions
 from scipy.io.matlab import loadmat, savemat
 from tqdm import tqdm
 
-from . import sphericalsampling
+# from . import sphericalsampling
+from pydesigner.tractography import sphericalsampling
 
 ODF_COLS = 20000  # Number of columns in DSI Studio odf split
 tqdmWidth = 70
@@ -189,29 +190,30 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
     if completion.returncode != 0:
         raise Exception("Failed to determine amplitude of SH " "coefficients. Check above for errors.")
     # Load images
-    amplitudes_img = nib.load(odf_amplitudes_nii)
-    ampl_data = amplitudes_img.get_fdata()
+    amplitudes_data = nib.load(odf_amplitudes_nii)
+    amplitudes_img = amplitudes_data.get_fdata()
     if mask is not None:
-        mask_img = nib.load(mask_)
-        if not np.allclose(mask_img.affine, amplitudes_img.affine):
+        mask_data = nib.load(mask_)
+        mask_img = mask_data.get_fdata()
+        if not np.allclose(mask_data.affine, amplitudes_data.affine):
             raise ValueError("Differing orientation between mask and " "amplitudes.")
         if not mask_img.shape == amplitudes_img.shape[:3]:
             raise ValueError("Differing grid between mask and " "amplitudes")
-        mask_img = mask_img.get_fdata()
     else:
-        mask_img = np.ones((ampl_data.shape[0], ampl_data.shape[1], ampl_data.shape[2]), order="F")
+        mask_img = np.ones((amplitudes_img.shape[0], amplitudes_img.shape[1], amplitudes_img.shape[2]), order="F")
     # Make flat mask
     flat_mask = mask_img.flatten(order="F") > 0
-    odf_array = ampl_data.reshape(-1, ampl_data.shape[3], order="F")
+    odf_array = amplitudes_img.reshape(-1, amplitudes_img.shape[3], order="F")
     masked_odfs = odf_array[flat_mask, :]
     masked_odfs = np.nan_to_num(masked_odfs)
     if map is not None:
-        map_img = nib.load(map_)
-        if not np.allclose(map_img.affine, amplitudes_img.affine):
+        map_data = nib.load(map_)
+        map_img = map_data.get_fdata()
+        if not np.allclose(map_data.affine, amplitudes_data.affine):
             raise ValueError("Differing orientation between map image and " "amplitudes.")
         if not map_img.shape == amplitudes_img.shape[:3]:
             raise ValueError("Differing grid between map image and " "amplitudes")
-        map_img = map_img.get_fdata().flatten(order="F")
+        map_img = map_img.flatten(order="F")
         map_img[map_img < 0] = 0
         masked_map = map_img[flat_mask]
 
@@ -247,8 +249,8 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
     peak_vals = np.zeros((n_odfs, n_fibers))
     dsi_mat = {}
     # Create matfile that can be read by dsi Studio
-    dsi_mat["dimension"] = np.array(amplitudes_img.shape[:3])
-    dsi_mat["voxel_size"] = np.array(amplitudes_img.header.get_zooms()[:3])
+    dsi_mat["dimension"] = np.array(amplitudes_data.shape[:3])
+    dsi_mat["voxel_size"] = np.array(amplitudes_data.header.get_zooms()[:3])
     n_voxels = int(np.prod(dsi_mat["dimension"]))
     for odfnum in tqdm(
         range(masked_odfs.shape[0]),
@@ -297,10 +299,11 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
             map_dir = op.dirname(path_map)
             map_lps = op.join(map_dir, map_name + "_lps" + ext)
             convertLPS(path_map, map_lps)
-            other_img = nib.load(map_lps)
+            other_data = nib.load(map_lps)
+            other_img = other_img.get_fdata()
             if not other_img.shape == amplitudes_img.shape[:3]:
                 raise ValueError("Differing grid between other map image: {} " "and amplitudes".format(path_map))
-            gmap = other_img.get_fdata().flatten(order="F")
+            gmap = other_img.flatten(order="F")
             dsi_mat[map_name] = gmap.astype(np.float32)
             os.remove(map_lps)
     savemat(output, dsi_mat, format="4", appendmat=False)
@@ -314,11 +317,13 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
     os.remove(odf_amplitudes_nii)
 
 
-path_sh = "/mnt/d/Datasets/PyDesigner_Test/test_run/metrics/dki_odf.nii"
-path_mask = "/mnt/d/Datasets/PyDesigner_Test/test_run/brain_mask.nii"
-path_out = "/mnt/d/Datasets/PyDesigner_Test/dki_odf/dki.fib"
-makefib(
-    input=path_sh,
-    output=path_out,
-    mask=path_mask,
-)
+# path_sh = "/mnt/d/Datasets/PyDesigner_Test/test_run/metrics/dki_odf.nii"
+# path_mask = "/mnt/d/Datasets/PyDesigner_Test/test_run/brain_mask.nii"
+# path_out = "/mnt/d/Datasets/PyDesigner_Test/dki_odf/dki.fib"
+# path_fa = "/mnt/d/Datasets/PyDesigner_Test/test_run/metrics/dti_fa.nii"
+# makefib(
+#     input=path_sh,
+#     output=path_out,
+#     mask=path_mask,
+#     map = path_fa,
+# )
