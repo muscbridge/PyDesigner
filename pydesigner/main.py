@@ -1,5 +1,4 @@
-"""Runs the PyDesigner pipeline
-"""
+"""Runs the PyDesigner pipeline"""
 
 import argparse  # ArgumentParser, add_argument
 import glob  # recursive file search
@@ -916,9 +915,9 @@ def main():
             os.rename(mif_smoothing, working_path)
             # update command history
             cmdtable["smooth"] = [
-                "designer.preprocessing.mrpreproc.smooth(input={}, "
-                "output={}, "
-                "fwhm={}".format(working_path, mif_smoothing, args.fwhm)
+                "designer.preprocessing.mrpreproc.smooth(input={}, " "output={}, " "fwhm={}".format(
+                    working_path, mif_smoothing, args.fwhm
+                )
             ]
             cmdtable["smooth"].append(mrinfoutil.commandhistory(working_path)[-1])
             cmdtable["HEAD"] = cmdtable["smooth"]
@@ -957,10 +956,9 @@ def main():
             os.rename(mif_rician, working_path)
             # update command history
             cmdtable["rician"] = [
-                "designer.preprocessing.mrpreproc."
-                "riciancorrect(input={}, "
-                "output={}, "
-                "noise={})".format(working_path, mif_rician, filetable["noisemap"].getFull())
+                "designer.preprocessing.mrpreproc." "riciancorrect(input={}, " "output={}, " "noise={})".format(
+                    working_path, mif_rician, filetable["noisemap"].getFull()
+                )
             ]
             cmdtable["rician"].append(mrinfoutil.commandhistory(working_path)[-1])
             cmdtable["HEAD"] = cmdtable["rician"]

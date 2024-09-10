@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding : utf-8 -*-
-"""Various definitions of spherical sampling
-"""
+"""Various definitions of spherical sampling"""
 
 import numpy as np
 

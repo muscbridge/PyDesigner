@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding : utf-8 -*-
 
-"""Utilities for running various MRtrix3's DWI preprocessing tools
-"""
+"""Utilities for running various MRtrix3's DWI preprocessing tools"""
 
 import os
 import os.path as op

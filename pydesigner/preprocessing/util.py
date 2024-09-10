@@ -1,5 +1,4 @@
-"""Adds utilities for the command-line interface
-"""
+"""Adds utilities for the command-line interface"""
 
 import json  # decode
 import os

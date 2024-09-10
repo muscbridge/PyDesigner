@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding : utf-8 -*-
 
-"""This module contains filter(s) for postprocessing DTI/DKI maps
-"""
+"""This module contains filter(s) for postprocessing DTI/DKI maps"""
 
 # ---------------------------------------------------------------------
 # Package Management

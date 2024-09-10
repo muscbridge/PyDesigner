@@ -11,7 +11,6 @@ References
 
 """
 
-
 import os
 import os.path as op
 import subprocess
@@ -313,6 +312,7 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
         os.remove(map_)
     os.remove(dirs_txt)
     os.remove(odf_amplitudes_nii)
+
 
 path_sh = "/mnt/d/Datasets/PyDesigner_Test/test_run/metrics/dki_odf.nii"
 path_mask = "/mnt/d/Datasets/PyDesigner_Test/test_run/brain_mask.nii"

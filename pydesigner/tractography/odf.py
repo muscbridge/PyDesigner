@@ -4,6 +4,7 @@
 """Function for computing DTI and DKI spherical harmonics from diffusion and
 kurtosis tensors
 """
+
 import multiprocessing
 import os.path as op
 import warnings

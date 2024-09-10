@@ -1099,11 +1099,7 @@ class DWI(object):
         md = (l1 + l2 + l3) / 3
         rd = (l2 + l3) / 2
         ad = l1
-        fa = (
-            np.sqrt(1 / 2)
-            * np.sqrt((l1 - l2) ** 2 + (l2 - l3) ** 2 + (l3 - l1) ** 2)
-            / np.sqrt(l1**2 + l2**2 + l3**2)
-        )
+        fa = np.sqrt(1 / 2) * np.sqrt((l1 - l2) ** 2 + (l2 - l3) ** 2 + (l3 - l1) ** 2) / np.sqrt(l1**2 + l2**2 + l3**2)
         fe = np.abs(np.stack((fa * v1[:, :, :, 0], fa * v1[:, :, :, 1], fa * v1[:, :, :, 2]), axis=3))
         trace = vectorize(trace.T, self.mask)
         return md, rd, ad, fa, fe, trace
@@ -1370,9 +1366,7 @@ class DWI(object):
                                 (-BT[b] * (1 - awf) ** -1)
                                 * np.diag((GT[b].dot((iDT - (awf**3 * zeta**-2) * iaDT).dot(GT[b].T))))
                             )
-                        ) * (
-                            1 - awf
-                        )  # Eq. 3 FBWM paper
+                        ) * (1 - awf)  # Eq. 3 FBWM paper
                         Sa = (2 * np.pi * b0 * zeta * np.sqrt(np.pi / BT[b])) * (
                             shB[b].dot((Pl0 * g2l_fa_R_b[b, idx, :][0] * clm))
                         )  # Eq. 4 FBM paper
@@ -1557,8 +1551,7 @@ class DWI(object):
                                 gamma((l_num + 1) / 2 + int_grid)
                                 * gamma(l_num + (3 / 2))
                                 * (
-                                    (-BT[b] * f_grid[idx_hyper] ** 2 * zeta**-2)
-                                    * np.ones((1, len(f_grid[idx_hyper])))
+                                    (-BT[b] * f_grid[idx_hyper] ** 2 * zeta**-2) * np.ones((1, len(f_grid[idx_hyper])))
                                 ).T
                                 ** int_grid
                                 / (factorial(int_grid) * gamma(l_num + (3 / 2) + int_grid) * gamma((l_num + 1) / 2))
@@ -1580,11 +1573,7 @@ class DWI(object):
                     idx_Y = 0
                     for l_num in degs[::2]:
                         g2l_fa_R_large[idx_Y : idx_Y + (2 * l_num + 1), np.squeeze(~idx_hyper)] = npm.repmat(
-                            (
-                                np.exp(
-                                    -l_num // 2 * (l_num + 1) / ((2 * BT[b] * (f_grid[~idx_hyper] ** 2 * zeta**-2)))
-                                )
-                            ),
+                            (np.exp(-l_num // 2 * (l_num + 1) / (2 * BT[b] * (f_grid[~idx_hyper] ** 2 * zeta**-2)))),
                             (2 * l_num + 1),
                             1,
                         )  # Eq. 20 FBI paper
@@ -1887,7 +1876,13 @@ class DWI(object):
 
     def extractWMTI(
         self,
-    ) -> Tuple[np.ndarray[float], np.ndarray[float], np.ndarray[float], np.ndarray[float], np.ndarray[float],]:
+    ) -> Tuple[
+        np.ndarray[float],
+        np.ndarray[float],
+        np.ndarray[float],
+        np.ndarray[float],
+        np.ndarray[float],
+    ]:
         """Returns white matter tract integrity (WMTI) parameters. Warning:
         this can only be run after fitting and DWI.extractDTI().
 
@@ -2167,8 +2162,9 @@ class DWI(object):
                         connLimit = 24
                 else:
                     raise Exception(
-                        'Connectivity choice "{}" is invalid. Please '
-                        'enter either "all" or "face".'.format(connectivity)
+                        'Connectivity choice "{}" is invalid. Please ' 'enter either "all" or "face".'.format(
+                            connectivity
+                        )
                     )
                 nVoil = np.sum(patchViol)
 

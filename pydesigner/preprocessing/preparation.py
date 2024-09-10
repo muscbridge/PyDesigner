@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # -*- coding : utf-8 -*-
 
-"""Adds utilities for preparing the data for eddy and analysis
-"""
+"""Adds utilities for preparing the data for eddy and analysis"""
 
 import os  # mkdir
 import os.path as op  # dirname, basename, join, splitext
