@@ -59,7 +59,8 @@ jobs:
         uses: crazy-max/ghaction-github-runtime@v3
 
       - name: Build Docker image
-        run: docker buildx build -t pydesigner-test -f tests/Dockerfile . \
+        run: |
+          docker buildx build -t pydesigner-test -f tests/Dockerfile . \
           --cache-to "type=gha,mode=max" \
           --cache-from "type=gha" \
 
