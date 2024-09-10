@@ -45,8 +45,6 @@ jobs:
   pytest:
     needs: pre-commit
     runs-on: ubuntu-latest
-    container:
-      image: dmri/ci-cd:latest
     steps:
       - name: Checkout code
         id: checkout
