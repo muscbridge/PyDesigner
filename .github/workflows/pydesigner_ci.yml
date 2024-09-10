@@ -62,7 +62,7 @@ jobs:
         run: |
           docker buildx build -t pydesigner-test -f tests/Dockerfile . \
           --cache-to "type=gha,mode=max" \
-          --cache-from "type=gha" \
+          --cache-from "type=gha"
 
       - name: Run tests in Docker container
         run: docker run pydesigner-test
