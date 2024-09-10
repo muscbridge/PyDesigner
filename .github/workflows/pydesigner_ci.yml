@@ -76,6 +76,7 @@ jobs:
           context: .
           load: true
           push: false
+          file: tests/Dockerfile
           tags: pydesigner-test
           cache-from: type=gha
           cache-to: type=gha,mode=max
