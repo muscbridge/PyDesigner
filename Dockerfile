@@ -8,6 +8,7 @@
 
 # Load base Ubuntu image
 FROM dmri/ci-cd:e93dd885 AS base
+SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 
 # Labels
 LABEL maintainer="Siddhartha Dhiman (siddhartha.dhiman@gmail.com)"
