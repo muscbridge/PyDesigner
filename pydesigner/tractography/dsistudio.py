@@ -300,7 +300,7 @@ def makefib(input, output, map=None, mask=None, n_fibers=5, scale=1, other_maps=
             map_lps = op.join(map_dir, map_name + "_lps" + ext)
             convertLPS(path_map, map_lps)
             other_data = nib.load(map_lps)
-            other_img = other_img.get_fdata()
+            other_img = other_data.get_fdata()
             if not other_img.shape == amplitudes_img.shape[:3]:
                 raise ValueError("Differing grid between other map image: {} " "and amplitudes".format(path_map))
             gmap = other_img.flatten(order="F")
