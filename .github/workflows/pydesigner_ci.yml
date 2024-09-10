@@ -80,6 +80,19 @@ jobs:
           name: coverage-report
           path: ./test_results/coverage.xml
 
+      - name: Code coverage summary report
+        uses: irongut/CodeCoverageSummary@v1.2.0
+        with:
+          filename: ./test_results/coverage.xml
+          badge: true
+          fail_below_min: true
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+          thresholds: '10 50'
+
       - name: Clean up
         run: |
           docker container rm pydesigner-test-container
