@@ -6,8 +6,9 @@ on:
     branches: master
     tags:
       - "**"
-
-
+permissions:
+  pull-requests: write
+  
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -81,7 +82,7 @@ jobs:
           path: ./test_results/coverage.xml
 
       - name: Code coverage summary report
-        uses: irongut/CodeCoverageSummary@v1.2.0
+        uses: irongut/CodeCoverageSummary@v1.3.0
         with:
           filename: ./test_results/coverage.xml
           badge: true
@@ -92,6 +93,13 @@ jobs:
           indicators: true
           output: both
           thresholds: '10 50'
+
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        if: github.event_name == 'pull_request'
+        with:
+          recreate: true
+          path: code-coverage-results.md
 
       - name: Clean up
         run: |
