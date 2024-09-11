@@ -3,6 +3,8 @@ class FileExtensionError(FileNotFoundError):
 
     pass
 
+
 class MRTrixError(IOError):
-    """Raise an exception for MRPreproc-related issues. """
+    """Raise an exception for MRPreproc-related issues."""
+
     pass

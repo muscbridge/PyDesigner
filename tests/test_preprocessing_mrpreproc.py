@@ -190,6 +190,3 @@ def test_denoise_output_success(tmp_path, nthreads, force, verbose):
     assert os.path.exists(noisemap_nii)
     assert mrinfoutil.format(output_nii) == "NIfTI-1.1"
     mrinfoutil.size(output_nii) == (2, 2, 2, 337)
-
-
-

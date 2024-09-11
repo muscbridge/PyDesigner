@@ -11,16 +11,11 @@ from shutil import copyfile, which
 import numpy as np
 
 from ..preprocessing import mrinfoutil, rician, smoothing
-from ..system.models import modelmrtrix, input_path_validator, output_path_validator
 from ..system.errors import MRTrixError
+from ..system.models import input_path_validator, modelmrtrix, output_path_validator
 
-def miftonii(
-        input: str,
-        output: str,
-        nthreads: bool = None,
-        force: bool = True, verbose:
-        bool = False
-) -> None:
+
+def miftonii(input: str, output: str, nthreads: bool = None, force: bool = True, verbose: bool = False) -> None:
     """Converts input `.mif` images to output `.nii` images
 
     Parameters
@@ -46,13 +41,7 @@ def miftonii(
     --------
     niitomif
     """
-    opts = modelmrtrix(
-        input=input,
-        output=output,
-        nthreads=nthreads,
-        force=force,
-        verbose=verbose
-    )
+    opts = modelmrtrix(input=input, output=output, nthreads=nthreads, force=force, verbose=verbose)
     input_path_validator(opts.input, ".mif")
     output_path_validator(opts.output, ".nii")
     arg = ["mrconvert"]
@@ -79,13 +68,7 @@ def miftonii(
         raise MRTrixError(msg)
 
 
-def niitomif(
-        input: str,
-        output: str,
-        nthreads: bool = None,
-        force: bool = True,
-        verbose: bool = False
-) -> None:
+def niitomif(input: str, output: str, nthreads: bool = None, force: bool = True, verbose: bool = False) -> None:
     """Converts input `.nii` images to output `.mif` images provided that
     all BVEC, BVAL and JSON files are provided and named same as input .nii
 
@@ -112,13 +95,7 @@ def niitomif(
     --------
     miftonii
     """
-    opts = modelmrtrix(
-        input=input,
-        output=output,
-        nthreads=nthreads,
-        force=force,
-        verbose=verbose
-    )
+    opts = modelmrtrix(input=input, output=output, nthreads=nthreads, force=force, verbose=verbose)
     input_path_validator(opts.input, ".nii")
     path_bvec = input_path_validator(op.splitext(opts.input)[0] + ".bvec", ".bvec")
     path_bval = input_path_validator(op.splitext(opts.input)[0] + ".bval", ".bval")
@@ -141,12 +118,9 @@ def niitomif(
         msg += f"\nMRtrix3 error: {completion.stderr}"
         raise MRTrixError(msg)
 
+
 def stride_match(
-        target: str, moving: str,
-        output: str,
-        nthreads: bool = None,
-        force: bool = True,
-        verbose: bool = False
+    target: str, moving: str, output: str, nthreads: bool = None, force: bool = True, verbose: bool = False
 ) -> None:
     """Matches strides on inputs target and moving by converting strides
     on moving image to those of target image.
@@ -172,12 +146,7 @@ def stride_match(
     -------
     None; writes out file
     """
-    opts = modelmrtrix(
-        output=output,
-        nthreads=nthreads,
-        force=force,
-        verbose=verbose
-    )
+    opts = modelmrtrix(output=output, nthreads=nthreads, force=force, verbose=verbose)
     target = input_path_validator(target)
     moving = input_path_validator(moving)
 
@@ -234,13 +203,7 @@ def denoise(
     -------
     None; writes out file
     """
-    opts = modelmrtrix(
-        input=input,
-        output=output,
-        nthreads=nthreads,
-        force=force,
-        verbose=verbose
-    )
+    opts = modelmrtrix(input=input, output=output, nthreads=nthreads, force=force, verbose=verbose)
     if not isinstance(noisemap, bool):
         raise TypeError("Please specify whether noisemap generation is True or False.")
     noisemap_path = op.join(op.dirname(opts.output), "noisemap.nii")
