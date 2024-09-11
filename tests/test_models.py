@@ -17,7 +17,7 @@ def test_modelmrtrix_input_nonexistent(tmp_path):
     input_nii = str(tmp_path / "input.nii")
     with pytest.raises(FileNotFoundError) as exc:
         model = modelmrtrix(input=input_nii)
-    assert f"Input file path ({input_nii}) does not exist" in str(exc.value) 
+    assert f"Input file path ({input_nii}) does not exist" in str(exc.value)
 
 
 def test_modelmrtrix_input_basedir():
@@ -47,7 +47,7 @@ def test_modelmrtrix_output_success(tmp_path):
     output_nii = str(tmp_path / "output.nii")
     model = modelmrtrix(output=output_nii)
     assert model.output == output_nii
-    
+
 
 def test_modelmrtrix_verbose_fail():
     with pytest.raises(ValidationError) as exc:
@@ -58,7 +58,7 @@ def test_modelmrtrix_verbose_fail():
 def test_modelmrtrix_verbose_success():
     model = modelmrtrix(verbose=True)
     print(model)
-    assert model.verbose == True 
+    assert model.verbose == True
 
 
 def test_modelmrtrix_force_fail():

@@ -1,7 +1,8 @@
 import os.path as op
 import typing as t
 
-from pydantic import BaseModel, ValidationInfo, field_validator, StrictBool
+from pydantic import BaseModel, StrictBool, ValidationInfo, field_validator
+
 from .errors import FileExtensionError
 
 
@@ -13,7 +14,7 @@ class modelmrtrix(BaseModel):
     nthreads: t.Optional[t.Union[int, t.Any]] = None
     verbose: t.Optional[StrictBool] = None
     force: t.Optional[StrictBool] = None
-    
+
     @field_validator("input", mode="before")
     @classmethod
     def input_valid(cls, var: str, info: ValidationInfo) -> str:
@@ -31,7 +32,6 @@ class modelmrtrix(BaseModel):
             raise FileNotFoundError(msg)
         return var
 
-
     @field_validator("output", mode="before")
     @classmethod
     def output_valid(cls, var: str, info: ValidationInfo) -> str:
@@ -46,7 +46,6 @@ class modelmrtrix(BaseModel):
             msg += "Pleasure ensure that the output parent directory exists."
             raise OSError(msg)
         return var
-    
 
     @field_validator("nthreads", mode="before")
     @classmethod
@@ -84,10 +83,10 @@ def input_path_validator(path: str, ctype: str = None):
     output_path_validator
     """
     opts = modelmrtrix(input=path)
-    if not ctype is None:
+    if ctype is not None:
         if not isinstance(ctype, str):
             msg = f"ctype variable (ctype={ctype}) needs to be a valid string."
-            raise(TypeError(msg))
+            raise (TypeError(msg))
     if ctype:
         if op.splitext(op.basename(opts.input))[-1] != ctype:
             msg = f"Input file ({path}) does not posses the required {ctype} extension."
@@ -113,10 +112,10 @@ def output_path_validator(path: str, ctype: str = None):
     --------
     input_path_validator
     """
-    if not ctype is None:
+    if ctype is not None:
         if not isinstance(ctype, str):
             msg = f"ctype variable (ctype={ctype}) needs to be a valid string."
-            raise(TypeError(msg))
+            raise (TypeError(msg))
     if ctype:
         if op.splitext(op.basename(path))[-1] != ctype:
             msg = f"Output file ({path}) does not posses the required {ctype} extension."
