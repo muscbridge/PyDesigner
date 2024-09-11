@@ -15,7 +15,8 @@ from tqdm import tqdm
 
 from ..plotting import outlierplot
 from ..system.utils import highprecisionexp, highprecisionpower, vectorize, writeNii
-from ..tractography import dsistudio, odf, sphericalsampling
+from ..tractography import dsistudio, odf, sphericalsampling 
+from ..system.models import input_path_validator
 from . import dwi_fnames, dwidirs
 from . import thresholds as th
 
@@ -77,7 +78,8 @@ class DWI(object):
             all physically present workers).
         """
         if not os.path.exists(imPath):
-            raise OSError("Input image {} not found".format(imPath))
+            msg = f"Input image ({imPath}) not found."
+            raise FileNotFoundError(msg)
         self.hdr = nib.load(imPath)
         self.img = np.array(self.hdr.dataobj)
         truncateIdx = np.logical_or(np.isnan(self.img), (self.img < minZero))
@@ -87,17 +89,11 @@ class DWI(object):
         # Remove extension from NIFTI filename
         fName = os.path.splitext(file)[0]
         if bvecPath:
-            if not isinstance(bvecPath, str):
-                raise TypeError("Path to .bvec is not specified " "as a string")
-            if not os.path.exists(bvecPath):
-                raise OSError("Path to .bvec does not exist: " "{}".format(bvecPath))
+            input_path_validator(bvecPath, ".bvec")
         else:
             bvecPath = os.path.join(path, fName + ".bvec")
         if bvalPath:
-            if not isinstance(bvalPath, str):
-                raise TypeError("Path to .bval is not specified " "as a string")
-            if not os.path.exists(bvalPath):
-                raise OSError("Path to .bvec does not exist: " "{}".format(bvalPath))
+            input_path_validator(bvalPath, ".bval")
         else:
             bvalPath = os.path.join(path, fName + ".bval")
         if os.path.exists(bvalPath) and os.path.exists(bvecPath):
@@ -113,7 +109,11 @@ class DWI(object):
             # number of DWI volumes. [Gx Gy Gz Bval]
             self.grad = np.c_[np.transpose(bvecs), bvals]
         else:
-            raise OSError("Unable to locate BVAL or BVEC files")
+            msg = "Unable to locate BVAL or BVEC files"
+            msg += "\nPaths being used are:"
+            msg += f"\nBVAL: {bvalPath}"
+            msg += f"\nBVEC: {bvecPath}"
+            raise OSError(msg)
         if mask is None:
             maskPath = os.path.join(path, "brain_mask.nii")
         else:
@@ -125,13 +125,16 @@ class DWI(object):
         else:
             self.mask = np.ones((self.img.shape[0], self.img.shape[1], self.img.shape[2]), order="F")
             self.maskStatus = False
-            print("No brain mask supplied")
-        tqdm.write("Image " + fName + ".nii loaded successfully")
+            msg = "No brain mask supplied"
+            print(msg)
+        tqdm.write(f"Image {fName}.nii loaded successfully")
         if nthreads is not None:
             if not isinstance(nthreads, int):
-                raise TypeError("Variable nthreads need to be an integer")
+                msg = "Variable nthreads need to be an integer"
+                raise TypeError(msg)
             if nthreads < -1 or nthreads == 0:
-                raise ValueError("Variable nthreads is a positive integer or -1")
+                msg = "Variable nthreads is a positive integer or -1"
+                raise ValueError(msg)
         if nthreads is None:
             self.workers = -1
         else:
@@ -170,7 +173,7 @@ class DWI(object):
         """
         return self.grad[:, 0:3]
 
-    def maxBval(self) -> float:
+    def maxBval(self) -> int:
         """Returns the maximum b-value in a dataset to determine between
         DTI and DKI, requires no input parameters.
 
@@ -184,9 +187,9 @@ class DWI(object):
         a = dwi.maxBval(), where dwi is the DWI class object.
 
         """
-        return max(np.unique(self.grad[:, 3])).astype(int)
+        return int(max(np.unique(self.grad[:, 3])))
 
-    def maxDTIBval(self) -> float:
+    def maxDTIBval(self) -> int:
         """Returns the maximum DTI b-value in a dataset.
 
         Returns
@@ -200,9 +203,9 @@ class DWI(object):
 
         """
         exclude_idx = self.grad[:, 3] <= th.__maxdtibval__
-        return max(np.unique(self.grad[exclude_idx, 3])).astype(int)
+        return int(max(np.unique(self.grad[exclude_idx, 3])))
 
-    def maxDKIBval(self) -> float:
+    def maxDKIBval(self) -> int:
         """Returns the maximum DKI b-value in a dataset.
 
         Returns
@@ -216,9 +219,9 @@ class DWI(object):
 
         """
         exclude_idx = self.grad[:, 3] <= th.__maxdkibval__
-        return max(np.unique(self.grad[exclude_idx, 3])).astype(int)
+        return int(max(np.unique(self.grad[exclude_idx, 3])))
 
-    def maxFBIBval(self) -> float:
+    def maxFBIBval(self) -> int:
         """Returns the maximum FBI b-value in a dataset.
 
         Returns
@@ -232,7 +235,7 @@ class DWI(object):
 
         """
         exclude_idx = self.grad[:, 3] <= th.__maxfbibval__
-        return max(np.unique(self.grad[exclude_idx, 3])).astype(int)
+        return int(max(np.unique(self.grad[exclude_idx, 3])))
 
     def idxb0(self) -> np.ndarray[bool]:
         """Returns the index of all B-zeros according to bvals
@@ -1015,7 +1018,8 @@ class DWI(object):
                     axis=0,
                 )
         else:
-            print('Invalid constraints. Please use format "[0, 0, 0]"')
+            msg = "Invalid contraints. Please use format [0, 0, 0]"
+            raise ValueError(msg)
         return C
 
     def extractDTI(

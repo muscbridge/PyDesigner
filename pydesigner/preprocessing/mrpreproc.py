@@ -15,7 +15,7 @@ from ..system.errors import MRTrixError
 from ..system.models import input_path_validator, modelmrtrix, output_path_validator
 
 
-def miftonii(input: str, output: str, nthreads: bool = None, force: bool = True, verbose: bool = False) -> None:
+def miftonii(input: str, output: str, nthreads: int = None, force: bool = True, verbose: bool = False) -> None:
     """Converts input `.mif` images to output `.nii` images
 
     Parameters
@@ -41,7 +41,7 @@ def miftonii(input: str, output: str, nthreads: bool = None, force: bool = True,
     --------
     niitomif
     """
-    opts = modelmrtrix(input=input, output=output, nthreads=nthreads, force=force, verbose=verbose)
+    opts = modelmrtrix(input=input_path_validator(input, ".mif"), output=output_path_validator(output, ".nii"), nthreads=nthreads, force=force, verbose=verbose)
     input_path_validator(opts.input, ".mif")
     output_path_validator(opts.output, ".nii")
     arg = ["mrconvert"]
@@ -68,7 +68,7 @@ def miftonii(input: str, output: str, nthreads: bool = None, force: bool = True,
         raise MRTrixError(msg)
 
 
-def niitomif(input: str, output: str, nthreads: bool = None, force: bool = True, verbose: bool = False) -> None:
+def niitomif(input: str, output: str, nthreads: int = None, force: bool = True, verbose: bool = False) -> None:
     """Converts input `.nii` images to output `.mif` images provided that
     all BVEC, BVAL and JSON files are provided and named same as input .nii
 
@@ -95,7 +95,7 @@ def niitomif(input: str, output: str, nthreads: bool = None, force: bool = True,
     --------
     miftonii
     """
-    opts = modelmrtrix(input=input, output=output, nthreads=nthreads, force=force, verbose=verbose)
+    opts = modelmrtrix(input=input_path_validator(input, ".nii"), output=output_path_validator(output, ".mif"), nthreads=nthreads, force=force, verbose=verbose)
     input_path_validator(opts.input, ".nii")
     path_bvec = input_path_validator(op.splitext(opts.input)[0] + ".bvec", ".bvec")
     path_bval = input_path_validator(op.splitext(opts.input)[0] + ".bval", ".bval")
@@ -120,7 +120,7 @@ def niitomif(input: str, output: str, nthreads: bool = None, force: bool = True,
 
 
 def stride_match(
-    target: str, moving: str, output: str, nthreads: bool = None, force: bool = True, verbose: bool = False
+    target: str, moving: str, output: str, nthreads: int = None, force: bool = True, verbose: bool = False
 ) -> None:
     """Matches strides on inputs target and moving by converting strides
     on moving image to those of target image.
@@ -171,7 +171,7 @@ def denoise(
     output: str,
     noisemap: bool = True,
     extent: str = "5,5,5",
-    nthreads: bool = None,
+    nthreads: int = None,
     force: bool = True,
     verbose: bool = False,
 ) -> None:
@@ -203,7 +203,7 @@ def denoise(
     -------
     None; writes out file
     """
-    opts = modelmrtrix(input=input, output=output, nthreads=nthreads, force=force, verbose=verbose)
+    opts = modelmrtrix(input=input_path_validator(input, ".mif"), output=output_path_validator(output, ".mif"), nthreads=nthreads, force=force, verbose=verbose)
     if not isinstance(noisemap, bool):
         raise TypeError("Please specify whether noisemap generation is True or False.")
     noisemap_path = op.join(op.dirname(opts.output), "noisemap.nii")
@@ -227,7 +227,13 @@ def denoise(
         raise MRTrixError(msg)
 
 
-def degibbs(input, output, nthreads=None, force=False, verbose=False):
+def degibbs(
+        input: str,
+        output: str,
+        nthreads: int = None,
+        force: bool = False,
+        verbose: bool = False
+) -> None:
     """Runs MRtrix3's `mrdegibbs` command with optimal parameters for
     PyDesigner.
 
@@ -250,32 +256,21 @@ def degibbs(input, output, nthreads=None, force=False, verbose=False):
     -------
     None; writes out file
     """
-    if not op.exists(input):
-        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
-    if not op.exists(op.dirname(output)):
-        raise OSError(
-            "Specifed directory for output file {} does not "
-            "exist. Please ensure that this is a valid "
-            "directory.".format(op.dirname(output))
-        )
-    if nthreads is not None:
-        if not isinstance(nthreads, int):
-            raise Exception("Please specify the number of threads as an " "integer.")
-    if not isinstance(force, bool):
-        raise Exception("Please specify whether forced overwrite is True " "or False.")
-    if not isinstance(verbose, bool):
-        raise Exception("Please specify whether verbose is True or False.")
+    opts = modelmrtrix(input=input_path_validator(input, ".mif"), output=output_path_validator(output, ".mif"), nthreads=nthreads, force=force, verbose=verbose)
     arg = ["mrdegibbs"]
-    if force:
+    if opts.force:
         arg.append("-force")
-    if not verbose:
+    if not opts.verbose:
         arg.append("-quiet")
-    if nthreads is not None:
+    if opts.nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
-    arg.extend([input, output])
+    arg.extend([opts.input, opts.output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception("mrdegibbs failed, please look above for error " "sources.")
+        msg = f"Mrdegibbs failed. Return code: {completion.returncode}"
+        msg += f"\nCommand: {' '.join(arg)}"
+        msg += f"\nMRtrix3 error: {completion.stderr}"
+        raise MRTrixError(msg)
 
 
 def undistort(
@@ -297,7 +292,7 @@ def undistort(
         Path to input .mif file
     output : str
         Path to output .mif file
-    rpe : str, {'rpe_header', 'rpe-pair', 'rpe_all, 'rpe_all'}, optional
+    rpe : str, {'rpe_header', 'rpe-pair', 'rpe_none, 'rpe_all'}, optional
         Reverse phase encoding of the dataset. (Default: 'rpe_header')
     epib0 : int
         Number of reverse PE dir B0 pairs to use in TOPUP correction
@@ -317,37 +312,25 @@ def undistort(
     -------
     None; writes out file
     """
-    if not op.exists(input):
-        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
-    if not op.exists(op.dirname(output)):
-        raise OSError(
-            "Specifed directory for output file {} does not "
-            "exist. Please ensure that this is a valid "
-            "directory.".format(op.dirname(output))
-        )
+    opts = modelmrtrix(input=input_path_validator(input, ".mif"), output=output_path_validator(output, ".mif"), nthreads=nthreads, force=force, verbose=verbose)
+    
     if rpe not in ["rpe_none", "rpe_pair", "rpe_all", "rpe_header"]:
-        raise Exception(
-            "Entered RPE selection is not valid. Please "
-            'choose either "rpe_none", "rpe_pair", '
-            '"rpe_all", or "rpe_header".'
-        )
+        msg = "Entered RPE selection is not valid. Please choose either "
+        msg += "'rpe_none', 'rpe_pair' 'rpe_all', or 'rpe_header'"
+        raise ValueError(msg)
     if not isinstance(epib0, int):
-        raise Exception("Number of TOPUP B0s need to be specified as " "as an integer.")
+        msg = "Number of TOPUP B0s need to be specified as a positive integer."
+        raise ValueError(msg)
     if qc is not None:
         if not isinstance(qc, str):
-            raise Exception("Please specify QC directory as a string")
+            msg = "Please specify QC directory as a string"
+            raise TypeError(msg)
         if not op.exists(qc):
-            raise OSError("Specified QC directory does not exist. " "Please ensure that this is a valid " "directory.")
-    if nthreads is not None:
-        if not isinstance(nthreads, int):
-            raise Exception("Please specify the number of threads as an " "integer.")
-    if not isinstance(force, bool):
-        raise Exception("Please specify whether forced overwrite is True " "or False.")
-    if not isinstance(verbose, bool):
-        raise Exception("Please specify whether verbose is True or False.")
+            msg = "Specified QC directory does not exist. Please ensure that this is a valid directory."
+            raise OSError(msg)
     rpe = "-" + rpe
     # Get output directory
-    outdir = op.dirname(output)
+    outdir = op.dirname(opts.output)
     # Extract BVEC and BVALS for shell sampling deduction
     arg_extract = ["mrinfo"]
     arg_extract.extend(
@@ -357,23 +340,24 @@ def undistort(
             op.join(outdir, "dwiec.bval"),
         ]
     )
-    arg_extract.append(input)
+    arg_extract.append(opts.input)
     completion = subprocess.run(arg_extract)
     if completion.returncode != 0:
-        raise Exception(
-            "extracting FSL BVEC and BVEC gradients " "failed during undistortion, please look " "above for errors."
-        )
+        msg = "Extraction of FSL BVEC and BVAL gradients failed. Return code: {completion.returncode}"
+        msg += f"\nCommand: {' '.join(arg_extract)}"
+        msg += f"\nMRtrix3 error: {completion.stderr}"
+        raise MRTrixError(msg)
     # Form main undistortion argument
     arg = []
     if which("dwipreproc") is None:
         arg.append("dwifslpreproc")
     else:
         arg.append("dwipreproc")
-    if force:
+    if opts.force:
         arg.append("-force")
-    if not verbose:
+    if not opts.verbose:
         arg.append("-quiet")
-    if nthreads is not None:
+    if opts.nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     # Determine whether half or full sphere sampling
     repol_string = "--repol "
@@ -407,10 +391,13 @@ def undistort(
     arg.append(rpe)
     if qc is not None:
         arg.extend(["-eddyqc_all", qc])
-    arg.extend([input, output])
+    arg.extend([opts.input, opts.output])
     completion = subprocess.run(arg, cwd=outdir)
     if completion.returncode != 0:
-        raise Exception("dwifslpreproc failed, please look above for " "error sources.")
+        msg = "Dwifslpreproc failed. Return code: {completion.returncode}"
+        msg += f"\nCommand: {' '.join(arg_extract)}"
+        msg += f"\nMRtrix3 error: {completion.stderr}"
+        raise(MRTrixError(msg))
     # Remove temporarily generated files
     os.remove(op.join(outdir, "dwiec.bvec"))
     os.remove(op.join(outdir, "dwiec.bval"))
@@ -446,48 +433,34 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False, verbose=Fa
     -------
     None; writes out file
     """
-    if not op.exists(input):
-        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
-    if not op.exists(op.dirname(output)):
-        raise OSError(
-            "Specifed directory for output file {} does not "
-            "exist. Please ensure that this is a valid "
-            "directory.".format(op.dirname(output))
-        )
+    opts = modelmrtrix(input=input, output=output, nthreads=nthreads, force=force, verbose=verbose)
     if (thresh < 0) or (thresh > 1):
         raise ValueError("BET Threshold needs to be within 0 to 1 range.")
-    if nthreads is not None:
-        if not isinstance(nthreads, int):
-            raise Exception("Please specify the number of threads as an " "integer.")
-    if not isinstance(force, bool):
-        raise Exception("Please specify whether forced overwrite is True " "or False.")
-    if not isinstance(verbose, bool):
-        raise Exception("Please specify whether verbose is True or False.")
     # Read FSL NifTi output format and change it if not '.nii'
     fsl_suffix = os.getenv("FSLOUTPUTTYPE")
     if fsl_suffix is None:
-        raise OSError(
-            "Unable to determine system environment variable "
-            "FSF_OUTPUT_FORMAT. Ensure that FSL is installed "
-            "correctly."
-        )
+        msg = "Unable to determine system environment variable 'FSF_OUTPUT_FORMAT'. Ensure that FSL is installed correctly."
+        raise OSError(msg)
     if fsl_suffix == "NIFTI_GZ":
         os.environ["FSLOUTPUTTYPE"] = "NIFTI"
-    outdir = op.dirname(output)
+    outdir = op.dirname(opts.output)
     B0_nan = op.join(outdir, "B0_nan.nii")
     mask = op.join(outdir, "brain")
     tmp_brain = op.join(outdir, "brain.nii")
     # Extract averaged B0 from DWI
-    extractmeanbzero(input=input, output=B0_nan, nthreads=nthreads, force=force, verbose=verbose)
+    extractmeanbzero(input=opts.input, output=B0_nan, nthreads=opts.nthreads, force=opts.force, verbose=opts.verbose)
     # Compute brain mask
     arg_mask = ["bet", B0_nan, mask, "-m", "-f", str(thresh)]
     completion = subprocess.run(arg_mask)
     if completion.returncode != 0:
-        raise Exception("Unable to compute brain mask from B0. See above " "for errors")
+        msg = f"Unable to compute brain mask from B0. Return code: {completion.returncode}"
+        msg += f"\nCommand: {' '.join(arg_mask)}"
+        msg += f"\FSL error: {completion.stderr}"
+        raise MRTrixError(msg)
     # Remove intermediary file
     os.remove(B0_nan)
     os.remove(tmp_brain)
-    os.rename(op.join(outdir, mask + "_mask.nii"), output)
+    os.rename(op.join(outdir, mask + "_mask.nii"), opts.output)
 
 
 def csfmask(

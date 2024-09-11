@@ -164,3 +164,8 @@ def test_commandhistory_valid():
 def test_commandhistory_dtype():
     """Test whether function returns list type"""
     assert isinstance(mrinfoutil.commandhistory(PATH_MIF), list)
+
+
+def test_fullsphere():
+    """Test whether function returns correct full sphere"""
+    assert mrinfoutil.is_fullsphere(PATH_MIF) == True
