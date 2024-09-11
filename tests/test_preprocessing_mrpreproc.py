@@ -1,9 +1,11 @@
 import os
 import nibabel as nib
 import pytest
+from unittest.mock import patch, MagicMock
 from conftest import load_data
 
 from pydesigner.preprocessing import mrpreproc, mrinfoutil
+from pydesigner.system.errors import MRTrixError
 
 DATA = load_data(type="hifi")
 PATH_DWI = DATA["nifti"]
@@ -15,123 +17,179 @@ PATH_BVAL = DATA["bval"]
 PATH_JSON = DATA["json"]
 PATH_MIF = DATA["mif"]
 
-
-def test_miftonii_error_path():
-    """Test whether function `miftonii` raises error on invalid path"""
-    with pytest.raises(IOError) as exc:
-        mrpreproc.miftonii("nonexistentfile", "output.nii")
-    assert "Input path does not exist" in str(exc.value)
-
-
-def test_miftonii_missing_input(tmp_path):
-    """Test whether function `miftonii` raises error when input file is missing"""
-    input_mif = tmp_path / "input.nii"
-    output_nii = tmp_path / "output.nii"
-    with pytest.raises(IOError) as exc:
-        mrpreproc.miftonii(input_mif, output_nii)
-    assert "Input path does not exist" in str(exc.value)
+def test_miftonii_output_failure(tmp_path):
+    """Test whether function `miftonii` fails when return code is non-zero"""
+    output_nii = str(tmp_path / "output.nii")
+    output_bval = str(tmp_path / "output.bval")
+    output_bvec = str(tmp_path / "output.bvec")
+    with patch("subprocess.run") as mock_subprocess:
+        mock_subprocess.return_value = MagicMock(
+            returncode=1, stderr="stderr"
+        )
+        with pytest.raises(MRTrixError) as exc:
+            mrpreproc.miftonii(PATH_MIF, output_nii)
+        assert f"Conversion from .mif to .nii failed" in str(exc.value)
+        assert "stderr" in str(exc.value)
 
 
-def test_miftonii_error_directory():
-    """Test whether function `miftonii` raises error on nonexistent directory"""
-    with pytest.raises(OSError) as exc:
-        mrpreproc.miftonii(PATH_MIF, "nonexistent/output.nii")
-    assert "Specifed directory for output file nonexistent does not exist" in str(exc.value)
-
-
-def test_miftonii_error_input(tmp_path):
-    """Test whether function `miftonii` raises error on invalid output file"""
-    output_nii = tmp_path / "output.tar"
-    with pytest.raises(IOError) as exc:
-        mrpreproc.miftonii(PATH_MIF, output_nii)
-    assert "Output specified does not possess the .nii extension" in str(exc.value)
-
-
-def test_miftonii_success(tmp_path):
-    """Test whether function `miftonii` successfully converts a valid MIF file to NIfTI"""
-    output_nii = tmp_path / "output.nii"
-    mrpreproc.miftonii(PATH_MIF, output_nii)
-    assert os.path.exists(output_nii)
-
-
-def test_miftonii_output_correctness_image(tmp_path):
+@pytest.mark.parametrize(
+    "nthreads, force, verbose",
+    [
+        (None, None, None),
+        (1, None, None),
+        (None, True, None),
+        (None, False, None),
+        (None, None, True),
+        (None, None, False),
+    ]
+)
+def test_miftonii_output_success(tmp_path, nthreads, force, verbose):
     """Test whether function `miftonii` generates a valid NIfTI file"""
-    output_nii = tmp_path / "output.nii"
-    output_bval = tmp_path / "output.bval"
-    output_bvec = tmp_path / "output.bvec"
-    mrpreproc.miftonii(PATH_MIF, output_nii)
+    output_nii = str(tmp_path / "output.nii")
+    output_bval = str(tmp_path / "output.bval")
+    output_bvec = str(tmp_path / "output.bvec")
+    mrpreproc.miftonii(PATH_MIF, output_nii, nthreads=nthreads, force=force, verbose=verbose)
     assert os.path.exists(output_nii)
     assert os.path.exists(output_bval)
     assert os.path.exists(output_bvec)
-    assert(os.path.splitext(output_nii))[-1] == ".nii"
+    assert os.path.splitext(output_nii)[-1] == ".nii"
     img = nib.load(output_nii)
     assert type(img).__name__ == "Nifti1Image"
     assert img.shape == (2, 2, 2, 337)
 
 
-def test_niitomif_error_path():
-    """Test whether function `miftonii` raises error on invalid path"""
-    with pytest.raises(IOError) as exc:
-        mrpreproc.niitomif("nonexistentfile", "output.mif")
-    assert "Input path does not exist" in str(exc.value)
-
-
-def test_niitomif_missing_input(tmp_path):
-    """Test whether function `niitomif` raises error when input file is missing"""
-    input_nii = tmp_path / "input.nii"
-    output_mif = tmp_path / "output.mif"
-    with pytest.raises(IOError) as exc:
-        mrpreproc.miftonii(input_nii, output_mif)
-    assert "Input path does not exist" in str(exc.value)
-
-
-def test_niitomif_error_directory():
-    """Test whether function `niitomif` raises error on nonexistent directory"""
-    with pytest.raises(OSError) as exc:
-        mrpreproc.niitomif(PATH_DWI, "nonexistent/output.mif")
-    assert "Specifed directory for output file nonexistent does not exist" in str(exc.value)
-
-
-def test_niitomif_error_output(tmp_path):
-    """Test whether function `niitomif` raises error on invalid output file"""
-    output_mif = tmp_path / "output.tar"
-    with pytest.raises(IOError) as exc:
-        mrpreproc.niitomif(PATH_DWI, output_mif)
-    assert "Output specified does not possess the .mif extension" in str(exc.value)
-
-
 def test_niitomif_failure_bval(tmp_path):
     """Test whether function `niitomif` fails when there is no sidecar file"""
-    output_mif = tmp_path / "output.mif"
+    output_mif = str(tmp_path / "output.mif")
     with pytest.raises(OSError) as exc:
          mrpreproc.niitomif(PATH_DWI_NO_BVAL, output_mif)
-    assert f"Unable to locate BVAL file {os.path.splitext(PATH_DWI_NO_BVAL)[0]}.bval" in str(exc.value)
+    assert f"Input file path ({os.path.splitext(PATH_DWI_NO_BVAL)[0]}.bval) does not exist" in str(exc.value)
 
 
 def test_niitomif_failure_bvec(tmp_path):
     """Test whether function `niitomif` fails when there is no sidecar file"""
-    output_mif = tmp_path / "output.mif"
+    output_mif = str(tmp_path / "output.mif")
     with pytest.raises(OSError) as exc:
          mrpreproc.niitomif(PATH_DWI_NO_BVEC, output_mif)
-    assert f"Unable to locate BVEC file {os.path.splitext(PATH_DWI_NO_BVEC)[0]}.bvec" in str(exc.value)
+    assert f"Input file path ({os.path.splitext(PATH_DWI_NO_BVEC)[0]}.bvec) does not exist" in str(exc.value)
 
 
 def test_niitomif_failure_json(tmp_path):
     """Test whether function `niitomif` fails when there is no sidecar file"""
-    output_mif = tmp_path / "output.mif"
+    output_mif = str(tmp_path / "output.mif")
     with pytest.raises(OSError) as exc:
          mrpreproc.niitomif(PATH_DWI_NO_JSON, output_mif)
-    assert f"Unable to locate JSON file {os.path.splitext(PATH_DWI_NO_JSON)[0]}.json" in str(exc.value)
+    assert f"Input file path ({os.path.splitext(PATH_DWI_NO_JSON)[0]}.json) does not exist" in str(exc.value)
 
-def test_niitomif_success(tmp_path):
+
+def test_niitomif_output_failure(tmp_path):
+    """Test whether function `niitomif` fails when return code is non-zero"""
+    output_mif = str(tmp_path / "output.mif")
+    with patch("subprocess.run") as mock_subprocess:
+        mock_subprocess.return_value = MagicMock(
+            returncode=1, stderr="stderr"
+        )
+        with pytest.raises(MRTrixError) as exc:
+            mrpreproc.niitomif(PATH_DWI, output_mif)
+        assert f"Conversion from .nii to .mif failed" in str(exc.value)
+        assert "stderr" in str(exc.value)
+
+
+@pytest.mark.parametrize(
+    "nthreads, force, verbose",
+    [
+        (None, None, None),
+        (1, None, None),
+        (None, True, None),
+        (None, False, None),
+        (None, None, True),
+        (None, None, False),
+    ]
+)
+def test_niitomif_success(tmp_path, nthreads, force, verbose):
     """Test whether function `niitomif` successfully converts a valid NifTI file to MIF"""
-    output_mif = tmp_path / "output.mif"
-    mrpreproc.niitomif(PATH_DWI, output_mif)
+    output_mif = str(tmp_path / "output.mif")
+    mrpreproc.niitomif(PATH_DWI, output_mif, nthreads=nthreads, force=force, verbose=verbose)
     assert os.path.exists(output_mif)
-
-
-def test_niitomif_output_correctness_image(tmp_path):
-    output_mif = tmp_path / "output.mif"
-    mrpreproc.niitomif(PATH_DWI, output_mif)
     assert mrinfoutil.format(output_mif) == "MRtrix"
     mrinfoutil.size(output_mif) == (2, 2, 2, 337)
+
+
+def test_stride_match_output_failure(tmp_path):
+    """Test whether function `stride_match` fails when return code is non-zero"""
+    output_nii = str(tmp_path / "output.nii")
+    with patch("subprocess.run") as mock_subprocess:
+        mock_subprocess.return_value = MagicMock(
+            returncode=1, stderr="stderr"
+        )
+        with pytest.raises(MRTrixError) as exc:
+            mrpreproc.stride_match(PATH_DWI, PATH_DWI_NO_BVAL, output_nii)
+        assert f"Stride matching failed" in str(exc.value)
+        assert "stderr" in str(exc.value)
+
+
+@pytest.mark.parametrize(
+    "nthreads, force, verbose",
+    [
+        (None, None, None),
+        (1, None, None),
+        (None, True, None),
+        (None, False, None),
+        (None, None, True),
+        (None, None, False),
+    ]
+)
+def test_stride_match_output_success(tmp_path, nthreads, force, verbose):
+    """Test whether function `stride_match` fails when return code is non-zero"""
+    output_mif = str(tmp_path / "output.mif")
+    mrpreproc.stride_match(PATH_DWI, PATH_DWI_NO_BVAL, output_mif, nthreads=nthreads, force=force, verbose=verbose)
+    assert os.path.exists(output_mif)
+    assert mrinfoutil.format(output_mif) == "MRtrix"
+    mrinfoutil.size(output_mif) == (2, 2, 2, 337)
+    assert mrinfoutil.strides(output_mif) == (1, 2, 3, 4)
+
+
+def test_denoise_noisemap_invalid(tmp_path):
+    """Test whether function `denoise` fails when noisemap is invalid"""
+    output_mif = str(tmp_path / "output.mif")
+    with pytest.raises(TypeError) as exc:
+        mrpreproc.denoise(PATH_DWI, output_mif, noisemap="invalid")
+    assert "Please specify whether noisemap generation is True or False" in str(exc.value)
+
+
+def test_denoise_output_failure(tmp_path):
+    """Test whether function `stride_match` fails when return code is non-zero"""
+    output_nii = str(tmp_path / "output.nii")
+    with patch("subprocess.run") as mock_subprocess:
+        mock_subprocess.return_value = MagicMock(
+            returncode=1, stderr="stderr"
+        )
+        with pytest.raises(MRTrixError) as exc:
+            mrpreproc.denoise(PATH_DWI, output_nii, noisemap=True, extent="1,1,1")
+        assert f"Dwidenoise failed" in str(exc.value)
+        assert "stderr" in str(exc.value)
+
+
+@pytest.mark.parametrize(
+    "nthreads, force, verbose",
+    [
+        (None, None, None),
+        (1, None, None),
+        (None, True, None),
+        (None, False, None),
+        (None, None, True),
+        (None, None, False),
+    ]
+)
+def test_denoise_output_success(tmp_path, nthreads, force, verbose):
+    """Test whether function `denoise` successfully denoises a DWI dataset"""
+    output_nii = str(tmp_path / "output.nii")
+    noisemap_nii = str(tmp_path / "noisemap.nii")
+    mrpreproc.denoise(PATH_DWI, output_nii, noisemap=True, extent="1,1,1", nthreads=nthreads, force=force, verbose=verbose)
+    assert os.path.exists(output_nii)
+    assert os.path.exists(noisemap_nii)
+    assert mrinfoutil.format(output_nii) == "NIfTI-1.1"
+    mrinfoutil.size(output_nii) == (2, 2, 2, 337)
+
+
+

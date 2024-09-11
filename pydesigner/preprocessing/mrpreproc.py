@@ -11,9 +11,16 @@ from shutil import copyfile, which
 import numpy as np
 
 from ..preprocessing import mrinfoutil, rician, smoothing
+from ..system.models import modelmrtrix, input_path_validator, output_path_validator
+from ..system.errors import MRTrixError
 
-
-def miftonii(input, output, nthreads=None, force=True, verbose=False):
+def miftonii(
+        input: str,
+        output: str,
+        nthreads: bool = None,
+        force: bool = True, verbose:
+        bool = False
+) -> None:
     """Converts input `.mif` images to output `.nii` images
 
     Parameters
@@ -39,45 +46,46 @@ def miftonii(input, output, nthreads=None, force=True, verbose=False):
     --------
     niitomif
     """
-    if not op.exists(input):
-        raise IOError("Input path does not exist. Please ensure that the folder or file specified exists.")
-    if not op.exists(op.dirname(output)):
-        raise OSError(
-            "Specifed directory for output file {} does not "
-            "exist. Please ensure that this is a valid "
-            "directory.".format(op.dirname(output))
-        )
-    if op.splitext(output)[-1] != ".nii":
-        raise IOError("Output specified does not possess the .nii extension.")
-    if nthreads is not None:
-        if not isinstance(nthreads, int):
-            raise TypeError("Please specify the number of threads as an integer.")
-    if not isinstance(force, bool):
-        raise TypeError("Please specify whether forced overwrite is True or False.")
-    if not isinstance(verbose, bool):
-        raise TypeError("Please specify whether verbose is True or False.")
+    opts = modelmrtrix(
+        input=input,
+        output=output,
+        nthreads=nthreads,
+        force=force,
+        verbose=verbose
+    )
+    input_path_validator(opts.input, ".mif")
+    output_path_validator(opts.output, ".nii")
     arg = ["mrconvert"]
-    if force:
+    if opts.force:
         arg.append("-force")
-    if not verbose:
+    if not opts.verbose:
         arg.append("-quiet")
-    if nthreads is not None:
+    if opts.nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     arg.extend(
         [
             "-export_grad_fsl",
-            op.splitext(output)[0] + ".bvec",
-            op.splitext(output)[0] + ".bval",
+            op.splitext(opts.output)[0] + ".bvec",
+            op.splitext(opts.output)[0] + ".bval",
         ]
     )
     arg.extend(["-json_export", op.splitext(output)[0] + ".json"])
-    arg.extend([input, output])
+    arg.extend([opts.input, opts.output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception("Conversion from .mif to .nii failed; check " "above for errors.")
+        msg = f"Conversion from .mif to .nii failed. Return code: {completion.returncode}"
+        msg += f"\nCommand: {' '.join(arg)}"
+        msg += f"\nMRtrix3 error: {completion.stderr}"
+        raise MRTrixError(msg)
 
 
-def niitomif(input, output, nthreads=None, force=True, verbose=False):
+def niitomif(
+        input: str,
+        output: str,
+        nthreads: bool = None,
+        force: bool = True,
+        verbose: bool = False
+) -> None:
     """Converts input `.nii` images to output `.mif` images provided that
     all BVEC, BVAL and JSON files are provided and named same as input .nii
 
@@ -104,49 +112,42 @@ def niitomif(input, output, nthreads=None, force=True, verbose=False):
     --------
     miftonii
     """
-    if not op.exists(input):
-        raise OSError("Input path does not exist. Please ensure that the folder or file specified exists.")
-    if not op.exists(op.dirname(output)):
-        raise OSError(
-            "Specifed directory for output file {} does not "
-            "exist. Please ensure that this is a valid "
-            "directory.".format(op.dirname(output))
-        )
-    if op.splitext(output)[-1] != ".mif":
-        msg = "Output specified does not possess the .mif extension."
-        raise OSError(msg)
-    if not op.exists(op.splitext(input)[0] + ".bvec"):
-        msg = f"Unable to locate BVEC file {op.splitext(input)[0]}.bvec."
-        raise OSError(msg)
-    if not op.exists(op.splitext(input)[0] + ".bval"):
-        msg = f"Unable to locate BVAL file {op.splitext(input)[0]}.bval."
-        raise OSError(msg)
-    if not op.exists(op.splitext(input)[0] + ".json"):
-        msg = f"Unable to locate JSON file {op.splitext(input)[0]}.json"
-        raise OSError(msg)
-    if nthreads is not None:
-        if not isinstance(nthreads, int):
-            raise Exception("Please specify the number of threads as an integer.")
-    if not isinstance(force, bool):
-        raise Exception("Please specify whether forced overwrite is True or False.")
-    if not isinstance(verbose, bool):
-        raise Exception("Please specify whether verbose is True or False.")
+    opts = modelmrtrix(
+        input=input,
+        output=output,
+        nthreads=nthreads,
+        force=force,
+        verbose=verbose
+    )
+    input_path_validator(opts.input, ".nii")
+    path_bvec = input_path_validator(op.splitext(opts.input)[0] + ".bvec", ".bvec")
+    path_bval = input_path_validator(op.splitext(opts.input)[0] + ".bval", ".bval")
+    path_json = input_path_validator(op.splitext(opts.input)[0] + ".json", ".json")
+    output_path_validator(opts.output, ".mif")
     arg = ["mrconvert"]
-    if force:
+    if opts.force:
         arg.append("-force")
-    if not verbose:
+    if not opts.verbose:
         arg.append("-quiet")
-    if nthreads is not None:
-        arg.extend(["-nthreads", str(nthreads)])
-    arg.extend(["-fslgrad", op.splitext(input)[0] + ".bvec", op.splitext(input)[0] + ".bval"])
-    arg.extend(["-json_import", op.splitext(input)[0] + ".json"])
-    arg.extend([input, output])
+    if opts.nthreads is not None:
+        arg.extend(["-nthreads", str(opts.nthreads)])
+    arg.extend(["-fslgrad", path_bvec, path_bval])
+    arg.extend(["-json_import", path_json])
+    arg.extend([opts.input, opts.output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception("Conversion from .nii to .mif failed; check above for errors.")
+        msg = f"Conversion from .nii to .mif failed. Return code: {completion.returncode}"
+        msg += f"\nCommand: {' '.join(arg)}"
+        msg += f"\nMRtrix3 error: {completion.stderr}"
+        raise MRTrixError(msg)
 
-
-def stride_match(target, moving, output, nthreads=None, force=True, verbose=False):
+def stride_match(
+        target: str, moving: str,
+        output: str,
+        nthreads: bool = None,
+        force: bool = True,
+        verbose: bool = False
+) -> None:
     """Matches strides on inputs target and moving by converting strides
     on moving image to those of target image.
 
@@ -171,51 +172,40 @@ def stride_match(target, moving, output, nthreads=None, force=True, verbose=Fals
     -------
     None; writes out file
     """
-    if not op.exists(target):
-        raise OSError("Input target path does not exist. Please ensure that " "the folder or file specified exists.")
-    if op.splitext(target)[-1] not in [".nii", ".mif"]:
-        raise OSError("Input target image needs to be a .nii or .mif file")
-    if not op.exists(moving):
-        raise OSError("Input moving path does not exist. Please ensure that " "the folder or file specified exists.")
-    if op.splitext(moving)[-1] not in [".nii", ".mif"]:
-        raise OSError("Input moving image needs to be a .nii or .mif file")
-    if not op.exists(op.dirname(output)):
-        raise OSError(
-            "Specifed directory for output file {} does not "
-            "exist. Please ensure that this is a valid "
-            "directory.".format(op.dirname(output))
-        )
-    if op.splitext(output)[-1] not in [".nii", ".mif"]:
-        raise OSError("Output specified does not possess the .nii " "extension.")
-    if nthreads is not None:
-        if not isinstance(nthreads, int):
-            raise Exception("Please specify the number of threads as an " "integer.")
-    if not isinstance(force, bool):
-        raise Exception("Please specify whether forced overwrite is True " "or False.")
-    if not isinstance(verbose, bool):
-        raise Exception("Please specify whether verbose is True or False.")
+    opts = modelmrtrix(
+        output=output,
+        nthreads=nthreads,
+        force=force,
+        verbose=verbose
+    )
+    target = input_path_validator(target)
+    moving = input_path_validator(moving)
+
     arg = ["mrconvert"]
-    if force:
+    if opts.force:
         arg.append("-force")
-    if not verbose:
+    if not opts.verbose:
         arg.append("-quiet")
-    if nthreads is not None:
+    if opts.nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
-    arg.extend(["-strides", target, moving, output])
+    arg.extend(["-strides", target, moving, opts.output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception("Stride matching failed; check above for errors.")
+        msg = f"Stride matching failed. Return code: {completion.returncode}"
+        msg += f"\nCommand: {' '.join(arg)}"
+        msg += f"\nMRtrix3 error: {completion.stderr}"
+        raise MRTrixError(msg)
 
 
 def denoise(
-    input,
-    output,
-    noisemap=True,
-    extent="5,5,5",
-    nthreads=None,
-    force=True,
-    verbose=False,
-):
+    input: str,
+    output: str,
+    noisemap: bool = True,
+    extent: str = "5,5,5",
+    nthreads: bool = None,
+    force: bool = True,
+    verbose: bool = False,
+) -> None:
     """Runs MRtrix3's `dwidenoise` command with optimal parameters for
     PyDesigner.
 
@@ -244,41 +234,34 @@ def denoise(
     -------
     None; writes out file
     """
-    if not op.exists(input):
-        raise OSError("Input path does not exist. Please ensure that " "the folder or file specified exists.")
-    if not op.exists(op.dirname(output)):
-        raise OSError(
-            "Specifed directory for output file {} does not "
-            "exist. Please ensure that this is a valid "
-            "directory.".format(op.dirname(output))
-        )
+    opts = modelmrtrix(
+        input=input,
+        output=output,
+        nthreads=nthreads,
+        force=force,
+        verbose=verbose
+    )
     if not isinstance(noisemap, bool):
-        raise Exception("Please specify whether noisemap generation " "is True or False.")
-    if not isinstance(extent, str):
-        raise Exception("Please specify extent as a string formatted as " '"n,n,n".')
-    if nthreads is not None:
-        if not isinstance(nthreads, int):
-            raise Exception("Please specify the number of threads as an " "integer.")
-    if not isinstance(force, bool):
-        raise Exception("Please specify whether forced overwrite is True " "or False.")
-    if not isinstance(verbose, bool):
-        raise Exception("Please specify whether verbose is True or False.")
-    noisemap_path = op.join(op.dirname(input), "noisemap.nii")
+        raise TypeError("Please specify whether noisemap generation is True or False.")
+    noisemap_path = op.join(op.dirname(opts.output), "noisemap.nii")
     arg = ["dwidenoise"]
-    if force:
+    if opts.force:
         arg.append("-force")
-    if not verbose:
+    if not opts.verbose:
         arg.append("-quiet")
-    if nthreads is not None:
+    if opts.nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     if noisemap:
         arg.extend(["-noise", noisemap_path])
     if extent is not None:
         arg.extend(["-extent", extent])
-    arg.extend([input, output])
+    arg.extend([opts.input, opts.output])
     completion = subprocess.run(arg)
     if completion.returncode != 0:
-        raise Exception("dwidenoise failed, please look above for error " "sources.")
+        msg = f"Dwidenoise failed. Return code: {completion.returncode}"
+        msg += f"\nCommand: {' '.join(arg)}"
+        msg += f"\nMRtrix3 error: {completion.stderr}"
+        raise MRTrixError(msg)
 
 
 def degibbs(input, output, nthreads=None, force=False, verbose=False):
