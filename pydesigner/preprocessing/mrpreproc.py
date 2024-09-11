@@ -41,7 +41,13 @@ def miftonii(input: str, output: str, nthreads: int = None, force: bool = True, 
     --------
     niitomif
     """
-    opts = modelmrtrix(input=input_path_validator(input, ".mif"), output=output_path_validator(output, ".nii"), nthreads=nthreads, force=force, verbose=verbose)
+    opts = modelmrtrix(
+        input=input_path_validator(input, ".mif"),
+        output=output_path_validator(output, ".nii"),
+        nthreads=nthreads,
+        force=force,
+        verbose=verbose,
+    )
     input_path_validator(opts.input, ".mif")
     output_path_validator(opts.output, ".nii")
     arg = ["mrconvert"]
@@ -95,7 +101,13 @@ def niitomif(input: str, output: str, nthreads: int = None, force: bool = True, 
     --------
     miftonii
     """
-    opts = modelmrtrix(input=input_path_validator(input, ".nii"), output=output_path_validator(output, ".mif"), nthreads=nthreads, force=force, verbose=verbose)
+    opts = modelmrtrix(
+        input=input_path_validator(input, ".nii"),
+        output=output_path_validator(output, ".mif"),
+        nthreads=nthreads,
+        force=force,
+        verbose=verbose,
+    )
     input_path_validator(opts.input, ".nii")
     path_bvec = input_path_validator(op.splitext(opts.input)[0] + ".bvec", ".bvec")
     path_bval = input_path_validator(op.splitext(opts.input)[0] + ".bval", ".bval")
@@ -203,7 +215,13 @@ def denoise(
     -------
     None; writes out file
     """
-    opts = modelmrtrix(input=input_path_validator(input, ".mif"), output=output_path_validator(output, ".mif"), nthreads=nthreads, force=force, verbose=verbose)
+    opts = modelmrtrix(
+        input=input_path_validator(input, ".mif"),
+        output=output_path_validator(output, ".mif"),
+        nthreads=nthreads,
+        force=force,
+        verbose=verbose,
+    )
     if not isinstance(noisemap, bool):
         raise TypeError("Please specify whether noisemap generation is True or False.")
     noisemap_path = op.join(op.dirname(opts.output), "noisemap.nii")
@@ -227,13 +245,7 @@ def denoise(
         raise MRTrixError(msg)
 
 
-def degibbs(
-        input: str,
-        output: str,
-        nthreads: int = None,
-        force: bool = False,
-        verbose: bool = False
-) -> None:
+def degibbs(input: str, output: str, nthreads: int = None, force: bool = False, verbose: bool = False) -> None:
     """Runs MRtrix3's `mrdegibbs` command with optimal parameters for
     PyDesigner.
 
@@ -256,7 +268,13 @@ def degibbs(
     -------
     None; writes out file
     """
-    opts = modelmrtrix(input=input_path_validator(input, ".mif"), output=output_path_validator(output, ".mif"), nthreads=nthreads, force=force, verbose=verbose)
+    opts = modelmrtrix(
+        input=input_path_validator(input, ".mif"),
+        output=output_path_validator(output, ".mif"),
+        nthreads=nthreads,
+        force=force,
+        verbose=verbose,
+    )
     arg = ["mrdegibbs"]
     if opts.force:
         arg.append("-force")
@@ -312,8 +330,14 @@ def undistort(
     -------
     None; writes out file
     """
-    opts = modelmrtrix(input=input_path_validator(input, ".mif"), output=output_path_validator(output, ".mif"), nthreads=nthreads, force=force, verbose=verbose)
-    
+    opts = modelmrtrix(
+        input=input_path_validator(input, ".mif"),
+        output=output_path_validator(output, ".mif"),
+        nthreads=nthreads,
+        force=force,
+        verbose=verbose,
+    )
+
     if rpe not in ["rpe_none", "rpe_pair", "rpe_all", "rpe_header"]:
         msg = "Entered RPE selection is not valid. Please choose either "
         msg += "'rpe_none', 'rpe_pair' 'rpe_all', or 'rpe_header'"
@@ -397,7 +421,7 @@ def undistort(
         msg = "Dwifslpreproc failed. Return code: {completion.returncode}"
         msg += f"\nCommand: {' '.join(arg_extract)}"
         msg += f"\nMRtrix3 error: {completion.stderr}"
-        raise(MRTrixError(msg))
+        raise (MRTrixError(msg))
     # Remove temporarily generated files
     os.remove(op.join(outdir, "dwiec.bvec"))
     os.remove(op.join(outdir, "dwiec.bval"))
@@ -439,7 +463,8 @@ def brainmask(input, output, thresh=0.25, nthreads=None, force=False, verbose=Fa
     # Read FSL NifTi output format and change it if not '.nii'
     fsl_suffix = os.getenv("FSLOUTPUTTYPE")
     if fsl_suffix is None:
-        msg = "Unable to determine system environment variable 'FSF_OUTPUT_FORMAT'. Ensure that FSL is installed correctly."
+        msg = "Unable to determine system environment variable 'FSF_OUTPUT_FORMAT'. "
+        msg += "Ensure that FSL is installed correctly."
         raise OSError(msg)
     if fsl_suffix == "NIFTI_GZ":
         os.environ["FSLOUTPUTTYPE"] = "NIFTI"

@@ -14,9 +14,9 @@ from scipy.special import factorial, gamma, hyp1f1
 from tqdm import tqdm
 
 from ..plotting import outlierplot
-from ..system.utils import highprecisionexp, highprecisionpower, vectorize, writeNii
-from ..tractography import dsistudio, odf, sphericalsampling 
 from ..system.models import input_path_validator
+from ..system.utils import highprecisionexp, highprecisionpower, vectorize, writeNii
+from ..tractography import dsistudio, odf, sphericalsampling
 from . import dwi_fnames, dwidirs
 from . import thresholds as th
 

@@ -57,7 +57,7 @@ def test_miftonii_output_success(tmp_path, nthreads, force, verbose):
     img = nib.load(output_nii)
     assert type(img).__name__ == "Nifti1Image"
     assert img.shape == (2, 2, 2, 337)
-    
+
 
 def test_niitomif_failure_bval(tmp_path):
     """Test whether function `niitomif` fails when there is no sidecar file"""
@@ -171,7 +171,7 @@ def test_denoise_output_failure(tmp_path):
             mrpreproc.denoise(PATH_MIF, output_mif, noisemap=True, extent="1,1,1")
         assert f"Dwidenoise failed" in str(exc.value)
         assert "stderr" in str(exc.value)
-        
+
 
 @pytest.mark.parametrize(
     "nthreads, force, verbose",
