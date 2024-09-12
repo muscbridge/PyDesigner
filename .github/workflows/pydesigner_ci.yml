@@ -91,6 +91,8 @@ jobs:
           docker image rm pydesigner-test
 
   summary-reports:
+    needs: pytest
+    if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -112,7 +114,6 @@ jobs:
           path: ./test_results
 
       - name: Code coverage summary report
-        if: always()
         uses: irongut/CodeCoverageSummary@v1.3.0
         with:
           filename: ./test_results/coverage.xml
@@ -126,7 +127,6 @@ jobs:
           thresholds: '10 50'
 
       - name: Publish Coverage PR Comment
-        if: always()
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           recreate: true
@@ -137,7 +137,6 @@ jobs:
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
         with:
           files: |
             test_results/results.xml
