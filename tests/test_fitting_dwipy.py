@@ -264,7 +264,6 @@ def test_dwi_constraints_success(constraints):
         shape = (60, 22)
     elif sum(constraints) == 3:
         shape = (90, 22)
-    print(np.shape(val))
     assert val.dtype == np.float64
     assert np.shape(val) == shape
 

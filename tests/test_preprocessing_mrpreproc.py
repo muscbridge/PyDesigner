@@ -6,7 +6,7 @@ import subprocess
 from conftest import load_data
 
 from pydesigner.preprocessing import mrpreproc, mrinfoutil
-from pydesigner.system.errors import MRTrixError
+from pydesigner.system.errors import FileExtensionError, MRTrixError
 
 DATA = load_data(type="hifi")
 PATH_DWI = DATA["nifti"]
@@ -198,13 +198,13 @@ def test_denoise_output_success(tmp_path, nthreads, force, verbose):
 
 def test_degibbs_output_failure(tmp_path):
     """Test whether function `degibbs` fails when return code is non-zero"""
-    output_nii = str(tmp_path / "output.nii")
+    output_mif = str(tmp_path / "output.mif")
     with patch("subprocess.run") as mock_subprocess:
         mock_subprocess.return_value = MagicMock(
             returncode=1, stderr="stderr"
         )
         with pytest.raises(MRTrixError) as exc:
-            mrpreproc.degibbs(PATH_DWI, output_nii)
+            mrpreproc.degibbs(PATH_MIF, output_mif)
         assert f"Mrdegibbs failed" in str(exc.value)
         assert "stderr" in str(exc.value)
 
@@ -222,7 +222,7 @@ def test_degibbs_output_failure(tmp_path):
 def test_degibbs_output_success(tmp_path, nthreads, force, verbose):
     """Test whether function `degibbs` fails when return code is non-zero"""
     output_mif = str(tmp_path / "output.mif")
-    mrpreproc.degibbs(PATH_DWI, output_mif, nthreads=nthreads, force=force, verbose=verbose)
+    mrpreproc.degibbs(PATH_MIF, output_mif, nthreads=nthreads, force=force, verbose=verbose)
     assert os.path.exists(output_mif)
     assert mrinfoutil.format(output_mif) == "MRtrix"
     mrinfoutil.size(output_mif) == (2, 2, 2, 337)
