@@ -13,6 +13,11 @@ PATH_BVEC = DATA["bvec"]
 PATH_BVAL = DATA["bval"]
 PATH_MASK = DATA["mask"]
 
+def is_all_none(array):
+    """Check if all elements in an array are None"""
+    return not np.all(np.vectorize(lambda x: x is None)(array))
+
+
 def test_dwi_init_image_nonexistent(tmp_path):
     input_nii = str(tmp_path / "nonexistent.nii")
     with pytest.raises(FileNotFoundError) as exc:
@@ -286,3 +291,128 @@ def test_dwi_fit_unconstrained(capsys):
     assert hasattr(dwi, "dt")
     assert np.shape(dwi.dt) == (21, 5)
     assert "Unconstrained Tensor Fit" in captured.err
+
+
+def test_dwi_dti_dki_params(capsys):
+    """Tests whether function returns correct DTI values"""
+    dwi = DWI(PATH_DWI, PATH_BVEC, PATH_BVAL, PATH_MASK)
+    dwi.fit([0, 1, 0])
+    md, rd, ad, fa, fe, trace = dwi.extractDTI()
+    mk, rk, ak, kfa, mkt, trace = dwi.extractDKI()
+    awf, eas_ad, eas_rd, eas_tort, ias_da = dwi.extractWMTI()
+
+    captured = capsys.readouterr()
+
+    assert "Constrained Tensor Fit" in captured.err
+    assert "DTI Parameters" in captured.err
+    assert "DKI Parameters" in captured.err
+    assert "Extracting AWF" in captured.err
+    assert "Extracting EAS and IAS" in captured.err
+
+    assert md.dtype == np.float64
+    assert rd.dtype == np.float64
+    assert ad.dtype == np.float64
+    assert fa.dtype == np.float64
+    assert fe.dtype == np.float64
+    assert trace.dtype == np.float64
+
+    assert np.shape(md) == (2, 2, 2)
+    assert np.shape(rd) == (2, 2, 2)
+    assert np.shape(ad) == (2, 2, 2)
+    assert np.shape(fa) == (2, 2, 2)
+    assert np.shape(fe) == (2, 2, 2, 3)
+    assert np.shape(trace) == (2, 2, 2, 61)
+
+    assert np.nanmean(md) > 0.40 and np.nanmean(md) < 0.60
+    assert np.nanmean(rd) > 0.15 and np.nanmean(rd) < 0.40
+    assert np.nanmean(ad) > 1.00 and np.nanmean(ad) < 1.30
+    assert np.nanmean(fa) > 0.70 and np.nanmean(fa) < 0.80
+    assert np.nanmean(fe) > 0.15 and np.nanmean(fe) < 0.40
+    assert np.nanmean(trace) > 0.15 and np.nanmean(trace) < 0.40
+
+    assert mk.dtype == np.float64
+    assert rk.dtype == np.float64
+    assert ak.dtype == np.float64
+    assert kfa.dtype == np.float64
+    assert mkt.dtype == np.float64
+    assert trace.dtype == np.float64
+
+    assert np.shape(mk) == (2, 2, 2)
+    assert np.shape(rk) == (2, 2, 2)
+    assert np.shape(ak) == (2, 2, 2)
+    assert np.shape(kfa) == (2, 2, 2)
+    assert np.shape(mkt) == (2, 2, 2)
+    assert np.shape(trace) == (2, 2, 2, 61)
+
+    assert np.nanmean(mk) > 0.60 and np.nanmean(mk) < 0.80
+    assert np.nanmean(rk) > 1.20 and np.nanmean(rk) < 1.70
+    assert np.nanmean(ak) > 0.15 and np.nanmean(ak) < 0.50
+    assert np.nanmean(kfa) > 0.20 and np.nanmean(kfa) < 0.50
+    assert np.nanmean(mkt) > 0.40 and np.nanmean(mkt) < 0.60
+    assert np.nanmean(trace) > 0.15 and np.nanmean(trace) < 0.40
+
+    assert awf.dtype == np.float64
+    assert eas_ad.dtype == np.float64
+    assert eas_rd.dtype == np.float64
+    assert eas_tort.dtype == np.float64
+    assert ias_da.dtype == np.float64
+
+    assert np.shape(awf) == (2, 2, 2)
+    assert np.shape(eas_ad) == (2, 2, 2)
+    assert np.shape(eas_rd) == (2, 2, 2)
+    assert np.shape(eas_tort) == (2, 2, 2)
+    assert np.shape(ias_da) == (2, 2, 2)
+
+    assert np.nanmean(awf) > 0.20 and np.nanmean(awf) < 0.40
+    assert np.nanmean(eas_ad) > 1.50 and np.nanmean(eas_ad) < 1.75
+    assert np.nanmean(eas_rd) > 0.35 and np.nanmean(eas_rd) < 0.55
+    assert np.nanmean(eas_tort) > 2.40 and np.nanmean(eas_tort) < 2.70
+    assert np.nanmean(ias_da) > 0.80 and np.nanmean(ias_da) < 0.90
+
+
+def test_dwi_fbi_without_fbwm(capsys):
+    """Tests whether FBI fitting works normally"""
+    dwi = DWI(PATH_DWI, PATH_BVEC, PATH_BVAL, PATH_MASK)
+    dwi.fit([0, 1, 0])
+    zeta, faa, sph, sph_mrtrix, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = dwi.fbi(fbwm=False)
+    captured = capsys.readouterr()
+
+    assert "Constrained Tensor Fit" in captured.err
+    assert "FBI Fit" in captured.err
+
+    assert zeta.dtype == np.float64
+    assert faa.dtype == np.float64
+    assert sph.dtype == np.complex128
+    assert sph_mrtrix.dtype == np.complex128
+    assert min_awf.dtype == np.dtype("O")
+    assert Da.dtype == np.dtype("O")
+    assert De_mean.dtype == np.dtype("O")
+    assert De_ax.dtype == np.dtype("O")
+    assert De_rad.dtype == np.dtype("O")
+    assert De_fa.dtype == np.dtype("O")
+    assert min_cost.dtype == np.dtype("O")
+    assert min_cost_fn.dtype == np.dtype("O")
+
+    assert np.shape(zeta) == (2, 2, 2)
+    assert np.shape(faa) == (2, 2, 2)
+    assert np.shape(sph) == (2, 2, 2, 28)
+    assert np.shape(sph_mrtrix) == (2, 2, 2, 28)
+    assert np.shape(min_awf) == (2, 2, 2)
+    assert np.shape(Da) == (2, 2, 2)
+    assert np.shape(De_mean) == (2, 2, 2)
+    assert np.shape(De_ax) == (2, 2, 2)
+    assert np.shape(De_rad) == (2, 2, 2)
+    assert np.shape(De_fa) == (2, 2, 2)
+    assert np.shape(min_cost) == (2, 2, 2)
+    assert np.shape(min_cost_fn) == (2, 2, 2)
+
+    assert np.nanmean(zeta) > 0.20 and np.nanmean(zeta) < 0.30
+    assert np.nanmean(faa) > 0.50 and np.nanmean(faa) < 0.55
+    assert is_all_none(min_awf)
+    assert is_all_none(Da)
+    assert is_all_none(De_mean)
+    assert is_all_none(De_ax)
+    assert is_all_none(De_rad)
+    assert is_all_none(De_fa)
+    assert is_all_none(min_cost)
+    assert is_all_none(min_cost_fn)
