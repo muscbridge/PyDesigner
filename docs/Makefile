@@ -11,7 +11,7 @@ BUILDDIR      = build
 # Added to auto build API doc during make
 APIBUILD	  ?= sphinx-apidoc
 APIBUILDDIR   = source/api
-APIDIR        = ../designer
+APIDIR        = ../pydesigner
 
 # Put it first so that "make" without argument is like "make help".
 help:
