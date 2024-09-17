@@ -45,6 +45,7 @@ pydesigner = "pydesigner.main:main"
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.4.0, <8.0.0"
 pytest-cov = "^5.0.0"
+pytest-xdist = "^3.6.1"
 
 [build-system]
 requires = ["poetry-core"]
