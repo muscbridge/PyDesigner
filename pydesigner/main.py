@@ -31,7 +31,7 @@ DWIParser = util.DWIParser
 # Locate mrtrix3 via which-ing dwidenoise
 dwidenoise_location = shutil.which("dwidenoise")
 if dwidenoise_location is None:
-    raise OSError("Cannot find mrtrix3, please see " "https://github.com/m-ama/PyDesigner/wiki" " to troubleshoot.")
+    raise OSError("Cannot find mrtrix3, please see https://github.com/m-ama/PyDesigner/wiki to troubleshoot.")
 
 # Extract mrtrix3 path from dwidenoise_location
 mrtrix3path = op.dirname(dwidenoise_location)
@@ -39,7 +39,7 @@ mrtrix3path = op.dirname(dwidenoise_location)
 # Locate FSL via which-ing fsl
 fsl_location = shutil.which("fsl")
 if fsl_location is None:
-    raise OSError("Cannot find FSL, please see " "https://github.com/m-ama/PyDesigner/wiki" " to troubleshoot.")
+    raise OSError("Cannot find FSL, please see https://github.com/m-ama/PyDesigner/wiki to troubleshoot.")
 
 # Extract FSL path from fsl_location
 fslpath = op.dirname(fsl_location)
@@ -112,7 +112,7 @@ def main():
     parser.add_argument(
         "dwi",
         nargs="+",
-        help="The diffusion dataset you would like " "to process. ",
+        help="The diffusion dataset you would like to process. ",
         type=str,
     )
 
@@ -121,7 +121,7 @@ def main():
         "-o",
         "--output",
         metavar="directory",
-        help="Output location. " "Default: same path as dwi.",
+        help="Output location. Default: same path as dwi.",
         type=str,
     )
     parser.add_argument(
@@ -144,7 +144,7 @@ def main():
         "--extent",
         metavar="n,n,n",
         default="5,5,5",
-        help="Denoising extent formatted n,n,n (forces " " denoising. " "Default: 5,5,5.",
+        help="Denoising extent formatted n,n,n (forces  denoising. Default: 5,5,5.",
     )
     parser.add_argument(
         "-g",
@@ -160,7 +160,7 @@ def main():
         "--undistort",
         action="store_true",
         default=False,
-        help="Run FSL eddy to perform image undistortion. " "NOTE: needs a --topup to run.",
+        help="Run FSL eddy to perform image undistortion. NOTE: needs a --topup to run.",
     )
     parser.add_argument(
         "--rpe_pairs",
@@ -185,14 +185,14 @@ def main():
         type=float,
         default=1.25,
         metavar="n",
-        help="The FWHM to use as a multiple of voxel size. " "Default 1.25",
+        help="The FWHM to use as a multiple of voxel size. Default 1.25",
     )
     parser.add_argument(
         "-r",
         "--rician",
         action="store_true",
         default=False,
-        help="Perform Rician noise correction on the data " "(requires --denoise to generate a noisemap).",
+        help="Perform Rician noise correction on the data (requires --denoise to generate a noisemap).",
     )
     parser.add_argument(
         "--nofit",
@@ -212,7 +212,7 @@ def main():
         "--nooutliers",
         action="store_true",
         default=False,
-        help="Do not perform outlier correction on kurtosis " "fitting metrics.",
+        help="Do not perform outlier correction on kurtosis fitting metrics.",
     )
     parser.add_argument(
         "-m",
@@ -227,7 +227,7 @@ def main():
         "--maskthr",
         metavar="n",
         default=0.25,
-        help="FSL bet threshold used for brain masking. " "Default: 0.25",
+        help="FSL bet threshold used for brain masking. Default: 0.25",
     )
     parser.add_argument(
         "--user_mask",
@@ -240,7 +240,7 @@ def main():
         "--csf_fsl",
         action="store_true",
         default=False,
-        help="Compute a CSF mask for CSF-excluded " "smoothing to minimize partial volume " "effects using FSL FAST.",
+        help="Compute a CSF mask for CSF-excluded smoothing to minimize partial volume effects using FSL FAST.",
     )
     parser.add_argument(
         "-cd",
@@ -266,9 +266,7 @@ def main():
         "--interp",
         action="store_true",
         default="linear",
-        help="Set the interpolation to use when "
-        "reslicing. Choices are linear (default), "
-        "nearest, cubic, and sinc.",
+        help="Set the interpolation to use when reslicing. Choices are linear (default), nearest, cubic, and sinc.",
     )
     parser.add_argument(
         "-te",
@@ -284,14 +282,14 @@ def main():
         "--fit_constraints",
         default="0,1,0",
         metavar="D>0,K>0,K < 3/(b*D)",
-        help="Constrain the WLLS fit. " "Default: 0,1,0.",
+        help="Constrain the WLLS fit. Default: 0,1,0.",
     )
     parser.add_argument(
         "--l_max",
         default=6,
         type=int,
         metavar="n",
-        help="Maximum spherical harmonic degree for " "FBI spherical harmonic expansion",
+        help="Maximum spherical harmonic degree for FBI spherical harmonic expansion",
     )
     parser.add_argument(
         "--no_rectify",
@@ -314,7 +312,7 @@ def main():
         "--t_fibers",
         type=int,
         default=5,
-        help="The maximum number ODF maxima to extract per " "voxel for tractography. Default: 5",
+        help="The maximum number ODF maxima to extract per voxel for tractography. Default: 5",
     )
     parser.add_argument(
         "--noqc",
@@ -340,17 +338,17 @@ def main():
         "--nthreads",
         type=int,
         default=None,
-        help="Number of threads to use for computation. " "Note that using too many threads will cause a slow-" "down.",
+        help="Number of threads to use for computation. Note that using too many threads will cause a slow-down.",
     )
     parser.add_argument(
         "--resume",
         action="store_true",
-        help="Continue from an aborted or partial previous " "run of pydesigner.",
+        help="Continue from an aborted or partial previous run of pydesigner.",
     )
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Force overwrites of existing files. Otherwise, " "there will be an error at runtime.",
+        help="Force overwrites of existing files. Otherwise, there will be an error at runtime.",
     )
     parser.add_argument(
         "--verbose",
@@ -467,7 +465,7 @@ def main():
     # Cannot run --user_mask and --mask at the same time
     if args.user_mask and args.mask:
         errmsg += "Cannot run with both --mask and --user_mask; "
-        errmsg += "--mask if you do not have a custom brain mask and " "--user_mask if you want to supply a mask."
+        errmsg += "--mask if you do not have a custom brain mask and --user_mask if you want to supply a mask."
 
     # Cannot run --csf_fsl and --csf_adc at the same time
     if args.csf_fsl and args.csf_adc:
@@ -887,7 +885,7 @@ def main():
         cmd = ["mrcalc", "-force", brainmask_out, csfmask_out, "-mult", csfmask_out]
         completion = subprocess.run(cmd)
         if completion.returncode != 0:
-            raise Exception("Unable to multiply CSF mask with brain " "mask. See above for errors.")
+            raise Exception("Unable to multiply CSF mask with brain mask. See above for errors.")
     # -----------------------------------------------------------------
     # Smooth
     # -----------------------------------------------------------------
@@ -922,7 +920,7 @@ def main():
             os.rename(mif_smoothing, working_path)
             # update command history
             cmdtable["smooth"] = [
-                "designer.preprocessing.mrpreproc.smooth(input={}, " "output={}, " "fwhm={}".format(
+                "designer.preprocessing.mrpreproc.smooth(input={}, output={}, fwhm={}".format(
                     working_path, mif_smoothing, args.fwhm
                 )
             ]
@@ -963,7 +961,7 @@ def main():
             os.rename(mif_rician, working_path)
             # update command history
             cmdtable["rician"] = [
-                "designer.preprocessing.mrpreproc." "riciancorrect(input={}, " "output={}, " "noise={})".format(
+                "designer.preprocessing.mrpreproc.riciancorrect(input={}, output={}, noise={})".format(
                     working_path, mif_rician, filetable["noisemap"].getFull()
                 )
             ]
@@ -1061,7 +1059,7 @@ def main():
                 )
             snr.makeplot(path=qcpath, smooth=True, smoothfactor=3)
         except:  # noqa: E722
-            print("[WARNING] SNR plotting failed, see above. " "Proceeding with processing.")
+            print("[WARNING] SNR plotting failed, see above. Proceeding with processing.")
 
     # -----------------------------------------------------------------
     # Write logs

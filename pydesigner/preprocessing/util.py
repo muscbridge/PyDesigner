@@ -438,7 +438,7 @@ class DWIParser:
                     try:
                         json2fslgrad(i)
                     except:  # noqa: E722
-                        raise IOError("Please supply a valid JSON file " "accompanying {}".format(i))
+                        raise IOError("Please supply a valid JSON file accompanying {}".format(i))
                 convert_args = ["mrconvert"]
                 if verbose is False:
                     convert_args.append("-quiet")
@@ -474,9 +474,7 @@ class DWIParser:
                 completion = subprocess.run(cmd, shell=True)
                 if completion.returncode != 0:
                     raise Exception(
-                        'Please use the "--force" flag to '
-                        "overwrite existing outputs, or clear "
-                        "the output directory"
+                        'Please use the "--force" flag to overwrite existing outputs, or clear the output directory'
                     )
             # The following command concatenates all DWI(i) into a single
             # .mif file if nDWI > 1
@@ -492,7 +490,7 @@ class DWIParser:
                 cmd = " ".join(str(e) for e in cat_arg)
                 completion = subprocess.run(cmd, shell=True)
                 if completion.returncode != 0:
-                    raise Exception("Failed to concatenate multiple " "series.")
+                    raise Exception("Failed to concatenate multiple series.")
             else:
                 cat_arg = ["mrconvert"]
                 if verbose is False:

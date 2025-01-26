@@ -42,11 +42,9 @@ def plot(
     if op.splitext(input)[-1] != ".nii":
         raise OSError("Input file {} is not nifti type".format(input))
     if op.isdir(output):
-        raise OSError(
-            "Output {} cannot be a directory. Please " "define the output to be an image file.".format(output)
-        )
+        raise OSError("Output {} cannot be a directory. Please define the output to be an image file.".format(output))
     if op.splitext(output)[-1] != ".png":
-        raise OSError("Output path {} does not indicate a PNG file" "".format(input))
+        raise OSError("Output path {} does not indicate a PNG file".format(input))
     hdr = nib.load(input)
     img = np.array(hdr.dataobj)
     truncateIdx = np.isnan(img)
@@ -55,11 +53,11 @@ def plot(
     dims[0] * dims[1] * dims[2]  # no. of voxels
     vols = dims[-1]  # number of volumes
     if np.ndim(img) != 4:
-        raise Exception("Only 4D nifti files can be read. " "User-supplied file is not a 4D nifti.")
+        raise Exception("Only 4D nifti files can be read. User-supplied file is not a 4D nifti.")
     if mask is not None:
         if op.exists(mask):
             if op.splitext(mask)[-1] != ".nii":
-                raise OSError("Input maks {} is not nifti type " "".format(mask))
+                raise OSError("Input maks {} is not nifti type ".format(mask))
             hdr_mask = nib.load(mask)
             bw = np.array(hdr_mask.dataobj)
         else:

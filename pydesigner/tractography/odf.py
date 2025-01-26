@@ -65,20 +65,18 @@ class odfmodel:
             (Default: 4)
         """
         if not op.exists(dt):
-            raise OSError("Input DT path does not exist. Please ensure that " "the folder or file specified exists.")
+            raise OSError("Input DT path does not exist. Please ensure that the folder or file specified exists.")
         if kt is not None:
             if not op.exists(kt):
-                raise OSError(
-                    "Input KT path does not exist. Please ensure that " "the folder or file specified exists."
-                )
+                raise OSError("Input KT path does not exist. Please ensure that the folder or file specified exists.")
         if mask is not None:
             if not op.exists(mask):
-                raise OSError("Path to brain mask does not exist. Please " "ensure that the file specified exists.")
+                raise OSError("Path to brain mask does not exist. Please ensure that the file specified exists.")
         if scale is not None:
             if not op.exists(scale):
-                raise OSError("Path to scale image does not exist. Please " "ensure that the file specified exists.")
+                raise OSError("Path to scale image does not exist. Please ensure that the file specified exists.")
         if not isinstance(res, str):
-            raise Exception("Please specify resolution as a string. Possible " 'choices are "low", "med", or "high"')
+            raise Exception('Please specify resolution as a string. Possible choices are "low", "med", or "high"')
         # Load images
         self.hdr = nib.load(dt)
         self.DT = self.hdr.get_fdata()
@@ -95,10 +93,10 @@ class odfmodel:
         else:
             self.scale_img = np.ones(self.DT.shape[0:3])
         if l_max % 2 != 0:
-            raise Exception("Please provide l_max as a postive " "and even integer")
+            raise Exception("Please provide l_max as a postive and even integer")
         self.l_max = l_max
         if radial_weight is None:
-            warnings.warn("Radial weight for dODF computation not specified. " "Using default value of 4.")
+            warnings.warn("Radial weight for dODF computation not specified. Using default value of 4.")
             self.radial_weight = 4
         else:
             self.radial_weight = radial_weight
@@ -473,7 +471,7 @@ class odfmodel:
             raise Exception("Please select a valid form of ODF to receive")
         if self.KT is None:
             raise AttributeError(
-                "WOAH! Cannot compute DKI ODFs without " "kurtosis tensor (KT). Try using dtiodf(), Jumbo."
+                "WOAH! Cannot compute DKI ODFs without kurtosis tensor (KT). Try using dtiodf(), Jumbo."
             )
         # Vectorize images
         DT = vectorize(self.DT, self.mask_img)
@@ -546,7 +544,7 @@ class odfmodel:
         DTI ODF in defined form
         """
         if self.DT is None:
-            raise AttributeError("WOAH! Cannot compute DTI ODFs without " "diffusion tensor (DT), Jumbo.")
+            raise AttributeError("WOAH! Cannot compute DTI ODFs without diffusion tensor (DT), Jumbo.")
         # Vectorize images
         DT = vectorize(self.DT, self.mask_img)
         nvox = DT.shape[-1]
@@ -914,7 +912,7 @@ def shbasis(deg, phi, theta, method="scipy") -> np.ndarray[complex]:
         try:
             deg = [int(x) for x in deg]
         except:  # noqa: E722
-            raise TypeError("Please supply degree of " "shperical harmonic as an integer")
+            raise TypeError("Please supply degree of shperical harmonic as an integer")
     if not isinstance(method, str):
         raise TypeError("Please enter method as a string")
     if method not in ["scipy", "tournier", "descoteaux"]:

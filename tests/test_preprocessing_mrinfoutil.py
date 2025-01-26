@@ -127,9 +127,25 @@ def test_multiplier_dtype():
 def test_transform():
     """Test whether function returns correct transform"""
     result = (
-        ["0.994345310289832", "2.73896740248844", "08", "-0.106195121171422", "-7.16012287139893"],
-        ["-0.0163522207646128", "0.988073569252652", "-0.153111814252808", "-15.8305568695068"],
-        ["0.104928588957842", "0.153982537140822", "0.982486319790561", "-10.7536220550537"],
+        [
+            "0.994345310289832",
+            "2.73896740248844",
+            "08",
+            "-0.106195121171422",
+            "-7.16012287139893",
+        ],
+        [
+            "-0.0163522207646128",
+            "0.988073569252652",
+            "-0.153111814252808",
+            "-15.8305568695068",
+        ],
+        [
+            "0.104928588957842",
+            "0.153982537140822",
+            "0.982486319790561",
+            "-10.7536220550537",
+        ],
         ["0", "0", "0", "1"],
     )
     assert mrinfoutil.transform(PATH_DWI) == result
@@ -149,14 +165,14 @@ def test_commandhistory_invalid():
 def test_commandhistory_valid():
     """Test normal function of commandhistory"""
     result = [
-        'variable',
-        'mrcat -axis 3 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi0.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi1.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi2.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif',
-        'dwidenoise -noise /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/noisemap.nii -extent 5,5,5 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/1_dwi_denoised.mif',
-        'mrdegibbs /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/2_dwi_degibbs.mif',
-        '/usr/local/mrtrix3/bin/dwifslpreproc -se_epi /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/B0_EPI.mif -eddy_options --repol --data_is_shelled -rpe_header -eddyqc_all /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/metrics_qc/eddy /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/3_dwi_undistorted.mif',
-        'mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.json -strides 1,2,3,4 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/4_dwi_smoothed.mif',
-        'mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.json -strides 1,2,3,4 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/5_dwi_rician.mif',
-        'mrconvert -json_import /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.json -fslgrad /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.bvec /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.bval /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.nii /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.mif',
+        "variable",
+        "mrcat -axis 3 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi0.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi1.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi2.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif",
+        "dwidenoise -noise /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/noisemap.nii -extent 5,5,5 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/1_dwi_denoised.mif",
+        "mrdegibbs /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/2_dwi_degibbs.mif",
+        "/usr/local/mrtrix3/bin/dwifslpreproc -se_epi /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/B0_EPI.mif -eddy_options --repol --data_is_shelled -rpe_header -eddyqc_all /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/metrics_qc/eddy /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/3_dwi_undistorted.mif",
+        "mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.json -strides 1,2,3,4 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/4_dwi_smoothed.mif",
+        "mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.json -strides 1,2,3,4 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/5_dwi_rician.mif",
+        "mrconvert -json_import /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.json -fslgrad /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.bvec /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.bval /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.nii /Users/siddhiman/Repos/PyDesigner/tests/data/hifi_splenium_4vox.mif",
     ]
     assert mrinfoutil.commandhistory(PATH_MIF) == result
 

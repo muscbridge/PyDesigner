@@ -54,14 +54,14 @@ class makesnr:
             Path to nifti brain mask (Default: None).
         """
         if noisepath is None:
-            raise Exception("Please provide the path to noise map from " '"dwidenoise"')
+            raise Exception('Please provide the path to noise map from "dwidenoise"')
 
         self.nDWI = len(dwilist)  # Number of input DWIs
         self.DWInames = [op.split(i)[-1] for i in dwilist]
         # Open the first image in list
         self.hdr = nib.load(dwilist[0])
         if self.hdr.ndim != 4:
-            raise IOError("Input DWIs need are not 4D. Please ensure you " "use 4D NifTi files only.")
+            raise IOError("Input DWIs need are not 4D. Please ensure you use 4D NifTi files only.")
         # Load image into 2D array
         self.img = np.array(self.hdr.dataobj)
         # Load noise into a vector
@@ -90,13 +90,13 @@ class makesnr:
                     tmp = vectorize(np.array(nib.load(dwilist[i]).dataobj), self.mask)
                     self.img = np.dstack((self.img, tmp))
                 except:  # noqa: E722
-                    raise ValueError("all input DWIs must have the same " "shape.")
+                    raise ValueError("all input DWIs must have the same shape.")
                 try:
                     fName = op.splitext(dwilist[i])[0]
                     bvalPath = op.join(fName + ".bval")
                     self.bval = np.stack((self.bval, np.rint(np.loadtxt(bvalPath) / 1000)))
                 except:  # noqa: E722
-                    raise IOError("Unable to locate BVAL file for image: {" "}".format(dwilist[i]))
+                    raise IOError("Unable to locate BVAL file for image: {}".format(dwilist[i]))
         truncateIdx = np.logical_or(np.isnan(self.img), (self.img < minZero))
         self.img[truncateIdx] = minZero
 
@@ -185,7 +185,7 @@ class makesnr:
             Array containing all unique B-values detected.
         """
         if not isinstance(nbins, int):
-            raise ValueError("Number of bins (nbins) entered is not an " "integer. Please specify and integer.")
+            raise ValueError("Number of bins (nbins) entered is not an integer. Please specify and integer.")
         bval_list = self.getuniquebval()
         snr = self.computesnr()
         # Get min and max values of SNR
@@ -203,9 +203,7 @@ class makesnr:
                 (count[:, i, j], edges[:, i, j]) = np.histogram(vals, bins=nbins, range=(minVal, maxVal), density=True)
         edges = np.unique(edges)
         if edges.size != nbins + 1:
-            raise Exception(
-                "Number of binning edges across B-values and " "DWIs is not consistent. Aborting SNR " "binning."
-            )
+            raise Exception("Number of binning edges across B-values and DWIs is not consistent. Aborting SNR binning.")
         binval = np.zeros((nbins))
         for i in range(binval.size):
             binval[i] = np.median([edges[i], edges[i + 1]])
@@ -228,7 +226,7 @@ class makesnr:
         None: Writes out image into directory as SNR.png
         """
         if not isinstance(smoothfactor, int):
-            raise ValueError("Please specify an integer for smooth " "factor.")
+            raise ValueError("Please specify an integer for smooth factor.")
         if not op.isdir(path):
             raise IOError("Output path defined does not exist.")
         outpath = op.join(path, "SNR.png")

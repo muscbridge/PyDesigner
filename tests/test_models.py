@@ -1,4 +1,8 @@
-from pydesigner.system.models import modelmrtrix, input_path_validator, output_path_validator
+from pydesigner.system.models import (
+    modelmrtrix,
+    input_path_validator,
+    output_path_validator,
+)
 from pydesigner.system.errors import FileExtensionError
 from pydantic import ValidationError
 import pytest
@@ -6,6 +10,7 @@ from conftest import load_data
 
 DATA = load_data(type="hifi")
 PATH_DWI = DATA["nifti"]
+
 
 def test_modelmrtrix_input_invalid():
     with pytest.raises(TypeError) as exc:
@@ -88,7 +93,10 @@ def test_input_validator_ctype_invalid():
 def test_input_validator_ctype_check_fail():
     with pytest.raises(FileExtensionError) as exc:
         path = input_path_validator(path=PATH_DWI, ctype=".tar")
-    assert f"Input file ({PATH_DWI}) does not posses the required .tar extension" in str(exc.value)
+    assert (
+        f"Input file ({PATH_DWI}) does not posses the required .tar extension"
+        in str(exc.value)
+    )
 
 
 def test_input_validator_success():
@@ -105,7 +113,10 @@ def test_output_validator_ctype_invalid():
 def test_output_validator_ctype_check_fail():
     with pytest.raises(FileExtensionError) as exc:
         path = output_path_validator(path=PATH_DWI, ctype=".tar")
-    assert f"Output file ({PATH_DWI}) does not posses the required .tar extension" in str(exc.value)
+    assert (
+        f"Output file ({PATH_DWI}) does not posses the required .tar extension"
+        in str(exc.value)
+    )
 
 
 def test_output_validator_success(tmp_path):

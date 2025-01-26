@@ -187,7 +187,7 @@ def make_se_epi(filetable):
     get_rpe_info_args = ["mrinfo", "-size", tmp_tp]
     completion = subprocess.run(get_rpe_info_args, capture_output=True)
     if completion.returncode != 0:
-        raise Exception("Extracted topup information failed, " "please see above")
+        raise Exception("Extracted topup information failed, please see above")
 
     ndrpexstr = completion.stdout.decode("utf-8").rstrip().split(" ")[-1]
     ndrpex = int(ndrpexstr.rstrip('"'))

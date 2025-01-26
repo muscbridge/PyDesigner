@@ -335,7 +335,7 @@ class DWI(object):
         if "fbi" in type and "dki" in type:
             type.append("fbwm")
         if not type:
-            raise ValueError("tensortype: Error in determining maximum " "BVAL")
+            raise ValueError("tensortype: Error in determining maximum BVAL")
         return type
 
     def isdti(self) -> bool:
@@ -522,7 +522,7 @@ class DWI(object):
                 - 1
             )
         else:
-            raise ValueError("createTensorOrder: Please enter valid " "order values (2 or 4).")
+            raise ValueError("createTensorOrder: Please enter valid order values (2 or 4).")
         return cnt, ind
 
     def fibonacciSphere(self, samples: int = 1, randomize: bool = True) -> np.ndarray[float]:
@@ -1192,7 +1192,7 @@ class DWI(object):
             l_max suitable for DWI.
         """
         if not self.isfbi():
-            raise Exception("Input DWI is not an " "FBI or HARDI acquisiton. Cannot compute " "l_max.")
+            raise Exception("Input DWI is not an FBI or HARDI acquisiton. Cannot compute l_max.")
         fbi_vols = np.count_nonzero(self.grad[self.idxfbi(), -1])
         l_max = 0
         vols = (l_max + 1) * (l_max / 2 + 1)
@@ -1670,7 +1670,7 @@ class DWI(object):
                 "Please run DWI.fit(constraints) before running DWI.fbi()."
             )
         if l_max % 2 != 0:
-            raise Exception("Please provide l_max as a postive " "and even integer")
+            raise Exception("Please provide l_max as a postive and even integer")
         if l_max > self.optimal_lmax():
             print(
                 "[WARNING]: l_max value provided ({}) is "
@@ -2166,9 +2166,7 @@ class DWI(object):
                         connLimit = 24
                 else:
                     raise Exception(
-                        'Connectivity choice "{}" is invalid. Please ' 'enter either "all" or "face".'.format(
-                            connectivity
-                        )
+                        'Connectivity choice "{}" is invalid. Please enter either "all" or "face".'.format(connectivity)
                     )
                 nVoil = np.sum(patchViol)
 
@@ -2235,13 +2233,13 @@ class DWI(object):
         #     assert('option: Excludeb0 should be set to True or False')
 
         if maxiter < 1 or maxiter > 200:
-            assert "option: Maxiter should be set to a value between 1 " "and 200"
+            assert "option: Maxiter should be set to a value between 1 and 200"
         if convcrit < 0 or convcrit > 1:
-            assert "option: Maxiter should be set to a value between 1 " "and 200"
+            assert "option: Maxiter should be set to a value between 1 and 200"
         if not (mode == "DKI" or mode == "DTI"):
             assert "Mode should be set to DKI or DTI"
         if leverage < 0 or leverage > 1:
-            assert "option: Leverage should be set to a value between 0 " "and 1"
+            assert "option: Leverage should be set to a value between 0 and 1"
         if bounds < 1:
             assert "option: Bounds should be set to a value >= 1"
         exclude_idx = np.ones_like(self.grad[:, 3], dtype=bool)
@@ -2616,7 +2614,7 @@ class DWI(object):
                 20              14
         """
         if self.dt is None:
-            raise Exception("Please run dwi.fit() to generate a tensor " "prior to reordering tensors.")
+            raise Exception("Please run dwi.fit() to generate a tensor prior to reordering tensors.")
 
         if dwiType == "dti":
             dt = np.zeros((6, self.dt.shape[1]))

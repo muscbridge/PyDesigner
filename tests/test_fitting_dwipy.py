@@ -1,5 +1,4 @@
 import os.path as op
-import nibabel as nib
 import pytest
 import numpy as np
 from conftest import load_data
@@ -12,6 +11,7 @@ PATH_DWI = DATA["nifti"]
 PATH_BVEC = DATA["bvec"]
 PATH_BVAL = DATA["bval"]
 PATH_MASK = DATA["mask"]
+
 
 def is_all_none(array):
     """Check if all elements in an array are None"""
@@ -153,6 +153,7 @@ def test_idx_fbi():
     assert len(idx) == 337
     assert sum(idx) == 256
 
+
 def test_dwi_n_dirs():
     """Tests whether function returns correct number of directions"""
     dwi = DWI(PATH_DWI, PATH_BVEC, PATH_BVAL, PATH_MASK)
@@ -243,20 +244,22 @@ def test_dwi_radial_sampling():
 def test_dwi_constraints_invalid():
     dwi = DWI(PATH_DWI, PATH_BVEC, PATH_BVAL, PATH_MASK)
     with pytest.raises(ValueError) as exc:
-        val = dwi.createConstraints([1,2,3])
+        val = dwi.createConstraints([1, 2, 3])
     assert "Invalid contraints" in str(exc.value)
 
 
 @pytest.mark.parametrize(
     "constraints",
-    ([0, 0, 0],
-    [1, 1, 1],
-    [0, 1, 0],
-    [1, 0, 1],
-    [0, 0, 1],
-    [1, 1, 0],
-    [0, 1, 1],
-    [1, 0, 0])
+    (
+        [0, 0, 0],
+        [1, 1, 1],
+        [0, 1, 0],
+        [1, 0, 1],
+        [0, 0, 1],
+        [1, 1, 0],
+        [0, 1, 1],
+        [1, 0, 0],
+    ),
 )
 def test_dwi_constraints_success(constraints):
     dwi = DWI(PATH_DWI, PATH_BVEC, PATH_BVAL, PATH_MASK)
@@ -374,7 +377,20 @@ def test_dwi_fbi_without_fbwm(capsys):
     """Tests whether FBI fitting works normally"""
     dwi = DWI(PATH_DWI, PATH_BVEC, PATH_BVAL, PATH_MASK)
     dwi.fit([0, 1, 0])
-    zeta, faa, sph, sph_mrtrix, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = dwi.fbi(fbwm=False)
+    (
+        zeta,
+        faa,
+        sph,
+        sph_mrtrix,
+        min_awf,
+        Da,
+        De_mean,
+        De_ax,
+        De_rad,
+        De_fa,
+        min_cost,
+        min_cost_fn,
+    ) = dwi.fbi(fbwm=False)
     captured = capsys.readouterr()
 
     assert "Constrained Tensor Fit" in captured.err

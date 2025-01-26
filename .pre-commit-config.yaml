@@ -7,7 +7,7 @@ repos:
     - id: trailing-whitespace
 
 - repo: https://github.com/python-jsonschema/check-jsonschema
-  rev: '0.29.2'
+  rev: '0.31.0'
   hooks:
     - id: check-readthedocs
 
@@ -18,13 +18,8 @@ repos:
       args: ['--html-dir', 'docs/html', '--source-dir', 'docs/source']
       language_version: python3
 
-# - repo: https://github.com/psf/black
-#   rev: '24.4.2'
-#   hooks:
-#     - id: black
-
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: 'v0.6.4'
+  rev: 'v0.9.3'
   hooks:
     - id: ruff
       args: [--config, pyproject.toml, --fix, --exit-non-zero-on-fix]

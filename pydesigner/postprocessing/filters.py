@@ -77,7 +77,7 @@ def median(input: str, output: str, mask: Union[str, None] = None) -> None:
     hdr, img = readnii(input)
     if mask is not None:
         if not op.exists(mask):
-            raise IOError("Input mask {} does not " "exist.".format(input))
+            raise IOError("Input mask {} does not exist.".format(input))
         maskhdr, mask = readnii(mask)
     else:
         mask = np.ones((img.shape[0], img.shape[1], img.shape[2]), order="F")
@@ -89,5 +89,5 @@ def median(input: str, output: str, mask: Union[str, None] = None) -> None:
     elif np.ndim(img) == 3:
         img = median_filter(img, footprint=conn, mode="constant", cval=float("nan")) * mask
     else:
-        raise Exception("Input nifti image needs to be either 3D or " "4D. Please check the file provided.")
+        raise Exception("Input nifti image needs to be either 3D or 4D. Please check the file provided.")
     writenii(hdr, img, output)

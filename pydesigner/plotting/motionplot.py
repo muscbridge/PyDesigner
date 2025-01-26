@@ -31,11 +31,9 @@ def plot(input: str, output: str, voxel: Union[Tuple[float], None] = None) -> No
     if not op.exists(input):
         raise OSError("Input file {} does not exist".format(input))
     if op.isdir(output):
-        raise OSError(
-            "Output {} cannot be a directory. Please " "define the output to be an image file.".format(output)
-        )
+        raise OSError("Output {} cannot be a directory. Please define the output to be an image file.".format(output))
     if op.splitext(output)[-1] != ".png":
-        raise OSError("Output path {} does not indicate a PNG file" " ".format(input))
+        raise OSError("Output path {} does not indicate a PNG file ".format(input))
     # Load file
     dat = np.loadtxt(input)
     if dat.shape[-1] != 2:
@@ -73,9 +71,9 @@ def plot(input: str, output: str, voxel: Union[Tuple[float], None] = None) -> No
         plt.text(
             0,
             -2,
-            "$\dag$ average voxel dimension is used in "
-            "converting voxel displacement to head displacement "
-            "$V_{avg} = (V_x + V_y + V_z) / 3$",
+            r"$\dag$ average voxel dimension is used in "
+            r"converting voxel displacement to head displacement "
+            r"$V_{avg} = (V_x + V_y + V_z) / 3$",
             ha="left",
             size=6,
         )

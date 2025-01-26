@@ -29,7 +29,7 @@ def getconsole(path: int, flag: str) -> str:
         MRtrix3's mrinfo console output.
     """
     if not op.exists(path):
-        raise OSError("Input path does not exist. Please ensure that the " "folder or file specified exists.")
+        raise OSError("Input path does not exist. Please ensure that the folder or file specified exists.")
     if not isinstance(flag, str):
         raise TypeError("Input flag is not a string")
     arg = ["mrinfo", flag]
@@ -198,12 +198,12 @@ def transform(path: str) -> Tuple[float]:
         Image transformation matrix.
     """
     if not op.exists(path):
-        raise OSError("Input path does not exist. Please ensure that the " "folder or file specified exists.")
+        raise OSError("Input path does not exist. Please ensure that the folder or file specified exists.")
     arg = ["mrinfo", "-transform"]
     arg.append(path)
     completion = subprocess.run(arg, stdout=subprocess.PIPE)
     if completion.returncode != 0:
-        raise IOError("Input {} is not currently supported by " "PyDesigner.".format(path))
+        raise IOError("Input {} is not currently supported by PyDesigner.".format(path))
     console = str(completion.stdout).split("\\n")
     num = [re.findall(r"[-+]?\d*\.\d+|\d+", s) for s in console]
     num = [s for s in num if s != []]
@@ -225,7 +225,7 @@ def commandhistory(path: str) -> List[str]:
         command history of input file
     """
     if not op.exists(path):
-        raise OSError("Input path does not exist. Please ensure that the " "folder or file specified exists.")
+        raise OSError("Input path does not exist. Please ensure that the folder or file specified exists.")
     ftype = format(path)
     if ftype != "MRtrix":
         raise IOError(
@@ -237,7 +237,7 @@ def commandhistory(path: str) -> List[str]:
     arg.append(path)
     completion = subprocess.run(arg, stdout=subprocess.PIPE)
     if completion.returncode != 0:
-        raise IOError("Input {} is not currently supported by " "PyDesigner.".format(path))
+        raise IOError("Input {} is not currently supported by PyDesigner.".format(path))
     # Remove new line delimiter
     console = str(completion.stdout).split("\\n")
     # Remove 'b'
@@ -269,7 +269,7 @@ def dwscheme(path: str) -> List[float]:
         diffusion weighing scheme.
     """
     if not op.exists(path):
-        raise OSError("Input path does not exist. Please ensure that the " "folder or file specified exists.")
+        raise OSError("Input path does not exist. Please ensure that the folder or file specified exists.")
     ftype = format(path)
     if ftype != "MRtrix":
         raise IOError(
@@ -281,7 +281,7 @@ def dwscheme(path: str) -> List[float]:
     arg.append(path)
     completion = subprocess.run(arg, stdout=subprocess.PIPE)
     if completion.returncode != 0:
-        raise IOError("Input {} is not currently supported by " "PyDesigner.".format(path))
+        raise IOError("Input {} is not currently supported by PyDesigner.".format(path))
     # Remove new line delimiter
     console = str(completion.stdout).split("\\n")
     # Remove 'b'
@@ -317,7 +317,7 @@ def pescheme(path: str) -> List[float]:
         Phase encoding scheme.
     """
     if not op.exists(path):
-        raise OSError("Input path does not exist. Please ensure that the " "folder or file specified exists.")
+        raise OSError("Input path does not exist. Please ensure that the folder or file specified exists.")
     ftype = format(path)
     if ftype != "MRtrix":
         raise IOError(
@@ -329,7 +329,7 @@ def pescheme(path: str) -> List[float]:
     arg.append(path)
     completion = subprocess.run(arg, stdout=subprocess.PIPE)
     if completion.returncode != 0:
-        raise IOError("Input {} is not currently supported by " "PyDesigner.".format(path))
+        raise IOError("Input {} is not currently supported by PyDesigner.".format(path))
     # Remove new line delimiter
     console = str(completion.stdout).split("\\n")
     # Remove 'b'
@@ -364,7 +364,7 @@ def shells(path: str) -> int:
         Number of shells.
     """
     if not op.exists(path):
-        raise OSError("Input path does not exist. Please ensure that the " "folder or file specified exists.")
+        raise OSError("Input path does not exist. Please ensure that the folder or file specified exists.")
     ftype = format(path)
     if ftype != "MRtrix":
         raise IOError(
@@ -376,7 +376,7 @@ def shells(path: str) -> int:
     arg.append(path)
     completion = subprocess.run(arg, stdout=subprocess.PIPE)
     if completion.returncode != 0:
-        raise IOError("Input {} is not currently supported by " "PyDesigner.".format(path))
+        raise IOError("Input {} is not currently supported by PyDesigner.".format(path))
     # Remove new line delimiter
     console = str(completion.stdout).split("\\n")
     # Remove 'b'
@@ -409,7 +409,7 @@ def num_shells(path: str) -> int:
         Number of shells.
     """
     if not op.exists(path):
-        raise OSError("Input path does not exist. Please ensure that the " "folder or file specified exists.")
+        raise OSError("Input path does not exist. Please ensure that the folder or file specified exists.")
     ftype = format(path)
     if ftype != "MRtrix":
         raise IOError(
@@ -435,7 +435,7 @@ def max_shell(path: str) -> int:
         Max b-value
     """
     if not op.exists(path):
-        raise OSError("Input path does not exist. Please ensure that the " "folder or file specified exists.")
+        raise OSError("Input path does not exist. Please ensure that the folder or file specified exists.")
     ftype = format(path)
     if ftype != "MRtrix":
         raise IOError(
@@ -447,7 +447,7 @@ def max_shell(path: str) -> int:
     arg.append(path)
     completion = subprocess.run(arg, stdout=subprocess.PIPE)
     if completion.returncode != 0:
-        raise IOError("Input {} is not currently supported by " "PyDesigner.".format(path))
+        raise IOError("Input {} is not currently supported by PyDesigner.".format(path))
     # Remove new line delimiter
     console = str(completion.stdout).split("\\n")
     # Remove 'b'
@@ -482,7 +482,7 @@ def is_fullsphere(path: str) -> bool:
         False if half-spherical sampling.
     """
     if not op.exists(path):
-        raise OSError("Input path does not exist. Please ensure that the " "folder or file specified exists.")
+        raise OSError("Input path does not exist. Please ensure that the folder or file specified exists.")
     ftype = format(path)
     if ftype != "MRtrix":
         raise IOError(
@@ -493,7 +493,7 @@ def is_fullsphere(path: str) -> bool:
     arg = ["dirstat", path, "-output", "ASYM"]
     completion = subprocess.run(arg, stdout=subprocess.PIPE)
     if completion.returncode != 0:
-        raise IOError("Input {} is not currently supported by " "PyDesigner.".format(path))
+        raise IOError("Input {} is not currently supported by PyDesigner.".format(path))
     # Remove new line delimiter
     console = str(completion.stdout).split("\\n")
     # Remove 'b'
@@ -541,7 +541,7 @@ def echotime(path: str) -> Union[int, str]:
         'variable'
     """
     if not op.exists(path):
-        raise OSError("Input path does not exist. Please ensure that the " "folder or file specified exists.")
+        raise OSError("Input path does not exist. Please ensure that the folder or file specified exists.")
     ftype = format(path)
     if ftype != "MRtrix":
         raise IOError(
@@ -553,7 +553,7 @@ def echotime(path: str) -> Union[int, str]:
     arg.append(path)
     completion = subprocess.run(arg, stdout=subprocess.PIPE)
     if completion.returncode != 0:
-        raise IOError("Input {} is not currently supported by " "PyDesigner.".format(path))
+        raise IOError("Input {} is not currently supported by PyDesigner.".format(path))
     console = str(completion.stdout).split("\\n")[0]
     console = console.split("b")[-1]
     console = console.replace("'", "")
