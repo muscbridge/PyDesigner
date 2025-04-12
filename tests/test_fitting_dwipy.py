@@ -90,7 +90,7 @@ def test_dwi_max_bval():
     """Tests whether function returns correct max bval"""
     dwi = DWI(PATH_DWI, PATH_BVEC, PATH_BVAL, PATH_MASK)
     val = dwi.maxBval()
-    assert isinstance(val, int)
+    assert isinstance(val, float)
     assert val == 8
 
 
@@ -98,7 +98,7 @@ def test_dwi_max_dti_bval():
     """Tests whether function returns correct max DTI bval"""
     dwi = DWI(PATH_DWI, PATH_BVEC, PATH_BVAL, PATH_MASK)
     val = dwi.maxDTIBval()
-    assert isinstance(val, int)
+    assert isinstance(val, float)
     assert val == 1
 
 
@@ -106,7 +106,7 @@ def test_dwi_max_dki_bval():
     """Tests whether function returns correct max DKI bval"""
     dwi = DWI(PATH_DWI, PATH_BVEC, PATH_BVAL, PATH_MASK)
     val = dwi.maxDKIBval()
-    assert isinstance(val, int)
+    assert isinstance(val, float)
     assert val == 2
 
 
@@ -114,7 +114,7 @@ def test_max_fbi_bval():
     """Tests whether function returns correct max FBI bval"""
     dwi = DWI(PATH_DWI, PATH_BVEC, PATH_BVAL, PATH_MASK)
     val = dwi.maxFBIBval()
-    assert isinstance(val, int)
+    assert isinstance(val, float)
     assert val == 8
 
 

@@ -173,7 +173,7 @@ class DWI(object):
         """
         return self.grad[:, 0:3]
 
-    def maxBval(self) -> int:
+    def maxBval(self) -> float:
         """Returns the maximum b-value in a dataset to determine between
         DTI and DKI, requires no input parameters.
 
@@ -187,9 +187,9 @@ class DWI(object):
         a = dwi.maxBval(), where dwi is the DWI class object.
 
         """
-        return int(max(np.unique(self.grad[:, 3])))
+        return max(np.unique(self.grad[:, 3]))
 
-    def maxDTIBval(self) -> int:
+    def maxDTIBval(self) -> float:
         """Returns the maximum DTI b-value in a dataset.
 
         Returns
@@ -203,9 +203,9 @@ class DWI(object):
 
         """
         exclude_idx = self.grad[:, 3] <= th.__maxdtibval__
-        return int(max(np.unique(self.grad[exclude_idx, 3])))
+        return max(np.unique(self.grad[exclude_idx, 3]))
 
-    def maxDKIBval(self) -> int:
+    def maxDKIBval(self) -> float:
         """Returns the maximum DKI b-value in a dataset.
 
         Returns
@@ -219,9 +219,9 @@ class DWI(object):
 
         """
         exclude_idx = self.grad[:, 3] <= th.__maxdkibval__
-        return int(max(np.unique(self.grad[exclude_idx, 3])))
+        return max(np.unique(self.grad[exclude_idx, 3]))
 
-    def maxFBIBval(self) -> int:
+    def maxFBIBval(self) -> float:
         """Returns the maximum FBI b-value in a dataset.
 
         Returns
@@ -235,7 +235,7 @@ class DWI(object):
 
         """
         exclude_idx = self.grad[:, 3] <= th.__maxfbibval__
-        return int(max(np.unique(self.grad[exclude_idx, 3])))
+        return max(np.unique(self.grad[exclude_idx, 3]))
 
     def idxb0(self) -> np.ndarray[bool]:
         """Returns the index of all B-zeros according to bvals
