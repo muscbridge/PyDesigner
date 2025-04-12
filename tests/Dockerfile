@@ -1,4 +1,4 @@
-FROM dmri/ci-cd-py3.11:9b5fdb22
+FROM dmri/ci-cd-py3.12:6f2600ca
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
 WORKDIR /src
 COPY . /src
