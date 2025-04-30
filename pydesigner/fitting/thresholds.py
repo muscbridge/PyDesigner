@@ -25,7 +25,7 @@ __eas_rd__ = [0, 5]
 __eas_ad__ = [0, 5]
 __tort__ = [0, 100]
 __ias_da__ = [0, 5]
- #FBI windows
+# FBI windows
 __zeta__ = [0, 10]
 __faa__ = [0, 1]
 # FBWM windows

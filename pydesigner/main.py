@@ -311,11 +311,7 @@ def main():
         "each TE separately.",
     )
     preprocessing_control.add_argument(
-        "-w",
-        "--window",
-        action="store_true",
-        default=False,
-        help="Window final metric maps within biological ranges"
+        "-w", "--window", action="store_true", default=False, help="Window final metric maps within biological ranges"
     )
     estimation_control.add_argument(
         "--fit_constraints",
