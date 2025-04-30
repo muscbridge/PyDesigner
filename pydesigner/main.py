@@ -128,14 +128,11 @@ def main():
         description="Controls for QC metrics",
     )
     tractography_control = parser.add_argument_group(
-        title="Tractography controls",
-        description="Fine-tune tractography"
+        title="Tractography controls", description="Fine-tune tractography"
     )
     program_control = parser.add_argument_group(
-        title="PyDesigner CLI controls",
-        description="Change PyDesigner app behavior"
+        title="PyDesigner CLI controls", description="Change PyDesigner app behavior"
     )
-
 
     # Optional
     preprocessing_control.add_argument(
@@ -290,18 +287,18 @@ def main():
         help="Set the interpolation to use when reslicing. Choices are linear (default), nearest, cubic, and sinc.",
     )
     preprocessing_control.add_argument(
-    "--median",
-    action="store_true",
-    default=False,
-    help="Performs postprocessing median filtering of "
-    "final maps. WARNING: Use on a case-by-case "
-    "basis for bad data only. When applied, the "
-    "filter alters the values of most voxels, so "
-    "it should be used with caution and avoided "
-    "when data quality is otherwise adequate. "
-    "While maps appear visually soother with "
-    "this flag on, they may nonetheless be less "
-    "accurate.",
+        "--median",
+        action="store_true",
+        default=False,
+        help="Performs postprocessing median filtering of "
+        "final maps. WARNING: Use on a case-by-case "
+        "basis for bad data only. When applied, the "
+        "filter alters the values of most voxels, so "
+        "it should be used with caution and avoided "
+        "when data quality is otherwise adequate. "
+        "While maps appear visually soother with "
+        "this flag on, they may nonetheless be less "
+        "accurate.",
     )
     preprocessing_control.add_argument(
         "-te",
