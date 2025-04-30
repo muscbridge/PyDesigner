@@ -9,6 +9,7 @@
 # Load base Ubuntu image
 FROM dmri/ci-cd-py3.12:6f2600ca AS base
 SHELL ["/bin/bash", "-euxo", "pipefail", "-c"]
+WORKDIR /src
 
 # Labels
 LABEL maintainer="Siddhartha Dhiman (siddhartha.dhiman@gmail.com)"
@@ -19,23 +20,22 @@ LABEL org.label-schema.vcs-url="https://github.com/m-ama/NeuroDock.git"
 LABEL org.label-schema.vendor="MUSC BRIDGE"
 
 # Copy and install PyDesigner
-FROM base as dependencies
-WORKDIR /src
+FROM base AS dependencies
 COPY requirements.txt ./
 RUN uv pip install -r requirements.txt
 
-FROM dependencies as development
+FROM dependencies AS development
 COPY requirements-dev.txt ./
 RUN uv pip install -rrequirements-dev.txt
 COPY . .
 RUN uv pip install --no-deps -e.
 
-FROM dependencies as pyc
+FROM dependencies AS pyc
 COPY . .
 RUN python -m compileall -bqj0 .
 RUN find . -name "*.py" -not -name "__init__.py" -delete
 
-FROM pyc as production
+FROM pyc AS production
 COPY --from=pyc /src .
 RUN uv pip install --no-deps -e.
 
