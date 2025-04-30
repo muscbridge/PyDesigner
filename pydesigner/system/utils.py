@@ -51,7 +51,7 @@ def vectorize(img, mask) -> np.ndarray[float]:
     return np.squeeze(s)
 
 
-def writeNii(map, hdr, outDir, range=None) -> None:
+def writeNii(map, hdr, outDir, range=None, clip=False) -> None:
     """Write clipped NifTi images
 
     Parameters
@@ -65,6 +65,9 @@ def writeNii(map, hdr, outDir, range=None) -> None:
     range : array_like
         [1 x 2] vector specifying range to clip, inclusive of value
         in range, e.g. range = [0, 1] for FA map
+    clip: bool
+        Clip and apply values specified in range
+        (Default: False)
 
     Returns
     -------
@@ -72,13 +75,15 @@ def writeNii(map, hdr, outDir, range=None) -> None:
 
     Examples
     --------
-    writeNii(matrix, header, output_directory, [0, 2])
+    writeNii(matrix, header, output_directory, [0, 2], clip=True)
 
     See Also
     --------
     clipImage(img, range) : this function is wrapped around
     """
-    if range is None:
+    if clip and not range:
+        raise Exception("Range is required in order to clip an image.")
+    if not clip:
         clipped_img = nib.Nifti1Image(map, hdr.affine, hdr.header)
     else:
         clipped_img = clipImage(map, range)
@@ -104,7 +109,7 @@ def clipImage(img, range) -> np.ndarray[float]:
 
     Examples
     --------
-    clippedImage = clipImage(image, [0 3])
+    clippedImage = clipImage(image, [0, 3])
     Clips input matrix in the range 0 to 3
     """
     img[img > range[1]] = range[1]

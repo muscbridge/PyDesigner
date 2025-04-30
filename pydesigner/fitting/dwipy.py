@@ -2698,6 +2698,7 @@ def fit_regime(
     res: str = "med",
     n_fibers: int = 5,
     mask: Union[str, None] = None,
+    window: bool = False,
     nthreads: Union[int, None] = None,
 ) -> None:
     """Performs the entire tensor fitting regime and writes out maps.
@@ -2741,6 +2742,9 @@ def fit_regime(
     mask : str
         Path to brain mask
         (Default: None)
+    window : bool
+        Window metric map within biological limits
+        (Default: False)
     nthreads : int
         Number of workers to use in processing. Default value uses all
         available workers.
@@ -2831,10 +2835,10 @@ def fit_regime(
     # DTI Parameters
     if img.isdti():
         md, rd, ad, fa, fe, trace = img.extractDTI()
-        writeNii(md, img.hdr, op.join(output, fname_dti["md"]))
-        writeNii(rd, img.hdr, op.join(output, fname_dti["rd"]))
-        writeNii(ad, img.hdr, op.join(output, fname_dti["ad"]))
-        writeNii(fa, img.hdr, op.join(output, fname_dti["fa"]))
+        writeNii(md, img.hdr, op.join(output, fname_dti["md"]), range=th.__md__, clip=window)
+        writeNii(rd, img.hdr, op.join(output, fname_dti["rd"]), range=th.__rd__, clip=window)
+        writeNii(ad, img.hdr, op.join(output, fname_dti["ad"]), range=th.__ad__, clip=window)
+        writeNii(fa, img.hdr, op.join(output, fname_dti["fa"]), range=th.__fa__, clip=window)
         writeNii(fe, img.hdr, op.join(output, fname_dti["fe"]))
         writeNii(trace, img.hdr, op.join(output, fname_dti["trace"]))
         dtimodel = odf.odfmodel(dt=op.join(output, fname_tensor["DT"]), mask=mask, l_max=2, res=res)
@@ -2857,19 +2861,19 @@ def fit_regime(
     if img.isdki():
         # DKI Parameters
         mk, rk, ak, kfa, mkt, trace = img.extractDKI()
-        writeNii(mk, img.hdr, op.join(output, fname_dki["mk"]))
-        writeNii(rk, img.hdr, op.join(output, fname_dki["rk"]))
-        writeNii(ak, img.hdr, op.join(output, fname_dki["ak"]))
-        writeNii(kfa, img.hdr, op.join(output, fname_dki["kfa"]))
+        writeNii(mk, img.hdr, op.join(output, fname_dki["mk"]), range=th.__mk__, clip=window)
+        writeNii(rk, img.hdr, op.join(output, fname_dki["rk"]), range=th.__rk__, clip=window)
+        writeNii(ak, img.hdr, op.join(output, fname_dki["ak"]), range=th.__ak__, clip=window)
+        writeNii(kfa, img.hdr, op.join(output, fname_dki["kfa"]), range=th.__kfa__, clip=window)
         writeNii(mkt, img.hdr, op.join(output, fname_dki["mkt"]))
         writeNii(trace, img.hdr, op.join(output, fname_dki["trace"]))
         # WMTI Parameters
         awf, eas_ad, eas_rd, eas_tort, ias_da = img.extractWMTI()
-        writeNii(awf, img.hdr, op.join(output, fname_wmti["awf"]))
-        writeNii(eas_ad, img.hdr, op.join(output, fname_wmti["eas_ad"]))
-        writeNii(eas_rd, img.hdr, op.join(output, fname_wmti["eas_rd"]))
-        writeNii(eas_tort, img.hdr, op.join(output, fname_wmti["eas_tort"]))
-        writeNii(ias_da, img.hdr, op.join(output, fname_wmti["ias_da"]))
+        writeNii(awf, img.hdr, op.join(output, fname_wmti["awf"]), range=th.__wawf__, clip=window)
+        writeNii(eas_ad, img.hdr, op.join(output, fname_wmti["eas_ad"]), range=th.__eas_ad__, clip=window)
+        writeNii(eas_rd, img.hdr, op.join(output, fname_wmti["eas_rd"]), range=th.__eas_rd__, clip=window)
+        writeNii(eas_tort, img.hdr, op.join(output, fname_wmti["eas_tort"]), range=th.__tort__, clip=window)
+        writeNii(ias_da, img.hdr, op.join(output, fname_wmti["ias_da"]), range=th.__ias_da__, clip=window)
         dkimodel = odf.odfmodel(
             dt=op.join(output, fname_tensor["DT"]),
             kt=op.join(output, fname_tensor["KT"]),
@@ -2918,16 +2922,16 @@ def fit_regime(
                 min_cost,
                 min_cost_fn,
             ) = img.fbi(l_max=l_max, fbwm=True, rectify=rectify)
-            writeNii(zeta, img.hdr, op.join(output, fname_fbi["zeta"]))
-            writeNii(faa, img.hdr, op.join(output, fname_fbi["faa"]))
+            writeNii(zeta, img.hdr, op.join(output, fname_fbi["zeta"]), range=th.__zeta__, clip=window)
+            writeNii(faa, img.hdr, op.join(output, fname_fbi["faa"]), range=th.__faa__, clip=window)
             writeNii(np.real(sph), img.hdr, op.join(output, fname_fbi["odf"]))
             writeNii(np.real(sph_mrtrix), img.hdr, op.join(output, fname_fbi["odf_mrtrix"]))
-            writeNii(min_awf, img.hdr, op.join(output, fname_fbi["awf"]))
-            writeNii(Da, img.hdr, op.join(output, fname_fbi["Da"]))
-            writeNii(De_mean, img.hdr, op.join(output, fname_fbi["De_mean"]))
-            writeNii(De_ax, img.hdr, op.join(output, fname_fbi["De_ax"]))
-            writeNii(De_rad, img.hdr, op.join(output, fname_fbi["De_rad"]))
-            writeNii(De_fa, img.hdr, op.join(output, fname_fbi["fae"]))
+            writeNii(min_awf, img.hdr, op.join(output, fname_fbi["awf"]), range=th.__fawf__, clip=window)
+            writeNii(Da, img.hdr, op.join(output, fname_fbi["Da"]), range=th.__da__, clip=window)
+            writeNii(De_mean, img.hdr, op.join(output, fname_fbi["De_mean"]), range=th.__de_mean__, clip=window)
+            writeNii(De_ax, img.hdr, op.join(output, fname_fbi["De_ax"]), range=th.__de__ax__, clip=window)
+            writeNii(De_rad, img.hdr, op.join(output, fname_fbi["De_rad"]), range=th.__de_rad__, clip=window)
+            writeNii(De_fa, img.hdr, op.join(output, fname_fbi["fae"]), range=th.__de_fa__, clip=window)
             writeNii(min_cost, img.hdr, op.join(output, fname_fbi["min_cost"]))
             writeNii(min_cost_fn, img.hdr, op.join(output, fname_fbi["min_cost_fn"]))
             dsistudio.makefib(

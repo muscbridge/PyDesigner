@@ -310,6 +310,13 @@ def main():
         "TEs together, then extract metric values of "
         "each TE separately.",
     )
+    preprocessing_control.add_argument(
+        "-w",
+        "--window",
+        action="store_true",
+        default=False,
+        help="Window final metric maps within biological ranges"
+    )
     estimation_control.add_argument(
         "--fit_constraints",
         default="0,1,0",
@@ -1137,6 +1144,7 @@ def main():
                     qcpath=fitqcpath,
                     fit_constraints=fit_constraints,
                     mask=fit_mask,
+                    window=args.window,
                     nthreads=args.nthreads,
                 )
         else:
@@ -1155,6 +1163,7 @@ def main():
                 qcpath=fitqcpath,
                 fit_constraints=fit_constraints,
                 mask=fit_mask,
+                window=args.window,
                 nthreads=args.nthreads,
             )
 
