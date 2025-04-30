@@ -107,7 +107,6 @@ def main():
     )
 
     # Specify arguments below
-
     # Mandatory
     parser.add_argument(
         "dwi",
@@ -116,15 +115,37 @@ def main():
         type=str,
     )
 
+    preprocessing_control = parser.add_argument_group(
+        title="Preprocessing controls",
+        description="Fine-tune DWI preprocessing",
+    )
+    estimation_control = parser.add_argument_group(
+        title="DTI/DKI/WMTI/FBI/FBWM controls",
+        description="Control estimation of diffusion estimation",
+    )
+    qc_control = parser.add_argument_group(
+        title="QC controls",
+        description="Controls for QC metrics",
+    )
+    tractography_control = parser.add_argument_group(
+        title="Tractography controls",
+        description="Fine-tune tractography"
+    )
+    program_control = parser.add_argument_group(
+        title="PyDesigner CLI controls",
+        description="Change PyDesigner app behavior"
+    )
+
+
     # Optional
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "-o",
         "--output",
         metavar="directory",
         help="Output location. Default: same path as dwi.",
         type=str,
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "-s",
         "--standard",
         action="store_true",
@@ -133,20 +154,20 @@ def main():
         "options. See Appendix:Standard pipeline steps "
         "for more information. ",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "-n",
         "--denoise",
         action="store_true",
         default=False,
         help="Run thermal denoising with dwidenoise.",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "--extent",
         metavar="n,n,n",
         default="5,5,5",
         help="Denoising extent formatted n,n,n (forces  denoising. Default: 5,5,5.",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "-g",
         "--degibbs",
         action="store_true",
@@ -155,14 +176,14 @@ def main():
         "have full Fourier encoding. The program will check "
         "for you if you have a .json sidecar.",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "-u",
         "--undistort",
         action="store_true",
         default=False,
         help="Run FSL eddy to perform image undistortion. NOTE: needs a --topup to run.",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "--rpe_pairs",
         default=0,
         type=int,
@@ -173,34 +194,34 @@ def main():
         "Specfying 0 results in using all B0 pairs."
         "We recommend using just one pair. Default: 0",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "-z",
         "--smooth",
         action="store_true",
         default=False,
         help="Perform smoothing on the DWI data.",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "--fwhm",
         type=float,
         default=1.25,
         metavar="n",
         help="The FWHM to use as a multiple of voxel size. Default 1.25",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "-r",
         "--rician",
         action="store_true",
         default=False,
         help="Perform Rician noise correction on the data (requires --denoise to generate a noisemap).",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "--nofit",
         action="store_true",
         default=False,
         help="Do not fit DTI or DKI tensors.",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "--akc",
         action="store_true",
         default=False,
@@ -208,13 +229,13 @@ def main():
         "a median filter to tensor voxels that exhibit AKC "
         "values of less than 2 and more than 10.",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "--nooutliers",
         action="store_true",
         default=False,
         help="Do not perform outlier correction on kurtosis fitting metrics.",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "-m",
         "--mask",
         action="store_true",
@@ -223,26 +244,26 @@ def main():
         "to strip skull and improve efficiency. Optionally, "
         "use --maskthr to specify a threshold manually.",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "--maskthr",
         metavar="n",
         default=0.25,
         help="FSL bet threshold used for brain masking. Default: 0.25",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "--user_mask",
         metavar="path",
         help="Path to user-supplied brain mask.",
         type=str,
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "-cf",
         "--csf_fsl",
         action="store_true",
         default=False,
         help="Compute a CSF mask for CSF-excluded smoothing to minimize partial volume effects using FSL FAST.",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "-cd",
         "--csf_adc",
         metavar="n",
@@ -252,7 +273,7 @@ def main():
         "effects using thresholding a pseudo-ADC map "
         "computed as ln(S0/S1000)/b1000. Default: 2",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "--reslice",
         metavar="x,y,z",
         help="Relices DWI to voxel resolution "
@@ -262,13 +283,27 @@ def main():
         "greater than 9 will switch from mm voxel "
         "reslicing to output image reslicing.",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
         "--interp",
         action="store_true",
         default="linear",
         help="Set the interpolation to use when reslicing. Choices are linear (default), nearest, cubic, and sinc.",
     )
-    parser.add_argument(
+    preprocessing_control.add_argument(
+    "--median",
+    action="store_true",
+    default=False,
+    help="Performs postprocessing median filtering of "
+    "final maps. WARNING: Use on a case-by-case "
+    "basis for bad data only. When applied, the "
+    "filter alters the values of most voxels, so "
+    "it should be used with caution and avoided "
+    "when data quality is otherwise adequate. "
+    "While maps appear visually soother with "
+    "this flag on, they may nonetheless be less "
+    "accurate.",
+    )
+    preprocessing_control.add_argument(
         "-te",
         "--multite",
         action="store_true",
@@ -278,20 +313,20 @@ def main():
         "TEs together, then extract metric values of "
         "each TE separately.",
     )
-    parser.add_argument(
+    estimation_control.add_argument(
         "--fit_constraints",
         default="0,1,0",
         metavar="D>0,K>0,K < 3/(b*D)",
         help="Constrain the WLLS fit. Default: 0,1,0.",
     )
-    parser.add_argument(
+    estimation_control.add_argument(
         "--l_max",
         default=6,
         type=int,
         metavar="n",
         help="Maximum spherical harmonic degree for FBI spherical harmonic expansion",
     )
-    parser.add_argument(
+    estimation_control.add_argument(
         "--no_rectify",
         action="store_true",
         default=False,
@@ -300,7 +335,7 @@ def main():
         "acquisitions results in degradation of FBI "
         "or FBWM metric maps",
     )
-    parser.add_argument(
+    tractography_control.add_argument(
         "--t_res",
         type=str,
         default="med",
@@ -308,56 +343,43 @@ def main():
         "Higher resolution implies slower computation. Choose "
         'between "low", "med", or "high". Default: "med"',
     )
-    parser.add_argument(
+    tractography_control.add_argument(
         "--t_fibers",
         type=int,
         default=5,
         help="The maximum number ODF maxima to extract per voxel for tractography. Default: 5",
     )
-    parser.add_argument(
+    qc_control.add_argument(
         "--noqc",
         action="store_true",
         default=False,
         help="Disable QC saving of QC metrics",
     )
-    parser.add_argument(
-        "--median",
-        action="store_true",
-        default=False,
-        help="Performs postprocessing median filtering of "
-        "final maps. WARNING: Use on a case-by-case "
-        "basis for bad data only. When applied, the "
-        "filter alters the values of most voxels, so "
-        "it should be used with caution and avoided "
-        "when data quality is otherwise adequate. "
-        "While maps appear visually soother with "
-        "this flag on, they may nonetheless be less "
-        "accurate.",
-    )
-    parser.add_argument(
+
+    program_control.add_argument(
         "--nthreads",
         type=int,
         default=None,
         help="Number of threads to use for computation. Note that using too many threads will cause a slow-down.",
     )
-    parser.add_argument(
+    program_control.add_argument(
         "--resume",
         action="store_true",
         help="Continue from an aborted or partial previous run of pydesigner.",
     )
-    parser.add_argument(
+    program_control.add_argument(
         "--force",
         action="store_true",
         help="Force overwrites of existing files. Otherwise, there will be an error at runtime.",
     )
-    parser.add_argument(
+    program_control.add_argument(
         "--verbose",
         action="store_true",
         help="Print out all output. This is a very messy "
         "option. We recommend piping output to a text file "
         "if you use this option.",
     )
-    parser.add_argument(
+    program_control.add_argument(
         "--adv",
         action="store_true",
         help="Disables safety checks for advanced users who "
@@ -367,10 +389,11 @@ def main():
         "RUNNING WITH THIS FLAG COULD POTENTIALLY "
         "RESULT IN IMPRECISE AND INACCURATE RESULTS.",
     )
-    parser.add_argument("-v", "--version", action="version", version=__version__)
+    program_control.add_argument("-v", "--version", action="version", version=__version__)
 
     # Use argument specification to actually get args
     args = parser.parse_args()
+    print(args)
 
     # -----------------------------------------------------------------
     # Parse Input Image
