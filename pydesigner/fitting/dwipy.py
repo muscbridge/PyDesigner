@@ -17,6 +17,12 @@ from ..plotting import outlierplot
 from ..system.models import input_path_validator
 from ..system.utils import highprecisionexp, highprecisionpower, vectorize, writeNii
 from ..tractography import dsistudio, odf, sphericalsampling
+
+# from pydesigner.plotting import outlierplot
+# from pydesigner.system.models import input_path_validator
+# from pydesigner.system.utils import highprecisionexp, highprecisionpower, vectorize, writeNii
+# from pydesigner.tractography import dsistudio, odf, sphericalsampling
+
 from . import dwi_fnames, dwidirs
 from . import thresholds as th
 
@@ -107,7 +113,9 @@ class DWI(object):
                 bvals = bvals / 1000
             # Combine bvecs and bvals into [n x 4] array where n is
             # number of DWI volumes. [Gx Gy Gz Bval]
-            self.grad = np.c_[np.transpose(bvecs), bvals]
+            # self.grad = np.c_[np.transpose(bvecs), bvals]
+            self.grad = np.c_[bvecs, bvals]
+            
         else:
             msg = "Unable to locate BVAL or BVEC files"
             msg += "\nPaths being used are:"
@@ -2089,7 +2097,7 @@ class DWI(object):
         """
         # Get box filter properties
         centralIdx = np.median(range(window))
-        d2move = np.int(np.abs(window - (centralIdx + 1)))  # Add 1 to
+        d2move = int(np.abs(window - (centralIdx + 1)))  # Add 1 to
         # central idx because first index starts with zero
         # Vectorize and Pad
         dt = np.pad(
