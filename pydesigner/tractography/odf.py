@@ -14,7 +14,7 @@ import nibabel as nib
 import numpy as np
 from dipy.core.geometry import sphere2cart
 from joblib import Parallel, delayed
-from scipy.special import sph_harm
+from scipy.special import sph_harm_y as sph_harm
 from tqdm import tqdm
 
 from ..fitting.thresholds import __minZero__
