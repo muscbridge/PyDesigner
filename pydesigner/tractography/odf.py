@@ -609,7 +609,17 @@ class odfmodel:
         """
         odfmax, dirmax = self.odfmaxhelper(odf)
         odfmax = odfmax[0]
-        sh = np.dot(np.linalg.pinv(B), odf / odfmax) * scale
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            odf_norm = odf / odfmax
+
+        odf_norm = np.nan_to_num(odf_norm, nan=0.0, posinf=0.0, neginf=0.0)
+
+        with np.errstate(divide="ignore", invalid="ignore"):
+            B_pinv = np.linalg.pinv(B)
+
+        sh = np.dot(B_pinv, odf_norm) * scale
+        # sh = np.dot(np.linalg.pinv(B), odf / odfmax) * scale
         sh[np.isnan(sh)] = __minZero__
         sh[np.isinf(sh)] = __minZero__
         return sh
@@ -920,7 +930,7 @@ def shbasis(deg, phi, theta, method="scipy") -> np.ndarray[complex]:
     SH = []
     for n in deg:
         for m in range(-n, n + 1):
-            shb = sph_harm(m, n, theta, phi, dtype=complex)
+            shb = sph_harm(m, n, theta, phi)
             if method == "tournier":
                 # Tournier does not have Condon–Shortley phase i.e. (-1)^m in
                 # their formulas, so we multiply those terms by (-1)^m to reverse the

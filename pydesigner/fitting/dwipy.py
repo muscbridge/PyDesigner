@@ -2399,6 +2399,7 @@ class DWI(object):
             except:  # noqa: E722
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
             dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
+
             # Goodness-of-fit
             residu = np.log(dwi_i.reshape((dwi_i.shape[0], 1))) - np.log(dwi_hat)
             residu_ = dwi_i.reshape((dwi_i.shape[0], 1)) - dwi_hat
@@ -2449,7 +2450,13 @@ class DWI(object):
                     #                (dwi_i.shape[0], 1)) * w)))
                 except:  # noqa: E722
                     dt_i = np.full((bmat_i.shape[1], 1), minZero)
-                dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
+                # dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
+
+                with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+                    dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
+                
+                # dwi_hat = np.nan_to_num(dwi_hat, nan=0.0, posinf=0.0, neginf=0.0)
+
                 dwi_hat[dwi_hat < 1] = 1
                 residu = np.log(dwi_i.reshape((dwi_i.shape[0], 1))) - np.log(dwi_hat)
                 residu_ = dwi_i.reshape((dwi_i.shape[0], 1)) - dwi_hat
