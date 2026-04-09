@@ -113,8 +113,8 @@ class DWI(object):
                 bvals = bvals / 1000
             # Combine bvecs and bvals into [n x 4] array where n is
             # number of DWI volumes. [Gx Gy Gz Bval]
-            # self.grad = np.c_[np.transpose(bvecs), bvals]
-            self.grad = np.c_[bvecs, bvals]
+            self.grad = np.c_[np.transpose(bvecs), bvals]
+            # self.grad = np.c_[bvecs, bvals]
             
         else:
             msg = "Unable to locate BVAL or BVEC files"
@@ -2793,6 +2793,9 @@ def fit_regime(
             outliers, dt_est = img.irlls(mode="DKI", excludeb0=True)
         else:
             outliers, dt_est = img.irlls(mode="DTI", excludeb0=True)
+
+        print(np.std(dt_est, axis=0))
+
         if qcpath:
             if op.exists(qcpath):
                 outlier_full = op.join(qcpath, fname_outliers["IRLLS"])
