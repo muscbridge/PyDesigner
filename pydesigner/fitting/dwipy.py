@@ -2455,7 +2455,7 @@ class DWI(object):
                 with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
                     dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
                 
-                # dwi_hat = np.nan_to_num(dwi_hat, nan=0.0, posinf=0.0, neginf=0.0)
+                dwi_hat = np.nan_to_num(dwi_hat, nan=0.0, posinf=0.0, neginf=0.0)
 
                 dwi_hat[dwi_hat < 1] = 1
                 residu = np.log(dwi_i.reshape((dwi_i.shape[0], 1))) - np.log(dwi_hat)
@@ -2801,7 +2801,7 @@ def fit_regime(
         else:
             outliers, dt_est = img.irlls(mode="DTI", excludeb0=True)
 
-        print(np.std(dt_est, axis=0))
+        # print(np.std(dt_est, axis=0))
 
         if qcpath:
             if op.exists(qcpath):
