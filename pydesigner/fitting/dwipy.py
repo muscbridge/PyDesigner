@@ -2822,27 +2822,26 @@ class DWI(object):
             # ------------------------------------------------------------
             if ~gof2:
                 try:
-                    # weights derived from predicted signal
-                    w = np.clip(dwi_hat.reshape(-1, 1), 0.0, 1e6)
-                    wsq = np.square(w)
-                    wsq = np.nan_to_num(wsq, nan=0.0, posinf=1e12, neginf=0.0)
-                    wsq = np.clip(wsq, 0.0, 1e12)
+                    # Use weighted design matrix directly for leverage
+                    # Keep leverage weights conservative; this is only for hat-diagonal estimation
+                    w_lev = np.clip(dwi_hat.reshape(-1, 1), 0.0, 1e3)
+                    w_lev = np.nan_to_num(w_lev, nan=0.0, posinf=1e3, neginf=0.0)
 
-                    # stable weighted normal-equation pieces
-                    W2B = wsq * bmat_i                     # equivalent to diag(w^2) @ bmat_i
-                    normal = np.matmul(bmat_i.T, W2B)     # B^T W^2 B
-                    BtW2 = bmat_i.T * wsq.reshape(1, -1)  # B^T W^2
+                    A_w = bmat_i * w_lev
+                    A_w = np.nan_to_num(A_w, nan=0.0, posinf=0.0, neginf=0.0)
 
-                    normal = np.nan_to_num(normal, nan=0.0, posinf=0.0, neginf=0.0)
-                    BtW2 = np.nan_to_num(BtW2, nan=0.0, posinf=0.0, neginf=0.0)
+                    # Leverage from QR: diag(H) = row-wise squared norm of Q
+                    with np.errstate(all="ignore"):
+                        Q, _ = np.linalg.qr(A_w, mode="reduced")
 
-                    hat_core = np.linalg.lstsq(normal, BtW2, rcond=None)[0]
-                    hat = np.matmul(bmat_i, hat_core)
-                    lev = np.diag(hat)
+                    Q = np.nan_to_num(Q, nan=0.0, posinf=0.0, neginf=0.0)
+                    lev = np.sum(Q * Q, axis=1).reshape(-1, 1)
+
+                    lev = np.nan_to_num(lev, nan=minZero, posinf=1.0, neginf=minZero)
+                    lev = np.clip(lev, 0.0, 1.0)
+
                 except Exception:
                     lev = np.full(residu.shape, minZero)
-
-                lev = lev.reshape((lev.shape[0], 1))
 
                 try:
                     lowerbound_linear = -bounds * np.lib.scimath.sqrt(1 - lev) * sigma / dwi_hat
@@ -2873,7 +2872,6 @@ class DWI(object):
                 tmp2 = np.zeros(b.shape, dtype=bool, order="F")
                 tmp2[out.reshape(-1)] = True
                 reject = tmp2
-
             # ------------------------------------------------------------
             # Robust parameter estimation
             # ------------------------------------------------------------
