@@ -2332,7 +2332,21 @@ class DWI(object):
                     #     bmat.T, np.log(dwi)))
                 except:  # noqa: E722
                     dt_ = np.full((bmat.shape[1], 1), minZero)
-                w = highprecisionexp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
+
+
+                with np.errstate(over="ignore", under="ignore", invalid="ignore", divide="ignore"):
+                    z = np.matmul(bmat, dt_)
+
+                # Clamp exponent to a safe range
+                z = np.clip(z, -50.0, 50.0)
+
+                # w = highprecisionexp(np.matmul(bmat, dt_)).reshape((ndwi, 1))
+                w = highprecisionexp(z).reshape((ndwi, 1))
+                w = np.nan_to_num(w, nan=0.0, posinf=0.0, neginf=0.0)
+
+                if np.random.rand() < 1e-5:
+                    print("w stats:", np.min(w), np.max(w))
+
                 try:
                     dt_ = np.linalg.lstsq((bmat * np.tile(w, (1, nparam))), (np.log(dwi) * w), rcond=None)[0]
                     # dt_ = np.linalg.solve(
