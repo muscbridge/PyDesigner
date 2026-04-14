@@ -113,8 +113,10 @@ class DWI(object):
                 bvals = bvals / 1000
             # Combine bvecs and bvals into [n x 4] array where n is
             # number of DWI volumes. [Gx Gy Gz Bval]
+            print(f"bvecs shape: {np.shape(bvecs)}")
             self.grad = np.c_[np.transpose(bvecs), bvals]
             # self.grad = np.c_[bvecs, bvals]
+
             
         else:
             msg = "Unable to locate BVAL or BVEC files"
@@ -2835,6 +2837,24 @@ def fit_regime(
         img.fit(fit_constraints, reject=outliers)
     else:
         img.fit(fit_constraints)
+        
+
+    if hasattr(img, "__dict__"):
+        print("DWI attributes:", sorted(img.__dict__.keys()))
+
+    # Try the most likely tensor-holding attributes; comment/uncomment as needed
+    for name in ["dt", "dt_est", "DT", "tensor", "tenfit", "dti", "dki", "kt", "kt_est"]:
+        if hasattr(img, name):
+            arr = getattr(img, name)
+            try:
+                print(f"{name}: shape={arr.shape}, dtype={arr.dtype}")
+                if hasattr(arr, "ndim") and arr.ndim >= 2:
+                    print(f"{name}: std across voxels = {np.std(arr, axis=0)}")
+                    print(f"{name}: first 3 rows =\n{arr[:3]}")
+            except Exception as e:
+                print(f"Could not summarize {name}: {e}")
+
+
     if akc and img.isdki():
         akc_out = img.akcoutliers()
         img.akccorrect(akc_out)
