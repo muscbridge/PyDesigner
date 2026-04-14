@@ -762,97 +762,183 @@ class DWI(object):
 
     def wlls(
         self,
-        shat: np.ndarray[float],
-        dwi: np.ndarray[float],
-        b: np.ndarray[float],
-        cons: Union[np.ndarray[float], None] = None,
-        warmup: bool = None,
-    ) -> np.ndarray[float]:
-        """Estimates diffusion and kurtosis tenor at voxel with
-        unconstrained Moore-Penrose pseudoinverse or constrained
-        quadratic convex optimization. This is a helper function for
-        dwi.fit() so a multiprocessing parallel loop can be iterated over
-        voxels.
+        shat: np.ndarray,
+        dwi: np.ndarray,
+        b: np.ndarray,
+        cons: Union[np.ndarray, None] = None,
+        warmup: Union[np.ndarray, None] = None,
+    ) -> np.ndarray:
+        """Weighted linear least squares for voxelwise DT/DKT fitting."""
 
-        Parameters
-        ----------
-        shat: ndarray(dtype=float)
-            [ndir x 1] array of S_hat, approximated signal intensity
-            at voxel.
-        dwiL: ndarray(dtype=float)
-            [ndir x 1] array of diffusion weighted intensity values at
-            voxel, for all b-values.
-        b: ndarray(dtype=float)
-            [ndir x 1] array of b-values vector.
-        cons: ndarray(dtype=float)
-            [(n * dir) x 22) array containing inequality constraints
-            for fitting (Default: None).
-        warmup: ndarray(dtype=float)
-            Estimated dt vector (22, 0) at each voxel for warm
-            starting constrianed tensor fitting (Default: None).
+        # Make inputs safe
+        shat = np.asarray(shat, dtype=np.float64).reshape(-1)
+        dwi = np.asarray(dwi, dtype=np.float64).reshape(-1)
+        b = np.asarray(b, dtype=np.float64)
 
-        Returns
-        -------
-        dt: ndarray(dtype=float)
-            Diffusion tensor.
+        # Avoid log(0), negative signal, NaN, Inf
+        dwi = np.nan_to_num(dwi, nan=minZero, posinf=minZero, neginf=minZero)
+        dwi[dwi < minZero] = minZero
 
-        Examples
-        --------
-        dt = dwi.wlls(shat, dwi, b, constraints)
+        shat = np.nan_to_num(shat, nan=0.0, posinf=0.0, neginf=0.0)
+        shat = np.clip(shat, 0.0, 1e6)
 
-        Notes
-        -----
-        For Unconstrained Fitting:
-        In the absence of constraints, an exact formulation in the form
-        Cx = b is produced. This is further simplified to x_hat = C^+ *
-        b. One can use the Moore-Penrose method to compute the
-        pseudoinverse to approximate diffusion tensors.
-
-        For Constrained Fitting:
-        .. code-block:: none
-
-            The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
-                                                      ~~~~~      ~~~~~
-                                                        P          q
-
-        where A is denoted by multiplier matrix (w * b)
-        Multiplying by a positive constant (0.5) does not change the value
-        of optimum x*. Similarly, the constant offset b.T*b does not
-        affect x*, therefore we can leave these out.
-
-        Minimize: || C*x -b ||_2^2
-            subject to A*x <= b
-            No lower or upper bounds
-        """
         w = np.diag(shat)
-        # Unconstrained Fitting
-        if cons is None:
-            dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
-        # Constrained fitting
-        else:
-            C = np.matmul(w, b).astype("double")
-            d = np.matmul(w, np.log(dwi)).astype("double").reshape(-1)
-            m, n = C.shape
-            x = cvx.Variable(n)
-            if warmup is not None:
-                x.value = warmup
-            objective = cvx.Minimize(0.5 * cvx.sum_squares(C @ x - d))
-            constraints = [cons @ x >= np.zeros((len(cons)))]
-            prob = cvx.Problem(objective, constraints)
+
+        # Safe unconstrained fallback
+        def unconstrained_solution():
+            with np.errstate(over="ignore", under="ignore", invalid="ignore", divide="ignore"):
+                C_u = np.matmul(w, b).astype(np.float64)
+                d_u = np.matmul(w, np.log(dwi)).astype(np.float64)
+            C_u = np.nan_to_num(C_u, nan=0.0, posinf=0.0, neginf=0.0)
+            d_u = np.nan_to_num(d_u, nan=0.0, posinf=0.0, neginf=0.0)
             try:
-                prob.solve(
-                    solver=cvx.OSQP,
-                    warm_start=True,
-                    max_iter=20000,
-                    polish=True,
-                    linsys_solver="qdldl",
-                )
-                dt = x.value
-                if prob.status != "optimal":
-                    dt = np.full(n, minZero)
-            except:  # noqa: E722
-                dt = np.full(n, minZero)
+                dt_u = np.matmul(np.linalg.pinv(C_u), d_u)
+            except np.linalg.LinAlgError:
+                dt_u = np.full(b.shape[1], np.nan)
+            return dt_u
+
+        # Unconstrained fitting
+        if cons is None:
+            return unconstrained_solution()
+
+        # Constrained fitting
+        with np.errstate(over="ignore", under="ignore", invalid="ignore", divide="ignore"):
+            C = np.matmul(w, b).astype(np.float64)
+            d = np.matmul(w, np.log(dwi)).astype(np.float64).reshape(-1)
+
+        C = np.nan_to_num(C, nan=0.0, posinf=0.0, neginf=0.0)
+        d = np.nan_to_num(d, nan=0.0, posinf=0.0, neginf=0.0)
+
+        m, n = C.shape
+        x = cvx.Variable(n)
+
+        if warmup is not None:
+            try:
+                x.value = np.asarray(warmup, dtype=np.float64).reshape(-1)
+            except Exception:
+                pass
+
+        objective = cvx.Minimize(0.5 * cvx.sum_squares(C @ x - d))
+        constraints = [cons @ x >= np.zeros(len(cons))]
+        prob = cvx.Problem(objective, constraints)
+
+        try:
+            prob.solve(
+                solver=cvx.OSQP,
+                warm_start=True,
+                max_iter=20000,
+                polish=True,
+                verbose=False,
+            )
+
+            # Accept lower-accuracy successful solves too
+            if prob.status in ("optimal", "optimal_inaccurate") and x.value is not None:
+                dt = np.asarray(x.value, dtype=np.float64).reshape(-1)
+                # print(f"prob.status = {prob.status}")
+            else:
+                dt = unconstrained_solution()
+
+        except (FloatingPointError, ValueError, cvx.error.SolverError) as e:
+            # TEMPORARY: keep this print while debugging
+            # print(f"WLLS constrained fallback: {type(e).__name__}: {e}")
+            dt = unconstrained_solution()
+
+        dt = np.nan_to_num(dt, nan=minZero, posinf=minZero, neginf=minZero)
         return dt
+
+    # def wlls(
+    #     self,
+    #     shat: np.ndarray[float],
+    #     dwi: np.ndarray[float],
+    #     b: np.ndarray[float],
+    #     cons: Union[np.ndarray[float], None] = None,
+    #     warmup: bool = None,
+    # ) -> np.ndarray[float]:
+    #     """Estimates diffusion and kurtosis tenor at voxel with
+    #     unconstrained Moore-Penrose pseudoinverse or constrained
+    #     quadratic convex optimization. This is a helper function for
+    #     dwi.fit() so a multiprocessing parallel loop can be iterated over
+    #     voxels.
+
+    #     Parameters
+    #     ----------
+    #     shat: ndarray(dtype=float)
+    #         [ndir x 1] array of S_hat, approximated signal intensity
+    #         at voxel.
+    #     dwiL: ndarray(dtype=float)
+    #         [ndir x 1] array of diffusion weighted intensity values at
+    #         voxel, for all b-values.
+    #     b: ndarray(dtype=float)
+    #         [ndir x 1] array of b-values vector.
+    #     cons: ndarray(dtype=float)
+    #         [(n * dir) x 22) array containing inequality constraints
+    #         for fitting (Default: None).
+    #     warmup: ndarray(dtype=float)
+    #         Estimated dt vector (22, 0) at each voxel for warm
+    #         starting constrianed tensor fitting (Default: None).
+
+    #     Returns
+    #     -------
+    #     dt: ndarray(dtype=float)
+    #         Diffusion tensor.
+
+    #     Examples
+    #     --------
+    #     dt = dwi.wlls(shat, dwi, b, constraints)
+
+    #     Notes
+    #     -----
+    #     For Unconstrained Fitting:
+    #     In the absence of constraints, an exact formulation in the form
+    #     Cx = b is produced. This is further simplified to x_hat = C^+ *
+    #     b. One can use the Moore-Penrose method to compute the
+    #     pseudoinverse to approximate diffusion tensors.
+
+    #     For Constrained Fitting:
+    #     .. code-block:: none
+
+    #         The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
+    #                                                   ~~~~~      ~~~~~
+    #                                                     P          q
+
+    #     where A is denoted by multiplier matrix (w * b)
+    #     Multiplying by a positive constant (0.5) does not change the value
+    #     of optimum x*. Similarly, the constant offset b.T*b does not
+    #     affect x*, therefore we can leave these out.
+
+    #     Minimize: || C*x -b ||_2^2
+    #         subject to A*x <= b
+    #         No lower or upper bounds
+    #     """
+    #     w = np.diag(shat)
+    #     # Unconstrained Fitting
+    #     if cons is None:
+    #         dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
+    #     # Constrained fitting
+    #     else:
+    #         C = np.matmul(w, b).astype("double")
+    #         d = np.matmul(w, np.log(dwi)).astype("double").reshape(-1)
+    #         m, n = C.shape
+    #         x = cvx.Variable(n)
+    #         if warmup is not None:
+    #             x.value = warmup
+    #         objective = cvx.Minimize(0.5 * cvx.sum_squares(C @ x - d))
+    #         constraints = [cons @ x >= np.zeros((len(cons)))]
+    #         prob = cvx.Problem(objective, constraints)
+    #         try:
+    #             prob.solve(
+    #                 solver=cvx.OSQP,
+    #                 warm_start=True,
+    #                 max_iter=20000,
+    #                 polish=True,
+    #                 linsys_solver="qdldl",
+    #             )
+    #             dt = x.value
+    #             if prob.status != "optimal":
+    #                 dt = np.full(n, minZero)
+    #         except:  # noqa: E722
+    #             dt = np.full(n, minZero)
+    #     return dt
 
     def fit(self, constraints: Union[np.ndarray[float], None] = None, reject: bool = None) -> Self:
         """Returns fitted diffusion or kurtosis tensor
@@ -952,6 +1038,11 @@ class DWI(object):
         self.dt = self.dt[1:, :]
         D_apprSq = 1 / (np.sum(self.dt[(0, 3, 5), :], axis=0) / 3) ** 2
         self.dt[6:, :] = self.dt[6:, :] * np.tile(D_apprSq, (15, 1))
+
+        print("fit(): self.dt min =", np.nanmin(self.dt))
+        print("fit(): self.dt max =", np.nanmax(self.dt))
+        print("fit(): unique first-column values =", np.unique(self.dt[:, 0]))
+        print("fit(): voxelwise std per coeff =", np.std(self.dt, axis=1))
 
     def createConstraints(self, constraints: List[int] = [0, 1, 0]) -> np.ndarray[float]:
         """Generates constraint array for constrained minimization quadratic
@@ -1063,6 +1154,11 @@ class DWI(object):
         (md, rd, ad, fa) = dwi.extractDTI(), where dwi is the DWI class
         object
         """
+
+        # print("extractDTI self.dt shape:", self.dt.shape)
+        # print("extractDTI voxelwise std (axis=1):", np.std(self.dt, axis=1))
+        # print("extractDTI first 5 voxels (first 6 coeffs):\n", self.dt[:6, :5])
+
         # extract all tensor parameters from dt
         DT = np.reshape(
             np.concatenate(
