@@ -7,11 +7,13 @@ from typing import List, Self, Tuple, Union
 import cvxpy as cvx
 import nibabel as nib
 import numpy as np
-import numpy.matlib as npm
+# import numpy.matlib as npm
 import scipy.linalg as sla
 from joblib import Parallel, delayed
 from scipy.special import factorial, gamma, hyp1f1
 from tqdm import tqdm
+
+import math
 
 from ..plotting import outlierplot
 from ..system.models import input_path_validator
@@ -33,8 +35,9 @@ dirSample = th.__dirs__
 # Progress bar Properties
 tqdmWidth = 70  # Number of columns of progress bar
 # Set default numpy errorstates
-np.seterr(all="ignore")
 defaultErrorState = np.geterr()
+np.seterr(all="ignore")
+
 
 
 class DWI(object):
@@ -786,7 +789,7 @@ class DWI(object):
 
         # Safe unconstrained fallback
         def unconstrained_solution():
-            with np.errstate(over="ignore", under="ignore", invalid="ignore", divide="ignore"):
+            with np.errstate(all="ignore"):
                 C_u = np.matmul(w, b).astype(np.float64)
                 d_u = np.matmul(w, np.log(dwi)).astype(np.float64)
             C_u = np.nan_to_num(C_u, nan=0.0, posinf=0.0, neginf=0.0)
@@ -802,7 +805,7 @@ class DWI(object):
             return unconstrained_solution()
 
         # Constrained fitting
-        with np.errstate(over="ignore", under="ignore", invalid="ignore", divide="ignore"):
+        with np.errstate(all="ignore"):
             C = np.matmul(w, b).astype(np.float64)
             d = np.matmul(w, np.log(dwi)).astype(np.float64).reshape(-1)
 
@@ -823,13 +826,14 @@ class DWI(object):
         prob = cvx.Problem(objective, constraints)
 
         try:
-            prob.solve(
-                solver=cvx.OSQP,
-                warm_start=True,
-                max_iter=20000,
-                polish=True,
-                verbose=False,
-            )
+            with np.errstate(all="ignore"):
+                prob.solve(
+                    solver=cvx.OSQP,
+                    warm_start=True,
+                    max_iter=20000,
+                    polish=True,
+                    verbose=False,
+                )
 
             # Accept lower-accuracy successful solves too
             if prob.status in ("optimal", "optimal_inaccurate") and x.value is not None:
@@ -844,101 +848,8 @@ class DWI(object):
             dt = unconstrained_solution()
 
         dt = np.nan_to_num(dt, nan=minZero, posinf=minZero, neginf=minZero)
+        # print("current np.geterr() =", np.geterr())
         return dt
-
-    # def wlls(
-    #     self,
-    #     shat: np.ndarray[float],
-    #     dwi: np.ndarray[float],
-    #     b: np.ndarray[float],
-    #     cons: Union[np.ndarray[float], None] = None,
-    #     warmup: bool = None,
-    # ) -> np.ndarray[float]:
-    #     """Estimates diffusion and kurtosis tenor at voxel with
-    #     unconstrained Moore-Penrose pseudoinverse or constrained
-    #     quadratic convex optimization. This is a helper function for
-    #     dwi.fit() so a multiprocessing parallel loop can be iterated over
-    #     voxels.
-
-    #     Parameters
-    #     ----------
-    #     shat: ndarray(dtype=float)
-    #         [ndir x 1] array of S_hat, approximated signal intensity
-    #         at voxel.
-    #     dwiL: ndarray(dtype=float)
-    #         [ndir x 1] array of diffusion weighted intensity values at
-    #         voxel, for all b-values.
-    #     b: ndarray(dtype=float)
-    #         [ndir x 1] array of b-values vector.
-    #     cons: ndarray(dtype=float)
-    #         [(n * dir) x 22) array containing inequality constraints
-    #         for fitting (Default: None).
-    #     warmup: ndarray(dtype=float)
-    #         Estimated dt vector (22, 0) at each voxel for warm
-    #         starting constrianed tensor fitting (Default: None).
-
-    #     Returns
-    #     -------
-    #     dt: ndarray(dtype=float)
-    #         Diffusion tensor.
-
-    #     Examples
-    #     --------
-    #     dt = dwi.wlls(shat, dwi, b, constraints)
-
-    #     Notes
-    #     -----
-    #     For Unconstrained Fitting:
-    #     In the absence of constraints, an exact formulation in the form
-    #     Cx = b is produced. This is further simplified to x_hat = C^+ *
-    #     b. One can use the Moore-Penrose method to compute the
-    #     pseudoinverse to approximate diffusion tensors.
-
-    #     For Constrained Fitting:
-    #     .. code-block:: none
-
-    #         The equation |Cx -b|^2 expands to 0.5*x.T(C.T*A)*x -(C.T*b).T
-    #                                                   ~~~~~      ~~~~~
-    #                                                     P          q
-
-    #     where A is denoted by multiplier matrix (w * b)
-    #     Multiplying by a positive constant (0.5) does not change the value
-    #     of optimum x*. Similarly, the constant offset b.T*b does not
-    #     affect x*, therefore we can leave these out.
-
-    #     Minimize: || C*x -b ||_2^2
-    #         subject to A*x <= b
-    #         No lower or upper bounds
-    #     """
-    #     w = np.diag(shat)
-    #     # Unconstrained Fitting
-    #     if cons is None:
-    #         dt = np.matmul(np.linalg.pinv(np.matmul(w, b)), np.matmul(w, np.log(dwi)))
-    #     # Constrained fitting
-    #     else:
-    #         C = np.matmul(w, b).astype("double")
-    #         d = np.matmul(w, np.log(dwi)).astype("double").reshape(-1)
-    #         m, n = C.shape
-    #         x = cvx.Variable(n)
-    #         if warmup is not None:
-    #             x.value = warmup
-    #         objective = cvx.Minimize(0.5 * cvx.sum_squares(C @ x - d))
-    #         constraints = [cons @ x >= np.zeros((len(cons)))]
-    #         prob = cvx.Problem(objective, constraints)
-    #         try:
-    #             prob.solve(
-    #                 solver=cvx.OSQP,
-    #                 warm_start=True,
-    #                 max_iter=20000,
-    #                 polish=True,
-    #                 linsys_solver="qdldl",
-    #             )
-    #             dt = x.value
-    #             if prob.status != "optimal":
-    #                 dt = np.full(n, minZero)
-    #         except:  # noqa: E722
-    #             dt = np.full(n, minZero)
-    #     return dt
 
     def fit(self, constraints: Union[np.ndarray[float], None] = None, reject: bool = None) -> Self:
         """Returns fitted diffusion or kurtosis tensor
@@ -1038,11 +949,6 @@ class DWI(object):
         self.dt = self.dt[1:, :]
         D_apprSq = 1 / (np.sum(self.dt[(0, 3, 5), :], axis=0) / 3) ** 2
         self.dt[6:, :] = self.dt[6:, :] * np.tile(D_apprSq, (15, 1))
-
-        print("fit(): self.dt min =", np.nanmin(self.dt))
-        print("fit(): self.dt max =", np.nanmax(self.dt))
-        print("fit(): unique first-column values =", np.unique(self.dt[:, 0]))
-        print("fit(): voxelwise std per coeff =", np.std(self.dt, axis=1))
 
     def createConstraints(self, constraints: List[int] = [0, 1, 0]) -> np.ndarray[float]:
         """Generates constraint array for constrained minimization quadratic
@@ -1461,6 +1367,7 @@ class DWI(object):
             cost_fn : array_like(dype=float)
                 Cost values for input grid
             """
+            
             if grid.ndim > 1:
                 raise Exception("Grid needs to be a flattened 1D vector")
             ndir = [len(x) for x in GT]
@@ -1468,6 +1375,12 @@ class DWI(object):
             with np.errstate(all="ignore"):
                 for idx, awf in np.ndenumerate(grid):
                     for b in range(0, len(BT)):
+                        if IMG[b].shape[0] != shB[b].shape[0]:
+                            raise ValueError(
+                            f"FBWM shell mismatch at shell {b}: "
+                            f"signal has shape {IMG[b].shape}, "
+                            f"basis has shape {shB[b].shape}"
+                        )
                         Se = (
                             b0
                             * np.exp(
@@ -1485,7 +1398,8 @@ class DWI(object):
         def fbi_helper(
             dwi,
             b0,
-            B,
+            B_pinv,
+            B_shell,
             H,
             Pl0,
             gl,
@@ -1501,131 +1415,133 @@ class DWI(object):
             """Computes FBI calculations for a given voxel. This function
             will perform FBWM only if all optional FBWM parameters are
             parsed.
-
-            Parameters
-            ----------
-            dwi: array_like(dtype=float)
-                Signal across DWI at a given voxel.
-            b0: float
-                Averaged B0 signal at a given voxel.
-            B: array_like(dtype=complex)
-                FBI spherical harmonic expansion.
-            H: array_like(dtype=complex)
-                ODF from spherical harmonic expansion.
-            Pl0: array_like(dtype=float)
-                Legendre polynomail.
-            gl: array_like(dtype=float)
-                Correction factor.
-            rectify: bool; optional
-                Specify whether to perform fODF rectification
-                (Default: True).
-            fbwm_SH1: array_like(dtype=complex); optional
-                DKI spherical harmonic expansion for B1000.
-            fbwm_SH2: array_like(dtype=complex); optional
-                DKI spherical harmonic expansion for B2000.
-            fbwm_degs: array_like(dtype=int); optional
-                Harmonics used in DKI spherical harmonic expansion.
-            fbwm_B1: array_like(dtype=float); optional
-                Signal across DWI at B1000 at a given voxel.
-            fbwm_B2: array_like(dtype=float); optional
-                Signal across DWI at B2000 at a given voxel.
-            fbwm_dt: array_like(dtype=float); optional
-                Diffusion tensor at a given voxel.
-            fbwm_degs: array_like(dtype=int)
-                Harmonics used in expansion of FBWM shperical
-                harmonics.
-            sh_area: array_list(dtype=float)
-                Area of spherical sampling.
-
-            Returns
-            -------
-            zeta: float
-                Zeta parameter
-            faa: float
-                Intra-axonal fractional anisotropy.
-            clm: float
-                Spherical harmonic coefficients.
-            min_awf : float
-                Axonal water fraction.
-            Da: float
-                Intrinsic intra-axonal diffusivity.
-            De_mean: float
-                Mean extra-axonal diffusion.
-            De_ax: float
-                Axial extra-axonal diffusion.
-            De_rad: float
-                Radial extra-axonal diffusion.
-            De_fa: float
-                Extra-axonal FA.
-            min_cost: float
-                Minimum cost of the cost function (first index of
-                min_cost_fn).
-            min_cost_fn: array_like(dtype=float)
-                Cost function vector.
             """
             fbwm = False
             if not (
-                (fbwm_SH1 is None) or (fbwm_SH2 is None) or (fbwm_B1 is None) or (fbwm_B2 is None) or (fbwm_dt is None)
+                (fbwm_SH1 is None)
+                or (fbwm_SH2 is None)
+                or (fbwm_B1 is None)
+                or (fbwm_B2 is None)
+                or (fbwm_dt is None)
             ):
                 fbwm = True
+
             if sh_area is None:
                 rectify = False
-            # For references to alm and clm see FBI papers, they (alm
-            # and clm) are defined in all of them
-            alm = np.dot(np.linalg.pinv(B), (dwi / b0))  # DWI signal SH coefficients (these are complex)
-            alm[np.isnan(alm)] = 0
-            a00 = alm[0].real  # the imaginary part is on the order of 10^-18 (this is for zeta)
-            clm = (
-                alm * gl[0] * highprecisionpower(np.sqrt(4 * np.pi) * alm[0] * Pl0 * gl, -1)
-            )  # fODF SH coefficients (these are complex)
-            # need to figure out how to do peak detection (on this variable and
-            # then read out odf structures like in MATLAB code) only the real
-            # part would be read out but that would need to be done later on
-            # after the rectification process below
-            ODF = np.matmul(H, clm)
+
+            # ------------------------------------------------------------------
+            # Safe input handling
+            # ------------------------------------------------------------------
+            dwi = np.asarray(dwi, dtype=np.float64).reshape(-1)
+            b0 = float(np.asarray(b0).item())
+
+            dwi = np.nan_to_num(dwi, nan=minZero, posinf=minZero, neginf=minZero)
+            dwi[dwi < minZero] = minZero
+
+            # ------------------------------------------------------------------
+            # Compute SH coefficients safely
+            # ------------------------------------------------------------------
+            if (not np.isfinite(b0)) or (b0 <= minZero):
+                alm = np.zeros(B_pinv.shape[0], dtype=np.complex128)
+            else:
+                with np.errstate(all="ignore"):
+                    sig = dwi / b0
+                sig = np.nan_to_num(sig, nan=0.0, posinf=0.0, neginf=0.0)
+
+                with np.errstate(all="ignore"):
+                    alm = np.dot(B_pinv, sig)
+
+            alm = np.nan_to_num(alm, nan=0.0, posinf=0.0, neginf=0.0)
+
+            # These are complex SH coefficients of the DWI signal
+            a00 = alm[0].real
+
+            with np.errstate(all="ignore"):
+                clm = alm * gl[0] * highprecisionpower(
+                    np.sqrt(4 * np.pi) * alm[0] * Pl0 * gl,
+                    -1,
+                )
+
+            clm = np.nan_to_num(clm, nan=0.0, posinf=0.0, neginf=0.0)
+
+            # ------------------------------------------------------------------
+            # ODF reconstruction / optional rectification
+            # ------------------------------------------------------------------
+            with np.errstate(all="ignore"):
+                ODF = np.matmul(H, clm)
+
+            ODF = np.nan_to_num(ODF, nan=0.0, posinf=0.0, neginf=0.0)
+
             if rectify:
                 ODF = __fbi_rectify(ODF.real, sh_area, iter=100)
                 # Re-expand the rectified fODF into SH's
-                clm = np.matmul(sh_area * ODF, np.conj(H))
-            clm = (clm / clm[0]) * (1 / np.sqrt(4 * np.pi))  # normalize clm
+                with np.errstate(all="ignore"):
+                    clm = np.matmul(sh_area * ODF, np.conj(H))
+                clm = np.nan_to_num(clm, nan=0.0, posinf=0.0, neginf=0.0)
+
+            # ------------------------------------------------------------------
+            # Normalize clm safely
+            # ------------------------------------------------------------------
+            if (not np.isfinite(clm[0])) or (np.abs(clm[0]) < minZero):
+                clm = np.zeros_like(clm, dtype=np.complex128)
+                clm[0] = 1 / np.sqrt(4 * np.pi)
+            else:
+                clm = (clm / clm[0]) * (1 / np.sqrt(4 * np.pi))
+
+            clm = np.nan_to_num(clm, nan=0.0, posinf=0.0, neginf=0.0)
+
+            # ------------------------------------------------------------------
             # zeta and FAA calculations
-            # NOTE: zeta is not affected by the rectification, only FAA
+            # NOTE: zeta is not affected by rectification, only FAA
+            # ------------------------------------------------------------------
             zeta = a00 * np.sqrt(self.maxBval()) / np.pi
-            faa = np.sqrt(
-                3 * np.sum(np.abs(clm[1:6] ** 2)) / (5 * np.abs(clm[0]) ** 2 + 2 * np.sum(np.abs(clm[1:6] ** 2)))
-            )
+
+            with np.errstate(all="ignore"):
+                faa = np.sqrt(
+                    3 * np.sum(np.abs(clm[1:6] ** 2))
+                    / (5 * np.abs(clm[0]) ** 2 + 2 * np.sum(np.abs(clm[1:6] ** 2)))
+                )
+
+            if not np.isfinite(faa):
+                faa = 0.0
+
+            # ------------------------------------------------------------------
             # BEGIN: construct axonal DT (aDT)
+            # ------------------------------------------------------------------
             c00 = clm[0]
             c2_2 = clm[1]
             c2_1 = clm[2]
             c20 = clm[3]
             c21 = clm[4]
             c22 = clm[5]
+
             A11 = (np.sqrt(30) / 3) * c00 - (np.sqrt(6) / 3) * c20 + c22 + c2_2
             A22 = (np.sqrt(30) / 3) * c00 - (np.sqrt(6) / 3) * c20 - c22 - c2_2
             A33 = (np.sqrt(30) / 3) * c00 + (2 * np.sqrt(6) / 3) * c20
             A12 = 1j * (c22 - c2_2)
             A13 = -c21 + c2_1
             A23 = 1j * (-c21 - c2_1)
+
             aDT = np.array([A11, A12, A13, A12, A22, A23, A13, A23, A33]).real
             aDT = 1 / (c00 * np.sqrt(30)) * aDT
             iaDT = np.reshape(aDT, (3, 3)).real
+
+            # ------------------------------------------------------------------
+            # FBWM branch
+            # ------------------------------------------------------------------
             if fbwm:
                 bval = np.rint(self.grad[:, -1])
                 BT = np.unique(bval)
                 BT = BT[BT != 0]  # Exclude B0s
                 GT = [self.grad[bval == x, 0:3] for x in BT]
-                f_grid = np.linspace(0, 1, 100)  # define AWF grid (100 pts evenly spaced between 0 (min) and 1 (max))
-                int_grid = np.linspace(0, 99, 100, dtype=int)  # define grid points to iterate over (100 of them)
-                awf_grid = np.linspace(0, 1, 100)  # another AWF grid
-                # This holds the SH basis sets for each b-value shell
-                shB = [
-                    fbwm_SH1,
-                    fbwm_SH2,
-                    B,
-                ]  # list object: to access, shB[0] = B1 (for example)
-                # This hold all DWI volumes for each b-vlaue shell
-                IMG = [fbwm_B1, fbwm_B2, dwi]  # list object: to access
+
+                f_grid = np.linspace(0, 1, 100)
+                int_grid = np.linspace(0, 99, 100, dtype=int)
+                awf_grid = np.linspace(0, 1, 100)
+
+                shB = [fbwm_SH1, fbwm_SH2, B_shell]
+                IMG = [fbwm_B1, fbwm_B2, dwi]
+
                 # BEGIN: DT construction
                 iDT = np.array(
                     [
@@ -1642,51 +1558,58 @@ class DWI(object):
                 )
                 iDT = np.reshape(iDT, (3, 3))
                 # END: DT construction
-                # initialze correction factor elements that will be looped over and filled accordingly...
+
                 g2l_fa_R = np.zeros((len(Pl0), f_grid.shape[0]), order="F")
                 g2l_fa_R_b = np.zeros((len(BT), f_grid.shape[0], len(Pl0)), order="F")
                 g2l_fa_R_large = np.zeros((len(Pl0), f_grid.shape[0]), order="F")
-                # BEGIN: cost function
-                # Not many comments here, See McKinnon 2018 FBWm paper for details
+
                 for b in range(0, len(BT)):
-                    idx_hyper = (
-                        BT[b] * np.power(f_grid, 2) * np.power(zeta, -2) < 20
-                    )  # when should hypergeometric function be implemented? When b*D is small
+                    idx_hyper = BT[b] * np.power(f_grid, 2) * np.power(zeta, -2) < 20
                     idx_Y = 0
-                    for l_num in degs[::2]:
+
+                    for l_num in fbwm_degs[::2]:
                         hypergeom_opt = np.sum(
                             (
                                 gamma((l_num + 1) / 2 + int_grid)
                                 * gamma(l_num + (3 / 2))
                                 * (
-                                    (-BT[b] * f_grid[idx_hyper] ** 2 * zeta**-2) * np.ones((1, len(f_grid[idx_hyper])))
+                                    (-BT[b] * f_grid[idx_hyper] ** 2 * zeta**-2)
+                                    * np.ones((1, len(f_grid[idx_hyper])))
                                 ).T
                                 ** int_grid
-                                / (factorial(int_grid) * gamma(l_num + (3 / 2) + int_grid) * gamma((l_num + 1) / 2))
+                                / (
+                                    factorial(int_grid)
+                                    * gamma(l_num + (3 / 2) + int_grid)
+                                    * gamma((l_num + 1) / 2)
+                                )
                             ),
                             1,
                         ) * np.ones((1, len(f_grid[idx_hyper])))
-                        g2l_fa_R[idx_Y : idx_Y + (2 * l_num + 1), np.squeeze(idx_hyper)] = npm.repmat(
+
+                        g2l_fa_R[idx_Y : idx_Y + (2 * l_num + 1), np.squeeze(idx_hyper)] = np.tile(
                             (
                                 factorial(l_num // 2)
                                 * (BT[b] * f_grid[idx_hyper] ** 2 * zeta**-2) ** ((l_num + 1) / 2)
                                 / gamma(l_num + (3 / 2))
                                 * hypergeom_opt
                             ),
-                            (2 * l_num + 1),
-                            1,
-                        )  # Eq. 9 FBWM paper
+                            (2 * l_num + 1, 1),
+                        )
+
                         idx_Y = idx_Y + (2 * l_num + 1)
+
                     g2l_fa_R_b[b, np.squeeze(idx_hyper), :] = g2l_fa_R[:, np.squeeze(idx_hyper)].T
+
                     idx_Y = 0
-                    for l_num in degs[::2]:
-                        g2l_fa_R_large[idx_Y : idx_Y + (2 * l_num + 1), np.squeeze(~idx_hyper)] = npm.repmat(
-                            (np.exp(-l_num // 2 * (l_num + 1) / (2 * BT[b] * (f_grid[~idx_hyper] ** 2 * zeta**-2)))),
-                            (2 * l_num + 1),
-                            1,
-                        )  # Eq. 20 FBI paper
+                    for l_num in fbwm_degs[::2]:
+                        g2l_fa_R_large[idx_Y : idx_Y + (2 * l_num + 1), np.squeeze(~idx_hyper)] = np.tile(
+                            np.exp(-l_num // 2 * (l_num + 1) / (2 * BT[b] * (f_grid[~idx_hyper] ** 2 * zeta**-2))),
+                            (2 * l_num + 1, 1),
+                        )
                         idx_Y = idx_Y + (2 * l_num + 1)
+
                     g2l_fa_R_b[b, np.squeeze(~idx_hyper), :] = g2l_fa_R_large[:, np.squeeze(~idx_hyper)].T
+
                 cost_fn = __costCalculator(
                     awf_grid,
                     BT,
@@ -1701,45 +1624,49 @@ class DWI(object):
                     g2l_fa_R_b,
                     clm,
                 )
-                min_cost_fn_idx = np.argsort(cost_fn, axis=0)  # find the indexes of the sorted cost_fn values
-                min_cost_fn = np.take_along_axis(cost_fn, min_cost_fn_idx, axis=0)  # sort those values
-                min_awf = awf_grid[
-                    min_cost_fn_idx[0]
-                ]  # grad the minimum AWF value based on the cost_fn sorting done immeidately prior to this...
+
+                min_cost_fn_idx = np.argsort(cost_fn, axis=0)
+                min_cost_fn = np.take_along_axis(cost_fn, min_cost_fn_idx, axis=0)
+                min_awf = awf_grid[min_cost_fn_idx[0]]
+
                 De = (iDT - (min_awf**3 * zeta**-2) * iaDT) / (1 - min_awf)
                 Da = min_awf**2 / zeta**2
-                iDe = De  # intermeidate De
+
+                iDe = De
                 iDe[np.isnan(iDe)] = minZero
                 iDe[np.isinf(iDe)] = minZero
-                L, V = np.linalg.eig(iDe)  # L : eigVals and V: eigVecs
-                L = np.sort(L)  # sort them (this is ascending)
-                L = L[::-1]  # reverse the order so they are descending (high -> low)
-                N = 1  # initialize counter
+
+                L, V = np.linalg.eig(iDe)
+                L = np.sort(L)[::-1]
+
+                N = 1
                 if L[0] < 0 or L[1] < 0 or L[2] < 0:
-                    while L[0] < 0 or L[1] < 0 or L[2] < 0:  # find new AWF values if L's are < 0
+                    while L[0] < 0 or L[1] < 0 or L[2] < 0:
                         N = N + 1
                         if N < 100:
                             min_awf = awf_grid[min_cost_fn_idx[N]]
                         else:
                             min_awf = 0
                             break
-                        # update De here...
-                        De = (iDT - (min_awf**3 * zeta**2) * iaDT) / (1 - min_awf)
-                        Da = min_awf**2 / zeta**2  # recalculate Da too...
-                    # Now recalculate eigVals again with correct AWF values
-                    iDe = De
-                    iDe[np.isnan(iDe)] = minZero
-                    iDe[np.isinf(iDe)] = minZero
-                    L, V = np.linalg.eig(iDe)  # L : eigVals and V: eigVecs
-                    L = np.sort(L)  # again, ascending
-                    L = L[::-1]  # now, descending
+
+                        # NOTE: keep your original zeta^-2 formulation here
+                        De = (iDT - (min_awf**3 * zeta**-2) * iaDT) / (1 - min_awf)
+                        Da = min_awf**2 / zeta**2
+
+                        iDe = De
+                        iDe[np.isnan(iDe)] = minZero
+                        iDe[np.isinf(iDe)] = minZero
+                        L, V = np.linalg.eig(iDe)
+                        L = np.sort(L)[::-1]
+
                 with np.errstate(invalid="ignore"):
-                    De_ax = L[0]  # Eq. 24 FBWM paper, axial extra-axonal diffusivity
-                    De_rad = (L[1] + L[2]) / 2  # radial De
+                    De_ax = L[0]
+                    De_rad = (L[1] + L[2]) / 2
                     De_fa = np.sqrt(
-                        ((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2) / (2 * np.sum(L**2))
-                    )  # extra-axonal FA
-                    De_mean = (1 / 3) * (2 * De_rad + De_ax)  # average De
+                        ((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2)
+                        / (2 * np.sum(L**2))
+                    )
+                    De_mean = (1 / 3) * (2 * De_rad + De_ax)
                     min_cost = min_cost_fn[0]
             else:
                 min_awf = None
@@ -1764,6 +1691,288 @@ class DWI(object):
                 min_cost,
                 min_cost_fn,
             )
+        # def fbi_helper(
+        #     dwi,
+        #     b0,
+        #     B,
+        #     H,
+        #     Pl0,
+        #     gl,
+        #     rectify=True,
+        #     fbwm_SH1=None,
+        #     fbwm_SH2=None,
+        #     fbwm_B1=None,
+        #     fbwm_B2=None,
+        #     fbwm_dt=None,
+        #     fbwm_degs=None,
+        #     sh_area=None,
+        # ):
+        #     """Computes FBI calculations for a given voxel. This function
+        #     will perform FBWM only if all optional FBWM parameters are
+        #     parsed.
+
+        #     Parameters
+        #     ----------
+        #     dwi: array_like(dtype=float)
+        #         Signal across DWI at a given voxel.
+        #     b0: float
+        #         Averaged B0 signal at a given voxel.
+        #     B: array_like(dtype=complex)
+        #         FBI spherical harmonic expansion.
+        #     H: array_like(dtype=complex)
+        #         ODF from spherical harmonic expansion.
+        #     Pl0: array_like(dtype=float)
+        #         Legendre polynomail.
+        #     gl: array_like(dtype=float)
+        #         Correction factor.
+        #     rectify: bool; optional
+        #         Specify whether to perform fODF rectification
+        #         (Default: True).
+        #     fbwm_SH1: array_like(dtype=complex); optional
+        #         DKI spherical harmonic expansion for B1000.
+        #     fbwm_SH2: array_like(dtype=complex); optional
+        #         DKI spherical harmonic expansion for B2000.
+        #     fbwm_degs: array_like(dtype=int); optional
+        #         Harmonics used in DKI spherical harmonic expansion.
+        #     fbwm_B1: array_like(dtype=float); optional
+        #         Signal across DWI at B1000 at a given voxel.
+        #     fbwm_B2: array_like(dtype=float); optional
+        #         Signal across DWI at B2000 at a given voxel.
+        #     fbwm_dt: array_like(dtype=float); optional
+        #         Diffusion tensor at a given voxel.
+        #     fbwm_degs: array_like(dtype=int)
+        #         Harmonics used in expansion of FBWM shperical
+        #         harmonics.
+        #     sh_area: array_list(dtype=float)
+        #         Area of spherical sampling.
+
+        #     Returns
+        #     -------
+        #     zeta: float
+        #         Zeta parameter
+        #     faa: float
+        #         Intra-axonal fractional anisotropy.
+        #     clm: float
+        #         Spherical harmonic coefficients.
+        #     min_awf : float
+        #         Axonal water fraction.
+        #     Da: float
+        #         Intrinsic intra-axonal diffusivity.
+        #     De_mean: float
+        #         Mean extra-axonal diffusion.
+        #     De_ax: float
+        #         Axial extra-axonal diffusion.
+        #     De_rad: float
+        #         Radial extra-axonal diffusion.
+        #     De_fa: float
+        #         Extra-axonal FA.
+        #     min_cost: float
+        #         Minimum cost of the cost function (first index of
+        #         min_cost_fn).
+        #     min_cost_fn: array_like(dtype=float)
+        #         Cost function vector.
+        #     """
+        #     fbwm = False
+        #     if not (
+        #         (fbwm_SH1 is None) or (fbwm_SH2 is None) or (fbwm_B1 is None) or (fbwm_B2 is None) or (fbwm_dt is None)
+        #     ):
+        #         fbwm = True
+        #     if sh_area is None:
+        #         rectify = False
+        #     # For references to alm and clm see FBI papers, they (alm
+        #     # and clm) are defined in all of them
+        #     alm = np.dot(np.linalg.pinv(B), (dwi / b0))  # DWI signal SH coefficients (these are complex)
+        #     alm[np.isnan(alm)] = 0
+        #     a00 = alm[0].real  # the imaginary part is on the order of 10^-18 (this is for zeta)
+        #     clm = (
+        #         alm * gl[0] * highprecisionpower(np.sqrt(4 * np.pi) * alm[0] * Pl0 * gl, -1)
+        #     )  # fODF SH coefficients (these are complex)
+        #     # need to figure out how to do peak detection (on this variable and
+        #     # then read out odf structures like in MATLAB code) only the real
+        #     # part would be read out but that would need to be done later on
+        #     # after the rectification process below
+        #     ODF = np.matmul(H, clm)
+        #     if rectify:
+        #         ODF = __fbi_rectify(ODF.real, sh_area, iter=100)
+        #         # Re-expand the rectified fODF into SH's
+        #         clm = np.matmul(sh_area * ODF, np.conj(H))
+        #     clm = (clm / clm[0]) * (1 / np.sqrt(4 * np.pi))  # normalize clm
+        #     # zeta and FAA calculations
+        #     # NOTE: zeta is not affected by the rectification, only FAA
+        #     zeta = a00 * np.sqrt(self.maxBval()) / np.pi
+        #     faa = np.sqrt(
+        #         3 * np.sum(np.abs(clm[1:6] ** 2)) / (5 * np.abs(clm[0]) ** 2 + 2 * np.sum(np.abs(clm[1:6] ** 2)))
+        #     )
+        #     # BEGIN: construct axonal DT (aDT)
+        #     c00 = clm[0]
+        #     c2_2 = clm[1]
+        #     c2_1 = clm[2]
+        #     c20 = clm[3]
+        #     c21 = clm[4]
+        #     c22 = clm[5]
+        #     A11 = (np.sqrt(30) / 3) * c00 - (np.sqrt(6) / 3) * c20 + c22 + c2_2
+        #     A22 = (np.sqrt(30) / 3) * c00 - (np.sqrt(6) / 3) * c20 - c22 - c2_2
+        #     A33 = (np.sqrt(30) / 3) * c00 + (2 * np.sqrt(6) / 3) * c20
+        #     A12 = 1j * (c22 - c2_2)
+        #     A13 = -c21 + c2_1
+        #     A23 = 1j * (-c21 - c2_1)
+        #     aDT = np.array([A11, A12, A13, A12, A22, A23, A13, A23, A33]).real
+        #     aDT = 1 / (c00 * np.sqrt(30)) * aDT
+        #     iaDT = np.reshape(aDT, (3, 3)).real
+        #     if fbwm:
+        #         bval = np.rint(self.grad[:, -1])
+        #         BT = np.unique(bval)
+        #         BT = BT[BT != 0]  # Exclude B0s
+        #         GT = [self.grad[bval == x, 0:3] for x in BT]
+        #         f_grid = np.linspace(0, 1, 100)  # define AWF grid (100 pts evenly spaced between 0 (min) and 1 (max))
+        #         int_grid = np.linspace(0, 99, 100, dtype=int)  # define grid points to iterate over (100 of them)
+        #         awf_grid = np.linspace(0, 1, 100)  # another AWF grid
+        #         # This holds the SH basis sets for each b-value shell
+        #         shB = [
+        #             fbwm_SH1,
+        #             fbwm_SH2,
+        #             B,
+        #         ]  # list object: to access, shB[0] = B1 (for example)
+        #         # This hold all DWI volumes for each b-vlaue shell
+        #         IMG = [fbwm_B1, fbwm_B2, dwi]  # list object: to access
+        #         # BEGIN: DT construction
+        #         iDT = np.array(
+        #             [
+        #                 fbwm_dt[0],
+        #                 fbwm_dt[3],
+        #                 fbwm_dt[4],
+        #                 fbwm_dt[3],
+        #                 fbwm_dt[1],
+        #                 fbwm_dt[5],
+        #                 fbwm_dt[4],
+        #                 fbwm_dt[5],
+        #                 fbwm_dt[2],
+        #             ]
+        #         )
+        #         iDT = np.reshape(iDT, (3, 3))
+        #         # END: DT construction
+        #         # initialze correction factor elements that will be looped over and filled accordingly...
+        #         g2l_fa_R = np.zeros((len(Pl0), f_grid.shape[0]), order="F")
+        #         g2l_fa_R_b = np.zeros((len(BT), f_grid.shape[0], len(Pl0)), order="F")
+        #         g2l_fa_R_large = np.zeros((len(Pl0), f_grid.shape[0]), order="F")
+        #         # BEGIN: cost function
+        #         # Not many comments here, See McKinnon 2018 FBWm paper for details
+        #         for b in range(0, len(BT)):
+        #             idx_hyper = (
+        #                 BT[b] * np.power(f_grid, 2) * np.power(zeta, -2) < 20
+        #             )  # when should hypergeometric function be implemented? When b*D is small
+        #             idx_Y = 0
+        #             for l_num in degs[::2]:
+        #                 hypergeom_opt = np.sum(
+        #                     (
+        #                         gamma((l_num + 1) / 2 + int_grid)
+        #                         * gamma(l_num + (3 / 2))
+        #                         * (
+        #                             (-BT[b] * f_grid[idx_hyper] ** 2 * zeta**-2) * np.ones((1, len(f_grid[idx_hyper])))
+        #                         ).T
+        #                         ** int_grid
+        #                         / (factorial(int_grid) * gamma(l_num + (3 / 2) + int_grid) * gamma((l_num + 1) / 2))
+        #                     ),
+        #                     1,
+        #                 ) * np.ones((1, len(f_grid[idx_hyper])))
+        #                 g2l_fa_R[idx_Y : idx_Y + (2 * l_num + 1), np.squeeze(idx_hyper)] = np.tile(
+        #                     (
+        #                         factorial(l_num // 2)
+        #                         * (BT[b] * f_grid[idx_hyper] ** 2 * zeta**-2) ** ((l_num + 1) / 2)
+        #                         / gamma(l_num + (3 / 2))
+        #                         * hypergeom_opt
+        #                     ),
+        #                     (2 * l_num + 1),
+        #                     1,
+        #                 )  # Eq. 9 FBWM paper
+        #                 idx_Y = idx_Y + (2 * l_num + 1)
+        #             g2l_fa_R_b[b, np.squeeze(idx_hyper), :] = g2l_fa_R[:, np.squeeze(idx_hyper)].T
+        #             idx_Y = 0
+        #             for l_num in degs[::2]:
+        #                 g2l_fa_R_large[idx_Y : idx_Y + (2 * l_num + 1), np.squeeze(~idx_hyper)] = np.tile(
+        #                     (np.exp(-l_num // 2 * (l_num + 1) / (2 * BT[b] * (f_grid[~idx_hyper] ** 2 * zeta**-2)))),
+        #                     ((2 * l_num + 1),
+        #                     1,
+        #                 ))  # Eq. 20 FBI paper
+        #                 idx_Y = idx_Y + (2 * l_num + 1)
+        #             g2l_fa_R_b[b, np.squeeze(~idx_hyper), :] = g2l_fa_R_large[:, np.squeeze(~idx_hyper)].T
+        #         cost_fn = __costCalculator(
+        #             awf_grid,
+        #             BT,
+        #             GT,
+        #             b0,
+        #             IMG,
+        #             iDT,
+        #             iaDT,
+        #             zeta,
+        #             shB,
+        #             Pl0,
+        #             g2l_fa_R_b,
+        #             clm,
+        #         )
+        #         min_cost_fn_idx = np.argsort(cost_fn, axis=0)  # find the indexes of the sorted cost_fn values
+        #         min_cost_fn = np.take_along_axis(cost_fn, min_cost_fn_idx, axis=0)  # sort those values
+        #         min_awf = awf_grid[
+        #             min_cost_fn_idx[0]
+        #         ]  # grad the minimum AWF value based on the cost_fn sorting done immeidately prior to this...
+        #         De = (iDT - (min_awf**3 * zeta**-2) * iaDT) / (1 - min_awf)
+        #         Da = min_awf**2 / zeta**2
+        #         iDe = De  # intermeidate De
+        #         iDe[np.isnan(iDe)] = minZero
+        #         iDe[np.isinf(iDe)] = minZero
+        #         L, V = np.linalg.eig(iDe)  # L : eigVals and V: eigVecs
+        #         L = np.sort(L)  # sort them (this is ascending)
+        #         L = L[::-1]  # reverse the order so they are descending (high -> low)
+        #         N = 1  # initialize counter
+        #         if L[0] < 0 or L[1] < 0 or L[2] < 0:
+        #             while L[0] < 0 or L[1] < 0 or L[2] < 0:  # find new AWF values if L's are < 0
+        #                 N = N + 1
+        #                 if N < 100:
+        #                     min_awf = awf_grid[min_cost_fn_idx[N]]
+        #                 else:
+        #                     min_awf = 0
+        #                     break
+        #                 # update De here...
+        #                 De = (iDT - (min_awf**3 * zeta**2) * iaDT) / (1 - min_awf)
+        #                 Da = min_awf**2 / zeta**2  # recalculate Da too...
+        #             # Now recalculate eigVals again with correct AWF values
+        #             iDe = De
+        #             iDe[np.isnan(iDe)] = minZero
+        #             iDe[np.isinf(iDe)] = minZero
+        #             L, V = np.linalg.eig(iDe)  # L : eigVals and V: eigVecs
+        #             L = np.sort(L)  # again, ascending
+        #             L = L[::-1]  # now, descending
+        #         with np.errstate(invalid="ignore"):
+        #             De_ax = L[0]  # Eq. 24 FBWM paper, axial extra-axonal diffusivity
+        #             De_rad = (L[1] + L[2]) / 2  # radial De
+        #             De_fa = np.sqrt(
+        #                 ((L[0] - L[1]) ** 2 + (L[0] - L[2]) ** 2 + (L[1] - L[2]) ** 2) / (2 * np.sum(L**2))
+        #             )  # extra-axonal FA
+        #             De_mean = (1 / 3) * (2 * De_rad + De_ax)  # average De
+        #             min_cost = min_cost_fn[0]
+        #     else:
+        #         min_awf = None
+        #         Da = None
+        #         De_mean = None
+        #         De_ax = None
+        #         De_rad = None
+        #         De_fa = None
+        #         min_cost = None
+        #         min_cost_fn = None
+
+        #     return (
+        #         zeta,
+        #         faa,
+        #         clm,
+        #         min_awf,
+        #         Da,
+        #         De_mean,
+        #         De_ax,
+        #         De_rad,
+        #         De_fa,
+        #         min_cost,
+        #         min_cost_fn,
+        #     )
 
         # --------------------FUNCTION SEPARATOR-----------------------
 
@@ -1782,6 +1991,7 @@ class DWI(object):
                 "to l_max = {}".format(l_max, self.optimal_lmax(), self.optimal_lmax())
             )
             l_max = self.optimal_lmax()
+        l_max = int(np.asarray(l_max).item())
         img = self.img
         np.unique(self.grad[:, -1])
         self.optimal_lmax()
@@ -1821,6 +2031,16 @@ class DWI(object):
         B = B[:, harmonics]
         H = odf.shbasis(degs, S1, S2, method="scipy")
         H = H[:, harmonics]
+
+        B = np.nan_to_num(B, nan=0.0, posinf=0.0, neginf=0.0)
+        H = np.nan_to_num(H, nan=0.0, posinf=0.0, neginf=0.0)
+
+        B_shell = B.copy()
+
+        with np.errstate(all="ignore"):
+            B_pinv = np.linalg.pinv(B, rcond=1e-10)
+        B_pinv = np.nan_to_num(B_pinv, nan=0.0, posinf=0.0, neginf=0.0)
+
         idx_Y = 0
         Pl0 = np.zeros((len(harmonics), 1), order="F")  # need Legendre polynomial Pl0
         gl = np.zeros(
@@ -1828,12 +2048,12 @@ class DWI(object):
         )  # calculate correction factor (see original FBI paper, Jensen 2016)
         for l_num in degs[::2]:
             Pl0[idx_Y : idx_Y + (2 * l_num + 1), :] = (
-                (np.power(-1, l_num // 2) * np.math.factorial(l_num))
-                / (np.power(4, l_num // 2) * np.power(np.math.factorial(l_num // 2), 2))
+                (np.power(-1, l_num // 2) * math.factorial(l_num))
+                / (np.power(4, l_num // 2) * np.power(math.factorial(l_num // 2), 2))
                 * np.ones((2 * l_num + 1, 1))
             )
             gl[idx_Y : idx_Y + (2 * l_num + 1), :] = (
-                (np.math.factorial(l_num // 2) * np.power(self.maxBval() * th.__d0__, (l_num + 1) / 2))
+                (math.factorial(l_num // 2) * np.power(self.maxBval() * th.__d0__, (l_num + 1) / 2))
                 / gamma(l_num + 3 / 2)
                 * hyp1f1((l_num + 1) / 2, l_num + 3 / 2, -self.maxBval() * th.__d0__)
                 * np.ones((2 * l_num + 1, 1))
@@ -1863,24 +2083,7 @@ class DWI(object):
             fbwm_SH2 = fbwm_SH2[:, harmonics]
             dt, kt = self.tensorReorder("dki")
             dt = vectorize(dt, self.mask)
-            # for i in inputs:
-            #     zeta, faa, fodf, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
-            #         fbi_helper(
-            #             dwi=img[self.idxfbi(), i],
-            #             b0 = b0[i],
-            #             B = B,
-            #             H = H,
-            #             Pl0=Pl0,
-            #             gl = gl,
-            #             rectify=rectify,
-            #             fbwm_SH1 = fbwm_SH1,
-            #             fbwm_SH2 = fbwm_SH2,
-            #             fbwm_B1 = img[self.grad[:, -1] == 1, i],
-            #             fbwm_B2 = img[self.grad[:, -1] == 2, i],
-            #             fbwm_dt = dt[:, i],
-            #             fbwm_degs=degs,
-            #             sh_area=AREA
-            #             )
+  
             (
                 zeta,
                 faa,
@@ -1898,7 +2101,8 @@ class DWI(object):
                     delayed(fbi_helper)(
                         dwi=img[self.idxfbi(), i],
                         b0=b0[i],
-                        B=B,
+                        B_pinv=B_pinv,
+                        B_shell=B_shell,
                         H=H,
                         Pl0=Pl0,
                         gl=gl,
@@ -1915,18 +2119,7 @@ class DWI(object):
                 )
             )
         else:
-            # for i in inputs:
-            #     zeta, faa, fodf, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = \
-            #         fbi_helper(
-            #             dwi=img[self.idxfbi(), i],
-            #             b0 = b0[i],
-            #             B = B,
-            #             H = H,
-            #             Pl0=Pl0,
-            #             gl = gl,
-            #             rectify=rectify,
-            #             sh_area=AREA
-            #             )
+
             (
                 zeta,
                 faa,
@@ -1944,7 +2137,8 @@ class DWI(object):
                     delayed(fbi_helper)(
                         dwi=img[self.idxfbi(), i],
                         b0=b0[i],
-                        B=B,
+                        B_pinv=B_pinv,
+                        B_shell=B_shell,
                         H=H,
                         Pl0=Pl0,
                         gl=gl,
@@ -2479,55 +2673,97 @@ class DWI(object):
             dwi_i = dwi.reshape((len(dwi), 1))
             dwi0 = np.median(dwi_i[b.reshape(-1) < 0.01])
             out = dwi_i > (dwi0 + 3 * sigma)
+
             if np.sum(~out[b.reshape(-1) > 0.01]) < (bmat.shape[1] - 1):
                 out = np.zeros((out.shape), dtype=bool)
+
             out[b0_pos.reshape(-1)] = False
             bmat_i = bmat[~out.reshape(-1)]
             dwi_i = dwi_i[~out.reshape(-1)]
             n_i = dwi_i.size
             ndof_i = n_i - bmat_i.shape[1]
-            # WLLS estimation
+
+            # ------------------------------------------------------------
+            # Initial WLLS estimate
+            # ------------------------------------------------------------
             try:
-                dt_i = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
-                # dt_i = np.linalg.solve(np.dot(bmat_i.T, bmat_i),
-                #                        np.dot(bmat_i.T, np.log(dwi_i)))
-            except:  # noqa: E722
+                dt_i = np.linalg.lstsq(
+                    bmat_i,
+                    np.log(np.clip(dwi_i, 1, None)),
+                    rcond=None,
+                )[0]
+            except Exception:
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
-            w = highprecisionexp(np.matmul(bmat_i, dt_i))
+
+            # ensure consistent shape
+            try:
+                dt_i = np.asarray(dt_i, dtype=np.float64).reshape(-1, 1)
+            except Exception:
+                dt_i = np.full((bmat_i.shape[1], 1), minZero, dtype=np.float64)
+
+            # Compute initial weights safely
+            with np.errstate(all="ignore"):
+                z = np.matmul(bmat_i, dt_i)
+
+            z = np.nan_to_num(z, nan=0.0, posinf=50.0, neginf=-50.0)
+            z = np.clip(z, -50.0, 50.0)
+
+            w = highprecisionexp(z)
+            w = np.nan_to_num(w, nan=0.0, posinf=1e12, neginf=0.0)
+            w = np.clip(w, 0.0, 1e6)
+
             try:
                 dt_i = np.linalg.lstsq(
                     (bmat_i * np.tile(w, (1, nparam))),
-                    (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
+                    (np.log(np.clip(dwi_i, 1, None)).reshape((dwi_i.shape[0], 1)) * w),
                     rcond=None,
                 )[0]
-                # dt_i = np.linalg.solve(
-                #     np.dot((bmat_i * np.tile(w, (1, nparam))).T,
-                #            (bmat_i * np.tile(w, (1, nparam)))),
-                #     np.dot((bmat_i * np.tile(w, (1, nparam))).T,
-                #            (np.log(dwi_i).reshape(
-                #                (dwi_i.shape[0], 1)) * w)))
-            except:  # noqa: E722
+            except Exception:
                 dt_i = np.full((bmat_i.shape[1], 1), minZero)
-            dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
 
-            # Goodness-of-fit
-            residu = np.log(dwi_i.reshape((dwi_i.shape[0], 1))) - np.log(dwi_hat)
+            try:
+                dt_i = np.asarray(dt_i, dtype=np.float64).reshape(-1, 1)
+            except Exception:
+                dt_i = np.full((bmat_i.shape[1], 1), minZero, dtype=np.float64)
+
+            # Initial predicted signal
+            with np.errstate(all="ignore"):
+                z = np.matmul(bmat_i, dt_i)
+
+            z = np.nan_to_num(z, nan=0.0, posinf=50.0, neginf=-50.0)
+            z = np.clip(z, -50.0, 50.0)
+
+            dwi_hat = highprecisionexp(z)
+            dwi_hat = np.nan_to_num(dwi_hat, nan=0.0, posinf=1e12, neginf=0.0)
+            dwi_hat[dwi_hat < 1] = 1
+
+            # Initial goodness-of-fit
+            residu = np.log(np.clip(dwi_i.reshape((dwi_i.shape[0], 1)), 1, None)) - np.log(dwi_hat)
             residu_ = dwi_i.reshape((dwi_i.shape[0], 1)) - dwi_hat
 
             try:
                 chi2 = np.sum((residu_ * residu_) / np.square(sigma)) / (ndof_i) - 1
-            except:  # noqa: E722
+            except Exception:
                 chi2 = minZero
+
             try:
                 gof = np.abs(chi2) < 3 * np.sqrt(2 / ndof_i)
-            except:  # noqa: E722
-                gof = True  # If ndof_i = 0, right inequality becomes inf
-                # and makes the logic True
+            except Exception:
+                gof = True  # If ndof_i == 0, treat as converged
+
             gof2 = gof
-            # Iterative reweighning procedure
+
+            # ------------------------------------------------------------
+            # Iterative reweighting procedure
+            # ------------------------------------------------------------
             iter = 0
+            dt_imin1 = dt_i.copy()   # <-- critical fix: always initialized
             np.seterr(divide="raise", invalid="raise")
+
             while (not gof) and (iter < maxiter):
+                # Save previous iterate BEFORE computing new one
+                dt_imin1 = dt_i.copy()
+
                 try:
                     C = (
                         np.sqrt(n_i / (n_i - nparam))
@@ -2535,79 +2771,100 @@ class DWI(object):
                         * np.median(np.abs(residu_ - np.median(residu_)))
                         / dwi_hat
                     )
-                except:  # noqa: E722
+                except Exception:
                     C = np.full(dwi_hat.shape, minZero)
+
                 try:
                     GMM = np.square(C) / np.square(np.square(residu) + np.square(C))
-                except:  # noqa: E722
-                    # The following line produces a lot of Intel MKL
-                    # warnings that should be ignored. This is a known
-                    # Intel and Numpy bug that has not yet been resolved.
+                except Exception:
                     GMM = np.full(C.shape, minZero)
+
                 w = np.sqrt(GMM) * dwi_hat
-                dt_imin1 = dt_i
+                w = np.nan_to_num(w, nan=0.0, posinf=1e12, neginf=0.0)
+                w = np.clip(w, 0.0, 1e6)
+
                 try:
                     dt_i = np.linalg.lstsq(
                         (bmat_i * np.tile(w, (1, nparam))),
-                        (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w),
+                        (np.log(np.clip(dwi_i, 1, None)).reshape((dwi_i.shape[0], 1)) * w),
                         rcond=None,
                     )[0]
-                    # dt_i = np.linalg.solve(
-                    #     np.dot((bmat_i * np.tile(w, (1, nparam))).T,
-                    #            (bmat_i * np.tile(w, (1, nparam)))),
-                    #     np.dot((bmat_i * np.tile(w, (1, nparam))).T,
-                    #            (np.log(dwi_i).reshape(
-                    #                (dwi_i.shape[0], 1)) * w)))
-                except:  # noqa: E722
+                except Exception:
                     dt_i = np.full((bmat_i.shape[1], 1), minZero)
-                # dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
 
-                with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
-                    dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
-                
-                dwi_hat = np.nan_to_num(dwi_hat, nan=0.0, posinf=0.0, neginf=0.0)
+                try:
+                    dt_i = np.asarray(dt_i, dtype=np.float64).reshape(-1, 1)
+                except Exception:
+                    dt_i = np.full((bmat_i.shape[1], 1), minZero, dtype=np.float64)
 
+                # Update predicted signal safely
+                with np.errstate(all="ignore"):
+                    z = np.matmul(bmat_i, dt_i)
+
+                z = np.nan_to_num(z, nan=0.0, posinf=50.0, neginf=-50.0)
+                z = np.clip(z, -50.0, 50.0)
+
+                dwi_hat = highprecisionexp(z)
+                dwi_hat = np.nan_to_num(dwi_hat, nan=0.0, posinf=1e12, neginf=0.0)
                 dwi_hat[dwi_hat < 1] = 1
-                residu = np.log(dwi_i.reshape((dwi_i.shape[0], 1))) - np.log(dwi_hat)
+
+                residu = np.log(np.clip(dwi_i.reshape((dwi_i.shape[0], 1)), 1, None)) - np.log(dwi_hat)
                 residu_ = dwi_i.reshape((dwi_i.shape[0], 1)) - dwi_hat
+
                 # Convergence check
                 iter = iter + 1
                 gof = np.linalg.norm(dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
+
             np.seterr(**defaultErrorState)
+
+            # ------------------------------------------------------------
             # Outlier detection
+            # ------------------------------------------------------------
             if ~gof2:
                 try:
-                    lev = np.diag(
-                        np.matmul(
-                            bmat_i,
-                            np.linalg.lstsq(
-                                np.matmul(
-                                    np.transpose(bmat_i),
-                                    np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i),
-                                ),
-                                np.matmul(
-                                    np.transpose(bmat_i),
-                                    np.diag(np.square(w.reshape(-1))),
-                                ),
-                                rcond=None,
-                            )[0],
-                        )
-                    )
-                except:  # noqa: E722
+                    # weights derived from predicted signal
+                    w = np.clip(dwi_hat.reshape(-1, 1), 0.0, 1e6)
+                    wsq = np.square(w)
+                    wsq = np.nan_to_num(wsq, nan=0.0, posinf=1e12, neginf=0.0)
+                    wsq = np.clip(wsq, 0.0, 1e12)
+
+                    # stable weighted normal-equation pieces
+                    W2B = wsq * bmat_i                     # equivalent to diag(w^2) @ bmat_i
+                    normal = np.matmul(bmat_i.T, W2B)     # B^T W^2 B
+                    BtW2 = bmat_i.T * wsq.reshape(1, -1)  # B^T W^2
+
+                    normal = np.nan_to_num(normal, nan=0.0, posinf=0.0, neginf=0.0)
+                    BtW2 = np.nan_to_num(BtW2, nan=0.0, posinf=0.0, neginf=0.0)
+
+                    hat_core = np.linalg.lstsq(normal, BtW2, rcond=None)[0]
+                    hat = np.matmul(bmat_i, hat_core)
+                    lev = np.diag(hat)
+                except Exception:
                     lev = np.full(residu.shape, minZero)
+
                 lev = lev.reshape((lev.shape[0], 1))
+
                 try:
                     lowerbound_linear = -bounds * np.lib.scimath.sqrt(1 - lev) * sigma / dwi_hat
-                except:  # noqa: E722
+                    lowerbound_linear = np.nan_to_num(
+                        lowerbound_linear, nan=minZero, posinf=minZero, neginf=minZero
+                    )
+                except Exception:
                     lowerbound_linear = np.full(lev.shape, minZero)
+
                 try:
                     upperbound_nonlinear = bounds * np.lib.scimath.sqrt(1 - lev) * sigma
-                except:  # noqa: E722
+                    upperbound_nonlinear = np.nan_to_num(
+                        upperbound_nonlinear, nan=minZero, posinf=minZero, neginf=minZero
+                    )
+                except Exception:
                     upperbound_nonlinear = np.full(lev.shape, minZero)
+
                 tmp = np.zeros(residu.shape, dtype=bool, order="F")
                 tmp[residu < lowerbound_linear] = True
                 tmp[residu > upperbound_nonlinear] = True
                 tmp[lev > leverage] = False
+
                 tmp2 = np.ones(b.shape, dtype=bool, order="F")
                 tmp2[~out.reshape(-1)] = tmp
                 tmp2[b0_pos] = False
@@ -2616,24 +2873,121 @@ class DWI(object):
                 tmp2 = np.zeros(b.shape, dtype=bool, order="F")
                 tmp2[out.reshape(-1)] = True
                 reject = tmp2
+
+            # ------------------------------------------------------------
             # Robust parameter estimation
+            # ------------------------------------------------------------
             keep = ~reject.reshape(-1)
             bmat_i = bmat[keep, :]
             dwi_i = dwi[keep]
+
             try:
-                dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
-            except:  # noqa: E722
-                dt_ = np.full((bmat_i.shape[1], 1), minZero)
-            w = highprecisionexp(np.matmul(bmat_i, dt_))
-            try:
-                dt = np.linalg.lstsq(
-                    (bmat_i * np.tile(w.reshape((len(w), 1)), (1, nparam))),
-                    (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w), 1))),
+                dt_ = np.linalg.lstsq(
+                    bmat_i,
+                    np.log(np.clip(dwi_i, 1, None)),
                     rcond=None,
                 )[0]
-            except:  # noqa: E722
+                dt_ = np.asarray(dt_).reshape(-1, 1)
+            except Exception:
+                dt_ = np.full((bmat_i.shape[1], 1), minZero)
+
+            with np.errstate(all="ignore"):
+                z = np.matmul(bmat_i, dt_)
+
+            z = np.nan_to_num(z, nan=0.0, posinf=50.0, neginf=-50.0)
+            z = np.clip(z, -50.0, 50.0)
+
+            w = highprecisionexp(z)
+            w = np.nan_to_num(w, nan=0.0, posinf=1e12, neginf=0.0)
+            w = np.clip(w, 0.0, 1e6).reshape(-1, 1)
+
+            try:
+                # stable weighted least squares via row scaling
+                A_w = bmat_i * w
+                y_w = np.log(np.clip(dwi_i, 1, None)).reshape(-1, 1) * w
+
+                A_w = np.nan_to_num(A_w, nan=0.0, posinf=0.0, neginf=0.0)
+                y_w = np.nan_to_num(y_w, nan=0.0, posinf=0.0, neginf=0.0)
+
+                dt = np.linalg.lstsq(A_w, y_w, rcond=None)[0]
+            except Exception:
                 dt = np.full((bmat_i.shape[1], 1), minZero)
-            return reject.reshape(-1), dt.reshape(-1)  # , fa, md
+
+            return reject.reshape(-1), dt.reshape(-1)
+
+            #     with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+            #         dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
+                
+            #     dwi_hat = np.nan_to_num(dwi_hat, nan=0.0, posinf=0.0, neginf=0.0)
+
+            #     dwi_hat[dwi_hat < 1] = 1
+            #     residu = np.log(dwi_i.reshape((dwi_i.shape[0], 1))) - np.log(dwi_hat)
+            #     residu_ = dwi_i.reshape((dwi_i.shape[0], 1)) - dwi_hat
+            #     # Convergence check
+            #     iter = iter + 1
+            #     gof = np.linalg.norm(dt_i - dt_imin1) < np.linalg.norm(dt_i) * convcrit
+            # np.seterr(**defaultErrorState)
+            # # Outlier detection
+            # if ~gof2:
+            #     try:
+            #         lev = np.diag(
+            #             np.matmul(
+            #                 bmat_i,
+            #                 np.linalg.lstsq(
+            #                     np.matmul(
+            #                         np.transpose(bmat_i),
+            #                         np.matmul(np.diag(np.square(w).reshape(-1)), bmat_i),
+            #                     ),
+            #                     np.matmul(
+            #                         np.transpose(bmat_i),
+            #                         np.diag(np.square(w.reshape(-1))),
+            #                     ),
+            #                     rcond=None,
+            #                 )[0],
+            #             )
+            #         )
+            #     except:  # noqa: E722
+            #         lev = np.full(residu.shape, minZero)
+            #     lev = lev.reshape((lev.shape[0], 1))
+            #     try:
+            #         lowerbound_linear = -bounds * np.lib.scimath.sqrt(1 - lev) * sigma / dwi_hat
+            #     except:  # noqa: E722
+            #         lowerbound_linear = np.full(lev.shape, minZero)
+            #     try:
+            #         upperbound_nonlinear = bounds * np.lib.scimath.sqrt(1 - lev) * sigma
+            #     except:  # noqa: E722
+            #         upperbound_nonlinear = np.full(lev.shape, minZero)
+            #     tmp = np.zeros(residu.shape, dtype=bool, order="F")
+            #     tmp[residu < lowerbound_linear] = True
+            #     tmp[residu > upperbound_nonlinear] = True
+            #     tmp[lev > leverage] = False
+            #     tmp2 = np.ones(b.shape, dtype=bool, order="F")
+            #     tmp2[~out.reshape(-1)] = tmp
+            #     tmp2[b0_pos] = False
+            #     reject = tmp2
+            # else:
+            #     tmp2 = np.zeros(b.shape, dtype=bool, order="F")
+            #     tmp2[out.reshape(-1)] = True
+            #     reject = tmp2
+            # # Robust parameter estimation
+            # keep = ~reject.reshape(-1)
+            # bmat_i = bmat[keep, :]
+            # dwi_i = dwi[keep]
+            # try:
+            #     dt_ = np.linalg.lstsq(bmat_i, np.log(dwi_i), rcond=None)[0]
+            # except:  # noqa: E722
+            #     dt_ = np.full((bmat_i.shape[1], 1), minZero)
+            # with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
+            #     w = highprecisionexp(np.matmul(bmat_i, dt_))
+            # try:
+            #     dt = np.linalg.lstsq(
+            #         (bmat_i * np.tile(w.reshape((len(w), 1)), (1, nparam))),
+            #         (np.log(dwi_i).reshape((dwi_i.shape[0], 1)) * w.reshape((len(w), 1))),
+            #         rcond=None,
+            #     )[0]
+            # except:  # noqa: E722
+            #     dt = np.full((bmat_i.shape[1], 1), minZero)
+            # return reject.reshape(-1), dt.reshape(-1)  # , fa, md
 
         inputs = tqdm(
             range(nvox),
@@ -2911,8 +3265,6 @@ def fit_regime(
         else:
             outliers, dt_est = img.irlls(mode="DTI", excludeb0=True)
 
-        # print(np.std(dt_est, axis=0))
-
         if qcpath:
             if op.exists(qcpath):
                 outlier_full = op.join(qcpath, fname_outliers["IRLLS"])
@@ -2945,23 +3297,6 @@ def fit_regime(
         img.fit(fit_constraints, reject=outliers)
     else:
         img.fit(fit_constraints)
-
-
-    if hasattr(img, "__dict__"):
-        print("DWI attributes:", sorted(img.__dict__.keys()))
-
-    # Try the most likely tensor-holding attributes; comment/uncomment as needed
-    for name in ["dt", "dt_est", "DT", "tensor", "tenfit", "dti", "dki", "kt", "kt_est"]:
-        if hasattr(img, name):
-            arr = getattr(img, name)
-            try:
-                print(f"{name}: shape={arr.shape}, dtype={arr.dtype}")
-                if hasattr(arr, "ndim") and arr.ndim >= 2:
-                    print(f"{name}: std across voxels = {np.std(arr, axis=1)}")
-                    print(f"{name}: first 3 rows =\n{arr[:3]}")
-            except Exception as e:
-                print(f"Could not summarize {name}: {e}")
-
 
     if akc and img.isdki():
         akc_out = img.akcoutliers()

@@ -94,7 +94,7 @@ class odfmodel:
             self.scale_img = np.ones(self.DT.shape[0:3])
         if l_max % 2 != 0:
             raise Exception("Please provide l_max as a postive and even integer")
-        self.l_max = l_max
+        self.l_max = int(np.asarray(l_max).item())
         if radial_weight is None:
             warnings.warn("Radial weight for dODF computation not specified. Using default value of 4.")
             self.radial_weight = 4
@@ -930,7 +930,8 @@ def shbasis(deg, phi, theta, method="scipy") -> np.ndarray[complex]:
     SH = []
     for n in deg:
         for m in range(-n, n + 1):
-            shb = sph_harm(m, n, theta, phi)
+            # shb = sph_harm(m, n, theta, phi)
+            shb = sph_harm(n, m, phi, theta)
             if method == "tournier":
                 # Tournier does not have Condon–Shortley phase i.e. (-1)^m in
                 # their formulas, so we multiply those terms by (-1)^m to reverse the
@@ -977,6 +978,12 @@ def odf_conversion(odf, target="tournier"):
     vol_table = np.array([0.5 * (x + 1) * (x + 2) for x in l_max_table], dtype=int)
     vols = odf.shape[0]
     l_max = l_max_table[np.where(vol_table == vols)[0]]
+    
+    l_max = np.asarray(l_max)
+    if l_max.size != 1:
+        raise ValueError(f"l_max must be scalar, got shape {l_max.shape}")
+    l_max = int(l_max.item())
+
     degs = np.arange(0, l_max + 1, 2, dtype=int)
     curr_vol = 0
     odf_ = np.zeros_like(odf)

@@ -1,6 +1,18 @@
 import os
 from pathlib import Path
 
+import numpy as np
+import pytest
+
+@pytest.fixture(autouse=True)
+def restore_numpy_errstate():
+    old = np.seterr()
+    try:
+        yield
+    finally:
+        np.seterr(**old)
+
+
 TEST_DIR = Path(__file__).parent
 DATA_DIR = os.path.join(TEST_DIR, "data")
 
