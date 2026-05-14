@@ -132,7 +132,3 @@ archs = ["x86_64", "arm64"]
 # If you prefer one macOS wheel that supports both Intel and Apple Silicon,
 # use this instead:
 # archs = ["universal2"]
-
-# [tool.cibuildwheel.windows]
-# archs = ["AMD64"]
-``
