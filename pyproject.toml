@@ -72,6 +72,11 @@ build-backend = "setuptools.build_meta"
 include = ["pydesigner*"]
 exclude = ["tests*", "docs*", "extras*"]
 
+
+[tool.setuptools.package-data]
+"pydesigner.fitting" = ["*.csv"]
+
+
 [tool.ruff]
 line-length = 120
 target-version = "py314"
