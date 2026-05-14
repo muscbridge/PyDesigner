@@ -1,5 +1,5 @@
 [project]
-name = "pydesigner"
+name = "PyDesigner-DWI"
 version = "2.0.0"
 description = "A hands-free DTI, DKI, FBI and FBWM preprocessing pipeline"
 readme = "README.rst"
@@ -108,3 +108,31 @@ unfixable = []
 
 [tool.setuptools]
 packages = ["pydesigner"]
+
+[tool.cibuildwheel]
+build = ["cp314-*"]
+skip = [
+    "*-musllinux_*",
+    "*-manylinux_i686",
+    "*-win32",
+    "pp*"
+]
+build-frontend = "build[uv]"
+
+# Keep wheel tests light because PyDesigner may need MRtrix/FSL externally.
+test-command = "python -c \"import pydesigner; import pydesigner.fitting.dwipy; print('PyDesigner wheel import OK')\""
+
+[tool.cibuildwheel.linux]
+archs = ["x86_64", "aarch64"]
+
+[tool.cibuildwheel.macos]
+# Option A: separate Intel + Apple Silicon wheels
+archs = ["x86_64", "arm64"]
+
+# If you prefer one macOS wheel that supports both Intel and Apple Silicon,
+# use this instead:
+# archs = ["universal2"]
+
+[tool.cibuildwheel.windows]
+archs = ["AMD64"]
+``
