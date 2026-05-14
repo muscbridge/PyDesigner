@@ -978,7 +978,7 @@ def odf_conversion(odf, target="tournier"):
     vol_table = np.array([0.5 * (x + 1) * (x + 2) for x in l_max_table], dtype=int)
     vols = odf.shape[0]
     l_max = l_max_table[np.where(vol_table == vols)[0]]
-    
+
     l_max = np.asarray(l_max)
     if l_max.size != 1:
         raise ValueError(f"l_max must be scalar, got shape {l_max.shape}")
