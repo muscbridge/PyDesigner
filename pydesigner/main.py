@@ -408,6 +408,10 @@ def main():
         outpath = image.getPath()
     else:
         outpath = args.output
+
+    outpath = op.abspath(args.output)
+    os.makedirs(outpath, exist_ok=True)
+
     image.cat(
         path=outpath,
         ext=fType,
@@ -415,7 +419,7 @@ def main():
         force=args.force,
         resume=args.resume,
     )
-    working_path = op.join(outpath, "working" + fType)
+    working_path = op.abspath(op.join(outpath, "working" + fType))
     # Create index of DWI volumes with different TEs
     if not args.resume and np.unique(image.echotime).size > 1:
         multi_echo = True
@@ -428,7 +432,7 @@ def main():
         multi_echo_end = [int(x) for x in multi_echo_end]
 
     # Make an initial conversion to nifti
-    init_nii = op.join(outpath, "dwi_raw.nii")
+    init_nii = op.abspath(op.join(outpath, "dwi_raw.nii"))
     if not (args.resume and op.exists(init_nii)):
         mrpreproc.miftonii(
             input=working_path,
@@ -994,6 +998,8 @@ def main():
         filetable["rician_corrected"] = DWIFile(nii_rician)
         filetable["HEAD"] = filetable["rician_corrected"]
 
+    print("[DEBUG] working_path for B0/shell extraction:", working_path)
+    print("[DEBUG] shells:", mrinfoutil.shells(working_path))
     # -----------------------------------------------------------------
     # Extract averaged B0
     # -----------------------------------------------------------------

@@ -306,7 +306,7 @@ def degibbs(
     if opts.nthreads is not None:
         arg.extend(["-nthreads", str(nthreads)])
     arg.extend([opts.input, opts.output])
-    completion = subprocess.run(arg)
+    completion = subprocess.run(arg, capture_output=True, text=True)
     if completion.returncode != 0:
         msg = f"Mrdegibbs failed. Return code: {completion.returncode}"
         msg += f"\nCommand: {' '.join(arg)}"
@@ -439,12 +439,15 @@ def undistort(
     if qc is not None:
         arg.extend(["-eddyqc_all", qc])
     arg.extend([opts.input, opts.output])
-    completion = subprocess.run(arg, cwd=outdir)
+    completion = subprocess.run(arg, capture_output=True, text=True)
+
     if completion.returncode != 0:
-        msg = "Dwifslpreproc failed. Return code: {completion.returncode}"
-        msg += f"\nCommand: {' '.join(arg_extract)}"
-        msg += f"\nMRtrix3 error: {completion.stderr}"
-        raise (MRTrixError(msg))
+        msg = f"Dwifslpreproc failed. Return code: {completion.returncode}"
+        msg += f"\nCommand: {' '.join(arg)}"
+        msg += f"\nMRtrix3 stdout:\n{completion.stdout}"
+        msg += f"\nMRtrix3 stderr:\n{completion.stderr}"
+        raise MRTrixError(msg)
+    
     # Remove temporarily generated files
     os.remove(op.join(outdir, "dwiec.bvec"))
     os.remove(op.join(outdir, "dwiec.bval"))

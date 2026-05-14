@@ -412,6 +412,11 @@ class DWIParser:
         -------
         None; writes out file
         """
+
+        # Ensure output directory exists before MRtrix writes intermediate files.
+        path = op.abspath(path)
+        os.makedirs(path, exist_ok=True)
+
         # Check whether working.(ext) exists
         if op.exists(op.join(path, "working" + ext)):
             if force:
@@ -471,10 +476,14 @@ class DWIParser:
                 convert_args.append(op.join(path, ("dwi" + str(idx) + ".mif")))
                 miflist.append(op.join(path, ("dwi" + str(idx) + ".mif")))
                 cmd = " ".join(str(e) for e in convert_args)
-                completion = subprocess.run(cmd, shell=True)
+                completion = subprocess.run(cmd, shell=True, capture_output=True, text=True)
                 if completion.returncode != 0:
                     raise Exception(
-                        'Please use the "--force" flag to overwrite existing outputs, or clear the output directory'
+                        "Failed to convert input DWI to intermediate .mif file.\n"
+                        f"Command: {cmd}\n"
+                        f"Return code: {completion.returncode}\n"
+                        f"stdout:\n{completion.stdout}\n"
+                        f"stderr:\n{completion.stderr}\n"
                     )
             # The following command concatenates all DWI(i) into a single
             # .mif file if nDWI > 1
