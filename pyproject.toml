@@ -133,6 +133,6 @@ archs = ["x86_64", "arm64"]
 # use this instead:
 # archs = ["universal2"]
 
-[tool.cibuildwheel.windows]
-archs = ["AMD64"]
+# [tool.cibuildwheel.windows]
+# archs = ["AMD64"]
 ``
