@@ -114,8 +114,7 @@ build = ["cp314-*"]
 skip = [
     "*-musllinux_*",
     "*-manylinux_i686",
-    "*-win32",
-    "pp*"
+
 ]
 build-frontend = "build[uv]"
 
