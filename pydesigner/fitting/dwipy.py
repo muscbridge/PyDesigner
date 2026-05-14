@@ -1367,7 +1367,7 @@ class DWI(object):
             cost_fn : array_like(dype=float)
                 Cost values for input grid
             """
-            
+
             if grid.ndim > 1:
                 raise Exception("Grid needs to be a flattened 1D vector")
             ndir = [len(x) for x in GT]
@@ -2083,7 +2083,7 @@ class DWI(object):
             fbwm_SH2 = fbwm_SH2[:, harmonics]
             dt, kt = self.tensorReorder("dki")
             dt = vectorize(dt, self.mask)
-  
+
             (
                 zeta,
                 faa,
@@ -2915,7 +2915,7 @@ class DWI(object):
 
             #     with np.errstate(divide="ignore", invalid="ignore", over="ignore"):
             #         dwi_hat = highprecisionexp(np.matmul(bmat_i, dt_i))
-                
+
             #     dwi_hat = np.nan_to_num(dwi_hat, nan=0.0, posinf=0.0, neginf=0.0)
 
             #     dwi_hat[dwi_hat < 1] = 1
