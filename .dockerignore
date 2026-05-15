@@ -1,0 +1,16 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+.mypy_cache
+htmlcov
+.coverage
+build
+*.egg-info
+
+# Do NOT ignore dist; Dockerfile copies the wheel from dist/
+# dist
+# *.whl
