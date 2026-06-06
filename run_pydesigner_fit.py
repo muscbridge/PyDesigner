@@ -23,10 +23,25 @@ python run_pydesigner_fit_from_preprocessed.py \
   --lmax-fbi 6 \
   --rectify \
   --fbwm \
-  --bvec-flips 1 -1 1
+  --bvec-flips 1 1 1
 
 '''
+def transform_gradients(grad, perm=(0, 1, 2), flips=(1, 1, 1)):
+        """
+        Apply axis permutation and sign flips to gradient table.
 
+        grad shape: (N, 4), columns [gx, gy, gz, bval]
+        perm: axis order, e.g. (0, 1, 2), (0, 2, 1), etc.
+        flips: signs after permutation, e.g. (1, -1, 1)
+        """
+        grad = grad.copy()
+
+        g = grad[:, :3].copy()
+        g = g[:, perm]
+        g *= np.asarray(flips, dtype=float)[None, :]
+
+        grad[:, :3] = g
+        return grad
 
 def parse_flips(values):
     flips = tuple(float(v) for v in values)
@@ -55,7 +70,7 @@ def main():
     parser.add_argument(
         "--bvec-flips",
         nargs=3,
-        default=(1, -1, 1),
+        default=(1, 1, 1),
         help="Gradient sign flips for x y z. Default is 1 -1 1 based on your y-flip test.",
     )
 
@@ -66,15 +81,19 @@ def main():
 
     print("\nLoading preprocessed DWI...")
     img = DWI(
-        imPath=args.dwi,
-        bvecPath=args.bvec,
-        bvalPath=args.bval,
-        mask=args.mask,
-        nthreads=args.nthreads,
+    imPath=args.dwi,
+    bvecPath=args.bvec,
+    bvalPath=args.bval,
+    mask=args.mask,
+    nthreads=args.nthreads,
+    bvec_flips=(1, 1, 1),
     )
 
-    print(f"Applying bvec flips: {flips}")
-    img.grad[:, :3] *= np.asarray(flips)[None, :]
+    # img.grad = transform_gradients(
+    #     img.grad,
+    #     perm=(0, 1, 2),
+    #     flips=(1, 1, 1),
+    # )
 
     print("Detected protocols:", img.tensorType())
 

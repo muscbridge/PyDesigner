@@ -1,8 +1,8 @@
+import itertools
 import os
+import os.path as op
 import numpy as np
-import nibabel as nib
 
-# Adjust this import to match your local PyDesigner structure
 from pydesigner.fitting.dwipy import DWI
 from pydesigner.system.utils import writeNii
 
@@ -17,62 +17,76 @@ out_dir = os.path.join(basePath, "debug_fodf_flips")
 os.makedirs(out_dir, exist_ok=True)
 
 
-def apply_gradient_flip(dwi_obj, flips):
-    """
-    flips = (fx, fy, fz), each either +1 or -1.
-    """
-    flips = np.asarray(flips, dtype=float)
-    dwi_obj.grad[:, :3] = dwi_obj.grad[:, :3] * flips[None, :]
-    return dwi_obj
+def transform_gradients(grad, perm=(0, 1, 2), flips=(1, 1, 1)):
+    grad = grad.copy()
+    g = grad[:, :3].copy()
+    g = g[:, perm]
+    g *= np.asarray(flips, dtype=float)[None, :]
+    grad[:, :3] = g
+    return grad
 
 
-flip_tests = {
-    "none":      ( 1,  1,  1),
-    "xflip":     (-1,  1,  1),
-    "yflip":     ( 1, -1,  1),
-    "zflip":     ( 1,  1, -1),
-    "xyflip":    (-1, -1,  1),
-    "xzflip":    (-1,  1, -1),
-    "yzflip":    ( 1, -1, -1),
-    "xyzflip":   (-1, -1, -1),
-}
+perms = list(itertools.permutations((0, 1, 2)))
+flips_list = list(itertools.product((1, -1), repeat=3))
 
+for perm in perms:
+    for flips in flips_list:
+        label = (
+            f"perm{perm[0]}{perm[1]}{perm[2]}"
+            f"_flip{flips[0]}{flips[1]}{flips[2]}"
+        )
+        label = label.replace("-", "m")
 
-for label, flips in flip_tests.items():
-    print(f"\nRunning flip test: {label} {flips}")
+        print(f"\nRunning {label}: perm={perm}, flips={flips}")
 
-    dwi = DWI(
-        imPath=dwi_path,
-        bvecPath=bvec_path,
-        bvalPath=bval_path,
-        mask=mask_path,
-        nthreads=1,
-    )
+        dwi = DWI(
+            imPath=dwi_path,
+            bvecPath=bvec_path,
+            bvalPath=bval_path,
+            mask=mask_path,
+            nthreads=1,
+            bvec_flips=(1, 1, 1),
+        )
 
-    dwi = apply_gradient_flip(dwi, flips)
+        dwi.grad = transform_gradients(dwi.grad, perm=perm, flips=flips)
 
-    # FBI/fODF only. Do not run full FBWM.
-    zeta, faa, fodf, fodf_mrtrix, min_awf, Da, De_mean, De_ax, De_rad, De_fa, min_cost, min_cost_fn = dwi.fbi(
-        l_max=6,
-        fbwm=False,
-        rectify=True,
-        res="low",
-    )
+        result = dwi.fbi(
+            l_max=6,
+            fbwm=False,
+            rectify=False,
+            res="low",
+        )
 
-    # Save the fODF SH coefficients or fODF output returned by dwi.fbi().
-    # Depending on your downstream viewer, this may be the file to inspect.
-    out_path = os.path.join(out_dir, f"fodf_{label}.nii")
-    writeNii(np.asarray(fodf).real, dwi.hdr, out_path)
-    
-    writeNii(
-        np.asarray(fodf_mrtrix).real,
-        dwi.hdr,
-        os.path.join(out_dir, f"fodf_mrtrix_{label}.nii"),
-    )
+        # Current fbi() returns 12 outputs in your branch:
+        (
+            zeta,
+            faa,
+            fodf,
+            fodf_mrtrix,
+            awf,
+            Da,
+            De_mean,
+            De_ax,
+            De_rad,
+            De_fa,
+            min_cost,
+            min_cost_fn,
+        ) = result
 
-    # # Save FAA too as a scalar QC map.
-    # faa_path = os.path.join(out_dir, f"faa_{label}.nii.gz")
-    # writeNii(np.asarray(faa), dwi.hdr, faa_path)
+        writeNii(
+            np.real(fodf),
+            dwi.hdr,
+            op.join(out_dir, f"fbi_odf_raw_{label}.nii"),
+        )
 
-    print(f"Saved: {out_path}")
-    # print(f"Saved: {faa_path}")
+        writeNii(
+            np.real(fodf_mrtrix),
+            dwi.hdr,
+            op.join(out_dir, f"fbi_odf_mrtrix_{label}.nii"),
+        )
+
+        # writeNii(
+        #     np.real(faa),
+        #     dwi.hdr,
+        #     op.join(out_dir, f"faa_{label}.nii.gz"),
+        # )

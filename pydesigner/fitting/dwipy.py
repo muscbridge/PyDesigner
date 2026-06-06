@@ -119,8 +119,8 @@ class DWI(object):
             # number of DWI volumes. [Gx Gy Gz Bval]
             self.grad = np.c_[np.transpose(bvecs), bvals]
 
-            # Apply optional bvec sign correction.
-            # Your test showed that the correct correction is a y-flip: (1, -1, 1).
+            # Apply bvec sign correction.
+            # Your permutation/flip test identified flip1m11 = (1, -1, 1).
             bvec_flips = np.asarray(bvec_flips, dtype=float)
 
             if bvec_flips.shape != (3,):
@@ -135,7 +135,7 @@ class DWI(object):
 
             self.grad[:, :3] *= bvec_flips[None, :]
 
-            print(f"Applied bvec flips: {tuple(bvec_flips.astype(int))}")
+            print(f"Applied bvec flips: {tuple(map(int, bvec_flips))}")
             print(f"bvecs, bvals (shape): {np.shape(self.grad)}")
         else:
             msg = "Unable to locate BVAL or BVEC files"
