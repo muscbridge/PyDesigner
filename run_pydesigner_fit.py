@@ -12,7 +12,7 @@ from pydesigner.tractography import odf
 '''
 basePath = os.path.join('/Volumes','Flashy','HIE_FBI_003','FBWM_b4000')
 
-python run_pydesigner_fit_from_preprocessed.py \
+python run_pydesigner_fit.py \
   --dwi /Volumes/Flashy/HIE_FBI_003/FBWM_b4000/dwi_preprocessed.nii \
   --bvec /Volumes/Flashy/HIE_FBI_003/FBWM_b4000/dwi_preprocessed.bvec \
   --bval /Volumes/Flashy/HIE_FBI_003/FBWM_b4000/dwi_preprocessed.bval \
