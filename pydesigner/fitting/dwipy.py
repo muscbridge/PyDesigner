@@ -69,7 +69,7 @@ class DWI(object):
         bvalPath: str = None,
         mask: str = None,
         nthreads: int = -1,
-        bvec_flips: tuple = (1, -1, 1),
+        bvec_flips: tuple = (1, 1, 1),
     ) -> None:
         """DWI class initializer
 

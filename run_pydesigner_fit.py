@@ -81,12 +81,12 @@ def main():
 
     print("\nLoading preprocessed DWI...")
     img = DWI(
-    imPath=args.dwi,
-    bvecPath=args.bvec,
-    bvalPath=args.bval,
-    mask=args.mask,
-    nthreads=args.nthreads,
-    bvec_flips=(1, 1, 1),
+        imPath=args.dwi,
+        bvecPath=args.bvec,
+        bvalPath=args.bval,
+        mask=args.mask,
+        nthreads=args.nthreads,
+        bvec_flips=tuple(args.bvec_flips),
     )
 
     # img.grad = transform_gradients(
