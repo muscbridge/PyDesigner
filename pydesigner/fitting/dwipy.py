@@ -69,6 +69,7 @@ class DWI(object):
         bvalPath: str = None,
         mask: str = None,
         nthreads: int = -1,
+        bvec_flips: tuple = (1, -1, 1),
     ) -> None:
         """DWI class initializer
 
@@ -117,8 +118,25 @@ class DWI(object):
             # Combine bvecs and bvals into [n x 4] array where n is
             # number of DWI volumes. [Gx Gy Gz Bval]
             self.grad = np.c_[np.transpose(bvecs), bvals]
+
+            # Apply optional bvec sign correction.
+            # Your test showed that the correct correction is a y-flip: (1, -1, 1).
+            bvec_flips = np.asarray(bvec_flips, dtype=float)
+
+            if bvec_flips.shape != (3,):
+                raise ValueError(
+                    "bvec_flips must be a 3-element tuple/list, e.g. (1, -1, 1)."
+                )
+
+            if not np.all(np.isin(bvec_flips, [-1, 1])):
+                raise ValueError(
+                    "bvec_flips values must be either 1 or -1, e.g. (1, -1, 1)."
+                )
+
+            self.grad[:, :3] *= bvec_flips[None, :]
+
+            print(f"Applied bvec flips: {tuple(bvec_flips.astype(int))}")
             print(f"bvecs, bvals (shape): {np.shape(self.grad)}")
-            # self.grad = np.c_[bvecs, bvals]
         else:
             msg = "Unable to locate BVAL or BVEC files"
             msg += "\nPaths being used are:"
@@ -873,7 +891,7 @@ class DWI(object):
         if reject is None:
             reject = np.zeros(self.img[:, :, :, exclude_idx].shape)
         grad = self.grad[exclude_idx, :]
-        grad_orig = grad
+        grad_orig = grad.copy()
         order = np.floor(np.log(np.abs(np.max(grad[:, -1]) + 1)) / np.log(10))
         img = self.img[:, :, :, exclude_idx]
         if order >= 2:
