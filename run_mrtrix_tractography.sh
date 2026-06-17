@@ -3,28 +3,30 @@
 ./run_mrtrix_tractography.sh \
 /Volumes/Flashy/HIE_FBI_003/FBWM_b4000/metrics \
 /Volumes/Flashy/HIE_FBI_003/FBWM_b4000/wm.nii \
+/Volumes/Flashy/HIE_FBI_003/FBWM_b4000/wm.nii \
 /Volumes/Flashy/HIE_FBI_003/FBWM_b4000/metrics \
 SD_STREAM
 '''
 
 set -euo pipefail
 
-METRICS_DIR="${1:?Usage: run_mrtrix_tractography.sh METRICS_DIR MASK_NII OUT_DIR [algorithm]}"
-MASK_NII="${2:?Usage: run_mrtrix_tractography.sh METRICS_DIR MASK_NII OUT_DIR [algorithm]}"
-OUT_DIR="${3:?Usage: run_mrtrix_tractography.sh METRICS_DIR MASK_NII OUT_DIR [algorithm]}"
+METRICS_DIR="${1:?Usage: run_mrtrix_tractography.sh METRICS_DIR WM_NII MASK_NII OUT_DIR [algorithm]}"
+WM_NII="${2:?Usage: run_mrtrix_tractography.sh METRICS_DIR WM_NII MASK_NII OUT_DIR [algorithm]}"
+MASK_NII="${3:?Usage: run_mrtrix_tractography.sh METRICS_DIR WM_NII MASK_NII OUT_DIR [algorithm]}"
+OUT_DIR="${4:?Usage: run_mrtrix_tractography.sh METRICS_DIR WM_NII MASK_NII OUT_DIR [algorithm]}"
 
 # Deterministic FOD-based tractography:
-ALGORITHM="${4:-sd_stream}"
+ALGORITHM="${5:-sd_stream}"
 
 # To run probabilistic iFOD2 instead:
 # ALGORITHM="ifod2"
 
-N_STREAMLINES="${N_STREAMLINES:-100000}"
-CUTOFF="${CUTOFF:-0.05}"
+N_STREAMLINES="${N_STREAMLINES:-50000}"
+CUTOFF="${CUTOFF:-0.2}"
 ANGLE="${ANGLE:-45}"
-MINLENGTH="${MINLENGTH:-10}"
-MAXLENGTH="${MAXLENGTH:-250}"
-STEP="${STEP:-0}"
+MINLENGTH="${MINLENGTH:-30}"
+MAXLENGTH="${MAXLENGTH:-300}"
+STEP="${STEP:-0.1}"
 
 mkdir -p "${OUT_DIR}"
 
@@ -34,6 +36,9 @@ echo "Cutoff: ${CUTOFF}"
 
 MASK_MIF="${OUT_DIR}/brain_mask.mif"
 mrconvert "${MASK_NII}" "${MASK_MIF}" -force
+
+WM_MIF="${OUT_DIR}/wm.mif"
+mrconvert "${WM_NII}" "${WM_MIF}" -force
 
 run_tracking () {
     local name="$1"
@@ -61,7 +66,7 @@ run_tracking () {
         "${fod_mif}"
         "${tck}"
         -algorithm "${ALGORITHM}"
-        -seed_image "${MASK_MIF}"
+        -seed_image "${WM_MIF}"
         -mask "${MASK_MIF}"
         -select "${N_STREAMLINES}"
         -cutoff "${CUTOFF}"
