@@ -1,7 +1,7 @@
 Dataset Requirements
 ====================
 
-PyDesigner can process input DWIs in NifTi (.nii), compressed NifTi (.nii.gz), MRTrix3
+pyDKE can process input DWIs in NifTi (.nii), compressed NifTi (.nii.gz), MRTrix3
 file format (.mif), and DICOM (.dcm) file formats. With the exception of :code:`.mif`
 and :code:`.dcm` filetypes, all other input formats are required to be accompanied with
 :code:`.bval`, :code:`.bvec`, and :code:`.json` files.
@@ -20,11 +20,11 @@ has it's own accompanying files.
 JSON File
 ---------
 
-Every DWI will NEED a :code:`.json` file of the same name; PyDesigner will refuse to process
+Every DWI will NEED a :code:`.json` file of the same name; pyDKE will refuse to process
 any input that fails to meet this criterion. This behavior is intentional to prevent unintentional
 corrections from being exectuted when they are incompatible. Users must create a JSON file if
 their DICOM to NifTi conversion software fails to create it.
 
-PyDesigner primarily looks for partial Fourier information within a JSON information. This information
+pyDKE primarily looks for partial Fourier information within a JSON information. This information
 if encoded in the fields :code:`PartialFourier`; or :code:`PhaseEncodingSteps` and
 :code:`AcquisitionMatrixPE`. Users need to have have these fields at the bare minimum to process DWIs.

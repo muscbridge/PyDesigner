@@ -1,7 +1,7 @@
-PyDesigner Requirements
+pyDKE Requirements
 =======================
 
-PyDesigner, currently, only requires the following three dependencies:
+pyDKE, currently, only requires the following three dependencies:
 
 1. Python *3.6*, or above
 2. `FSL`_ *6.0.2*, or above
@@ -26,5 +26,5 @@ platform. Users running Windows are recommended to run the Docker image
 
 .. _NeuroDock: https://hub.docker.com/repository/docker/dmri/neurodock
 
-You may still proceed with the installation of PyDesigner Python
+You may still proceed with the installation of pyDKE Python
 modules to perform tensor fitting and map extraction.

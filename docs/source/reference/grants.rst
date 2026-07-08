@@ -1,7 +1,7 @@
 Grants
 ======
 
-The PyDesigner project is a result of effort from several contributors
+The pyDKE project is a result of effort from several contributors
 and support from grants. This section acknowledges all contributions
 to the project.
 

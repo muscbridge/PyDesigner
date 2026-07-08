@@ -5,8 +5,8 @@ Congratulations, you've come this far. You've installed Docker and
 NeuroDock, and are probably wondering how what else to do...
 
 **You're done. Not even kidding!** You can now start processing data
-with PyDesigner and NeuroDock. It's almost as if FSL, MRtrix3 and
-PyDesigner commands are built natively into your OS - be it Linux,
+with pyDKE and NeuroDock. It's almost as if FSL, MRtrix3 and
+pyDKE commands are built natively into your OS - be it Linux,
 Mac OS, or even Windows!
 
 Intro to Docker Run
@@ -26,7 +26,7 @@ where,
 
     :code:`[OPTIONS]`, "docker options to use when running the container; common options are :code:`-it`, :code:`-v`, :code:`-d`"
     :code:`IMAGE`, "image name to run; in this instance, this is :code:`dmri/neurodock`"
-    :code:`[COMMAND]`, "specify which NeuroDock commands to run; these can be FSL, MRtrix3 or PyDesigner commands"
+    :code:`[COMMAND]`, "specify which NeuroDock commands to run; these can be FSL, MRtrix3 or pyDKE commands"
     :code:`[ARG]`, "arguments for :code:`[COMMAND]`"
 
 
@@ -81,7 +81,7 @@ structured the following way:
 |   │
 |   └── processed (empty dir)
 
-This subject needs to be processed PyDesigner read the input nifti
+This subject needs to be processed pyDKE read the input nifti
 files in the :code:`nifti` directory, and saves the outputs in the
 :code:`processed` directory. Since both :code:`nifti` and
 :code:`processed` folders belong to a common parent directory, the
@@ -127,7 +127,7 @@ could process Mr. Bond's DWI with the command:
         --output /data/processed \
         /data/nifti/bond_dwi.nii,/data/nifti/bond_topup.nii
 
-This command runs the :code:`--standard` PyDesigner pipeline on
+This command runs the :code:`--standard` pyDKE pipeline on
 the input files :code:`/Users/sid/Desktop/bond_007/nifti/bond_dwi.nii`
 and :code:`/Users/sid/Desktop/bond_007/nifti/bond_topup.nii`, and
 saves all outputs into the directory :code:`Users/sid/Desktop/bond_007/processed`

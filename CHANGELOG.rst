@@ -16,14 +16,14 @@ Jan 13, 2023
 * ODF computations and spherical harmonic expansion for DTI and DKI
 * Option to add user-defined map for tractography stopping criteria
 * Added option to import multiple custom maps into DSI studio file
-* PyDesigner can now be pulled from PyPI with `pip install pydesigner`
+* pyDKE can now be pulled from PyPI with `pip install pydesigner`
 
 **Changed**
 
 * Fixed a logic in multi-TE detection algorithm that prevented certain
   datasets from processing
 * Overhauled how inputs paths are entered. Paths to input DWIs can now
-  be provided to PyDesigner without comma separation
+  be provided to pyDKE without comma separation
 * Udpate `des2dke.m` for compatibility with nii_preprocess
 * Replaced FBI SH with tesseral SH
 
@@ -45,7 +45,7 @@ Jan 14, 2022
 * Fixed a logic in multi-TE detection algorithm that prevented certain
   datasets from processing
 * Overhauled how inputs paths are entered. Paths to input DWIs can now
-  be provided to PyDesigner without comma separation
+  be provided to pyDKE without comma separation
 
 **Removed**
 
@@ -86,7 +86,7 @@ Jun 29, 2021
 
 **Added**:
 
-* Support for multi echo time (TE) datasets. PyDesigner will now
+* Support for multi echo time (TE) datasets. pyDKE will now
   preprocess DWIs with multiple TEs together, but extract diffusion
   metrics for each TE separately. Users need to parse :code:`-te`
   flag to enable this feature.
@@ -237,7 +237,7 @@ Sep 22, 2020
 
 * Reslicing compatibility udpated for new MRTrix3 version
   where ``mrrelice`` has been changed to ``mrgrid``.
-  PyDesigner will work with either versions.
+  pyDKE will work with either versions.
 
 **Changed**
 
@@ -300,11 +300,11 @@ Aug 19, 2020
 
 **Added**
 
-* Methods to perform tensor only with compatible B-values. PyDesigner
+* Methods to perform tensor only with compatible B-values. pyDKE
   previously use all B-values in a DWI to do so. This behavior has
   been updated to use only B-values less than 2500
 * FBI and FBWM calculations
-* Brief documentation on how to run PyDesigner
+* Brief documentation on how to run pyDKE
 
 **Changed**
 
@@ -384,7 +384,7 @@ Apr 8, 2020
 * Documentation moved to ReadTheDocs
 * Moved B0 production module from designer.preprocessing.brainmask to
   a separate function at ``designer.preprocessing.extractmeanbzero()``
-  that gets called by PyDesigner main. This allows a B0.nii to be
+  that gets called by pyDKE main. This allows a B0.nii to be
   produced regardless of the ``--mask`` flag.
 
 **Removed**
@@ -443,22 +443,22 @@ Initial port of MATLAB code to Python. 200,000,000,000 BCE
 
 .. Links
 
-.. _v1.0.0: https://github.com/m-ama/PyDesigner/releases/tag/v1.0.0
-.. _v1.0-RC12: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC12
-.. _v1.0-RC11: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC11
-.. _v1.0-RC10: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC10
-.. _v1.0-RC9: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC9
-.. _v1.0-RC8: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC8
-.. _v1.0-RC7: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC7
-.. _v1.0-RC6: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC6
-.. _v1.0-RC5: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC5
-.. _v1.0-RC4: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC4
-.. _v1.0-RC3: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC3
-.. _v1.0-RC2: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC2
-.. _v1.0-RC1: https://github.com/m-ama/PyDesigner/releases/tag/v1.0-RC1
-.. _v0.32: https://github.com/m-ama/PyDesigner/releases/tag/v0.32
-.. _v0.31: https://github.com/m-ama/PyDesigner/releases/tag/v0.31
-.. _v0.3: https://github.com/m-ama/PyDesigner/releases/tag/v0.3
-.. _v0.2 [The Cupid Release]: https://github.com/m-ama/PyDesigner/releases/tag/v0.2
-.. _dev-0.11: https://github.com/m-ama/PyDesigner/releases/tag/dev-0.11
-.. _0.1-dev: https://github.com/m-ama/PyDesigner/releases/tag/0.1-dev
+.. _v1.0.0: https://github.com/m-ama/pyDKE/releases/tag/v1.0.0
+.. _v1.0-RC12: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC12
+.. _v1.0-RC11: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC11
+.. _v1.0-RC10: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC10
+.. _v1.0-RC9: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC9
+.. _v1.0-RC8: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC8
+.. _v1.0-RC7: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC7
+.. _v1.0-RC6: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC6
+.. _v1.0-RC5: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC5
+.. _v1.0-RC4: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC4
+.. _v1.0-RC3: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC3
+.. _v1.0-RC2: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC2
+.. _v1.0-RC1: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC1
+.. _v0.32: https://github.com/m-ama/pyDKE/releases/tag/v0.32
+.. _v0.31: https://github.com/m-ama/pyDKE/releases/tag/v0.31
+.. _v0.3: https://github.com/m-ama/pyDKE/releases/tag/v0.3
+.. _v0.2 [The Cupid Release]: https://github.com/m-ama/pyDKE/releases/tag/v0.2
+.. _dev-0.11: https://github.com/m-ama/pyDKE/releases/tag/dev-0.11
+.. _0.1-dev: https://github.com/m-ama/pyDKE/releases/tag/0.1-dev

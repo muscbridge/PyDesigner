@@ -1,0 +1,140 @@
+[project]
+name = "PyDesigner-DWI"
+version = "2.0.0"
+description = "A hands-free DTI, DKI, FBI and FBWM preprocessing pipeline"
+readme = "README.rst"
+requires-python = ">=3.14"
+license = "LicenseRef-Proprietary"
+
+authors = [
+    { name = "MUSC Brain Imaging Diffusion Group (BRIDGE) Lab", email = "bridge@musc.edu" }
+]
+
+maintainers = [
+    { name = "Hunter Moss", email = "mossh@musc.edu" },
+    { name = "Ryn Thorn", email = "keithka@musc.edu" },
+    { name = "Siddhartha Dhiman", email = "sid.kill3r@gmail.com" }
+]
+
+keywords = [
+    "python", "mrtrix", "dipy", "diffusion", "imaging",
+    "dti", "dki", "fbi", "fbwm"
+]
+
+classifiers = [
+    "Programming Language :: Python",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Software Development :: Libraries :: Python Modules"
+]
+
+dependencies = [
+    "numpy>=1.26,<1.30",
+    "scipy>=1.11,<2.0",
+    "joblib>=1.2,<2.0",
+    "tqdm>=4.65,<5.0",
+    "multiprocess>=0.70,<0.80",
+    "nibabel>=5.0,<6.0",
+    "dipy>=1.7,<2.0",
+    "cvxpy>=1.3,<2.0",
+    "matplotlib>=3.8,<4.0",
+    "pydantic>=2.7,<3.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4,<9.0",
+    "pytest-cov>=5.0,<6.0",
+    "pytest-xdist>=3.6,<4.0"
+]
+
+[project.urls]
+Homepage = "https://pypi.org/project/PyDesigner-DWI/"
+Repository = "https://github.com/muscbridge/PyDesigner"
+Documentation = "https://pydesigner.readthedocs.io/en/latest/"
+
+[project.scripts]
+pydesigner = "pydesigner.main:main"
+
+
+[build-system]
+requires = [
+    "setuptools>=69",
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["pydesigner*"]
+exclude = ["tests*", "docs*", "extras*"]
+
+
+[tool.setuptools.package-data]
+"pydesigner.fitting" = ["*.csv"]
+
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+    "docs",
+    "tests",
+    "setup.py",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["F841"]
+fixable = ["ALL"]
+unfixable = []
+
+
+
+#[tool.cibuildwheel]
+build = ["cp314-*"]
+skip = [
+    "*-musllinux_*",
+    "*-manylinux_i686",
+
+]
+#build-frontend = "build[uv]"
+
+# Keep wheel tests light because PyDesigner may need MRtrix/FSL externally.
+test-command = "python -c \"import pydesigner; import pydesigner.fitting.dwipy; print('PyDesigner wheel import OK')\""
+
+[tool.cibuildwheel.linux]
+# archs = ["x86_64", "aarch64"]
+
+[tool.cibuildwheel.macos]
+# Option A: separate Intel + Apple Silicon wheels
+# archs = ["x86_64", "arm64"]
+
+# If you prefer one macOS wheel that supports both Intel and Apple Silicon,
+# use this instead:
+archs = ["universal2"]

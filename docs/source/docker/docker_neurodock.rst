@@ -14,9 +14,9 @@ of NeuroDock will be configured exactly the same other another
 person's.
 
 The second option is intended for devopers who make frequent changes
-to the PyDesigner source code and wish to test their changes in a
+to the pyDKE source code and wish to test their changes in a
 Docker environment. The Dockerfile script is designed to build a
-Docker image using PyDesigner in the root directory of the repository.
+Docker image using pyDKE in the root directory of the repository.
 
 Docker Hub
 ----------
@@ -47,13 +47,13 @@ Local Build
     there is no sematic versioning to referece.
 
 1. Open up a command line interface and change directory to your
-PyDesigner repository
+pyDKE repository
 
 .. code-block:: console
 
     $ cd [PyDesginer Repo Path]
 
-2. To build a Docker image using your local PyDesigner copy, run the
+2. To build a Docker image using your local pyDKE copy, run the
 command:
 
 .. code-block:: console

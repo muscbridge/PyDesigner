@@ -1,7 +1,7 @@
 List of Flags
 =============
 
-PyDesigner is extremely flexible when it comes to dMRI processing.
+pyDKE is extremely flexible when it comes to dMRI processing.
 Users can easily enable or disable various preprocessing steps without
 changing the overall sequence.
 
@@ -12,7 +12,7 @@ IO Control
 
 These flags allow control of the pipeline's I/O handling
 
--o DIR, --output DIR    PyDesigner output directory
+-o DIR, --output DIR    pyDKE output directory
 
 
 Preprocessing Control

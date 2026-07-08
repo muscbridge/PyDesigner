@@ -1,0 +1,252 @@
+.github/workflows-disabled/publish.yml:74:            ghcr.io/muscbridge/pyDKE:latest
+.github/workflows-disabled/publish.yml:75:            ghcr.io/muscbridge/pyDKE:${{ steps.version.outputs.value }}
+.github/workflows-disabled/pydesigner_ci.yml:65:        run: docker build -t pydesigner-test -f tests/Dockerfile .
+.github/workflows-disabled/pydesigner_ci.yml:68:        run: docker run --name pydesigner-test-container pydesigner-test
+.github/workflows-disabled/pydesigner_ci.yml:72:        run: docker cp pydesigner-test-container:/test_results/ ./test_results
+.github/workflows-disabled/pydesigner_ci.yml:90:          docker container rm pydesigner-test-container
+.github/workflows-disabled/pydesigner_ci.yml:91:          docker image rm pydesigner-test
+CHANGELOG.rst:19:* pyDKE can now be pulled from PyPI with `pip install pydesigner`
+CHANGELOG.rst:26:  be provided to pyDKE without comma separation
+CHANGELOG.rst:48:  be provided to pyDKE without comma separation
+CHANGELOG.rst:89:* Support for multi echo time (TE) datasets. pyDKE will now
+CHANGELOG.rst:240:  pyDKE will work with either versions.
+CHANGELOG.rst:303:* Methods to perform tensor only with compatible B-values. pyDKE
+CHANGELOG.rst:307:* Brief documentation on how to run pyDKE
+CHANGELOG.rst:387:  that gets called by pyDKE main. This allows a B0.nii to be
+CHANGELOG.rst:429:* Fixed bug in Dockerfile that prevented ``pydesigner.py`` from being
+CHANGELOG.rst:446:.. _v1.0.0: https://github.com/m-ama/pyDKE/releases/tag/v1.0.0
+CHANGELOG.rst:447:.. _v1.0-RC12: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC12
+CHANGELOG.rst:448:.. _v1.0-RC11: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC11
+CHANGELOG.rst:449:.. _v1.0-RC10: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC10
+CHANGELOG.rst:450:.. _v1.0-RC9: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC9
+CHANGELOG.rst:451:.. _v1.0-RC8: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC8
+CHANGELOG.rst:452:.. _v1.0-RC7: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC7
+CHANGELOG.rst:453:.. _v1.0-RC6: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC6
+CHANGELOG.rst:454:.. _v1.0-RC5: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC5
+CHANGELOG.rst:455:.. _v1.0-RC4: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC4
+CHANGELOG.rst:456:.. _v1.0-RC3: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC3
+CHANGELOG.rst:457:.. _v1.0-RC2: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC2
+CHANGELOG.rst:458:.. _v1.0-RC1: https://github.com/m-ama/pyDKE/releases/tag/v1.0-RC1
+CHANGELOG.rst:459:.. _v0.32: https://github.com/m-ama/pyDKE/releases/tag/v0.32
+CHANGELOG.rst:460:.. _v0.31: https://github.com/m-ama/pyDKE/releases/tag/v0.31
+CHANGELOG.rst:461:.. _v0.3: https://github.com/m-ama/pyDKE/releases/tag/v0.3
+CHANGELOG.rst:462:.. _v0.2 [The Cupid Release]: https://github.com/m-ama/pyDKE/releases/tag/v0.2
+CHANGELOG.rst:463:.. _dev-0.11: https://github.com/m-ama/pyDKE/releases/tag/dev-0.11
+CHANGELOG.rst:464:.. _0.1-dev: https://github.com/m-ama/pyDKE/releases/tag/0.1-dev
+Dockerfile:2:# NeuroDock / pyDKE v2.0.0
+Dockerfile:4:# Docker image containing pyDKE and external neuroimaging dependencies:
+Dockerfile:7:# - pydke 2.0.0
+Dockerfile:23:LABEL org.opencontainers.image.title="pydke"
+Dockerfile:25:LABEL org.opencontainers.image.url="https://github.com/muscbridge/pyDKE"
+Dockerfile:26:LABEL org.opencontainers.image.source="https://github.com/muscbridge/pyDKE"
+Dockerfile:30:ARG PYDKE_WHEEL=dist/pydke-2.0.0-py3-none-any.whl
+Dockerfile:35:ENV PYDKE_VENV=/opt/pydesigner/.venv
+Dockerfile:36:ENV PATH="/opt/pydesigner/.venv/bin:/usr/local/fsl/bin:/usr/lib/mrtrix3/bin:${PATH}"
+Dockerfile:39:ENV PATH="/opt/pydesigner/.venv/bin:/usr/local/fsl/bin:/usr/lib/mrtrix3/bin:${PATH}"
+Dockerfile:85:# pyDKE
+Dockerfile:88:WORKDIR /opt/pydesigner
+Dockerfile:90:COPY ${PYDKE_WHEEL} /tmp/pydke-2.0.0-py3-none-any.whl
+Dockerfile:93:    uv venv "${PYDKE_VENV}" --python 3.14 && \
+Dockerfile:94:    uv pip install --python "${PYDKE_VENV}/bin/python" /tmp/pydke-2.0.0-py3-none-any.whl && \
+Dockerfile:95:    rm -f /tmp/pydke-2.0.0-py3-none-any.whl
+Dockerfile:101:RUN cat > /usr/local/bin/pydesigner-entrypoint <<'EOF' && \
+Dockerfile:102:    chmod +x /usr/local/bin/pydesigner-entrypoint
+Dockerfile:110:exec pydesigner "$@"
+Dockerfile:118:    python -c "import pydesigner; import pydesigner.fitting.dwipy; print('pyDKE import OK:', pydesigner.__version__)" && \
+Dockerfile:129:    chown -R bridge:bridge /data /opt/pydesigner
+Dockerfile:134:ENTRYPOINT ["pydesigner-entrypoint"]
+LICENSE:42:Els Fieremans, Andreana Benitez, Joseph A Helpern, Jens H Jensen. pyDKE: A
+README.rst:2:pyDKE
+README.rst:9:.. image:: https://img.shields.io/github/downloads-pre/m-ama/pydesigner/latest/total?style=flat-square
+README.rst:10:   :target: https://github.com/m-ama/pyDKE/releases/latest
+README.rst:13:.. image:: https://img.shields.io/readthedocs/pydesigner?style=flat-square
+README.rst:14:   :target: https://pydesigner.readthedocs.io/en/latest/?badge=latest
+README.rst:17:.. image:: https://results.pre-commit.ci/badge/github/muscbridge/pyDKE/master.svg
+README.rst:18:   :target: https://results.pre-commit.ci/latest/github/muscbridge/pyDKE/master
+README.rst:21:Welcome to the official pyDKE project!
+README.rst:24:pyDKE was inspired by `NYU's DESIGNER`_ dMRI preprocessing pipeline
+README.rst:25:to bring pre- and post- processing to every MRI imaging scientist. With pyDKE,
+README.rst:28:pyDKE makes this easy, and you will love it!
+README.rst:34:   :target: https://pydesigner.readthedocs.io/en/latest/
+README.rst:39:    :alt: pyDKE Walkthrough Video: Software Setup & Usage
+README.rst:67:.. _Issues: https://github.com/m-ama/pyDKE/issues
+README.rst:68:.. _Discussion: https://github.com/m-ama/pyDKE/discussions
+README.rst:71:   Parallel processing in pyDKE scales almost linearly with the
+README.rst:76:   pyDKE, we recommend the following minimum system specifications:
+README.rst:84:pyDKE in Container
+README.rst:86:pyDKE can run on all major platforms (x86, x64, and ARM) via Docker container technology. The containerized
+README.rst:87:form of pyDKE is called `NeuroDock`_ and comes preloaded with pyDKE, FSL, and MRtrix3.
+README.rst:98:Cite pyDKE
+README.rst:100:Please include the following citation if you used pyDKE in your
+README.rst:103:1. Siddhartha Dhiman, Joshua B Teves, Kathryn E Thorn, Emilie T McKinnon, Hunter G Moss, Vitria Adisetiyo, Benjamin Ades-Aron, Jelle Veraart, Jenny Chen, Els Fieremans, Andreana Benitez, Joseph A Helpern, Jens H Jensen. pyDKE: A Pythonic Implementation of the DESIGNER Pipeline for Diffusion Tensor and Diffusional Kurtosis Imaging. bioRxiv 2021.10.20.465189. doi: 10.1101/2021.10.20.465189
+README.rst:108:The pyDKE software packages is based upon the the references
+README.rst:109:listed below. Please be sure to cite them if pyDKE was used
+READMEv2.0.0.md:1:# pyDKE
+READMEv2.0.0.md:3:pyDKE is a hands-free diffusion MRI preprocessing and modeling pipeline for DTI, DKI, FBI, FBWM, and related diffusion MRI analyses.
+READMEv2.0.0.md:11:pyDKE 2.0.0 requires:
+READMEv2.0.0.md:18:The pyDKE wheel is a pure-Python universal wheel:
+READMEv2.0.0.md:21:pydke-2.0.0-py3-none-any.whl
+docs/Makefile:14:APIDIR        = ../pydesigner
+docs/source/api/designer.pydesigner.rst:1:.. automodule:: designer.pydesigner
+docs/source/conf.py:22:project = "pyDKE"
+docs/source/docker/docker_neurodock.rst:17:to the pyDKE source code and wish to test their changes in a
+docs/source/docker/docker_neurodock.rst:19:Docker image using pyDKE in the root directory of the repository.
+docs/source/docker/docker_neurodock.rst:50:pyDKE repository
+docs/source/docker/docker_neurodock.rst:56:2. To build a Docker image using your local pyDKE copy, run the
+docs/source/docker/docker_neurodock_run.rst:8:with pyDKE and NeuroDock. It's almost as if FSL, MRtrix3 and
+docs/source/docker/docker_neurodock_run.rst:9:pyDKE commands are built natively into your OS - be it Linux,
+docs/source/docker/docker_neurodock_run.rst:29:    :code:`[COMMAND]`, "specify which NeuroDock commands to run; these can be FSL, MRtrix3 or pyDKE commands"
+docs/source/docker/docker_neurodock_run.rst:84:This subject needs to be processed pyDKE read the input nifti
+docs/source/docker/docker_neurodock_run.rst:126:        dmri/neurodock pydesigner --standard \
+docs/source/docker/docker_neurodock_run.rst:130:This command runs the :code:`--standard` pyDKE pipeline on
+docs/source/docker/introduction.rst:6:package. We adapted pyDKE and its dependencies for compatibility
+docs/source/docker/introduction.rst:27:FSL, MRtrix3 and pyDKE commands.
+docs/source/docker/introduction.rst:33:By packaging fixed versions of FSL, MRtrix3, and pyDKE, we are
+docs/source/docker/introduction.rst:40:MRtrix3, or pyDKE commands at near-native speed, even on
+docs/source/index.rst:12:   installation/pydesigner
+docs/source/index.rst:35:   reference/pydesigner_args
+docs/source/index.rst:36:   reference/pydesigner_files
+docs/source/installation/fsl.rst:11:with FSL 6.0.2. pyDKE has not been tested with other versions of
+docs/source/installation/pydesigner.rst:1:pyDKE
+docs/source/installation/pydesigner.rst:9:pyDKE can be installed using the PyPI package manager using the command
+docs/source/installation/pydesigner.rst:13:    $ pip install pydke
+docs/source/installation/python.rst:4:pyDKE was built and tested on Python 3.7, so we enourage all
+docs/source/installation/python.rst:22:by your OS, skip pyDKE installation.
+docs/source/installation/requirements.rst:1:pyDKE Requirements
+docs/source/installation/requirements.rst:4:pyDKE, currently, only requires the following three dependencies:
+docs/source/installation/requirements.rst:29:You may still proceed with the installation of pyDKE Python
+docs/source/processing/dataset_reqs.rst:4:pyDKE can process input DWIs in NifTi (.nii), compressed NifTi (.nii.gz), MRTrix3
+docs/source/processing/dataset_reqs.rst:23:Every DWI will NEED a :code:`.json` file of the same name; pyDKE will refuse to process
+docs/source/processing/dataset_reqs.rst:28:pyDKE primarily looks for partial Fourier information within a JSON information. This information
+docs/source/processing/running_pyd.rst:1:pyDKE Syntax
+docs/source/processing/running_pyd.rst:4:pyDKE has a simple syntax:
+docs/source/processing/running_pyd.rst:8:    $ pydesigner [OPTIONS] DWI1,DWI2,DWI3...
+docs/source/processing/running_pyd.rst:11:For example, one may run pyDKE with standard processing using the command:
+docs/source/processing/running_pyd.rst:15:    $ pydesigner -s --verbose \
+docs/source/processing/running_pyd.rst:24:from your DWIs. It's very simple, pyDKE figures this out for you. It analyzes
+docs/source/reference/grants.rst:4:The pyDKE project is a result of effort from several contributors
+docs/source/reference/pydesigner_args.rst:4:pyDKE is extremely flexible when it comes to dMRI processing.
+docs/source/reference/pydesigner_args.rst:15:-o DIR, --output DIR    pyDKE output directory
+docs/source/reference/pydesigner_files.rst:4:The number of output files generated by pyDKE may seem very
+docs/source/reference/pydesigner_files.rst:170:pyDKE for preprocessing flow control, especially to allow
+old/Dockerfile:3:# A docker container that contains all pyDKE dependencies such as MRTRIX3,
+old/Dockerfile:16:LABEL org.label-schema.name="dmri/pydesigner"
+old/Dockerfile:22:# Copy and install pyDKE
+pydesigner/Tensor_Fit_Guide.ipynb:8:    "# pyDKE Example\n",
+pydesigner/Tensor_Fit_Guide.ipynb:9:    "This notebook serves to educate on pyDKE and it's usage. Currently, this example will only cover portions past preprocessing for stability testing of **dwipi**."
+pydesigner/Tensor_Fit_Guide_HM.ipynb:8:    "# pyDKE Example\n",
+pydesigner/Tensor_Fit_Guide_HM.ipynb:9:    "This notebook serves to educate on pyDKE and it's usage. Currently, this example will only cover portions past preprocessing for stability testing of **dwipi**."
+pydesigner/Tensor_Fit_Guide_HM.ipynb:30:    "os.chdir('/Users/gonzo/Documents/GitHub/pyDKE')\n",
+pydesigner/Tensor_Fit_Guide_HM.ipynb:33:    "from pydesigner.fitting import dwipy as dp"
+pydesigner/Tensor_Fit_Guide_HM.ipynb:439:      "\u001b[36mFile \u001b[39m\u001b[32m~/Documents/GitHub/pyDKE/pydesigner/fitting/dwipy.py:2662\u001b[39m, in \u001b[36mDWI.tensorReorder\u001b[39m\u001b[34m(self, dwiType)\u001b[39m\n\u001b[32m   2660\u001b[39m     DT = vectorize(dt[\u001b[32m0\u001b[39m:\u001b[32m6\u001b[39m, :], \u001b[38;5;28mself\u001b[39m.mask)\n\u001b[32m   2661\u001b[39m     KT = vectorize(dt[\u001b[32m6\u001b[39m:\u001b[32m21\u001b[39m, :], \u001b[38;5;28mself\u001b[39m.mask)\n\u001b[32m-> \u001b[39m\u001b[32m2662\u001b[39m \u001b[38;5;28;01mreturn\u001b[39;00m \u001b[43mDT\u001b[49m, KT\n",
+pydesigner/__init__.py:4:    __version__ = version("pydesigner-dwi")
+pydesigner/__init__.py:7:        __version__ = version("pydesigner")
+pydesigner/fitting/dwipy.py:23:# from pydesigner.plotting import outlierplot
+pydesigner/fitting/dwipy.py:24:# from pydesigner.system.models import input_path_validator
+pydesigner/fitting/dwipy.py:25:# from pydesigner.system.utils import highprecisionexp, highprecisionpower, vectorize, writeNii
+pydesigner/fitting/dwipy.py:26:# from pydesigner.tractography import dsistudio, odf, sphericalsampling
+pydesigner/fodf_flip.py:6:from pydesigner.fitting.dwipy import DWI
+pydesigner/fodf_flip.py:7:from pydesigner.system.utils import writeNii
+pydesigner/main.py:1:"""Runs the pyDKE pipeline"""
+pydesigner/main.py:34:    raise OSError("Cannot find mrtrix3, please see https://github.com/m-ama/pyDKE/wiki to troubleshoot.")
+pydesigner/main.py:42:    raise OSError("Cannot find FSL, please see https://github.com/m-ama/pyDKE/wiki to troubleshoot.")
+pydesigner/main.py:54:        prog="pydesigner",
+pydesigner/main.py:71:        python3 pydesigner.py \\
+pydesigner/main.py:77:        python3 pydesigner.py \\
+pydesigner/main.py:86:        python3 pydesigner.py \\
+pydesigner/main.py:101:        GitHub      https://github.com/m-ama/pyDKE
+pydesigner/main.py:134:        title="pyDKE CLI controls", description="Change pyDKE app behavior"
+pydesigner/main.py:309:        "multiple TEs. pyDKE will preprocess all "
+pydesigner/main.py:368:        help="Continue from an aborted or partial previous run of pydesigner.",
+pydesigner/main.py:894:        # Rotates user mask to same orientation as pyDKE's working
+pydesigner/preprocessing/mrinfoutil.py:206:        raise IOError("Input {} is not currently supported by pyDKE.".format(path))
+pydesigner/preprocessing/mrinfoutil.py:240:        raise IOError("Input {} is not currently supported by pyDKE.".format(path))
+pydesigner/preprocessing/mrinfoutil.py:284:        raise IOError("Input {} is not currently supported by pyDKE.".format(path))
+pydesigner/preprocessing/mrinfoutil.py:332:        raise IOError("Input {} is not currently supported by pyDKE.".format(path))
+pydesigner/preprocessing/mrinfoutil.py:379:        raise IOError("Input {} is not currently supported by pyDKE.".format(path))
+pydesigner/preprocessing/mrinfoutil.py:450:        raise IOError("Input {} is not currently supported by pyDKE.".format(path))
+pydesigner/preprocessing/mrinfoutil.py:496:        raise IOError("Input {} is not currently supported by pyDKE.".format(path))
+pydesigner/preprocessing/mrinfoutil.py:556:        raise IOError("Input {} is not currently supported by pyDKE.".format(path))
+pydesigner/preprocessing/mrpreproc.py:208:    pyDKE.
+pydesigner/preprocessing/mrpreproc.py:273:    pyDKE.
+pydesigner/preprocessing/mrpreproc.py:328:    parameters for pyDKE.
+pydesigner/preprocessing/preparation.py:49:        The filetable that pydesigner.py uses to track files
+pydesigner/preprocessing/preparation.py:89:        The filetable that pydesigner.py uses to track files
+pydesigner/preprocessing/preparation.py:107:    # pydesigner will not allow the 'dwi' entry to not have them
+pydesigner/preprocessing/util.py:13:from pydesigner.preprocessing import mrinfoutil
+pydesigner/preprocessing/util.py:98:                "pyDKE currently only supports "
+pydesigner/preprocessing/util.py:409:            pydesigner (Default: False)
+pydesigner/tractography/dsistudio.py:5:mattcieslak/dmri_convert/mrtrix_to_dsistudio.py to suit pyDKE's
+pydesigner/tractography/dsistudio.py:29:from pydesigner.tractography import sphericalsampling
+pydesigner/tractography/dsistudio.py:324:# path_sh = "/mnt/d/Datasets/pyDKE_Test/test_run/metrics/dki_odf.nii"
+pydesigner/tractography/dsistudio.py:325:# path_mask = "/mnt/d/Datasets/pyDKE_Test/test_run/brain_mask.nii"
+pydesigner/tractography/dsistudio.py:326:# path_out = "/mnt/d/Datasets/pyDKE_Test/dki_odf/dki.fib"
+pydesigner/tractography/dsistudio.py:327:# path_fa = "/mnt/d/Datasets/pyDKE_Test/test_run/metrics/dti_fa.nii"
+pyproject.toml:61:pydke = "pydesigner.main:main"
+pyproject.toml:62:pydesigner = "pydesigner.main:main"
+pyproject.toml:73:include = ["pydesigner*"]
+pyproject.toml:78:"pydesigner.fitting" = ["*.csv"]
+pyproject.toml:130:test-command = "python -c \"import pydesigner; import pydesigner.fitting.dwipy; print('pyDKE wheel import OK')\""
+run_pydesigner_fit.py:10:from pydesigner.fitting.dwipy import DWI
+run_pydesigner_fit.py:11:from pydesigner.system.utils import writeNii
+run_pydesigner_fit.py:12:from pydesigner.tractography import odf
+run_pydesigner_fit.py:17:python run_pydesigner_fit.py \
+run_pydesigner_fit.py:247:        description="Run pyDKE fitting only, starting from dwi_preprocessed.nii."
+tests/data/hifi/hifi_splenium_4vox.json:77:        "mrcat -axis 3 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi0.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi1.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi2.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox.json:78:        "dwidenoise -noise /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/noisemap.nii -extent '5,5,5' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/1_dwi_denoised.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox.json:79:        "mrdegibbs /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/2_dwi_degibbs.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox.json:80:        "/usr/local/mrtrix3/bin/dwifslpreproc -se_epi /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/B0_EPI.mif -eddy_options '--repol --data_is_shelled' -rpe_header -eddyqc_all /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/metrics_qc/eddy /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/3_dwi_undistorted.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox.json:81:        "mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/4_dwi_smoothed.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox.json:82:        "mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/5_dwi_rician.mif  (version=3.0.1-24-g62bb3c69)"
+tests/data/hifi/hifi_splenium_4vox.mif:67:command_history: mrcat -axis 3 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi0.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi1.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi2.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_4vox.mif:68:command_history: dwidenoise -noise /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/noisemap.nii -extent '5,5,5' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/1_dwi_denoised.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_4vox.mif:69:command_history: mrdegibbs /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/2_dwi_degibbs.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_4vox.mif:70:command_history: /usr/local/mrtrix3/bin/dwifslpreproc -se_epi /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/B0_EPI.mif -eddy_options '--repol --data_is_shelled' -rpe_header -eddyqc_all /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/metrics_qc/eddy /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/3_dwi_undistorted.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_4vox.mif:71:command_history: mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/4_dwi_smoothed.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_4vox.mif:72:command_history: mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/5_dwi_rician.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_4vox.mif:73:command_history: mrconvert -json_import /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.json -fslgrad /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.bvec /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.bval /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.nii /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.mif  (version=3.0.4)
+tests/data/hifi/hifi_splenium_4vox_no_bval.json:77:        "mrcat -axis 3 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi0.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi1.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi2.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox_no_bval.json:78:        "dwidenoise -noise /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/noisemap.nii -extent '5,5,5' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/1_dwi_denoised.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox_no_bval.json:79:        "mrdegibbs /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/2_dwi_degibbs.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox_no_bval.json:80:        "/usr/local/mrtrix3/bin/dwifslpreproc -se_epi /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/B0_EPI.mif -eddy_options '--repol --data_is_shelled' -rpe_header -eddyqc_all /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/metrics_qc/eddy /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/3_dwi_undistorted.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox_no_bval.json:81:        "mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/4_dwi_smoothed.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox_no_bval.json:82:        "mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/5_dwi_rician.mif  (version=3.0.1-24-g62bb3c69)"
+tests/data/hifi/hifi_splenium_4vox_no_bvec.json:77:        "mrcat -axis 3 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi0.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi1.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi2.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox_no_bvec.json:78:        "dwidenoise -noise /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/noisemap.nii -extent '5,5,5' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/1_dwi_denoised.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox_no_bvec.json:79:        "mrdegibbs /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/2_dwi_degibbs.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox_no_bvec.json:80:        "/usr/local/mrtrix3/bin/dwifslpreproc -se_epi /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/B0_EPI.mif -eddy_options '--repol --data_is_shelled' -rpe_header -eddyqc_all /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/metrics_qc/eddy /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/3_dwi_undistorted.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox_no_bvec.json:81:        "mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/4_dwi_smoothed.mif  (version=3.0.1-24-g62bb3c69)",
+tests/data/hifi/hifi_splenium_4vox_no_bvec.json:82:        "mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/5_dwi_rician.mif  (version=3.0.1-24-g62bb3c69)"
+tests/data/hifi/hifi_splenium_mrgrid.mif:67:command_history: mrcat -axis 3 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi0.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi1.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi2.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_mrgrid.mif:68:command_history: dwidenoise -noise /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/noisemap.nii -extent '5,5,5' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/1_dwi_denoised.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_mrgrid.mif:69:command_history: mrdegibbs /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/2_dwi_degibbs.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_mrgrid.mif:70:command_history: /usr/local/mrtrix3/bin/dwifslpreproc -se_epi /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/B0_EPI.mif -eddy_options '--repol --data_is_shelled' -rpe_header -eddyqc_all /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/metrics_qc/eddy /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/3_dwi_undistorted.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_mrgrid.mif:71:command_history: mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/4_dwi_smoothed.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_mrgrid.mif:72:command_history: mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/5_dwi_rician.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_mrgrid.mif:73:command_history: mrconvert -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi_preprocessed.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi_preprocessed.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi_preprocessed.json /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi_preprocessed.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/hifi_splenium_mrgrid.mif:74:command_history: mrgrid /Users/siddhiman/Datasets/IAM_HiFI/out/pydesigner/working.mif regrid -size '1,1,1' /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_mrgrid.mif  (version=3.0.4)
+tests/data/hifi/mean_b0.mif:67:command_history: mrcat -axis 3 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi0.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi1.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi2.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/mean_b0.mif:68:command_history: dwidenoise -noise /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/noisemap.nii -extent '5,5,5' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/1_dwi_denoised.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/mean_b0.mif:69:command_history: mrdegibbs /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/2_dwi_degibbs.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/mean_b0.mif:70:command_history: /usr/local/mrtrix3/bin/dwifslpreproc -se_epi /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/B0_EPI.mif -eddy_options '--repol --data_is_shelled' -rpe_header -eddyqc_all /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/metrics_qc/eddy /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/3_dwi_undistorted.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/mean_b0.mif:71:command_history: mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/4_dwi_smoothed.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/mean_b0.mif:72:command_history: mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.json -strides '1,2,3,4' /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/5_dwi_rician.mif  (version=3.0.1-24-g62bb3c69)
+tests/data/hifi/mean_b0.mif:73:command_history: mrconvert -json_import /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.json -fslgrad /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.bvec /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.bval /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.nii /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.mif  (version=3.0.4)
+tests/data/hifi/mean_b0.mif:74:command_history: dwiextract /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.mif - -bzero  (version=3.0.4)
+tests/data/hifi/mean_b0.mif:75:command_history: mrmath - mean /Users/siddhiman/Repos/pyDKE/tests/data/mean_b0.mif -axis 3  (version=3.0.4)
+tests/entrypoint.sh:6:    pytest tests -vv  -n auto --cov=pydesigner --cov-report=xml:/test_results/coverage.xml --junitxml=/test_results/results.xml
+tests/test_fitting_dwipy.py:6:from pydesigner.fitting.dwipy import DWI
+tests/test_fitting_dwipy.py:7:from pydesigner.fitting.dwidirs import dirs30
+tests/test_models.py:1:from pydesigner.system.models import (
+tests/test_models.py:6:from pydesigner.system.errors import FileExtensionError
+tests/test_preprocessing_mrinfoutil.py:2:from pydesigner.preprocessing import mrinfoutil
+tests/test_preprocessing_mrinfoutil.py:169:        "mrcat -axis 3 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi0.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi1.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwi2.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif",
+tests/test_preprocessing_mrinfoutil.py:170:        "dwidenoise -noise /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/noisemap.nii -extent 5,5,5 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/1_dwi_denoised.mif",
+tests/test_preprocessing_mrinfoutil.py:171:        "mrdegibbs /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/2_dwi_degibbs.mif",
+tests/test_preprocessing_mrinfoutil.py:172:        "/usr/local/mrtrix3/bin/dwifslpreproc -se_epi /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/B0_EPI.mif -eddy_options --repol --data_is_shelled -rpe_header -eddyqc_all /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/metrics_qc/eddy /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/working.mif /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/3_dwi_undistorted.mif",
+tests/test_preprocessing_mrinfoutil.py:173:        "mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.json -strides 1,2,3,4 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwism.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/4_dwi_smoothed.mif",
+tests/test_preprocessing_mrinfoutil.py:174:        "mrconvert -force -quiet -fslgrad /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bvec /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.bval -json_import /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.json -strides 1,2,3,4 /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/dwirc.nii /media/sid/Secondary/Datasets/IAM_HiFI/out/pydesigner/5_dwi_rician.mif",
+tests/test_preprocessing_mrinfoutil.py:175:        "mrconvert -json_import /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.json -fslgrad /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.bvec /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.bval /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.nii /Users/siddhiman/Repos/pyDKE/tests/data/hifi_splenium_4vox.mif",
+tests/test_preprocessing_mrpreproc.py:8:from pydesigner.preprocessing import mrpreproc, mrinfoutil
+tests/test_preprocessing_mrpreproc.py:9:from pydesigner.system.errors import MRTrixError
+uv.lock:625:name = "pydesigner-dwi"

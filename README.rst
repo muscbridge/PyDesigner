@@ -1,5 +1,5 @@
 
-PyDesigner
+pyDKE
 ==========
 
 .. image:: https://img.shields.io/docker/pulls/dmri/neurodock?style=flat-square
@@ -7,25 +7,25 @@ PyDesigner
    :alt: Docker Pulls
 
 .. image:: https://img.shields.io/github/downloads-pre/m-ama/pydesigner/latest/total?style=flat-square
-   :target: https://github.com/m-ama/PyDesigner/releases/latest
+   :target: https://github.com/m-ama/pyDKE/releases/latest
    :alt: GitHub release (latest SemVer including pre-releases)
 
 .. image:: https://img.shields.io/readthedocs/pydesigner?style=flat-square
    :target: https://pydesigner.readthedocs.io/en/latest/?badge=latest
    :alt: Documentation Status
 
-.. image:: https://results.pre-commit.ci/badge/github/muscbridge/PyDesigner/master.svg
-   :target: https://results.pre-commit.ci/latest/github/muscbridge/PyDesigner/master
+.. image:: https://results.pre-commit.ci/badge/github/muscbridge/pyDKE/master.svg
+   :target: https://results.pre-commit.ci/latest/github/muscbridge/pyDKE/master
    :alt: pre-commit.ci status
 
-Welcome to the official PyDesigner project!
+Welcome to the official pyDKE project!
 *******************************************
 
-PyDesigner was inspired by `NYU's DESIGNER`_ dMRI preprocessing pipeline
-to bring pre- and post- processing to every MRI imaging scientist. With PyDesigner,
+pyDKE was inspired by `NYU's DESIGNER`_ dMRI preprocessing pipeline
+to bring pre- and post- processing to every MRI imaging scientist. With pyDKE,
 users are no longer confined to specific file types, operating systems,
 or complicated scripts just to extract DTI or DKI parameters –
-PyDesigner makes this easy, and you will love it!
+pyDKE makes this easy, and you will love it!
 
 .. _NYU's DESIGNER: https://github.com/NYU-DiffusionMRI/DESIGNER
 
@@ -36,7 +36,7 @@ PyDesigner makes this easy, and you will love it!
 
 .. image:: https://img.youtube.com/vi/mChQFuQqX3k/maxresdefault.jpg
     :width: 512pt
-    :alt: PyDesigner Walkthrough Video: Software Setup & Usage
+    :alt: pyDKE Walkthrough Video: Software Setup & Usage
     :target: https://www.youtube.com/watch?v=mChQFuQqX3k
 
 Notable Features
@@ -64,16 +64,16 @@ We welcome all DTI/DKI researchers to evaluate this software and pass
 on their feedback or issues through the `Issues`_ and `Discussion`_ page of this
 project’s GitHub repository.
 
-.. _Issues: https://github.com/m-ama/PyDesigner/issues
-.. _Discussion: https://github.com/m-ama/PyDesigner/discussions
+.. _Issues: https://github.com/m-ama/pyDKE/issues
+.. _Discussion: https://github.com/m-ama/pyDKE/discussions
 
 **System Requirements**
-   Parallel processing in PyDesigner scales almost linearly with the
+   Parallel processing in pyDKE scales almost linearly with the
    nummber of CPU cores present. The application is also memory-intensive
    due to the number of parameter maps being computed.
 
    Based on this evaluation, for processing a single DWI using
-   PyDesigner, we recommend the following minimum system specifications:
+   pyDKE, we recommend the following minimum system specifications:
 
    - Ubuntu 18.04
    - Intel i7-9700 or AMD Ryzen 1800X [8 cores]
@@ -81,10 +81,10 @@ project’s GitHub repository.
    - 12 GB free storage
    - Nvidia CUDA-enabled GPU
 
-PyDesigner in Container
+pyDKE in Container
 =======================
-PyDesigner can run on all major platforms (x86, x64, and ARM) via Docker container technology. The containerized
-form of PyDesigner is called `NeuroDock`_ and comes preloaded with PyDesigner, FSL, and MRtrix3.
+pyDKE can run on all major platforms (x86, x64, and ARM) via Docker container technology. The containerized
+form of pyDKE is called `NeuroDock`_ and comes preloaded with pyDKE, FSL, and MRtrix3.
 
 Obtaining the `FSL`_ software typically requires `registration`_. Therefore, we requeust users of NeuroDock who have
 not previously registered as a user of the FSL software complete the registration process. This allows developers
@@ -95,18 +95,18 @@ of FSL to be recognized for the utilization of their software.
 .. _registration: https://fsl.fmrib.ox.ac.uk/fsldownloads_registration
 
 
-Cite PyDesigner
+Cite pyDKE
 ===============
-Please include the following citation if you used PyDesigner in your
+Please include the following citation if you used pyDKE in your
 work or publication:
 
-1. Siddhartha Dhiman, Joshua B Teves, Kathryn E Thorn, Emilie T McKinnon, Hunter G Moss, Vitria Adisetiyo, Benjamin Ades-Aron, Jelle Veraart, Jenny Chen, Els Fieremans, Andreana Benitez, Joseph A Helpern, Jens H Jensen. PyDesigner: A Pythonic Implementation of the DESIGNER Pipeline for Diffusion Tensor and Diffusional Kurtosis Imaging. bioRxiv 2021.10.20.465189. doi: 10.1101/2021.10.20.465189
+1. Siddhartha Dhiman, Joshua B Teves, Kathryn E Thorn, Emilie T McKinnon, Hunter G Moss, Vitria Adisetiyo, Benjamin Ades-Aron, Jelle Veraart, Jenny Chen, Els Fieremans, Andreana Benitez, Joseph A Helpern, Jens H Jensen. pyDKE: A Pythonic Implementation of the DESIGNER Pipeline for Diffusion Tensor and Diffusional Kurtosis Imaging. bioRxiv 2021.10.20.465189. doi: 10.1101/2021.10.20.465189
 
 References
 ==========
 
-The PyDesigner software packages is based upon the the references
-listed below. Please be sure to cite them if PyDesigner was used
+The pyDKE software packages is based upon the the references
+listed below. Please be sure to cite them if pyDKE was used
 in any publications.
 
 1. Jensen JH, Helpern JA, Ramani A, Lu H, Kaczynski K. Diffusional kurtosis imaging: the quantification of non-Gaussian water diffusion by means of MRI. Magn Reson Med 2005;53:1432-1440. doi: 10.1002/mrm.20508

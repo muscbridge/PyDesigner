@@ -71,5 +71,5 @@ jobs:
           tags: |
             dmri/neurodock:latest
             dmri/neurodock:${{ steps.version.outputs.value }}
-            ghcr.io/muscbridge/PyDesigner:latest
-            ghcr.io/muscbridge/PyDesigner:${{ steps.version.outputs.value }}
+            ghcr.io/muscbridge/pyDKE:latest
+            ghcr.io/muscbridge/pyDKE:${{ steps.version.outputs.value }}

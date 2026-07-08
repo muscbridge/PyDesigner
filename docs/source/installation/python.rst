@@ -1,7 +1,7 @@
 Python
 ======
 
-PyDesigner was built and tested on Python 3.7, so we enourage all
+pyDKE was built and tested on Python 3.7, so we enourage all
 users to adopt this version as well. While you may use the Python
 supplied by default on your OS, we highly enocurage users to adopt a
 Conda-based Python like `Miniconda`_ or `Anaconda`_. Conda is a command
@@ -19,7 +19,7 @@ Download and Insall
 Refer to either of these distributions' page for installation. This
 guide assumes a conda (Miniconda) installation for setting up Python.
 If you already have conda, or prefer using the default Python supplied
-by your OS, skip PyDesigner installation.
+by your OS, skip pyDKE installation.
 
 Update Conda
 ------------
