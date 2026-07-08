@@ -1,5 +1,5 @@
 [project]
-name = "PyDesigner-DWI"
+name = "pydke"
 version = "2.0.0"
 description = "A hands-free DTI, DKI, FBI and FBWM preprocessing pipeline"
 readme = "README.rst"
@@ -53,11 +53,12 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://pypi.org/project/PyDesigner-DWI/"
-Repository = "https://github.com/muscbridge/PyDesigner"
-Documentation = "https://pydesigner.readthedocs.io/en/latest/"
+Homepage = "https://pypi.org/project/pydke/"
+Repository = "https://github.com/muscbridge/pyDKE"
+Documentation = "https://pydke.readthedocs.io/en/latest/"
 
 [project.scripts]
+pydke = "pydesigner.main:main"
 pydesigner = "pydesigner.main:main"
 
 
@@ -125,8 +126,8 @@ skip = [
 ]
 #build-frontend = "build[uv]"
 
-# Keep wheel tests light because PyDesigner may need MRtrix/FSL externally.
-test-command = "python -c \"import pydesigner; import pydesigner.fitting.dwipy; print('PyDesigner wheel import OK')\""
+# Keep wheel tests light because pyDKE may need MRtrix/FSL externally.
+test-command = "python -c \"import pydesigner; import pydesigner.fitting.dwipy; print('pyDKE wheel import OK')\""
 
 [tool.cibuildwheel.linux]
 # archs = ["x86_64", "aarch64"]
